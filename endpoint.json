@@ -3,8 +3,8 @@
   "tunnelUrl": "https://bryant-app-documentary-postage.trycloudflare.com/",
   "lanUrl": "http://192.168.10.111:8790/",
   "studioPermanentUrl": "https://promisefree-cmyk.github.io/trip/studio/",
-  "studioTunnelUrl": "",
+  "studioTunnelUrl": "https://final-latina-duo-zoo.trycloudflare.com/",
   "studioLanUrl": "http://192.168.10.111:8765/blog-studio.html",
   "studioLocalUrl": "http://127.0.0.1:8765/blog-studio.html",
-  "updatedAt": 1793190612651
+  "updatedAt": 1793190648195
 }
