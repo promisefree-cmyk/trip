@@ -2906,20 +2906,13 @@
         <strong style="font-size:15px;">📱 スマホでお出かけ＆旅行マスターを開く</strong>
         <button class="lightbox-close" style="background:rgba(255,255,255,0.2);" onclick="closeQrModal()">閉じる ✕</button>
       </div>
-      <div class="qr-grid">
+      <div class="qr-grid" style="grid-template-columns:1fr;">
         <div class="qr-box">
-          <span class="c-badge cb-tabelog" style="font-size:11.5px;">🌐 固定アドレス（外出先・4G/5G・LINE共有・ブックマーク用）</span>
-          <h4 style="margin-top:6px; font-size:14px; color:var(--primary);">毎回変わらない統一URL</h4>
-          <img id="qr-tunnel-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fpromisefree-cmyk.github.io%2Ftrip%2F" alt="外出先QR">
+          <span class="c-badge cb-tabelog" style="font-size:11.5px;">📱 5Gモバイル回線対応（Galaxy S26 Ultra・LINE共有・ブックマーク用）</span>
+          <h4 style="margin-top:6px; font-size:14px; color:var(--primary);">毎回変わらない永久固定URL</h4>
+          <img id="qr-tunnel-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fpromisefree-cmyk.github.io%2Ftrip%2F" alt="5G固定URL QR">
           <div id="qr-tunnel-text" style="font-size:11.5px; font-weight:800; word-break:break-all; color:var(--primary); margin-bottom:8px;">https://promisefree-cmyk.github.io/trip/</div>
           <button class="ms-btn" style="width:100%;" onclick="copyShareUrl('tunnel')">📋 固定URLをコピーして共有</button>
-        </div>
-        <div class="qr-box">
-          <span class="c-badge cb-google" style="font-size:11.5px;">🏠 自宅Wi-Fi用（Mac直結・超高速）</span>
-          <h4 style="margin-top:6px; font-size:14px; color:var(--primary);">同じWi-Fi内で開ける固定URL</h4>
-          <img id="qr-lan-img" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=http%3A%2F%2F192.168.10.111%3A8790%2F" alt="自宅Wi-Fi QR">
-          <div id="qr-lan-text" style="font-size:11px; word-break:break-all; color:var(--text-muted); margin-bottom:8px;">http://192.168.10.111:8790/</div>
-          <button class="ms-btn secondary" style="width:100%;" onclick="copyShareUrl('lan')">📋 自宅Wi-Fi URLをコピー</button>
         </div>
       </div>
     </div>
