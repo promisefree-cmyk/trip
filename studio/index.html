@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Rooton Master Studio — 自動接続ポータル</title>
+<style>
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif; background:#141210; color:#f5f2eb; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; box-sizing:border-box; }
+  .card { max-width:480px; width:100%; background:#1f1c18; border:1px solid rgba(197,160,89,0.3); border-radius:16px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.5); text-align:center; }
+  h1 { font-size:20px; margin:0 0 8px; color:#c5a059; letter-spacing:0.04em; }
+  p { font-size:14px; color:#b8b2a6; line-height:1.6; margin:0 0 20px; }
+  .status { font-size:13px; color:#e6dcc8; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:8px; margin-bottom:20px; }
+  .links { display:flex; flex-direction:column; gap:10px; }
+  a.btn { display:block; text-decoration:none; padding:12px 16px; border-radius:10px; font-weight:600; font-size:14px; background:#c5a059; color:#141210; transition:opacity 0.2s; }
+  a.btn.sub { background:transparent; color:#e6dcc8; border:1px solid rgba(255,255,255,0.18); font-weight:500; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>ROOTON MASTER STUDIO</h1>
+  <p>現在利用可能な最適ルート（Mac本体・自宅Wi-Fi・外出先トンネル）を自動判定して接続しています…</p>
+  <div id="status" class="status">接続先を確認中…</div>
+  <div class="links">
+    <a id="btn-tunnel" class="btn" href="blog-studio.html">🌐 外出先・スマホトンネルで開く</a>
+    <a class="btn sub" href="http://127.0.0.1:8765/blog-studio.html">💻 Mac本体で開く (127.0.0.1:8765)</a>
+    <a class="btn sub" href="http://192.168.10.111:8765/blog-studio.html">🏠 自宅Wi-Fiで開く (192.168.10.111:8765)</a>
+  </div>
+</div>
+<script>
+(async function() {
+  const statusEl = document.getElementById('status');
+  const btnTunnel = document.getElementById('btn-tunnel');
+  let tunnelBase = "";
+  try {
+    const gRes = await fetch('https://api.github.com/gists/9eea03e785382031cabb2892c490b3cd?t=' + Date.now(), { cache: 'no-store' });
+    if (gRes.ok) {
+      const gJson = await gRes.json();
+      if (gJson.files && gJson.files['endpoint.json']) {
+        const ep = JSON.parse(gJson.files['endpoint.json'].content);
+        if (ep.studioTunnelUrl) tunnelBase = ep.studioTunnelUrl;
+      }
+    }
+  } catch (e) {}
+  if (!tunnelBase) {
+    try {
+      const eRes = await fetch('../endpoint.json?t=' + Date.now(), { cache: 'no-store' });
+      if (eRes.ok) {
+        const ep = await eRes.json();
+        if (ep.studioTunnelUrl) tunnelBase = ep.studioTunnelUrl;
+      }
+    } catch (e) {}
+  }
+  if (tunnelBase) {
+    const target = tunnelBase.replace(/\/+$/, '') + '/blog-studio.html';
+    btnTunnel.href = target;
+    statusEl.textContent = '最新トンネルを確認しました。自動移動します…';
+    setTimeout(() => { window.location.replace(target); }, 150);
+  } else {
+    statusEl.textContent = '下のボタンからお使いの端末に合わせて選択してください。';
+  }
+})();
+</script>
+</body>
+</html>

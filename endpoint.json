@@ -2,5 +2,9 @@
   "permanentUrl": "https://promisefree-cmyk.github.io/trip/",
   "tunnelUrl": "https://bryant-app-documentary-postage.trycloudflare.com/",
   "lanUrl": "http://192.168.10.111:8790/",
-  "updatedAt": 1793177103892
+  "studioPermanentUrl": "https://promisefree-cmyk.github.io/trip/studio/",
+  "studioTunnelUrl": "",
+  "studioLanUrl": "http://192.168.10.111:8765/blog-studio.html",
+  "studioLocalUrl": "http://127.0.0.1:8765/blog-studio.html",
+  "updatedAt": 1793190612651
 }
