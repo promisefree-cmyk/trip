@@ -22,7 +22,7 @@
   <p>現在利用可能な最適ルート（Mac本体・自宅Wi-Fi・外出先トンネル）を自動判定して接続しています…</p>
   <div id="status" class="status">接続先を確認中…</div>
   <div class="links">
-    <a id="btn-tunnel" class="btn" href="https://final-latina-duo-zoo.trycloudflare.com/blog-studio.html">🌐 外出先・スマホトンネルで開く</a>
+    <a id="btn-tunnel" class="btn" href="https://final-latina-duo-zoo.trycloudflare.com/blog-studio.html?k=rt9k4m7x2v8p">🌐 外出先・スマホトンネルで開く</a>
     <a class="btn sub" href="http://127.0.0.1:8765/blog-studio.html">💻 Mac本体で開く (127.0.0.1:8765)</a>
     <a class="btn sub" href="http://192.168.10.111:8765/blog-studio.html">🏠 自宅Wi-Fiで開く (192.168.10.111:8765)</a>
   </div>
@@ -52,7 +52,7 @@
     } catch (e) {}
   }
   if (tunnelBase) {
-    const target = tunnelBase.replace(/\/+$/, '') + '/blog-studio.html';
+    const target = tunnelBase.replace(/\/+$/, '') + '/blog-studio.html?k=rt9k4m7x2v8p';
     btnTunnel.href = target;
     statusEl.textContent = '最新トンネルを確認しました。自動移動します…';
     setTimeout(() => { window.location.replace(target); }, 150);
