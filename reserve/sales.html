@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>売上集計システム（月別・担当者別） — 自動接続ポータル</title>
+<style>
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif; background:#0c192c; color:#f5f2eb; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; box-sizing:border-box; }
+  .card { max-width:480px; width:100%; background:#132642; border:1px solid rgba(166,124,82,0.45); border-radius:16px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.5); text-align:center; }
+  h1 { font-size:19px; margin:0 0 8px; color:#e6d7c3; letter-spacing:0.04em; }
+  p { font-size:14px; color:#cbd5e1; line-height:1.6; margin:0 0 20px; }
+  .status { font-size:13px; color:#e6dcc8; background:rgba(255,255,255,0.06); padding:10px 14px; border-radius:8px; margin-bottom:20px; }
+  .links { display:flex; flex-direction:column; gap:10px; }
+  a.btn { display:block; text-decoration:none; padding:12px 16px; border-radius:10px; font-weight:700; font-size:14px; background:#a67c52; color:#fff; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>売上集計システム（月別・担当者別）</h1>
+  <p>5Gモバイル回線・iPad・PC対応の最新サーバーへ自動接続しています…</p>
+  <div id="status" class="status">接続先を確認中…</div>
+  <div class="links">
+    <a id="btn-tunnel" class="btn" href="https://animal-honest-blog-swimming.trycloudflare.com/admin.html?k=chiro9x4m2p7v&view=sales">📱 画面を開く（5G / iPad / PC対応）</a>
+  </div>
+</div>
+<script>
+(async function() {
+  const statusEl = document.getElementById('status');
+  const btnTunnel = document.getElementById('btn-tunnel');
+  let tunnelBase = "https://animal-honest-blog-swimming.trycloudflare.com/";
+  try {
+    const gRes = await fetch('https://api.github.com/gists/9eea03e785382031cabb2892c490b3cd?t=' + Date.now(), { cache: 'no-store' });
+    if (gRes.ok) {
+      const gJson = await gRes.json();
+      if (gJson.files && gJson.files['endpoint.json']) {
+        const ep = JSON.parse(gJson.files['endpoint.json'].content);
+        if (ep.chiroTunnelUrl) tunnelBase = ep.chiroTunnelUrl;
+      }
+    }
+  } catch (e) {}
+  if (!tunnelBase) {
+    try {
+      const eRes = await fetch('../endpoint.json?t=' + Date.now(), { cache: 'no-store' });
+      if (eRes.ok) {
+        const ep = await eRes.json();
+        if (ep.chiroTunnelUrl) tunnelBase = ep.chiroTunnelUrl;
+      }
+    } catch (e) {}
+  }
+  if (tunnelBase) {
+    const target = tunnelBase.replace(/\/+$/, '') + '/admin.html?k=chiro9x4m2p7v&view=sales';
+    btnTunnel.href = target;
+    statusEl.textContent = '接続先を確認しました。自動移動します…';
+    window.location.replace(target);
+  } else {
+    statusEl.textContent = '上のボタンをタップして開いてください。';
+  }
+})();
+</script>
+</body>
+</html>
