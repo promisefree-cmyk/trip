@@ -21,7 +21,7 @@
   <p>5Gモバイル回線・iPad・PC対応の最新サーバーへ自動接続しています…</p>
   <div id="status" class="status">接続先を確認中…</div>
   <div class="links">
-    <a id="btn-tunnel" class="btn" href="https://animal-honest-blog-swimming.trycloudflare.com/customers.html">📱 画面を開く（5G / iPad / PC対応）</a>
+    <a id="btn-tunnel" class="btn" href="https://animal-honest-blog-swimming.trycloudflare.com/customers.html?k=chiro9x4m2p7v">📱 画面を開く（5G / iPad / PC対応）</a>
   </div>
 </div>
 <script>
@@ -49,7 +49,7 @@
     } catch (e) {}
   }
   if (tunnelBase) {
-    const target = tunnelBase.replace(/\/+$/, '') + '/customers.html';
+    const target = tunnelBase.replace(/\/+$/, '') + '/customers.html?k=chiro9x4m2p7v';
     btnTunnel.href = target;
     statusEl.textContent = '接続先を確認しました。自動移動します…';
     window.location.replace(target);
