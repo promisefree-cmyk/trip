@@ -661,9 +661,9 @@ const FLIPBOOK_THEMES = {
 
 const ART_STYLES = {
   classic_genga: {
-    name: "✏️ 王道アニメ原画 × 色鉛筆スケッチ（上質クリーム紙）",
+    name: "✏️ リアル鉛筆デッサン × 色鉛筆スケッチ（上質クリーム紙）",
     paperTint: [1.0, 1.0, 1.0],
-    inkContrast: 1.25,
+    inkContrast: 1.04,
     sepia: 0.0,
     invert: false,
     blueprint: false,

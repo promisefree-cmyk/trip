@@ -423,7 +423,7 @@
     </button>
     <div class="record-status" id="recordStatus"></div>
 
-    <a class="export-btn" id="btnDirectMp4" href="flipbook_straight_neck.mp4?v=5" download="01_スマホ首_パラパラ漫画.mp4">
+    <a class="export-btn" id="btnDirectMp4" href="flipbook_straight_neck.mp4?v=6" download="01_スマホ首_パラパラ漫画.mp4">
       📥 このテーマのスタジオ最高画質MP4を即保存
     </a>
   </div>
@@ -437,7 +437,7 @@
   <div id="galleryContainer"></div>
 </div>
 
-<script src="studio_engine.js?v=5"></script>
+<script src="studio_engine.js?v=6"></script>
 <script>
 (function() {
   const canvas = document.getElementById("flipCanvas");
@@ -466,7 +466,7 @@
   const imgCache = {};
   const deskImg = new Image();
   deskImg.crossOrigin = "anonymous";
-  deskImg.src = "assets/desk_base.jpg?v=5";
+  deskImg.src = "assets/desk_base.jpg?v=6";
 
   function loadRigImages(rigPrefix) {
     if (!imgCache[rigPrefix]) {
@@ -474,7 +474,7 @@
       for (let i = 1; i <= 4; i++) {
         const im = new Image();
         im.crossOrigin = "anonymous";
-        im.src = `assets/${rigPrefix}_${i}.jpg?v=5`;
+        im.src = `assets/${rigPrefix}_${i}.jpg?v=6`;
         imgCache[rigPrefix].push(im);
       }
     }
@@ -564,7 +564,7 @@
     document.getElementById("currentVolBadge").textContent = theme.vol;
 
     const dlBtn = document.getElementById("btnDirectMp4");
-    dlBtn.href = `${theme.mp4File}?v=5`;
+    dlBtn.href = `${theme.mp4File}?v=6`;
     dlBtn.download = `${theme.vol}_${theme.id}_パラパラ漫画.mp4`;
     dlBtn.textContent = `📥 ${theme.vol}（${theme.shortName}）の最高画質MP4を即保存`;
   }
@@ -867,8 +867,8 @@
       ctx.fillRect(curlX - 24, PY0, 42, PH - 25);
     }
 
-    // 4. Biomechanical Vector HUD / Red Culprit Callout Rings
-    if (currentCameraKey === "vector_hud" || currentCameraKey === "stop_motion_focus" || art.blueprint || progressT > 0.62) {
+    // 4. Biomechanical Vector HUD / Red Culprit Callout Rings (only when Vector HUD or Stop-Motion or Blueprint is chosen)
+    if (currentCameraKey === "vector_hud" || currentCameraKey === "stop_motion_focus" || art.blueprint) {
       const fx = PX0 + PW * theme.focusTarget[0];
       const fy = PY0 + PH * theme.focusTarget[1];
       if (progressT > 0.50) {
@@ -1048,9 +1048,9 @@
       <div class="badge">${t.vol}｜${t.shortName}</div>
       <h3>${h.title}</h3>
       <p>${h.desc}</p>
-      <video src="${t.mp4File}?v=5" poster="${t.posterFile}?v=5" controls playsinline loop muted></video>
+      <video src="${t.mp4File}?v=6" poster="${t.posterFile}?v=6" controls playsinline loop muted></video>
       <div class="card-actions">
-        <a class="btn-dl" href="${t.mp4File}?v=5" download="0${idx+1}_${t.id}_パラパラ漫画.mp4">📥 ${t.vol}をGalaxyに保存</a>
+        <a class="btn-dl" href="${t.mp4File}?v=6" download="0${idx+1}_${t.id}_パラパラ漫画.mp4">📥 ${t.vol}をGalaxyに保存</a>
         <button class="btn-customize" type="button" data-theme="${k}">🎨 上のスタジオで別表現にカスタム</button>
       </div>
     `;
