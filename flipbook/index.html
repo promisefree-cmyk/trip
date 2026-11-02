@@ -3,62 +3,1068 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>365枚の手描き解剖パラパラ漫画シリーズ（全4巻）｜Rooton Chiropractic</title>
+<title>✏️ 365枚の手描き解剖パラパラ漫画・無限生成マスタースタジオ｜Rooton</title>
 <style>
-  body { margin:0; background:#12100e; color:#f5f0e8; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif; padding:16px; }
-  .wrap { max-width:480px; margin:0 auto; }
-  .header { text-align:center; margin-bottom:18px; }
-  .header h1 { font-size:19px; color:#ffd46c; margin:0 0 6px; }
-  .header p { font-size:13px; color:#c8beb2; margin:0; line-height:1.5; }
-  .tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
-  .tab { background:#221d19; border:1px solid rgba(255,212,108,0.22); color:#e6ddd2; padding:10px 8px; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; text-align:center; }
-  .tab.active { background:linear-gradient(135deg,#ffd46c,#e59b38); color:#1a1410; border-color:transparent; }
-  .card { background:#1e1a17; border:1px solid rgba(255,212,108,0.25); border-radius:20px; padding:16px; margin-bottom:20px; box-shadow:0 12px 32px rgba(0,0,0,0.5); }
-  .badge { font-size:12px; color:#ffd46c; font-weight:700; margin-bottom:4px; }
-  .card h2 { font-size:17px; margin:0 0 6px; color:#fff; }
-  .card p { font-size:13px; margin:0 0 12px; color:#ccc2b8; line-height:1.5; }
-  video { width:100%; border-radius:14px; background:#000; display:block; margin-bottom:12px; }
-  .btn { display:block; width:100%; text-align:center; background:linear-gradient(135deg,#ffd46c,#e59b38); color:#1a1410; font-weight:800; font-size:15px; padding:13px 0; border-radius:12px; text-decoration:none; box-sizing:border-box; }
+  :root {
+    --bg: #100e0c;
+    --panel: #1b1714;
+    --panel-2: #25201b;
+    --gold: #ffd46c;
+    --gold-2: #e59b38;
+    --text: #f7f2eb;
+    --muted: #c2b6a8;
+    --red: #ef4444;
+    --green: #10b981;
+    --blue: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+    padding: 12px 12px 60px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 540px; margin: 0 auto; }
+
+  .hero {
+    background: linear-gradient(145deg, #241d17, #15110e);
+    border: 1px solid rgba(255, 212, 108, 0.35);
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255, 212, 108, 0.15);
+    color: var(--gold);
+    border: 1px solid rgba(255, 212, 108, 0.4);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+  }
+  .hero h1 {
+    font-size: 19px;
+    margin: 0 0 6px;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+  .hero p {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Studio Box */
+  .studio-box {
+    background: var(--panel);
+    border: 1px solid rgba(255, 212, 108, 0.28);
+    border-radius: 22px;
+    padding: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 14px 36px rgba(0,0,0,0.6);
+  }
+  .sec-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gold);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Theme Grid */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .theme-btn {
+    background: var(--panel-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e8dfd5;
+    padding: 9px 8px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .theme-btn.active {
+    background: linear-gradient(135deg, rgba(255, 212, 108, 0.24), rgba(229, 155, 56, 0.18));
+    border-color: var(--gold);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255, 212, 108, 0.25);
+  }
+
+  /* Gacha Randomizer Button */
+  .gacha-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ff5e62, #ff9966);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 13px 12px;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(255, 94, 98, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .gacha-btn:active { transform: scale(0.98); }
+
+  /* Canvas Player Container */
+  .canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto 12px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.7);
+    border: 1px solid rgba(255, 212, 108, 0.3);
+  }
+  #flipCanvas {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .canvas-hud {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .hud-btn {
+    flex: 1;
+    background: var(--panel-2);
+    border: 1px solid rgba(255, 212, 108, 0.3);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .hud-btn.active {
+    background: var(--gold);
+    color: #1a1410;
+  }
+
+  /* Expression Controls */
+  .ctrl-group {
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 11px;
+    margin-bottom: 10px;
+  }
+  .ctrl-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .pill-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .pill-btn {
+    background: #231e1a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ddd3c7;
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+  }
+  .pill-btn.active {
+    background: var(--gold);
+    color: #18120e;
+    border-color: transparent;
+    font-weight: 800;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    background: #161310;
+    border: 1px solid rgba(255, 212, 108, 0.3);
+    color: #fff;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 7px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* Export / Record Buttons */
+  .export-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    color: #19130e;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 12px;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 8px 24px rgba(229, 155, 56, 0.35);
+    display: block;
+    text-align: center;
+    text-decoration: none;
+  }
+  .record-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 13px 12px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .record-status {
+    font-size: 12px;
+    color: #86efac;
+    text-align: center;
+    margin-top: 6px;
+    min-height: 18px;
+  }
+
+  /* Gallery Cards */
+  .gallery-header {
+    text-align: center;
+    margin: 26px 0 14px;
+  }
+  .gallery-header h2 {
+    font-size: 18px;
+    color: var(--gold);
+    margin: 0 0 4px;
+  }
+  .gallery-header p {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid rgba(255, 212, 108, 0.24);
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+  }
+  .badge { font-size: 12px; color: var(--gold); font-weight: 800; margin-bottom: 3px; }
+  .card h3 { font-size: 16px; margin: 0 0 6px; color: #fff; }
+  .card p { font-size: 12px; margin: 0 0 10px; color: var(--muted); }
+  video { width: 100%; border-radius: 13px; background: #000; display: block; margin-bottom: 10px; }
+  .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-dl {
+    display: block;
+    text-align: center;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    color: #1a1410;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 11px 6px;
+    border-radius: 11px;
+    text-decoration: none;
+  }
+  .btn-customize {
+    background: var(--panel-2);
+    border: 1px solid rgba(255, 212, 108, 0.35);
+    color: var(--gold);
+    font-weight: 800;
+    font-size: 13px;
+    padding: 11px 6px;
+    border-radius: 11px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <h1>◆ 365枚の手描き解剖パラパラ漫画（全4巻）</h1>
-    <p>アニメ原画デッサン × 実写ウォールナット木目デスク合成（紙めくりASMR音付き）</p>
+  <div class="hero">
+    <div class="hero-badge">🏴‍☠️ フランキー＆ロビン＆ウソップ 共同開発</div>
+    <h1>✏️ 手描き解剖パラパラ漫画・無限生成マスタースタジオ</h1>
+    <p>全12テーマ × 4大心理フック × 6種の画風 × 5種のカメラ演出で、同じ体の悩みでも無限に違う表現のリール動画を生み出せます</p>
   </div>
 
-  <div class="card" id="vol1">
-    <div class="badge">Vol.1｜スマホ首・ストレートネック編</div>
-    <h2>スマホを見る女性の「首と背骨」の末路</h2>
-    <p>首の傾き5°→60°で背骨が丸まり、頸椎の前弯カーブが消失して負荷5kg→27kgへ跳ね上がる</p>
-    <video src="flipbook_straight_neck.mp4?v=3" poster="flipbook_preview_grid.jpg?v=3" controls playsinline loop muted></video>
-    <a class="btn" href="flipbook_straight_neck.mp4?v=3" download="01_スマホ首ストレートネック_パラパラ漫画.mp4">📥 Vol.1（スマホ首）をGalaxyに保存</a>
+  <!-- INTERACTIVE INFINITE GENERATOR -->
+  <div class="studio-box" id="studioTop">
+    <div class="sec-label">
+      <span>① 訴えたい「体のテーマ」を選択（12種＋自由入力）</span>
+      <span id="currentVolBadge" style="color:#fff;background:#3a2e21;padding:2px 8px;border-radius:6px;">Vol.1</span>
+    </div>
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <button class="gacha-btn" id="btnGacha" type="button">
+      🎲 このテーマで「表現・切り口」をガチャ変更！（無限パターン）
+    </button>
+
+    <!-- Live Flipbook Canvas Preview -->
+    <div class="canvas-wrap">
+      <canvas id="flipCanvas" width="540" height="960"></canvas>
+    </div>
+
+    <div class="canvas-hud">
+      <button class="hud-btn active" id="btnPlayPause" type="button">⏸️ 一時停止</button>
+      <button class="hud-btn" id="btnSoundToggle" type="button">🔊 紙めくり音＆BGMをON</button>
+      <button class="hud-btn" id="btnStepFrame" type="button">⏭️ 1枚めくる</button>
+    </div>
+
+    <!-- Hook Copy Selector -->
+    <div class="ctrl-group">
+      <div class="ctrl-title">② 訴求切り口・キャッチコピー（行動心理学4大フック）</div>
+      <div class="pill-row" id="hookPills"></div>
+    </div>
+
+    <!-- Visual Art Style & Camera Mode -->
+    <div class="ctrl-group">
+      <div class="ctrl-title">③ 画風・インク表現 ＆ カメラワーク演出</div>
+      <label style="font-size:11px;color:var(--muted);">🎨 画風・紙質スタイル（6種類）：</label>
+      <select id="selArtStyle"></select>
+
+      <label style="font-size:11px;color:var(--muted);">🎥 カメラ＆解剖図解演出（5種類）：</label>
+      <select id="selCameraMode"></select>
+
+      <div class="two-col">
+        <div>
+          <label style="font-size:11px;color:var(--muted);">⚡ めくり速度：</label>
+          <select id="selFlipSpeed" style="margin-bottom:0;">
+            <option value="12">12fps（王道365枚）</option>
+            <option value="16">16fps（高速ショート）</option>
+            <option value="8">8fps（じっくり解剖解説）</option>
+            <option value="dynamic">可変（悪化部位で強調ストップ）</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);">🎵 BGM＆紙めくり音：</label>
+          <select id="selAudioStyle" style="margin-bottom:0;">
+            <option value="lofi">🎵 ローファイ＋紙めくり音</option>
+            <option value="asmr">📄 生音ASMR（紙と鉛筆のみ）</option>
+            <option value="pulse">💓 心拍緊張➔解放和音</option>
+            <option value="healing">☕ オルゴール＋紙めくり音</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Text & Metric Editor -->
+    <div class="ctrl-group">
+      <div class="ctrl-title">④ 文字・数値・骨格ベースの自由カスタマイズ（直接編集OK）</div>
+      <label style="font-size:11px;color:var(--muted);">📌 上部メインタイトル：</label>
+      <input type="text" id="inpTitle" placeholder="タイトルを入力">
+
+      <div class="two-col">
+        <div>
+          <label style="font-size:11px;color:var(--muted);">📏 数値メーター1（左）：</label>
+          <input type="text" id="inpMetric1" placeholder="例: 首の傾き">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);">⚖️ 数値メーター2（負荷）：</label>
+          <input type="text" id="inpMetric2" placeholder="例: 首の負荷">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <label style="font-size:11px;color:var(--muted);">🔴 限界ロック時の赤文字：</label>
+          <input type="text" id="inpSubLocked" placeholder="例: 【！】ストレートネック">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);">✨ 回復時の青緑文字：</label>
+          <input type="text" id="inpSubRecover" placeholder="例: ★ 視線を上げS字回復">
+        </div>
+      </div>
+
+      <label style="font-size:11px;color:var(--muted);">🦴 手描き原画の骨格ベース（8種から自由に組み合わせ可能）：</label>
+      <select id="selRigPrefix" style="margin-bottom:0;">
+        <option value="straight_neck">📱 首・頸椎・背中横アングル（スマホ首原画）</option>
+        <option value="cross_legs">🪑 骨盤・腰椎・坐骨神経背面アングル（足組み原画）</option>
+        <option value="shallow_breath">💻 肋骨・胸郭・横隔膜アングル（PC猫背・呼吸原画）</option>
+        <option value="anterior_pelvis">👠 骨盤前傾・腰椎L4/L5・股関節アングル（反り腰原画）</option>
+        <option value="jaw_clench">🦷 顎関節・咬筋・側頭筋・上部頸椎アングル（食いしばり原画）</option>
+        <option value="bag_scoliosis">👜 肩甲骨高低差・背骨S字側弯アングル（カバン片掛け原画）</option>
+        <option value="pillow_neck">🛌 睡眠姿勢・枕と頸椎屈曲アングル（高すぎる枕原画）</option>
+        <option value="eye_headache">👀 視神経・後頭下筋群・後頭部頭痛アングル（眼精疲労原画）</option>
+      </select>
+    </div>
+
+    <!-- Save / Record Actions -->
+    <button class="record-btn" id="btnRecordCustom" type="button">
+      🎥 いま画面で再生中の「カスタム表現」を動画録画して保存（10秒）
+    </button>
+    <div class="record-status" id="recordStatus"></div>
+
+    <a class="export-btn" id="btnDirectMp4" href="flipbook_straight_neck.mp4?v=5" download="01_スマホ首_パラパラ漫画.mp4">
+      📥 このテーマのスタジオ最高画質MP4を即保存
+    </a>
   </div>
 
-  <div class="card" id="vol2">
-    <div class="badge">Vol.2｜足を組むクセ・骨盤ねじれ編</div>
-    <h2>足を組む女性の「骨盤と背骨」の末路</h2>
-    <p>何気なく足を組むことで骨盤が25°傾き、腰椎〜胸椎がS字に側弯して坐骨神経と腰を圧迫</p>
-    <video src="flipbook_cross_legs.mp4?v=3" poster="flipbook_grid_cross_legs.jpg?v=3" controls playsinline loop muted></video>
-    <a class="btn" href="flipbook_cross_legs.mp4?v=3" download="02_足を組む骨盤歪み_パラパラ漫画.mp4">📥 Vol.2（足を組む・骨盤）をGalaxyに保存</a>
+  <!-- PRE-RENDERED 8-VOLUME STUDIO GALLERY -->
+  <div class="gallery-header">
+    <h2>🎬 全8巻・スタジオ完成版MP4ギャラリー（即保存OK）</h2>
+    <p>各テーマの「🎨 このテーマを上で別表現にカスタム」を押すと、上のマスタースタジオで切り口や画風を無限に変えられます</p>
   </div>
 
-  <div class="card" id="vol3">
-    <div class="badge">Vol.3｜PC猫背・肋骨ロックと隠れ酸欠編</div>
-    <h2>PC猫背で「肋骨が潰れ隠れ酸欠」の末路</h2>
-    <p>デスクワークの巻き肩で肋骨カゴと横隔膜が上から押し潰され、酸素吸入量が45%まで低下</p>
-    <video src="flipbook_shallow_breath.mp4?v=3" poster="flipbook_grid_shallow_breath.jpg?v=3" controls playsinline loop muted></video>
-    <a class="btn" href="flipbook_shallow_breath.mp4?v=3" download="03_PC猫背と隠れ酸欠_パラパラ漫画.mp4">📥 Vol.3（PC猫背・隠れ酸欠）をGalaxyに保存</a>
-  </div>
-
-  <div class="card" id="vol4">
-    <div class="badge">Vol.4｜反り腰立ち・骨盤前傾と腰椎ロック編</div>
-    <h2>反り腰立ちで「骨盤前傾・腰が潰れる」末路</h2>
-    <p>お腹が前に抜けた反り腰で骨盤が30°前傾し、腰椎L4/L5の椎間関節がギシッと挟み込まれる</p>
-    <video src="flipbook_anterior_pelvis.mp4?v=3" poster="flipbook_grid_anterior_pelvis.jpg?v=3" controls playsinline loop muted></video>
-    <a class="btn" href="flipbook_anterior_pelvis.mp4?v=3" download="04_反り腰と骨盤前傾_パラパラ漫画.mp4">📥 Vol.4（反り腰・骨盤前傾）をGalaxyに保存</a>
-  </div>
+  <div id="galleryContainer"></div>
 </div>
+
+<script src="studio_engine.js?v=5"></script>
+<script>
+(function() {
+  const canvas = document.getElementById("flipCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;   // 540
+  const H = canvas.height;  // 960
+
+  // Paper pad bounding box scaled to 540x960 (exact half of 1080x1920)
+  const PX0 = Math.round(275 * 0.5);
+  const PY0 = Math.round(656 * 0.5);
+  const PX1 = Math.round(885 * 0.5);
+  const PY1 = Math.round(1264 * 0.5);
+  const PW = PX1 - PX0;
+  const PH = PY1 - PY0;
+
+  let currentThemeKey = "straight_neck";
+  let currentHookIdx = 0;
+  let currentArtKey = "classic_genga";
+  let currentCameraKey = "standard_desk";
+  let flipSpeedMode = "12";
+  let audioStyleMode = "lofi";
+  let isPlaying = true;
+  let soundEnabled = false;
+
+  // Loaded image cache
+  const imgCache = {};
+  const deskImg = new Image();
+  deskImg.crossOrigin = "anonymous";
+  deskImg.src = "assets/desk_base.jpg?v=5";
+
+  function loadRigImages(rigPrefix) {
+    if (!imgCache[rigPrefix]) {
+      imgCache[rigPrefix] = [];
+      for (let i = 1; i <= 4; i++) {
+        const im = new Image();
+        im.crossOrigin = "anonymous";
+        im.src = `assets/${rigPrefix}_${i}.jpg?v=5`;
+        imgCache[rigPrefix].push(im);
+      }
+    }
+    return imgCache[rigPrefix];
+  }
+
+  // Preload all 8 rigs
+  ["straight_neck","cross_legs","shallow_breath","anterior_pelvis","jaw_clench","bag_scoliosis","pillow_neck","eye_headache"].forEach(loadRigImages);
+
+  // Offscreen canvas for Multiply blending & art style filtering
+  const padCanvas = document.createElement("canvas");
+  padCanvas.width = PW;
+  padCanvas.height = PH;
+  const padCtx = padCanvas.getContext("2d");
+
+  // Populate UI Controls
+  const themeGrid = document.getElementById("themeGrid");
+  Object.keys(FLIPBOOK_THEMES).forEach((k) => {
+    const t = FLIPBOOK_THEMES[k];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "theme-btn" + (k === currentThemeKey ? " active" : "");
+    btn.dataset.key = k;
+    btn.innerHTML = `<span>${t.shortName}</span>`;
+    btn.onclick = () => selectTheme(k, 0);
+    themeGrid.appendChild(btn);
+  });
+
+  const selArtStyle = document.getElementById("selArtStyle");
+  Object.keys(ART_STYLES).forEach((k) => {
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = ART_STYLES[k].name;
+    selArtStyle.appendChild(opt);
+  });
+  selArtStyle.onchange = () => { currentArtKey = selArtStyle.value; };
+
+  const selCameraMode = document.getElementById("selCameraMode");
+  Object.keys(CAMERA_MODES).forEach((k) => {
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = CAMERA_MODES[k].name;
+    selCameraMode.appendChild(opt);
+  });
+  selCameraMode.onchange = () => { currentCameraKey = selCameraMode.value; };
+
+  const selFlipSpeed = document.getElementById("selFlipSpeed");
+  selFlipSpeed.onchange = () => { flipSpeedMode = selFlipSpeed.value; };
+
+  const selAudioStyle = document.getElementById("selAudioStyle");
+  selAudioStyle.onchange = () => { audioStyleMode = selAudioStyle.value; };
+
+  const inpTitle = document.getElementById("inpTitle");
+  const inpMetric1 = document.getElementById("inpMetric1");
+  const inpMetric2 = document.getElementById("inpMetric2");
+  const inpSubLocked = document.getElementById("inpSubLocked");
+  const inpSubRecover = document.getElementById("inpSubRecover");
+  const selRigPrefix = document.getElementById("selRigPrefix");
+
+  function renderHookPills() {
+    const hookPills = document.getElementById("hookPills");
+    hookPills.innerHTML = "";
+    const theme = FLIPBOOK_THEMES[currentThemeKey];
+    theme.hooks.forEach((h, idx) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pill-btn" + (idx === currentHookIdx ? " active" : "");
+      b.textContent = h.hookType;
+      b.onclick = () => {
+        currentHookIdx = idx;
+        applyHookToInputs();
+        renderHookPills();
+      };
+      hookPills.appendChild(b);
+    });
+  }
+
+  function applyHookToInputs() {
+    const theme = FLIPBOOK_THEMES[currentThemeKey];
+    const h = theme.hooks[currentHookIdx] || theme.hooks[0];
+    inpTitle.value = h.title;
+    inpMetric1.value = theme.metric1Label;
+    inpMetric2.value = theme.metric2Label;
+    inpSubLocked.value = h.subLocked;
+    inpSubRecover.value = h.subRecover;
+    selRigPrefix.value = theme.rigPrefix;
+    document.getElementById("currentVolBadge").textContent = theme.vol;
+
+    const dlBtn = document.getElementById("btnDirectMp4");
+    dlBtn.href = `${theme.mp4File}?v=5`;
+    dlBtn.download = `${theme.vol}_${theme.id}_パラパラ漫画.mp4`;
+    dlBtn.textContent = `📥 ${theme.vol}（${theme.shortName}）の最高画質MP4を即保存`;
+  }
+
+  function selectTheme(key, hookIdx) {
+    currentThemeKey = key;
+    currentHookIdx = hookIdx || 0;
+    document.querySelectorAll(".theme-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.key === key);
+    });
+    renderHookPills();
+    applyHookToInputs();
+  }
+
+  // Gacha Randomizer Button
+  document.getElementById("btnGacha").onclick = () => {
+    const theme = FLIPBOOK_THEMES[currentThemeKey];
+    if (theme.hooks.length > 1) {
+      currentHookIdx = (currentHookIdx + 1) % theme.hooks.length;
+    }
+    const artKeys = Object.keys(ART_STYLES);
+    const camKeys = Object.keys(CAMERA_MODES);
+    currentArtKey = artKeys[Math.floor(Math.random() * artKeys.length)];
+    currentCameraKey = camKeys[Math.floor(Math.random() * camKeys.length)];
+    selArtStyle.value = currentArtKey;
+    selCameraMode.value = currentCameraKey;
+    renderHookPills();
+    applyHookToInputs();
+    triggerFlipSound(true);
+  };
+
+  // WebAudio Synthesizer for Paper Flip ASMR + BGM
+  let audioCtx = null;
+  let audioDest = null;
+  let lastFlippedPage = -1;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+      audioDest = audioCtx.createMediaStreamDestination();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  function triggerFlipSound(isAccent) {
+    if (!soundEnabled && !isRecording) return;
+    ensureAudio();
+    const now = audioCtx.currentTime;
+
+    // Paper snap noise burst
+    const bufSize = Math.floor(audioCtx.sampleRate * 0.032);
+    const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      const env = Math.exp(-i / (bufSize * 0.28));
+      data[i] = (Math.random() * 2 - 1) * env * 0.38;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = isAccent ? 1400 : 1950;
+    filter.Q.value = 1.4;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.03);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    if (audioDest) gain.connect(audioDest);
+    noise.start(now);
+
+    // Optional soft chord note on beat
+    if (audioStyleMode !== "asmr" && (isAccent || Math.random() < 0.24)) {
+      const osc = audioCtx.createOscillator();
+      const cGain = audioCtx.createGain();
+      const chords = {
+        lofi: [261.63, 329.63, 392.00, 493.88, 587.33],
+        pulse: [146.83, 174.61, 220.00, 293.66],
+        healing: [523.25, 659.25, 783.99, 987.77]
+      };
+      const pool = chords[audioStyleMode] || chords.lofi;
+      osc.type = audioStyleMode === "healing" ? "sine" : "triangle";
+      osc.frequency.value = pool[Math.floor(Math.random() * pool.length)];
+      cGain.gain.setValueAtTime(0.06, now);
+      cGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.42);
+      osc.connect(cGain);
+      cGain.connect(audioCtx.destination);
+      if (audioDest) cGain.connect(audioDest);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    }
+  }
+
+  document.getElementById("btnPlayPause").onclick = function() {
+    isPlaying = !isPlaying;
+    this.textContent = isPlaying ? "⏸️ 一時停止" : "▶️ 再生する";
+    this.classList.toggle("active", isPlaying);
+  };
+
+  document.getElementById("btnSoundToggle").onclick = function() {
+    ensureAudio();
+    soundEnabled = !soundEnabled;
+    this.textContent = soundEnabled ? "🔊 音ON（再生中）" : "🔇 紙めくり音＆BGMをON";
+    this.classList.toggle("active", soundEnabled);
+  };
+
+  let manualTimeSec = 0;
+  document.getElementById("btnStepFrame").onclick = () => {
+    isPlaying = false;
+    document.getElementById("btnPlayPause").textContent = "▶️ 再生する";
+    document.getElementById("btnPlayPause").classList.remove("active");
+    manualTimeSec = (manualTimeSec + 1 / 12) % 10.0;
+    soundEnabled = true;
+    triggerFlipSound(false);
+  };
+
+  // Core Animation Loop (10.0 sec cycle = 120 flip pages displayed as 001..365枚)
+  let startTs = performance.now();
+
+  function drawFlipbookFrame(sec) {
+    const theme = FLIPBOOK_THEMES[currentThemeKey];
+    const hook = theme.hooks[currentHookIdx] || theme.hooks[0];
+    const art = ART_STYLES[currentArtKey] || ART_STYLES.classic_genga;
+    const rigKey = selRigPrefix.value || theme.rigPrefix;
+    const rigImgs = loadRigImages(rigKey);
+
+    let effectiveFps = flipSpeedMode === "dynamic" ? 12 : parseInt(flipSpeedMode, 10);
+    let cycleSec = sec % 10.0;
+
+    // Camera mode: shock_opener shows locked state in first 1.6s, then rewinds!
+    let timelineU = cycleSec / 10.0;
+    if (currentCameraKey === "shock_opener") {
+      if (cycleSec < 1.6) {
+        timelineU = 0.72; // Peak crimson lock right at start!
+      } else {
+        timelineU = (cycleSec - 1.6) / 8.4;
+      }
+    } else if (currentCameraKey === "stop_motion_focus" || flipSpeedMode === "dynamic") {
+      // Quantize slightly around key anatomical steps to hold emphasis
+      if (timelineU > 0.66 && timelineU < 0.80) {
+        timelineU = 0.73;
+      }
+    }
+
+    const exactPage = timelineU * 10.0 * effectiveFps;
+    const pIdx = Math.floor(exactPage);
+    const subProgress = exactPage - pIdx;
+
+    if (pIdx !== lastFlippedPage && (isPlaying || isRecording)) {
+      lastFlippedPage = pIdx;
+      triggerFlipSound(pIdx % 12 === 0);
+    }
+
+    // Determine anatomical step (0..3) and rotation angle
+    let stepA = 0, stepB = 1, localAlpha = 0, progressT = 0, phase = "normal";
+    if (timelineU <= 0.14) {
+      stepA = 0; stepB = 0; localAlpha = timelineU / 0.14;
+      progressT = localAlpha * 0.15;
+      phase = "normal";
+    } else if (timelineU <= 0.36) {
+      stepA = 0; stepB = 1; localAlpha = (timelineU - 0.14) / 0.22;
+      progressT = 0.15 + localAlpha * 0.35;
+      phase = "deforming";
+    } else if (timelineU <= 0.60) {
+      stepA = 1; stepB = 2; localAlpha = (timelineU - 0.36) / 0.24;
+      progressT = 0.50 + localAlpha * 0.38;
+      phase = "deforming";
+    } else if (timelineU <= 0.80) {
+      stepA = 2; stepB = 2; localAlpha = (timelineU - 0.60) / 0.20;
+      progressT = 0.88 + 0.12 * Math.sin(localAlpha * Math.PI);
+      phase = "locked";
+    } else {
+      stepA = 3; stepB = 0; localAlpha = (timelineU - 0.80) / 0.20;
+      progressT = 1.0 - localAlpha;
+      phase = "recovering";
+    }
+
+    const activeStepIdx = localAlpha < 0.5 ? stepA : stepB;
+    const gengaImg = rigImgs[activeStepIdx];
+    const rotDeg = (localAlpha < 0.5 ? localAlpha : -(1.0 - localAlpha)) * 7.5 * theme.dirSign;
+
+    // Camera Zoom calculation
+    let camZoom = 1.0;
+    let camCenterX = W * 0.5;
+    let camCenterY = H * 0.52;
+    if (currentCameraKey === "zoom_culprit" && progressT > 0.45) {
+      const zFactor = Math.min(1.0, (progressT - 0.45) / 0.40);
+      camZoom = 1.0 + 0.34 * Math.sin(zFactor * Math.PI * 0.5);
+      camCenterX = PX0 + PW * theme.focusTarget[0];
+      camCenterY = PY0 + PH * theme.focusTarget[1];
+    }
+
+    ctx.save();
+    if (camZoom > 1.001) {
+      ctx.translate(W * 0.5, H * 0.5);
+      ctx.scale(camZoom, camZoom);
+      ctx.translate(-camCenterX, -camCenterY);
+    }
+
+    // 1. Draw Walnut Desk & Pad Base
+    if (deskImg.complete && deskImg.naturalWidth > 0) {
+      ctx.drawImage(deskImg, 0, 0, W, H);
+    } else {
+      ctx.fillStyle = "#2b1d14";
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // 2. Prepare Flipbook Pad Surface in padCanvas
+    padCtx.save();
+    padCtx.clearRect(0, 0, PW, PH);
+
+    // Optional Paper Tint / Dark X-Ray Pad
+    if (art.invert) {
+      padCtx.fillStyle = "rgb(28, 34, 46)";
+      padCtx.fillRect(0, 0, PW, PH);
+    } else if (art.blueprint) {
+      padCtx.fillStyle = "rgba(215, 236, 255, 0.55)";
+      padCtx.fillRect(0, 0, PW, PH);
+    } else if (art.sepia > 0.2) {
+      padCtx.fillStyle = "rgba(238, 218, 182, 0.48)";
+      padCtx.fillRect(0, 0, PW, PH);
+    }
+
+    // Optional Architectural / Anatomical Grid Lines
+    if (art.gridLines) {
+      padCtx.strokeStyle = art.invert ? "rgba(56, 189, 248, 0.16)" : (art.blueprint ? "rgba(30, 64, 175, 0.14)" : "rgba(120, 90, 60, 0.12)");
+      padCtx.lineWidth = 1;
+      for (let gx = 20; gx < PW; gx += 24) {
+        padCtx.beginPath(); padCtx.moveTo(gx, 0); padCtx.lineTo(gx, PH); padCtx.stroke();
+      }
+      for (let gy = 20; gy < PH; gy += 24) {
+        padCtx.beginPath(); padCtx.moveTo(0, gy); padCtx.lineTo(PW, gy); padCtx.stroke();
+      }
+    }
+
+    // Draw Warped Genga Illustration onto Pad
+    if (gengaImg && gengaImg.complete && gengaImg.naturalWidth > 0) {
+      padCtx.save();
+      const pivX = PW * theme.pivot[0];
+      const pivY = PH * theme.pivot[1];
+      const boilX = Math.sin(pIdx * 1.7) * 0.9;
+      const boilY = Math.cos(pIdx * 2.3) * 0.9;
+      padCtx.translate(pivX + boilX, pivY + boilY);
+      padCtx.rotate((rotDeg * Math.PI) / 180);
+      padCtx.translate(-pivX, -pivY);
+
+      if (art.invert) {
+        padCtx.filter = "invert(1) contrast(1.35) saturate(1.4)";
+      } else if (art.sepia > 0.2) {
+        padCtx.filter = `sepia(${art.sepia}) contrast(${art.inkContrast})`;
+      } else if (art.blueprint) {
+        padCtx.filter = "hue-rotate(185deg) contrast(1.32) saturate(1.25)";
+      } else {
+        padCtx.filter = `contrast(${art.inkContrast})`;
+      }
+
+      padCtx.drawImage(gengaImg, 0, 0, PW, PH);
+      padCtx.restore();
+    }
+    padCtx.restore();
+
+    // Composite padCanvas onto main desk Canvas (protecting bottom-right thumb corner)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(PX0, PY0, PW, PH);
+    ctx.clip();
+
+    ctx.globalCompositeOperation = art.invert ? "source-over" : "multiply";
+    ctx.drawImage(padCanvas, PX0, PY0, PW, PH);
+    ctx.globalCompositeOperation = "source-over";
+
+    // Re-draw thumb corner from deskImg so thumb stays on top of paper!
+    if (deskImg.complete && deskImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(PX1 - 24, PY1 - 8, 44, 0, Math.PI * 2);
+      ctx.clip();
+      const thumbShift = Math.sin(subProgress * Math.PI) * 2.0;
+      ctx.drawImage(deskImg, 0, thumbShift, W, H);
+      ctx.restore();
+    }
+
+    // 3. Page Flip Curl Shadow & Highlight Band (12fps physical paper flip feel)
+    if (subProgress < 0.68) {
+      const flipT = subProgress / 0.68;
+      const curlX = PX0 + PW * (1.0 - Math.pow(flipT, 0.82));
+      const grad = ctx.createLinearGradient(curlX - 24, 0, curlX + 18, 0);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(0.45, `rgba(20,12,6,${(1.0 - flipT) * 0.24})`);
+      grad.addColorStop(0.75, `rgba(255,252,240,${(1.0 - flipT) * 0.22})`);
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(curlX - 24, PY0, 42, PH - 25);
+    }
+
+    // 4. Biomechanical Vector HUD / Red Culprit Callout Rings
+    if (currentCameraKey === "vector_hud" || currentCameraKey === "stop_motion_focus" || art.blueprint || progressT > 0.62) {
+      const fx = PX0 + PW * theme.focusTarget[0];
+      const fy = PY0 + PH * theme.focusTarget[1];
+      if (progressT > 0.50) {
+        const pulseR = 16 + 10 * Math.abs(Math.sin(sec * 6.0));
+        ctx.save();
+        ctx.strokeStyle = art.invert ? "rgba(248, 113, 113, 0.9)" : "rgba(195, 28, 24, 0.78)";
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        ctx.arc(fx, fy, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (currentCameraKey === "vector_hud" || currentCameraKey === "stop_motion_focus") {
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(185, 24, 20, 0.88)";
+          ctx.font = "bold 10px 'Hiragino Sans', sans-serif";
+          ctx.fillText("▼ 真犯人ロック部位", fx - 44, fy - pulseR - 6);
+        }
+        ctx.restore();
+      }
+    }
+
+    ctx.restore(); // End paper pad clip
+
+    // 5. Hand-Written Margin Annotations on the Paper Pad
+    const m1Val = Math.round(theme.metric1Start + (theme.metric1End - theme.metric1Start) * progressT);
+    const m2Raw = theme.metric2Start + (theme.metric2End - theme.metric2Start) * Math.pow(progressT, 1.12);
+    const m2Val = Number.isInteger(theme.metric2Start) && Number.isInteger(theme.metric2End)
+      ? Math.round(m2Raw)
+      : m2Raw.toFixed(1);
+
+    const m1Label = inpMetric1.value || theme.metric1Label;
+    const m2Label = inpMetric2.value || theme.metric2Label;
+
+    const isHighLoad = progressT > 0.48;
+    const metricColor = art.invert
+      ? (isHighLoad ? "#f87171" : "#38bdf8")
+      : (isHighLoad ? "rgba(188, 30, 24, 0.92)" : "rgba(32, 82, 142, 0.88)");
+
+    ctx.font = "bold 11.5px 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = metricColor;
+    ctx.fillText(`${m1Label}: ${m1Val}${theme.metric1Unit}`, 70, 346);
+
+    ctx.font = "bold 15px 'Hiragino Sans', sans-serif";
+    ctx.fillText(`${m2Label}: ${m2Val}${theme.metric2Unit}`, 70, 365);
+
+    // Page counter (001 / 365枚)
+    const displayPage = Math.max(1, Math.min(365, Math.round(1 + timelineU * 364)));
+    ctx.font = "bold 11px 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = art.invert ? "rgba(226,232,240,0.8)" : "rgba(92, 84, 74, 0.85)";
+    ctx.fillText(`${String(displayPage).padStart(3, "0")} / 365枚`, 366, 346);
+
+    // Bottom-left status label on pad
+    let statusTxt = hook.subNormal;
+    let statusCol = art.invert ? "#38bdf8" : "rgba(36, 88, 148, 0.9)";
+    if (phase === "deforming") {
+      statusTxt = hook.subDeform;
+      statusCol = art.invert ? "#fbbf24" : "rgba(180, 82, 22, 0.92)";
+    } else if (phase === "locked") {
+      statusTxt = inpSubLocked.value || hook.subLocked;
+      statusCol = art.invert ? "#f87171" : "rgba(195, 28, 24, 0.95)";
+    } else if (phase === "recovering") {
+      statusTxt = inpSubRecover.value || hook.subRecover;
+      statusCol = art.invert ? "#34d399" : "rgba(28, 118, 84, 0.92)";
+    }
+    ctx.font = "bold 11.5px 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = statusCol;
+    ctx.fillText(statusTxt, 70, 616);
+
+    ctx.restore(); // Restore camera zoom so top title banner stays crisp at top
+
+    // 6. Top Title Banner on Upper Walnut Desk
+    ctx.save();
+    ctx.fillStyle = art.headerBg;
+    ctx.strokeStyle = "rgba(255, 212, 108, 0.45)";
+    ctx.lineWidth = 1.5;
+    const bx = 24, by = 42, bw = W - 48, bh = 78, br = 14;
+    ctx.beginPath();
+    ctx.moveTo(bx + br, by);
+    ctx.lineTo(bx + bw - br, by);
+    ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+    ctx.lineTo(bx + bw, by + bh - br);
+    ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+    ctx.lineTo(bx + br, by + bh);
+    ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+    ctx.lineTo(bx, by + br);
+    ctx.quadraticCurveTo(bx, by, bx + br, by);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = "bold 13px 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = art.badgeColor;
+    ctx.fillText(hook.badge, bx + 16, by + 26);
+
+    const customTitle = inpTitle.value || hook.title;
+    ctx.font = "bold 17.5px 'Hiragino Sans', sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(customTitle.slice(0, 25), bx + 16, by + 55);
+    ctx.restore();
+  }
+
+  function loop(now) {
+    const sec = isPlaying ? (now - startTs) / 1000.0 : manualTimeSec;
+    drawFlipbookFrame(sec);
+    requestAnimationFrame(loop);
+  }
+
+  // Video Recording (Smartphone Direct Canvas + WebAudio Export)
+  let isRecording = false;
+  document.getElementById("btnRecordCustom").onclick = function() {
+    if (isRecording) return;
+    ensureAudio();
+    isRecording = true;
+    isPlaying = true;
+    startTs = performance.now();
+
+    const statusEl = document.getElementById("recordStatus");
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = "⏳ カスタム動画を録画・生成中...（残り10秒）";
+    statusEl.textContent = "紙めくり音とカスタム演出を合成しています...";
+
+    const canvasStream = canvas.captureStream(30);
+    if (audioDest) {
+      audioDest.stream.getAudioTracks().forEach((t) => canvasStream.addTrack(t));
+    }
+
+    let mimeType = "video/mp4";
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9"
+        : "video/webm";
+    }
+
+    const recorder = new MediaRecorder(canvasStream, { mimeType });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      isRecording = false;
+      btn.disabled = false;
+      btn.textContent = "🎥 いま画面で再生中の「カスタム表現」を動画録画して保存（10秒）";
+      const blob = new Blob(chunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `custom_flipbook_${currentThemeKey}_${currentArtKey}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      statusEl.textContent = "✅ カスタム動画の保存が完了しました！";
+    };
+
+    recorder.start();
+    let remain = 10;
+    const timer = setInterval(() => {
+      remain--;
+      if (remain > 0) {
+        btn.textContent = `⏳ カスタム動画を録画・生成中...（残り${remain}秒）`;
+      } else {
+        clearInterval(timer);
+        if (recorder.state === "recording") recorder.stop();
+      }
+    }, 1000);
+  };
+
+  // Build Bottom 8-Volume Pre-rendered MP4 Gallery
+  const galleryContainer = document.getElementById("galleryContainer");
+  const coreKeys = ["straight_neck","cross_legs","shallow_breath","anterior_pelvis","jaw_clench","bag_scoliosis","pillow_neck","eye_headache"];
+  coreKeys.forEach((k, idx) => {
+    const t = FLIPBOOK_THEMES[k];
+    const h = t.hooks[0];
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="badge">${t.vol}｜${t.shortName}</div>
+      <h3>${h.title}</h3>
+      <p>${h.desc}</p>
+      <video src="${t.mp4File}?v=5" poster="${t.posterFile}?v=5" controls playsinline loop muted></video>
+      <div class="card-actions">
+        <a class="btn-dl" href="${t.mp4File}?v=5" download="0${idx+1}_${t.id}_パラパラ漫画.mp4">📥 ${t.vol}をGalaxyに保存</a>
+        <button class="btn-customize" type="button" data-theme="${k}">🎨 上のスタジオで別表現にカスタム</button>
+      </div>
+    `;
+    card.querySelector(".btn-customize").onclick = () => {
+      selectTheme(k, 1); // Switch to Hook #2 automatically to show a fresh angle!
+      document.getElementById("studioTop").scrollIntoView({ behavior: "smooth" });
+    };
+    galleryContainer.appendChild(card);
+  });
+
+  // Initialize default theme & start 60fps loop
+  selectTheme("straight_neck", 0);
+  requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>
