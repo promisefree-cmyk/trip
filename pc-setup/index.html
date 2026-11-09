@@ -210,21 +210,21 @@
     <div class="section">
       <h2>⚡ 方法1（一番カンタン・推奨）：全自動インストーラー（.bat）で一括導入</h2>
       <p style="margin:0 0 8px;font-size:14px;">自作PCでこのページを開き、下のボタンからバッチファイルをダウンロードしてダブルクリックするだけで、全7パッケージの自動ダウンロード・解凍・共通脳リンク作成・デスクトップショートカット作成まで全自動で完了します。</p>
-      <a class="hero-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/01_%E8%87%AA%E4%BD%9C%50%43%E4%B8%80%E6%8B%AC%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97_Windows.bat?k=rt9k4m7x2v8p" download="01_自作PC一括セットアップ_Windows.bat">
-        🚀 01_自作PC一括セットアップ_Windows.bat をダウンロード（1KB）
+      <a class="hero-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/setup_win.bat?k=rt9k4m7x2v8p" download="setup_win.bat">
+        🚀 setup_win.bat（全自動インストーラー・PS1不要版）をダウンロード
       </a>
       <ol class="steps">
-        <li>ダウンロードした <strong>01_自作PC一括セットアップ_Windows.bat</strong> をダブルクリックして実行します。（「WindowsによってPCが保護されました」と出た場合は「詳細情報」➔「実行」をクリック）</li>
-        <li>自動的にホームページ・共通脳・スタジオ等（全7個のZIP）をダウンロードし、自作PCの最適な場所へ配置します。</li>
-        <li>完了すると、自作PCのデスクトップに <strong>「Rooton_公式HP」「Rooton_マスタースタジオ」「Rooton_予約カルテSaaS」「Obsidian_共通の脳」</strong> のショートカットが作られます！</li>
+        <li>ダウンロードした <strong>setup_win.bat</strong> をダブルクリックして実行します。（「WindowsによってPCが保護されました」と出た場合は「詳細情報」➔「実行」をクリック）</li>
+        <li><strong>.ps1 ファイルを使わず</strong>、Windows標準の <code>curl.exe</code> と <code>tar.exe</code> だけでホームページ・共通脳・スタジオ等（全7個のZIP）を自動ダウンロード・解凍します。</li>
+        <li>完了すると、自作PCのデスクトップに <strong>「Rooton_Homepage」「Rooton_MasterStudio」「Rooton_ChiroSaaS」「Obsidian_SharedBrain」</strong> のショートカットが作られます！</li>
       </ol>
     </div>
 
     <div class="section">
-      <h2>💻 方法2：PowerShell に1行貼り付けて一発セットアップ（ファイル保存すら不要）</h2>
-      <p style="margin:0;font-size:13.5px;color:var(--muted);">自作PCで「スタート」を右クリック ➔「ターミナル（または PowerShell）」を開き、下のコマンドをコピー＆貼り付けて Enter を押すだけでも全自動移行が始まります。</p>
+      <h2>💻 方法2：ターミナル（またはコマンドプロンプト／PowerShell）に1行貼り付けて一発実行</h2>
+      <p style="margin:0;font-size:13.5px;color:var(--muted);">自作PCで「スタート」を右クリック ➔「ターミナル（PowerShell でもコマンドプロンプトでもOK）」を開き、下のコマンドをコピー＆貼り付けて Enter を押すだけでも全自動移行が始まります。</p>
       <div class="cmd-box">
-        <code id="psCmd">irm "https://promisefree-cmyk.github.io/trip/pc-setup/setup_win.ps1" | iex</code>
+        <code id="psCmd">powershell -NoProfile -ExecutionPolicy Bypass -Command "irm 'https://final-latina-duo-zoo.trycloudflare.com/pc-setup/setup_win.ps1?k=rt9k4m7x2v8p' | iex"</code>
         <button class="copy-btn" onclick="copyPs()">📋 コピー</button>
       </div>
     </div>
