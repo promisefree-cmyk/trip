@@ -1085,6 +1085,11 @@
     }
 
     /* Surface Mode overrides for SVG backgrounds */
+    body[data-surface="parchment"] .flash-bg,
+    body[data-surface="parchment"] .bg-mask,
+    body[data-surface="parchment"] .facet-light {
+      fill: #F5EBD6 !important;
+    }
     body[data-surface="skin"] .flash-bg,
     body[data-surface="skin"] .bg-mask,
     body[data-surface="skin"] .facet-light {
@@ -1112,7 +1117,7 @@
     }
   </style>
 </head>
-<body data-surface="paper">
+<body data-surface="parchment">
 
   <!-- Toast -->
   <div id="toast-msg" class="toast-msg">コピーしました！</div>
@@ -1121,13 +1126,13 @@
   <!-- 1. Compact Header                                                   -->
   <!-- =================================================================== -->
   <header class="hero-header">
-    <div class="hero-badge">GALAXY MASTER STUDIO × KOREAN FINE LINE × ONE PIECE VOW</div>
-    <h1 class="hero-title">True Alignment, True North — 全20作品マスターページ</h1>
+    <div class="hero-badge">DA VINCI × ROOTON LOGO × FLAME SUN & COMPASS MASTER STUDIO</div>
+    <h1 class="hero-title">True Alignment, True North — ダ・ヴィンチ×Rooton統合マスターページ</h1>
     <p class="hero-subtitle">
-      ①気になる作品に「♡お気に入り」を押す ➔ ②自動で「好みの傾向DNA」が判明＆理想案を自動合成 ➔ ③ワンタップ指示チップとメモでブラッシュアップ編集！
+      ①炎の太陽＆三日月 × ②4方位羅針盤 × ③ダ・ヴィンチ天球作図線 × ④Rooton背骨・樹木の根・4重波紋 を融合した新作10選（DV-01〜10）＋初期20選！
     </p>
     <div class="quick-guide-bar">
-      <span class="quick-guide-step">📱 Galaxy 2列/1列/3列/VS比較</span>
+      <span class="quick-guide-step">🔥 新作：ダ・ヴィンチ×Rooton 10選</span>
       <span class="quick-guide-step">💖 お気に入り傾向DNA自動診断</span>
       <span class="quick-guide-step">✏️ 指示チップ＆リアルタイム編集</span>
     </div>
@@ -1145,14 +1150,16 @@
         <button class="btn-tab" id="btn-toggle-vs" data-grid-mode="vs">⚖️ 2枚VS比較</button>
       </div>
       <div class="btn-group" id="surface-switcher">
-        <button class="btn-tab active" data-surface-btn="paper">📄 白紙</button>
+        <button class="btn-tab active" data-surface-btn="parchment">📜 羊皮紙</button>
+        <button class="btn-tab" data-surface-btn="paper">📄 白紙</button>
         <button class="btn-tab" data-surface-btn="skin">💪 肌色</button>
         <button class="btn-tab" data-surface-btn="stencil">🟣 下絵</button>
       </div>
     </div>
     <div class="toolbar-row" id="filter-bar">
       <div class="btn-group">
-        <button class="btn-tab active" data-filter="all">すべて <span class="badge-count">20</span></button>
+        <button class="btn-tab active" data-filter="Series V:">🔥 ダ・ヴィンチ×Rooton新作 <span class="badge-count">10</span></button>
+        <button class="btn-tab" data-filter="all">全作品 <span class="badge-count">30</span></button>
         <button class="btn-tab fav-filter" data-filter="fav" id="filter-fav-btn">💖 お気に入り <span class="badge-count" id="nav-fav-count">0</span></button>
         <button class="btn-tab" data-filter="edited" id="filter-edited-btn">✏️ 指示・編集済 <span class="badge-count" id="nav-edit-count">0</span></button>
         <button class="btn-tab" data-filter="Series I:">I. 誓いの× (01-05)</button>
@@ -1226,11 +1233,11 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- 5. All 20 Artworks Gallery (Galaxy 2-col / 1-col / 3-col)           -->
+    <!-- 5. All 30 Artworks Gallery (Galaxy 2-col / 1-col / 3-col)           -->
     <!-- =================================================================== -->
     <section id="section-gallery">
       <div class="section-heading">
-        <h2>🏴‍☠️ 全20作品ギャラリー（True Alignment, True North）</h2>
+        <h2>🏴‍☠️ ダ・ヴィンチ×Rooton新作10選 ＆ 全30作品ギャラリー</h2>
         <span>画像をタップで拡大・比較 ／「♡お気に入り」で上の傾向DNAがリアルタイム更新</span>
       </div>
       <div class="gallery-grid grid-2" id="gallery-grid">
@@ -1244,7 +1251,7 @@
     <section class="studio-section" id="live-studio">
       <div class="studio-header">
         <div>
-          <div class="studio-title" id="studio-active-title">✏️ ブラッシュアップ指示＆微調整マスタースタジオ（選択中：No.20）</div>
+          <div class="studio-title" id="studio-active-title">✏️ ブラッシュアップ指示＆微調整マスタースタジオ（選択中：DV-10）</div>
           <p style="font-size:0.76rem; color:var(--text-sub); margin-top:2px;">
             ワンタップ指示チップを押すと「図柄への即時反映」と「ブラッシュアップ指示メモへの追記」が同時に行われます。
           </p>
@@ -1283,8 +1290,14 @@
               <span>💡 ワンタップ・ブラッシュアップ指示チップ（押すと即時プレビュー反映＋指示メモ追記）</span>
             </h4>
 
-            <div class="chip-cat-label">【全体の印象・線の太さ・シルエット】</div>
+            <div class="chip-cat-label">【🔥 ダ・ヴィンチ天球背景 × Rooton背骨・樹木の根・4重波紋 × 炎の太陽】</div>
             <div class="chips-wrap" id="quick-instruction-chips">
+              <button class="btn-chip" data-chip="rooton_roots_wider">🌳 ルートンの「樹木の根」をもっと広く力強く張る</button>
+              <button class="btn-chip" data-chip="rooton_waves_more">〰️ ルートンの「4重共鳴波紋」と「背骨の棘突起」を強調</button>
+              <button class="btn-chip" data-chip="sun_flame_petals">☀️ 太陽を画像3・4の「立体炎型16花弁」にする</button>
+              <button class="btn-chip" data-chip="davinci_max_lines">📐 背景の「ダ・ヴィンチ天球・黄金比作図線」を緻密にする</button>
+
+              <div class="chip-cat-label" style="width:100%;">【全体の印象・線の太さ・シルエット】</div>
               <button class="btn-chip" data-chip="thinner_line">✨ もっと線を細く繊細に(1RL風)</button>
               <button class="btn-chip" data-chip="bolder_axis">🔥 主軸の線を力強くくっきり(3RL)</button>
               <button class="btn-chip" data-chip="more_slender">📐 もっと縦長・スレンダーに</button>
@@ -1506,10 +1519,10 @@
                 </select>
               </div>
               <div class="slider-row">
-                <div class="slider-header"><span>中心リング外径 (太陽二重環)</span><span class="slider-val" id="val-ring-r">88</span></div>
+                <div class="slider-header"><span>中心リング外径 (太陽二重環)</span><span class="slider-val" id="val-ring-r">80</span></div>
                 <div class="slider-touch-wrap">
                   <button class="btn-step" data-target="ctrl-ring-r" data-dir="-1">−</button>
-                  <input type="range" id="ctrl-ring-r" min="66" max="110" step="2" value="88">
+                  <input type="range" id="ctrl-ring-r" min="62" max="110" step="2" value="80">
                   <button class="btn-step" data-target="ctrl-ring-r" data-dir="1">＋</button>
                 </div>
               </div>
@@ -1520,6 +1533,59 @@
                   <input type="range" id="ctrl-gap" min="0" max="18" step="2" value="0">
                   <button class="btn-step" data-target="ctrl-gap" data-dir="1">＋</button>
                 </div>
+              </div>
+            </div>
+
+            <!-- Box 5: Rootonロゴ（根・共鳴波紋）＆ ダ・ヴィンチ背景 -->
+            <div class="control-box">
+              <h4>⑤ Rootonロゴ（樹木の根・波紋）＆ ダ・ヴィンチ天球背景</h4>
+              <div class="slider-row">
+                <div class="slider-header"><span>太陽コロナ＆花弁の造形スタイル</span></div>
+                <select class="studio-select" id="ctrl-flare-style">
+                  <option value="flame_petals_16">画像3・4 立体炎型花弁 16枚 (長短交互・リブ入り)</option>
+                  <option value="flame_petals_8">立体炎型花弁 8枚 (対角ペア・リブ入り)</option>
+                  <option value="nika_flame">ニカ解放の鼓動・2本線ウェーブ</option>
+                  <option value="classic_wave">クラシック・二重ウェーブ</option>
+                  <option value="sleek_wave">スリーク・単線ウェーブ</option>
+                  <option value="converging_flame">収束フレーム・コロナ</option>
+                  <option value="diverging_corona">拡散コロナ・ウェーブ</option>
+                  <option value="alternating_wave">長短交互・単線ウェーブ</option>
+                  <option value="compact_wave">引き算ショート・ウェーブ</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>Rooton 樹木の根の広がり幅</span><span class="slider-val" id="val-root-spread">140</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-root-spread" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-root-spread" min="60" max="185" step="5" value="140">
+                  <button class="btn-step" data-target="ctrl-root-spread" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>Rooton 樹木の根の本数 (0=非表示)</span><span class="slider-val" id="val-root-branches">9</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-root-branches" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-root-branches" min="0" max="13" step="1" value="9">
+                  <button class="btn-step" data-target="ctrl-root-branches" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>Rooton 左右の共鳴波紋アーク数</span><span class="slider-val" id="val-wave-arcs">4</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-wave-arcs" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-wave-arcs" min="0" max="6" step="1" value="4">
+                  <button class="btn-step" data-target="ctrl-wave-arcs" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>レオナルド・ダ・ヴィンチ背景作図線</span></div>
+                <select class="studio-select" id="ctrl-davinci-mode">
+                  <option value="da_vinci_max">フル天球アストロラーベ＋外接正方形＋八芒星</option>
+                  <option value="vitruvian_full">ウィトルウィウス円環＋外接正方形＋黄金比レイ</option>
+                  <option value="astrolabe_rings">天球偏心アストロラーベ軌道リング</option>
+                  <option value="vitruvian_clean">シンプル同心円＋測量レイ</option>
+                  <option value="none">背景作図線なし (ミニマル)</option>
+                </select>
               </div>
             </div>
 
@@ -1539,15 +1605,15 @@
         <div class="spec-card">
           <h4>1. ニードル＆線幅ヒエラルキー</h4>
           <ul>
-            <li><strong>主軸ライン (重力軸・S字流線・4方位針・C1ダイヤ)</strong>：<code>3RL (Tight Bugpin 0.25mm)</code></li>
-            <li><strong>副軸ライン (太陽二重環・8本フレア・内周三日月・7シェブロン)</strong>：<code>1RL (Single Needle)</code></li>
-            <li><strong>点線・破線は完全不使用</strong>：すべて実線（Solid Line）で引き切る。</li>
+            <li><strong>主軸ライン (重力軸・S字流線・4方位針・C1ダイヤ・樹木の根)</strong>：<code>3RL (Tight Bugpin 0.25mm)</code></li>
+            <li><strong>副軸ライン (太陽16花弁・内周三日月・7シェブロン・4重波紋・ダ・ヴィンチ作図線)</strong>：<code>1RL (Single Needle)</code></li>
+            <li><strong>点線・破線は完全不使用</strong>：すべて実線（Solid Line）と点描（Stippling）で引き切る。</li>
           </ul>
         </div>
         <div class="spec-card">
           <h4>2. シェーディング＆インク配合</h4>
           <ul>
-            <li><strong>コンパス片側陰影</strong>：<code>20%〜35% Greywash</code> または極細スティップリング（密度差ドット）。</li>
+            <li><strong>コンパス片側＆太陽花弁陰影</strong>：<code>20%〜35% Greywash</code> または極細スティップリング（密度差ドット）。</li>
             <li><strong>ハイライト</strong>：白インクのベタ塗りは避け、<strong>「彫らない肌の余白（Skin Break）」</strong>で白黒のシャープな切り返しを表現。</li>
           </ul>
         </div>
@@ -1568,7 +1634,7 @@
   <!-- =================================================================== -->
   <div class="zoom-modal" id="zoom-modal">
     <div class="zoom-modal-top">
-      <div id="zoom-modal-title" style="font-weight:800; font-size:0.9rem; color:var(--wood-light);">No.20</div>
+      <div id="zoom-modal-title" style="font-weight:800; font-size:0.9rem; color:var(--wood-light);">DV-10</div>
       <button class="btn-mini" id="btn-close-zoom">✕ 閉じる</button>
     </div>
     <div class="zoom-modal-stage" id="zoom-modal-stage"></div>
@@ -1586,7 +1652,7 @@
   <nav class="bottom-dock">
     <button class="dock-btn active" data-scroll-to="section-gallery">
       <span class="dock-icon">🖼️</span>
-      <span>20作品一覧</span>
+      <span>30作品一覧</span>
     </button>
     <button class="dock-btn" data-scroll-to="section-dna">
       <span class="dock-icon">💖</span>
@@ -1603,8 +1669,568 @@
   </nav>
 
   <script>
-    // SSOT Catalog Data (20 Masterworks)
+    // SSOT Catalog Data (30 Masterworks: 10 Da Vinci × Rooton + 20 Original)
     const TATTOO_CATALOG = [
+  {
+    "id": 101,
+    "code": "DV-01",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Vitruvian Rooton & Flame Sun Compass",
+    "title_ja": "ウィトルウィウスの羅針盤・ルートン背骨と太陽の炎（王道統合）",
+    "subtitle": "ダ・ヴィンチ黄金比作図線 × 炎型花弁の太陽＆三日月 × 棘突起S字背骨と樹木の根 × 左右4重共鳴波紋",
+    "story": "4枚の参考画像を黄金比で完全統合した王道モデル。中央には画像3・4の「うねる炎型花弁の太陽と三日月」＆「4方位の羅針盤」、縦軸にはルートンロゴの「棘突起を持つS字背骨」と大地に張る「樹木の根」、左右には「4重の共鳴波紋」、そして背景にレオナルド・ダ・ビンチのウィトルウィウス幾何学作図線を重ねた一作。",
+    "aspect_label": "1.618 : 1（ダ・ヴィンチ黄金比統合）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 370,
+      "south_len": 370,
+      "east_west_len": 230,
+      "needle_half_w": 19,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 78,
+      "ring_r_inner": 64,
+      "open_junction_gap": 0,
+      "c1_y": -245,
+      "c1_size": 19,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 205,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.0,
+      "x_style": "core_diamond_x",
+      "x_size": 54,
+      "flare_len": 74,
+      "flare_spread_deg": 15.0,
+      "flare_wave_amp": 9.5,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 150,
+      "crescent_thickness": 16,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9,
+      "root_branches": 7,
+      "root_spread": 118,
+      "root_depth": 115,
+      "wave_arcs": 4,
+      "wave_radius_start": 108,
+      "wave_span_deg": 68,
+      "spine_notches": 10,
+      "davinci_mode": "vitruvian_full",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 102,
+    "code": "DV-02",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Sculpted Solar Flames & Sacred Roots",
+    "title_ja": "炎の太陽16花弁と聖なる根（画像3・4太陽デザイン特化）",
+    "subtitle": "横針をコンパクトに抑え、長短交互にうねる16枚の立体炎レイ＋三日月＋上下の小天球リング＋根を主役に",
+    "story": "画像3（前腕の太陽）と画像4（肩の太陽と三日月）の「花弁のようにうねる炎の太陽レイ（内部流線リブ入り）」と「上下の点描小天球リング＆四芒星」を主役に据え、東西の針を太陽フレア内にコンパクトに収めることで、太陽の輪郭と下部のルートンの根を際立たせたデザイン。",
+    "aspect_label": "2.2 : 1（画像3・4直系・太陽メイン）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 350,
+      "south_len": 350,
+      "east_west_len": 145,
+      "needle_half_w": 15,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 86,
+      "ring_r_inner": 70,
+      "open_junction_gap": 0,
+      "c1_y": -230,
+      "c1_size": 17,
+      "c1_style": "split_diamond",
+      "l5_anchor": false,
+      "l5_y": 205,
+      "s_amp": 34,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 10.0,
+      "x_style": "center_vow_x",
+      "x_size": 46,
+      "flare_len": 88,
+      "flare_spread_deg": 15.5,
+      "flare_wave_amp": 11.0,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 175,
+      "crescent_span_deg": 162,
+      "crescent_thickness": 19,
+      "shading_mode": "stipple",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9,
+      "root_branches": 7,
+      "root_spread": 105,
+      "root_depth": 105,
+      "wave_arcs": 3,
+      "wave_radius_start": 128,
+      "wave_span_deg": 54,
+      "spine_notches": 9,
+      "davinci_mode": "astrolabe_rings",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 103,
+    "code": "DV-03",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Da Vinci Celestial Astrolabe & Octagram",
+    "title_ja": "ダ・ヴィンチ天球アストロラーベと背骨の航海図（画像2背景特化）",
+    "subtitle": "二重外接正方形・偏心多重サークル・斜め測量レイ・キャリパー目盛り × 4方位コンパス",
+    "story": "画像2（ルフィの背後に描かれたレオナルド・ダ・ビンチ風の天球作図・多重偏心円・斜めに走る測量線と目盛り交点）を最も贅沢に展開。知的な幾何学天球図の中心から4方位の羅針盤とルートンの背骨・根が浮かび上がる芸術的ピース。",
+    "aspect_label": "4 : 3（天球アストロラーベ作図特化）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 385,
+      "south_len": 385,
+      "east_west_len": 265,
+      "needle_half_w": 21,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 74,
+      "ring_r_inner": 60,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 20,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 210,
+      "s_amp": 40,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.0,
+      "x_style": "diagonal_ring_x",
+      "x_size": 70,
+      "flare_len": 64,
+      "flare_spread_deg": 14.0,
+      "flare_wave_amp": 8.0,
+      "flare_style": "flame_petals_8",
+      "crescent_side": "right",
+      "crescent_angle_deg": 0,
+      "crescent_span_deg": 148,
+      "crescent_thickness": 15,
+      "shading_mode": "hatch",
+      "line_weight_main": 1.4,
+      "line_weight_sub": 0.85,
+      "root_branches": 5,
+      "root_spread": 95,
+      "root_depth": 95,
+      "wave_arcs": 4,
+      "wave_radius_start": 102,
+      "wave_span_deg": 64,
+      "spine_notches": 9,
+      "davinci_mode": "da_vinci_max",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 104,
+    "code": "DV-04",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Rooton Sacred Emblem — Spine, Roots & 4 Waves",
+    "title_ja": "ルートン聖紋章・棘突起S字と大地に張る根と4重波紋（画像1ロゴ特化）",
+    "subtitle": "Rooton公式ロゴの「棘突起S字背骨・ドーム状の根・左右4重波紋」を主役にしたエンブレム構図",
+    "story": "画像1のRooton Chiropracticロゴ（優美な大振幅S字を描く棘突起付きの背骨、下部で絡み合いながら大地に広がるドーム状の根、左右4本の共鳴波紋アーク）の造形美を主役に据え、その中心核に炎の太陽・三日月・コンパクト羅針盤とダ・ヴィンチの円環を融合した象徴的エンブレム。",
+    "aspect_label": "1.5 : 1（画像1 Rootonロゴ主役型）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 330,
+      "south_len": 310,
+      "east_west_len": 155,
+      "needle_half_w": 16,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 64,
+      "ring_r_inner": 52,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 18,
+      "c1_style": "crown_diamond",
+      "l5_anchor": false,
+      "l5_y": 185,
+      "s_amp": 54,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "cervical_7_cluster",
+      "chevron_size": 11.5,
+      "x_style": "core_diamond_x",
+      "x_size": 46,
+      "flare_len": 58,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 7.5,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 145,
+      "crescent_thickness": 14,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.55,
+      "line_weight_sub": 0.95,
+      "root_branches": 9,
+      "root_spread": 155,
+      "root_depth": 135,
+      "wave_arcs": 4,
+      "wave_radius_start": 92,
+      "wave_span_deg": 82,
+      "spine_notches": 12,
+      "davinci_mode": "vitruvian_clean",
+      "celestial_orbits": false,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 105,
+    "code": "DV-05",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Yggdrasil Roots & Polaris North Needle",
+    "title_ja": "世界樹のルーツと北極星ポラリス（南根ワイドドーム×北針ロング）",
+    "subtitle": "深く広く張る11本の根が土台を支え、炎の太陽から北極星C1アトラスへ突き抜ける非対称美",
+    "story": "「根（Root）が深いほど、軸は高く天（True North）へ伸びる」という哲学を体現。下部は11本に分岐するルートンの根が力強いドームを描き、中央の炎型太陽＆羅針盤から上部へはダ・ヴィンチの作図線と北極星ポラリス針が鋭く突き抜ける非対称シルエット。",
+    "aspect_label": "非対称トーテム（北針ロング×大樹の根）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 415,
+      "south_len": 310,
+      "east_west_len": 215,
+      "needle_half_w": 20,
+      "needle_style": "asymmetric_polaris",
+      "ring_r_outer": 76,
+      "ring_r_inner": 63,
+      "open_junction_gap": 0,
+      "c1_y": -280,
+      "c1_size": 23,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 175,
+      "s_amp": 44,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.5,
+      "x_style": "core_diamond_x",
+      "x_size": 56,
+      "flare_len": 72,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 9.0,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "bottom",
+      "crescent_angle_deg": 90,
+      "crescent_span_deg": 156,
+      "crescent_thickness": 17,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.9,
+      "root_branches": 11,
+      "root_spread": 165,
+      "root_depth": 140,
+      "wave_arcs": 4,
+      "wave_radius_start": 106,
+      "wave_span_deg": 68,
+      "spine_notches": 10,
+      "davinci_mode": "vitruvian_full",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 106,
+    "code": "DV-06",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Vitruvian Horizon & Silent X Vow",
+    "title_ja": "ウィトルウィウスの水平翼と仲間の誓い「×」（画像2ルフィ構図融合）",
+    "subtitle": "両腕を広げたワイドな東西コンパス針と45°対角の「×」が天球サークルで交差する羅針盤",
+    "story": "画像2でルフィが海に向かって両腕を大きく広げた「ウィトルウィウスの水平線」と、アラバスタの誓い「×（45°対角作図線）」をダ・ヴィンチの外接正方形＆正円フレームで構築。東西の針をワイドに広げ、中心で燃える太陽の花弁とルートンの背骨・根が「自由と繋がり」を刻む。",
+    "aspect_label": "5 : 4（ウィトルウィウス水平翼＆対角X）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 355,
+      "south_len": 355,
+      "east_west_len": 285,
+      "needle_half_w": 22,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 82,
+      "ring_r_inner": 68,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 20,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 200,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "all_blue_4_3",
+      "chevron_size": 11.5,
+      "x_style": "flare_root_x",
+      "x_size": 78,
+      "flare_len": 76,
+      "flare_spread_deg": 15.0,
+      "flare_wave_amp": 9.5,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 152,
+      "crescent_thickness": 16,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.92,
+      "root_branches": 7,
+      "root_spread": 125,
+      "root_depth": 110,
+      "wave_arcs": 4,
+      "wave_radius_start": 114,
+      "wave_span_deg": 70,
+      "spine_notches": 9,
+      "davinci_mode": "da_vinci_max",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 107,
+    "code": "DV-07",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Solar & Lunar Phases — Autonomic Resonance",
+    "title_ja": "太陽と月の位相・大口径エクリプスと5重共鳴波（画像4エクリプス特化）",
+    "subtitle": "大口径の太陽リング内に宿る深い三日月 × 16枚の炎花弁 × 左右5重の共鳴波紋アーク",
+    "story": "画像4（Same sun, different phases）のように、大口径の炎型太陽花弁の中心で深い三日月が陰陽の調和を描き、その外周へルートンロゴの「5重の共鳴波紋アーク」が大きく広がる設計。交感神経（太陽）と副交感神経（月）の切り替えを整えるカイロプラクターの手技を象徴。",
+    "aspect_label": "3 : 2（大口径エクリプス＆5重波紋）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 345,
+      "south_len": 345,
+      "east_west_len": 195,
+      "needle_half_w": 17,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 94,
+      "ring_r_inner": 76,
+      "open_junction_gap": 0,
+      "c1_y": -230,
+      "c1_size": 18,
+      "c1_style": "double_hollow",
+      "l5_anchor": true,
+      "l5_y": 200,
+      "s_amp": 46,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "spine_7_even",
+      "chevron_size": 10.5,
+      "x_style": "center_vow_x",
+      "x_size": 52,
+      "flare_len": 80,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 10.2,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "right",
+      "crescent_angle_deg": 15,
+      "crescent_span_deg": 170,
+      "crescent_thickness": 22,
+      "shading_mode": "stipple",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9,
+      "root_branches": 7,
+      "root_spread": 115,
+      "root_depth": 105,
+      "wave_arcs": 5,
+      "wave_radius_start": 124,
+      "wave_span_deg": 78,
+      "spine_notches": 9,
+      "davinci_mode": "astrolabe_rings",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 108,
+    "code": "DV-08",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Forearm Celestial Totem — Spine to Root",
+    "title_ja": "前腕セレスティアル・トーテム（画像3の前腕縦長バランス特化）",
+    "subtitle": "前腕の中央に最も美しく収まる2.5:1超スレンダー比率・上下の小天球ドット軌道と太陽・背骨・根",
+    "story": "画像3（KINGLEOの前腕タトゥー）のスマートな縦長バランスをベースに、横幅を抑えて上下の点描小天球リング＆四芒星、中央の炎型太陽花弁、その内部を貫くルートンの棘突起S字背骨と下部の根を前腕の縦ラインに合わせてシャープに凝縮したスタイル。",
+    "aspect_label": "2.5 : 1（画像3直系・前腕縦長トーテム）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 410,
+      "south_len": 395,
+      "east_west_len": 135,
+      "needle_half_w": 14,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 68,
+      "ring_r_inner": 55,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 17,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 215,
+      "s_amp": 32,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 9.5,
+      "x_style": "core_diamond_x",
+      "x_size": 42,
+      "flare_len": 68,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 8.8,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 148,
+      "crescent_thickness": 14,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.38,
+      "line_weight_sub": 0.85,
+      "root_branches": 7,
+      "root_spread": 86,
+      "root_depth": 100,
+      "wave_arcs": 3,
+      "wave_radius_start": 92,
+      "wave_span_deg": 58,
+      "spine_notches": 10,
+      "davinci_mode": "vitruvian_clean",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 109,
+    "code": "DV-09",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "Codex Anatomical Engraving",
+    "title_ja": "ダ・ヴィンチ解剖手稿エングレービング（古典ハッチング陰影×中空回廊）",
+    "subtitle": "ルネサンス手稿の平行線ハッチング陰影 × 中空スプリット回廊 × 背骨と根の解剖幾何学",
+    "story": "レオナルド・ダ・ビンチの解剖手稿（Codex）のペン画技法を取り入れ、羅針盤と太陽花弁の陰影を繊細な平行線ハッチングで表現。南北のコンパス針の中央を白く抜いたスプリット回廊の中に、ルートンの棘突起S字背骨と7シェブロンが鮮明に浮かび上がる。",
+    "aspect_label": "1.618 : 1（手稿エングレービング仕様）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 375,
+      "south_len": 375,
+      "east_west_len": 235,
+      "needle_half_w": 22,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 78,
+      "ring_r_inner": 64,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 21,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 210,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "cervical_7_cluster",
+      "chevron_size": 11.5,
+      "x_style": "diagonal_ring_x",
+      "x_size": 62,
+      "flare_len": 70,
+      "flare_spread_deg": 14.0,
+      "flare_wave_amp": 8.5,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 190,
+      "crescent_span_deg": 148,
+      "crescent_thickness": 15,
+      "shading_mode": "hatch",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.88,
+      "root_branches": 9,
+      "root_spread": 130,
+      "root_depth": 115,
+      "wave_arcs": 4,
+      "wave_radius_start": 106,
+      "wave_span_deg": 68,
+      "spine_notches": 10,
+      "davinci_mode": "da_vinci_max",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
+  {
+    "id": 110,
+    "code": "DV-10",
+    "series": "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+    "title_en": "True Alignment, True Root — Grand Masterpiece",
+    "title_ja": "真の軸、真のルーツ・4大要素究極統合マスターピース（決定版）",
+    "subtitle": "①炎の太陽16花弁＆三日月 × ②4方位羅針盤＆×印 × ③ダ・ヴィンチ天球黄金比 × ④Rooton背骨・根・4重波紋",
+    "story": "ご提示いただいた4枚の画像のすべての魂を1枚に結晶させた最終決定版。画像3・4の「うねる炎の太陽レイ＆内周ドット＆三日月」、4方位へ鋭く伸びる「羅針盤と仲間の印（×）」、画像2の「ダ・ヴィンチ天球作図線とウィトルウィウスの調和円」、そして画像1の「Rootonの棘突起S字背骨・大地に張る樹木の根・左右4重の共鳴波紋」が前腕の上でひとつの物語として完結する最高傑作。",
+    "aspect_label": "1.618 : 1（4大要素・究極決定版）",
+    "params": {
+      "is_davinci_rooton": true,
+      "north_len": 385,
+      "south_len": 385,
+      "east_west_len": 238,
+      "needle_half_w": 20,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 80,
+      "ring_r_inner": 66,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 22,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 210,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.5,
+      "x_style": "core_diamond_x",
+      "x_size": 60,
+      "flare_len": 78,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 9.8,
+      "flare_style": "flame_petals_16",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 154,
+      "crescent_thickness": 16,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.92,
+      "root_branches": 9,
+      "root_spread": 140,
+      "root_depth": 122,
+      "wave_arcs": 4,
+      "wave_radius_start": 110,
+      "wave_span_deg": 72,
+      "spine_notches": 11,
+      "davinci_mode": "da_vinci_max",
+      "celestial_orbits": true,
+      "inner_dot_ring": true
+    }
+  },
   {
     "id": 1,
     "code": "No.01",
@@ -2508,9 +3134,9 @@
 ];
 
     // Persistent User State (Favorites, Per-Work Edits & Notes, Global Memo)
-    const STORAGE_KEY = "true_north_tattoo_master_v2";
+    const STORAGE_KEY = "true_north_tattoo_master_v3";
     let userState = {
-      favorites: [20, 6, 4], // Default initial favorites so DNA analyzer is immediately alive!
+      favorites: [110, 104, 102, 20], // Default initial favorites showcasing DV-10, DV-04, DV-02, No.20!
       customParamsById: {},
       notesById: {},
       chipsById: {},
@@ -2639,6 +3265,320 @@
       return lines.join("");
     }
 
+    function buildFlamePetalPathJS(cx, cy, rBase, length, angleRad, halfBaseRad, waveAmp, waveSign = 1.0, ink = "#121211", lwSub = 0.90, isMain = true, shadingMode = "hybrid") {
+      const perp = angleRad + Math.PI / 2.0;
+      const aLeft = angleRad - halfBaseRad;
+      const aRight = angleRad + halfBaseRad;
+
+      const lx0 = cx + rBase * Math.cos(aLeft);
+      const ly0 = cy + rBase * Math.sin(aLeft);
+      const rx0 = cx + rBase * Math.cos(aRight);
+      const ry0 = cy + rBase * Math.sin(aRight);
+
+      const tipR = rBase + length;
+      const tx = cx + tipR * Math.cos(angleRad) + (waveAmp * 0.22 * waveSign) * Math.cos(perp);
+      const ty = cy + tipR * Math.sin(angleRad) + (waveAmp * 0.22 * waveSign) * Math.sin(perp);
+
+      const r1 = rBase + length * 0.34;
+      const r2 = rBase + length * 0.70;
+      const wMid = rBase * halfBaseRad * 0.62;
+
+      const lc1x = cx + r1 * Math.cos(angleRad) - wMid * Math.cos(perp) + (waveAmp * 1.15 * waveSign) * Math.cos(perp);
+      const lc1y = cy + r1 * Math.sin(angleRad) - wMid * Math.sin(perp) + (waveAmp * 1.15 * waveSign) * Math.sin(perp);
+      const lc2x = cx + r2 * Math.cos(angleRad) - (wMid * 0.28) * Math.cos(perp) - (waveAmp * 0.85 * waveSign) * Math.cos(perp);
+      const lc2y = cy + r2 * Math.sin(angleRad) - (wMid * 0.28) * Math.sin(perp) - (waveAmp * 0.85 * waveSign) * Math.sin(perp);
+
+      const rc2x = cx + r2 * Math.cos(angleRad) + (wMid * 0.28) * Math.cos(perp) - (waveAmp * 0.85 * waveSign) * Math.cos(perp);
+      const rc2y = cy + r2 * Math.sin(angleRad) + (wMid * 0.28) * Math.sin(perp) - (waveAmp * 0.85 * waveSign) * Math.sin(perp);
+      const rc1x = cx + r1 * Math.cos(angleRad) + wMid * Math.cos(perp) + (waveAmp * 1.15 * waveSign) * Math.cos(perp);
+      const rc1y = cy + r1 * Math.sin(angleRad) + wMid * Math.sin(perp) + (waveAmp * 1.15 * waveSign) * Math.sin(perp);
+
+      const outerD = `M ${fmt(lx0)} ${fmt(ly0)} C ${fmt(lc1x)} ${fmt(lc1y)}, ${fmt(lc2x)} ${fmt(lc2y)}, ${fmt(tx)} ${fmt(ty)} C ${fmt(rc2x)} ${fmt(rc2y)}, ${fmt(rc1x)} ${fmt(rc1y)}, ${fmt(rx0)} ${fmt(ry0)} Z`;
+
+      const mx0 = cx + rBase * Math.cos(angleRad);
+      const my0 = cy + rBase * Math.sin(angleRad);
+      const ribTipR = rBase + length * 0.80;
+      const rtx = cx + ribTipR * Math.cos(angleRad);
+      const rty = cy + ribTipR * Math.sin(angleRad);
+      const mc1x = cx + (rBase + length * 0.32) * Math.cos(angleRad) + (waveAmp * 0.85 * waveSign) * Math.cos(perp);
+      const mc1y = cy + (rBase + length * 0.32) * Math.sin(angleRad) + (waveAmp * 0.85 * waveSign) * Math.sin(perp);
+      const mc2x = cx + (rBase + length * 0.58) * Math.cos(angleRad) - (waveAmp * 0.55 * waveSign) * Math.cos(perp);
+      const mc2y = cy + (rBase + length * 0.58) * Math.sin(angleRad) - (waveAmp * 0.55 * waveSign) * Math.sin(perp);
+
+      const ribD = `M ${fmt(mx0)} ${fmt(my0)} C ${fmt(mc1x)} ${fmt(mc1y)}, ${fmt(mc2x)} ${fmt(mc2y)}, ${fmt(rtx)} ${fmt(rty)}`;
+
+      const extra = [];
+      const sAng0 = angleRad + (halfBaseRad * 0.38 * waveSign);
+      const sx0 = cx + rBase * Math.cos(sAng0), sy0 = cy + rBase * Math.sin(sAng0);
+      const sTipR = rBase + length * 0.54;
+      const stx = cx + sTipR * Math.cos(angleRad) + (waveAmp * 0.18 * waveSign) * Math.cos(perp);
+      const sty = cy + sTipR * Math.sin(angleRad) + (waveAmp * 0.18 * waveSign) * Math.sin(perp);
+      const sc1x = cx + (rBase + length * 0.26) * Math.cos(angleRad) + (waveAmp * 0.62 * waveSign) * Math.cos(perp);
+      const sc1y = cy + (rBase + length * 0.26) * Math.sin(angleRad) + (waveAmp * 0.62 * waveSign) * Math.sin(perp);
+      extra.push(`<path class="sun-flare-rib-sub" d="M ${fmt(sx0)} ${fmt(sy0)} Q ${fmt(sc1x)} ${fmt(sc1y)}, ${fmt(stx)} ${fmt(sty)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.48)}" stroke-opacity="0.55" stroke-linecap="round"/>`);
+
+      if (isMain) {
+        for (const [dStep, dR, dOp] of [[4.5, 0.92, 0.78], [8.2, 0.64, 0.56], [11.4, 0.42, 0.36]]) {
+          extra.push(`<circle class="korean-tip-dot" cx="${fmt(tx + dStep * Math.cos(angleRad))}" cy="${fmt(ty + dStep * Math.sin(angleRad))}" r="${fmt(dR)}" fill="${ink}" fill-opacity="${fmt(dOp)}"/>`);
+        }
+        if (shadingMode !== "stencil") {
+          for (const [prOff, paOff, prRad, prOp] of [[3.2, -0.32, 0.82, 0.62], [3.6, 0.28, 0.78, 0.58], [6.8, -0.15, 0.64, 0.46], [7.2, 0.22, 0.60, 0.42], [10.8, 0.04, 0.46, 0.32]]) {
+            const px = cx + (rBase + prOff) * Math.cos(angleRad + halfBaseRad * paOff);
+            const py = cy + (rBase + prOff) * Math.sin(angleRad + halfBaseRad * paOff);
+            extra.push(`<circle class="shade-detail" cx="${fmt(px)}" cy="${fmt(py)}" r="${fmt(prRad)}" fill="${ink}" fill-opacity="${fmt(prOp)}"/>`);
+          }
+        }
+      }
+      return [outerD, ribD, extra.join("\n    ")];
+    }
+
+    function buildDaVinciBlueprintJS(cx, cy, rOut, nLen, ewLen, mode, ink, lwSub) {
+      if (!mode || mode === "none") return "";
+      const els = ['<g id="davinci-blueprint" opacity="0.38">'];
+      const thin = fmt(Math.max(0.42, lwSub * 0.52));
+      const ultraThin = fmt(Math.max(0.34, lwSub * 0.40));
+
+      const rVitruvian = Math.max(ewLen * 0.96, rOut * 2.38);
+      const rAstro1 = rVitruvian * 0.78;
+      const rAstro2 = rVitruvian * 1.12;
+
+      els.push(`<circle cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rVitruvian)}" fill="none" stroke="${ink}" stroke-width="${thin}"/>`);
+      els.push(`<circle cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rAstro1)}" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+
+      const eccY = cy - rOut * 0.40;
+      els.push(`<circle cx="${fmt(cx)}" cy="${fmt(eccY)}" r="${fmt(rVitruvian * 0.88)}" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+
+      if (mode === "vitruvian_full" || mode === "da_vinci_max") {
+        els.push(`<circle cx="${fmt(cx)}" cy="${fmt(cy + rOut * 0.34)}" r="${fmt(rVitruvian * 0.84)}" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<circle cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rAstro2)}" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+
+        const sqHalf = rVitruvian * 0.7071;
+        const ext = 26.0;
+        els.push(`<line x1="${fmt(cx - sqHalf - ext)}" y1="${fmt(cy - sqHalf)}" x2="${fmt(cx + sqHalf + ext)}" y2="${fmt(cy - sqHalf)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<line x1="${fmt(cx - sqHalf - ext)}" y1="${fmt(cy + sqHalf)}" x2="${fmt(cx + sqHalf + ext)}" y2="${fmt(cy + sqHalf)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<line x1="${fmt(cx - sqHalf)}" y1="${fmt(cy - sqHalf - ext)}" x2="${fmt(cx - sqHalf)}" y2="${fmt(cy + sqHalf + ext)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<line x1="${fmt(cx + sqHalf)}" y1="${fmt(cy - sqHalf - ext)}" x2="${fmt(cx + sqHalf)}" y2="${fmt(cy + sqHalf + ext)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+      }
+
+      if (mode === "da_vinci_max") {
+        const dR = rVitruvian;
+        els.push(`<polygon points="${fmt(cx)},${fmt(cy - dR)} ${fmt(cx + dR)},${fmt(cy)} ${fmt(cx)},${fmt(cy + dR)} ${fmt(cx - dR)},${fmt(cy)}" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+      }
+
+      const rayAngles = [-62.0, -28.0, 28.0, 62.0, 118.0, 152.0, -118.0, -152.0];
+      rayAngles.forEach((deg, idx) => {
+        const rad = deg * Math.PI / 180.0;
+        const rStart = rOut * 1.48;
+        const rEnd = rVitruvian * (idx % 2 === 0 ? 1.26 : 1.08);
+        els.push(`<line x1="${fmt(cx + rStart * Math.cos(rad))}" y1="${fmt(cy + rStart * Math.sin(rad))}" x2="${fmt(cx + rEnd * Math.cos(rad))}" y2="${fmt(cy + rEnd * Math.sin(rad))}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        const ix = cx + rVitruvian * Math.cos(rad), iy = cy + rVitruvian * Math.sin(rad);
+        els.push(`<circle cx="${fmt(ix)}" cy="${fmt(iy)}" r="2.1" fill="none" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<line x1="${fmt(ix - 3.4)}" y1="${fmt(iy)}" x2="${fmt(ix + 3.4)}" y2="${fmt(iy)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        els.push(`<line x1="${fmt(ix)}" y1="${fmt(iy - 3.4)}" x2="${fmt(ix)}" y2="${fmt(iy + 3.4)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+        for (const [dOff, dR] of [[5.0, 0.75], [9.5, 0.45]]) {
+          els.push(`<circle cx="${fmt(cx + (rEnd + dOff) * Math.cos(rad))}" cy="${fmt(cy + (rEnd + dOff) * Math.sin(rad))}" r="${fmt(dR)}" fill="${ink}"/>`);
+        }
+      });
+
+      const hW = rVitruvian * 1.18;
+      const hInner = rOut * 1.55;
+      els.push(`<line x1="${fmt(cx - hW)}" y1="${fmt(cy)}" x2="${fmt(cx - hInner)}" y2="${fmt(cy)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+      els.push(`<line x1="${fmt(cx + hInner)}" y1="${fmt(cy)}" x2="${fmt(cx + hW)}" y2="${fmt(cy)}" stroke="${ink}" stroke-width="${ultraThin}"/>`);
+      els.push('</g>');
+      return els.join("\n    ");
+    }
+
+    function buildRootonLogoElementsJS(cx, cy, p, ink, maskFill, shadingMode) {
+      const lwMain = Number(p.line_weight_main);
+      const lwSub = Number(p.line_weight_sub);
+      const rOut = Number(p.ring_r_outer);
+      const nLen = Number(p.north_len);
+      const sLen = Number(p.south_len);
+      const sAmp = Number(p.s_amp);
+
+      const waveCount = Number(p.wave_arcs !== undefined ? p.wave_arcs : (p.is_davinci_rooton ? 4 : 0));
+      const rootBranches = Number(p.root_branches !== undefined ? p.root_branches : (p.is_davinci_rooton ? 7 : 0));
+      if (!p.is_davinci_rooton && waveCount <= 0 && rootBranches <= 0) return "";
+
+      const waveR0 = Number(p.wave_radius_start || Math.max(98.0, rOut + 24.0));
+      const waveSpan = Number(p.wave_span_deg || 68.0);
+      const halfSpan = (waveSpan * 0.5) * Math.PI / 180.0;
+
+      const els = ['<g id="rooton-logo-integration">'];
+
+      // A. 左右の共鳴波紋アーク + 韓国風フェードドット
+      els.push('<g id="rooton-resonance-waves">');
+      for (let i = 0; i < waveCount; i++) {
+        const rw = waveR0 + i * 14.5;
+        const sw = Math.max(0.45, lwSub * (1.08 - i * 0.16));
+        const op = Math.max(0.32, 0.88 - i * 0.16);
+        for (const sideAng of [0.0, Math.PI]) {
+          for (const segSign of [-1.0, 1.0]) {
+            let a1 = sideAng + segSign * (10.0 * Math.PI / 180.0);
+            let a2 = sideAng + segSign * halfSpan;
+            if (segSign < 0) { const tmp = a1; a1 = a2; a2 = tmp; }
+            const x1 = cx + rw * Math.cos(a1), y1 = cy + rw * Math.sin(a1);
+            const x2 = cx + rw * Math.cos(a2), y2 = cy + rw * Math.sin(a2);
+            els.push(`<path class="rooton-wave-arc" d="M ${fmt(x1)} ${fmt(y1)} A ${fmt(rw)} ${fmt(rw)} 0 0 1 ${fmt(x2)} ${fmt(y2)}" fill="none" stroke="${ink}" stroke-width="${fmt(sw)}" stroke-opacity="${fmt(op)}" stroke-linecap="round"/>`);
+            const outerA = sideAng + segSign * (halfSpan + 3.2 * Math.PI / 180.0);
+            els.push(`<circle class="wave-tip-dot" cx="${fmt(cx + rw * Math.cos(outerA))}" cy="${fmt(cy + rw * Math.sin(outerA))}" r="${fmt(Math.max(0.38, 0.72 - i * 0.10))}" fill="${ink}" fill-opacity="${fmt(op * 0.85)}"/>`);
+          }
+        }
+      }
+      els.push('</g>');
+
+      // B. 棘突起付き二重S字背骨シルエット + ハロー白抜き
+      const notchCount = Number(p.spine_notches || 10);
+      const sStartY = cy - nLen * 0.84;
+      const sEndY = cy + sLen * 0.84;
+      const sFreq = Number(p.s_freq || 1.0);
+      const sPhase = Number(p.s_phase || 0.0);
+
+      const ribbonPts = [];
+      for (let k = 0; k <= 56; k++) {
+        const t = k / 56.0;
+        const yv = sStartY + t * (sEndY - sStartY);
+        const env = Math.sin(Math.PI * t);
+        const wv = Math.sin(2.0 * Math.PI * t * sFreq + sPhase);
+        const xv = cx + sAmp * env * wv + 4.8 * env;
+        ribbonPts.push(`${fmt(xv)},${fmt(yv)}`);
+      }
+      if (shadingMode !== "stencil") {
+        els.push(`<polyline class="bg-mask" points="${ribbonPts.join(" ")}" fill="none" stroke="${maskFill}" stroke-width="${fmt(lwMain * 2.6)}" stroke-opacity="0.88" stroke-linecap="round"/>`);
+      }
+      els.push(`<polyline id="rooton-spine-ribbon" points="${ribbonPts.join(" ")}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.95)}" stroke-linecap="round"/>`);
+
+      els.push('<g id="rooton-spinous-notches">');
+      const upperCnt = Math.max(4, Math.floor(notchCount / 2) + 1);
+      const lowerCnt = Math.max(3, Math.floor(notchCount / 2) - 1);
+      const tVals = [];
+      for (let j = 0; j < upperCnt; j++) tVals.push(0.11 + 0.038 * j);
+      for (let j = 0; j < lowerCnt; j++) tVals.push(0.64 + 0.036 * j);
+      for (const t of tVals) {
+        const yv = sStartY + t * (sEndY - sStartY);
+        if (Math.abs(yv - cy) < rOut + 12.0) continue;
+        const env = Math.sin(Math.PI * t);
+        const wv = Math.sin(2.0 * Math.PI * t * sFreq + sPhase);
+        const xv = cx + sAmp * env * wv;
+        const toothDir = -1.0;
+        const toothLen = 9.2 + 4.8 * env;
+        const tx1 = xv, ty1 = yv - 4.8;
+        const tx2 = xv + toothDir * toothLen, ty2 = yv - 2.2;
+        const tx3 = xv + toothDir * (toothLen * 0.85), ty3 = yv + 2.4;
+        const tx4 = xv, ty4 = yv + 4.6;
+        const toothFill = shadingMode === "stencil" ? "none" : "rgba(18, 18, 17, 0.15)";
+        els.push(`<path class="spine-notch-tooth" d="M ${fmt(tx1)} ${fmt(ty1)} C ${fmt(tx2)} ${fmt(ty2)}, ${fmt(tx3)} ${fmt(ty3)}, ${fmt(tx4)} ${fmt(ty4)}" fill="${toothFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.12)}" stroke-linecap="round"/>`);
+        els.push(`<path class="spine-notch-rib" d="M ${fmt(xv)} ${fmt(yv - 1.6)} Q ${fmt(xv + toothDir * toothLen * 0.65)} ${fmt(yv)}, ${fmt(xv)} ${fmt(yv + 1.8)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.55)}" stroke-opacity="0.62" stroke-linecap="round"/>`);
+      }
+      els.push('</g>');
+
+      // C. 大地へドーム状に垂れ下がり先端が毛細分岐へ抜ける樹木の根
+      const rootSpread = Number(p.root_spread || 125.0);
+      const rootDepth = Number(p.root_depth || 115.0);
+      const rootStartY = cy + Math.max(rOut + 48.0, sLen * 0.42);
+
+      els.push('<g id="rooton-tree-roots">');
+      const halfB = rootBranches > 1 ? (rootBranches - 1) / 2.0 : 1.0;
+      for (let bIdx = 0; bIdx < rootBranches; bIdx++) {
+        const rel = (bIdx - halfB) / Math.max(1.0, halfB);
+        const absR = Math.abs(rel);
+
+        const rx0 = cx + rel * 4.5;
+        const ry0 = rootStartY - (1.0 - absR) * 14.0;
+
+        const domeAng = rel * (Math.PI * 0.44);
+        const rx3 = cx + Math.sin(domeAng) * rootSpread;
+        const ry3 = rootStartY + Math.cos(domeAng) * rootDepth + (1.0 - Math.cos(domeAng)) * (rootDepth * 0.35);
+
+        const rc1x = cx + rel * (rootSpread * 0.15);
+        const rc1y = rootStartY + rootDepth * 0.35;
+        const rc2x = rx3 - rel * (rootSpread * 0.06);
+        const rc2y = ry3 - rootDepth * (0.42 - 0.12 * absR);
+
+        const swRoot = lwMain * (1.16 - 0.26 * absR);
+        if (shadingMode !== "stencil") {
+          els.push(`<path class="bg-mask" d="M ${fmt(rx0)} ${fmt(ry0)} C ${fmt(rc1x)} ${fmt(rc1y)}, ${fmt(rc2x)} ${fmt(rc2y)}, ${fmt(rx3)} ${fmt(ry3)}" fill="none" stroke="${maskFill}" stroke-width="${fmt(swRoot + 2.2)}" stroke-opacity="0.72" stroke-linecap="round"/>`);
+        }
+        els.push(`<path class="rooton-root-main" d="M ${fmt(rx0)} ${fmt(ry0)} C ${fmt(rc1x)} ${fmt(rc1y)}, ${fmt(rc2x)} ${fmt(rc2y)}, ${fmt(rx3)} ${fmt(ry3)}" fill="none" stroke="${ink}" stroke-width="${fmt(swRoot)}" stroke-linecap="round"/>`);
+
+        const forkLen = 13.5 - 2.5 * absR;
+        for (const [fSign, fLenMul, fSwMul] of [[-1.0, 1.0, 0.56], [1.0, 0.72, 0.42]]) {
+          const fAng = domeAng * 0.35 + fSign * 0.28;
+          const fx2 = rx3 + Math.sin(fAng) * (forkLen * fLenMul);
+          const fy2 = ry3 + Math.cos(fAng) * (forkLen * fLenMul);
+          const fc1x = rx3 + Math.sin(domeAng * 0.2) * (forkLen * 0.45);
+          const fc1y = ry3 + (forkLen * 0.45);
+          els.push(`<path class="rooton-root-capillary" d="M ${fmt(rx3)} ${fmt(ry3)} Q ${fmt(fc1x)} ${fmt(fc1y)}, ${fmt(fx2)} ${fmt(fy2)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * fSwMul)}" stroke-opacity="0.76" stroke-linecap="round"/>`);
+        }
+
+        if (absR > 0.08) {
+          const subT = 0.56, mt = 1.0 - subT;
+          const bx0 = (mt**3)*rx0 + 3*(mt**2)*subT*rc1x + 3*mt*(subT**2)*rc2x + (subT**3)*rx3;
+          const by0 = (mt**3)*ry0 + 3*(mt**2)*subT*rc1y + 3*mt*(subT**2)*rc2y + (subT**3)*ry3;
+          const inwardSign = rel > 0 ? -1.0 : 1.0;
+          const bx2 = bx0 + inwardSign * (22.0 + 12.0 * absR);
+          const by2 = ry3 + 6.0 * (1.0 - absR);
+          const bc1x = bx0 + inwardSign * 14.0;
+          const bc1y = by0 + (by2 - by0) * 0.35;
+          const bc2x = bx2;
+          const bc2y = by2 - 18.0;
+          els.push(`<path class="rooton-root-sub" d="M ${fmt(bx0)} ${fmt(by0)} C ${fmt(bc1x)} ${fmt(bc1y)}, ${fmt(bc2x)} ${fmt(bc2y)}, ${fmt(bx2)} ${fmt(by2)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.88)}" stroke-opacity="0.86" stroke-linecap="round"/>`);
+        }
+      }
+      els.push('</g>');
+      els.push('</g>');
+      return els.join("\n    ");
+    }
+
+    function buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub) {
+      const els = ['<g id="celestial-axis-orbits">'];
+      const orbR = 16.0;
+      for (const [sign, axisL] of [[-1.0, nLen], [1.0, sLen]]) {
+        const orbY = cy + sign * (rOut + 64.0);
+        els.push(`<circle cx="${fmt(cx)}" cy="${fmt(orbY)}" r="10.2" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.52)}" stroke-opacity="0.62"/>`);
+        els.push(`<circle cx="${fmt(cx)}" cy="${fmt(orbY)}" r="1.45" fill="${ink}" fill-opacity="0.82"/>`);
+        const tiltDeg = sign < 0 ? -28.0 : 28.0;
+        els.push(`<ellipse cx="${fmt(cx)}" cy="${fmt(orbY)}" rx="22.5" ry="7.2" transform="rotate(${fmt(tiltDeg)} ${fmt(cx)} ${fmt(orbY)})" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.55)}" stroke-opacity="0.68"/>`);
+        for (let k = 0; k < 12; k++) {
+          const ang = k * (2.0 * Math.PI / 12.0);
+          els.push(`<circle cx="${fmt(cx + orbR * Math.cos(ang))}" cy="${fmt(orbY + orbR * Math.sin(ang))}" r="1.15" fill="${ink}" fill-opacity="0.78"/>`);
+        }
+        const tipY = cy + sign * (axisL + 22.0);
+        const armV = 12.5, armH = 8.2, cWaist = 1.8;
+        const starD = `M ${fmt(cx)} ${fmt(tipY - armV)} Q ${fmt(cx + cWaist)} ${fmt(tipY - cWaist)}, ${fmt(cx + armH)} ${fmt(tipY)} Q ${fmt(cx + cWaist)} ${fmt(tipY + cWaist)}, ${fmt(cx)} ${fmt(tipY + armV)} Q ${fmt(cx - cWaist)} ${fmt(tipY + cWaist)}, ${fmt(cx - armH)} ${fmt(tipY)} Q ${fmt(cx - cWaist)} ${fmt(tipY - cWaist)}, ${fmt(cx)} ${fmt(tipY - armV)} Z`;
+        els.push(`<path class="celestial-starburst" d="${starD}" fill="${ink}" fill-opacity="0.86" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linejoin="round"/>`);
+        els.push(`<line x1="${fmt(cx - 4.0)}" y1="${fmt(tipY - 4.0)}" x2="${fmt(cx + 4.0)}" y2="${fmt(tipY + 4.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.65)}" stroke-linecap="round"/><line x1="${fmt(cx + 4.0)}" y1="${fmt(tipY - 4.0)}" x2="${fmt(cx - 4.0)}" y2="${fmt(tipY + 4.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.65)}" stroke-linecap="round"/>`);
+        for (const [dOff, dR, dOp] of [[16.5, 0.95, 0.78], [20.5, 0.65, 0.55], [24.0, 0.42, 0.35]]) {
+          els.push(`<circle cx="${fmt(cx)}" cy="${fmt(tipY + sign * dOff)}" r="${fmt(dR)}" fill="${ink}" fill-opacity="${fmt(dOp)}"/>`);
+        }
+      }
+      els.push('</g>');
+      return els.join("\n    ");
+    }
+
+    function buildLunarPepperStippleJS(cx, cy, rIn, cAngDeg, cSpanDeg, cThick, ink, shadingMode) {
+      if (shadingMode === "stencil") return "";
+      const els = ['<g id="lunar-pepper-stipple">'];
+      const cRad = cAngDeg * Math.PI / 180.0;
+      const halfSpan = (cSpanDeg * 0.5) * Math.PI / 180.0;
+      const crRadius = rIn - 9.0;
+      const layers = [[0.18, 22, 0.88, 0.64], [0.36, 18, 0.70, 0.48], [0.56, 13, 0.52, 0.34], [0.74, 9, 0.40, 0.22]];
+      for (const [depthRatio, dotCnt, baseR, baseOp] of layers) {
+        const spanLimit = halfSpan * (0.86 - depthRatio * 0.28);
+        for (let i = 0; i < dotCnt; i++) {
+          const frac = (i / Math.max(1, dotCnt - 1)) * 2.0 - 1.0;
+          const ang = cRad + frac * spanLimit;
+          const localThick = cThick * (1.0 - frac * frac);
+          if (localThick < 2.2) continue;
+          const rPos = crRadius - localThick * depthRatio;
+          const rDot = Math.max(0.35, baseR * (1.0 - 0.35 * Math.abs(frac)));
+          els.push(`<circle class="shade-detail" cx="${fmt(cx + rPos * Math.cos(ang))}" cy="${fmt(cy + rPos * Math.sin(ang))}" r="${fmt(rDot)}" fill="${ink}" fill-opacity="${fmt(baseOp)}"/>`);
+        }
+      }
+      els.push('</g>');
+      return els.join("\n    ");
+    }
+
     function renderTattooSVG(design, forceStencil = false, includeForearmGuide = false) {
       const p = design.params;
       const cx = 400.0, cy = 500.0;
@@ -2654,7 +3594,7 @@
       const shadingMode = forceStencil ? "stencil" : p.shading_mode;
       const ink = "#121211";
 
-      // ③ 8本の太陽フレア
+      // ③ 太陽フレア（8本ウェーブ または 画像3・4の立体炎型花弁16枚）
       const sunFlares = [];
       const flareLen = Number(p.flare_len);
       const spread = Number(p.flare_spread_deg);
@@ -2663,51 +3603,86 @@
       const baseDiags = [-45.0, 45.0, 135.0, 225.0];
       let fIdx = 0;
 
-      for (const diag of baseDiags) {
-        const offsets = [-spread * 0.5, spread * 0.5];
-        offsets.forEach((off, pairIdx) => {
-          const ang = (diag + off) * Math.PI / 180.0;
-          const perp = ang + Math.PI / 2.0;
-          const curLen = (flareStyle === "alternating_wave" && pairIdx === 1) ? flareLen * 0.74 : flareLen;
-          const startR = rOut + gap * 0.6;
-
-          const x0 = cx + startR * Math.cos(ang);
-          const y0 = cy + startR * Math.sin(ang);
-          const x3 = cx + (startR + curLen) * Math.cos(ang);
-          const y3 = cy + (startR + curLen) * Math.sin(ang);
-
-          const r1 = startR + curLen * 0.33;
-          const r2 = startR + curLen * 0.68;
-          let dirSign = (pairIdx === 0) ? 1.0 : -1.0;
-          let c2Sign = -dirSign * 0.9;
-          if (flareStyle === "converging_flame") {
-            dirSign = (pairIdx === 0) ? 1.0 : -1.0;
-            c2Sign = dirSign * 0.4;
-          } else if (flareStyle === "diverging_corona") {
-            dirSign = (pairIdx === 0) ? -1.0 : 1.0;
-            c2Sign = -dirSign * 0.9;
-          } else if (flareStyle === "nika_flame") {
-            dirSign = 1.0;
-            c2Sign = -0.95;
+      if (flareStyle === "flame_petals_16" || flareStyle === "flame_petals_8") {
+        for (const diag of baseDiags) {
+          const offsets = [-spread * 0.52, spread * 0.52];
+          offsets.forEach((off, pairIdx) => {
+            const ang = (diag + off) * Math.PI / 180.0;
+            const wSign = (pairIdx === 0) ? 1.0 : -1.0;
+            const halfBase = 5.4 * Math.PI / 180.0;
+            const [outerD, ribD, extraEls] = buildFlamePetalPathJS(cx, cy, rOut + gap * 0.5, flareLen, ang, halfBase, waveAmp, wSign, ink, lwSub, true, shadingMode);
+            const petalFill = shadingMode === "stencil" ? "none" : "rgba(18, 18, 17, 0.08)";
+            sunFlares.push(`<path class="sun-flare-item" data-flare-idx="${fIdx}" d="${outerD}" fill="${petalFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.18)}" stroke-linejoin="round"/>`);
+            sunFlares.push(`<path class="sun-flare-rib" d="${ribD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.72)}" stroke-opacity="0.74" stroke-linecap="round"/>`);
+            if (extraEls) sunFlares.push(extraEls);
+            fIdx++;
+          });
+          if (flareStyle === "flame_petals_16") {
+            for (const [secDeg, secScale, secSign] of [[diag, 0.72, 1.0], [diag - spread * 1.06, 0.58, -1.0], [diag + spread * 1.06, 0.58, 1.0]]) {
+              const sAng = secDeg * Math.PI / 180.0;
+              const [sOuterD, sRibD, sExtra] = buildFlamePetalPathJS(cx, cy, rOut + gap * 0.5, flareLen * secScale, sAng, 3.8 * Math.PI / 180.0, waveAmp * 0.72, secSign, ink, lwSub, false, shadingMode);
+              const petalFill = shadingMode === "stencil" ? "none" : "rgba(18, 18, 17, 0.08)";
+              sunFlares.push(`<path class="sun-flare-tongue" d="${sOuterD}" fill="${petalFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.94)}" stroke-linejoin="round"/>`);
+              sunFlares.push(`<path class="sun-flare-rib" d="${sRibD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.60)}" stroke-opacity="0.64" stroke-linecap="round"/>`);
+              if (sExtra) sunFlares.push(sExtra);
+            }
           }
+        }
+      } else {
+        for (const diag of baseDiags) {
+          const offsets = [-spread * 0.5, spread * 0.5];
+          offsets.forEach((off, pairIdx) => {
+            const ang = (diag + off) * Math.PI / 180.0;
+            const perp = ang + Math.PI / 2.0;
+            const curLen = (flareStyle === "alternating_wave" && pairIdx === 1) ? flareLen * 0.74 : flareLen;
+            const startR = rOut + gap * 0.6;
 
-          const cx1 = cx + r1 * Math.cos(ang) + (waveAmp * dirSign) * Math.cos(perp);
-          const cy1 = cy + r1 * Math.sin(ang) + (waveAmp * dirSign) * Math.sin(perp);
-          const cx2 = cx + r2 * Math.cos(ang) + (waveAmp * c2Sign) * Math.cos(perp);
-          const cy2 = cy + r2 * Math.sin(ang) + (waveAmp * c2Sign) * Math.sin(perp);
+            const x0 = cx + startR * Math.cos(ang);
+            const y0 = cy + startR * Math.sin(ang);
+            const x3 = cx + (startR + curLen) * Math.cos(ang);
+            const y3 = cy + (startR + curLen) * Math.sin(ang);
 
-          sunFlares.push(`<path class="sun-flare-item" data-flare-idx="${fIdx}" d="M ${fmt(x0)} ${fmt(y0)} C ${fmt(cx1)} ${fmt(cy1)}, ${fmt(cx2)} ${fmt(cy2)}, ${fmt(x3)} ${fmt(y3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 1.15)}" stroke-linecap="round"/>`);
+            const r1 = startR + curLen * 0.33;
+            const r2 = startR + curLen * 0.68;
+            let dirSign = (pairIdx === 0) ? 1.0 : -1.0;
+            let c2Sign = -dirSign * 0.9;
+            if (flareStyle === "converging_flame") {
+              dirSign = (pairIdx === 0) ? 1.0 : -1.0;
+              c2Sign = dirSign * 0.4;
+            } else if (flareStyle === "diverging_corona") {
+              dirSign = (pairIdx === 0) ? -1.0 : 1.0;
+              c2Sign = -dirSign * 0.9;
+            } else if (flareStyle === "nika_flame") {
+              dirSign = 1.0;
+              c2Sign = -0.95;
+            }
 
-          if (flareStyle === "nika_flame" || flareStyle === "classic_wave" || flareStyle === "converging_flame") {
-            const iLen = curLen * 0.52;
-            const ix3 = cx + (startR + iLen) * Math.cos(ang);
-            const iy3 = cy + (startR + iLen) * Math.sin(ang);
-            const icx1 = cx + (startR + iLen * 0.45) * Math.cos(ang) + (waveAmp * 0.55 * dirSign) * Math.cos(perp);
-            const icy1 = cy + (startR + iLen * 0.45) * Math.sin(ang) + (waveAmp * 0.55 * dirSign) * Math.sin(perp);
-            sunFlares.push(`<path class="sun-flare-sub" d="M ${fmt(x0)} ${fmt(y0)} Q ${fmt(icx1)} ${fmt(icy1)}, ${fmt(ix3)} ${fmt(iy3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.72)}" stroke-opacity="0.65" stroke-linecap="round"/>`);
-          }
-          fIdx++;
-        });
+            const cx1 = cx + r1 * Math.cos(ang) + (waveAmp * dirSign) * Math.cos(perp);
+            const cy1 = cy + r1 * Math.sin(ang) + (waveAmp * dirSign) * Math.sin(perp);
+            const cx2 = cx + r2 * Math.cos(ang) + (waveAmp * c2Sign) * Math.cos(perp);
+            const cy2 = cy + r2 * Math.sin(ang) + (waveAmp * c2Sign) * Math.sin(perp);
+
+            sunFlares.push(`<path class="sun-flare-item" data-flare-idx="${fIdx}" d="M ${fmt(x0)} ${fmt(y0)} C ${fmt(cx1)} ${fmt(cy1)}, ${fmt(cx2)} ${fmt(cy2)}, ${fmt(x3)} ${fmt(y3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 1.15)}" stroke-linecap="round"/>`);
+
+            if (flareStyle === "nika_flame" || flareStyle === "classic_wave" || flareStyle === "converging_flame") {
+              const iLen = curLen * 0.52;
+              const ix3 = cx + (startR + iLen) * Math.cos(ang);
+              const iy3 = cy + (startR + iLen) * Math.sin(ang);
+              const icx1 = cx + (startR + iLen * 0.45) * Math.cos(ang) + (waveAmp * 0.55 * dirSign) * Math.cos(perp);
+              const icy1 = cy + (startR + iLen * 0.45) * Math.sin(ang) + (waveAmp * 0.55 * dirSign) * Math.sin(perp);
+              sunFlares.push(`<path class="sun-flare-sub" d="M ${fmt(x0)} ${fmt(y0)} Q ${fmt(icx1)} ${fmt(icy1)}, ${fmt(ix3)} ${fmt(iy3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.72)}" stroke-opacity="0.65" stroke-linecap="round"/>`);
+            }
+            fIdx++;
+          });
+        }
+      }
+
+      if (p.inner_dot_ring) {
+        const dotR = rIn - 4.2;
+        for (let dIdx = 0; dIdx < 36; dIdx++) {
+          const dAng = dIdx * (2.0 * Math.PI / 36.0);
+          sunFlares.push(`<circle class="sun-inner-dot" cx="${fmt(cx + dotR * Math.cos(dAng))}" cy="${fmt(cy + dotR * Math.sin(dAng))}" r="0.95" fill="${ink}" fill-opacity="0.72"/>`);
+        }
       }
 
       // ④ 内側の三日月
@@ -2938,6 +3913,12 @@
         forearmOverlay = `<g id="forearm-silhouette-guide" opacity="0.22"><path d="M 190 40 C 215 320, 235 680, 255 960 M 610 40 C 585 320, 565 680, 545 960" fill="none" stroke="#8C6D46" stroke-width="2.5"/></g>`;
       }
 
+      const davinciMode = p.davinci_mode !== undefined ? p.davinci_mode : (p.is_davinci_rooton ? "vitruvian_full" : "none");
+      const davinciLayer = buildDaVinciBlueprintJS(cx, cy, rOut, nLen, ewLen, davinciMode, ink, lwSub);
+      const rootonLayer = buildRootonLogoElementsJS(cx, cy, p, ink, maskFill, shadingMode);
+      const celestialLayer = p.celestial_orbits ? buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub) : "";
+      const lunarStippleLayer = p.is_davinci_rooton ? buildLunarPepperStippleJS(cx, cy, rIn, Number(p.crescent_angle_deg), Number(p.crescent_span_deg), Number(p.crescent_thickness), ink, shadingMode) : "";
+
       const defsBlock = shadingMode === "stencil" ? "" : `  <defs>
     <linearGradient id="greywashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#121211" stop-opacity="0.34"/>
@@ -2949,12 +3930,15 @@
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%" data-design-id="${design.id}" data-design-code="${design.code}">
 ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill="#FAF8F5"/>
   ${forearmOverlay}
+  ${davinciLayer}
   <g id="sun-flares">
     <circle id="sun-ring-outer" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rOut)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain)}"/>
     <circle id="sun-ring-inner" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rIn)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub)}"/>
     ${sunFlares.join("\n    ")}
   </g>
   ${crescentSVG}
+  ${lunarStippleLayer}
+  ${rootonLayer}
   <g id="compass-rose">
     ${compassEls.join("\n    ")}
   </g>
@@ -2964,12 +3948,13 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
   <g id="axis-spine">
     ${spineEls.join("\n    ")}
   </g>
+  ${celestialLayer}
 </svg>`;
     }
 
     // Helper: Get design with user's custom parameters if edited
     function getEffectiveDesign(id) {
-      const base = TATTOO_CATALOG.find(item => item.id === id) || TATTOO_CATALOG[19];
+      const base = TATTOO_CATALOG.find(item => item.id === id) || TATTOO_CATALOG[9] || TATTOO_CATALOG[0];
       const copy = JSON.parse(JSON.stringify(base));
       if (userState.customParamsById[id]) {
         copy.params = Object.assign(copy.params, userState.customParamsById[id]);
@@ -3004,11 +3989,11 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       floating_x: "浮遊ミニマル×印"
     };
 
-    // Active State
-    let activeDesign = getEffectiveDesign(20);
-    let currentFilter = "all";
+    // Active State (default to DV-10 Grand Masterpiece and Series V filter!)
+    let activeDesign = getEffectiveDesign(110);
+    let currentFilter = "Series V:";
     let comparingOriginal = false;
-    let zoomModalId = 20;
+    let zoomModalId = 110;
 
     // ===================================================================
     // Favorite Preference DNA Analyzer
@@ -3156,13 +4141,14 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       return {
         topNeedle, topC1, topX, topShade, avgAspect, avgSAmp, avgFlareLen, avgC1Size,
         synthesizedParams: {
+          is_davinci_rooton: countMap(p => Boolean(p.is_davinci_rooton))[0][0] === "true",
           north_len: Math.round(avg("north_len") / 5) * 5,
           south_len: Math.round(avg("south_len") / 5) * 5,
           east_west_len: Math.round(avg("east_west_len") / 5) * 5,
           needle_half_w: Math.round(avg("needle_half_w")),
           needle_style: topNeedle,
           ring_r_outer: Math.round(avg("ring_r_outer") / 2) * 2,
-          ring_r_inner: Math.round(avg("ring_r_outer") / 2) * 2 - 11,
+          ring_r_inner: Math.round(avg("ring_r_outer") / 2) * 2 - 12,
           open_junction_gap: Math.round(avg("open_junction_gap") / 2) * 2,
           c1_y: Math.round(avg("c1_y") / 5) * 5,
           c1_size: Math.round(avg("c1_size")),
@@ -3188,7 +4174,17 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
           crescent_thickness: Math.round(avg("crescent_thickness")),
           shading_mode: topShade,
           line_weight_main: Number(avg("line_weight_main").toFixed(2)),
-          line_weight_sub: Number(avg("line_weight_sub").toFixed(2))
+          line_weight_sub: Number(avg("line_weight_sub").toFixed(2)),
+          root_branches: Math.round(avg("root_branches")) || 9,
+          root_spread: Math.round(avg("root_spread") / 5) * 5 || 135,
+          root_depth: Math.round(avg("root_depth") / 5) * 5 || 115,
+          wave_arcs: Math.round(avg("wave_arcs")) || 4,
+          wave_radius_start: 108,
+          wave_span_deg: 68,
+          spine_notches: 10,
+          davinci_mode: countMap(p => p.davinci_mode || "da_vinci_max")[0][0],
+          celestial_orbits: true,
+          inner_dot_ring: true
         }
       };
     }
@@ -3210,7 +4206,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       });
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:32px; color:var(--text-sub);">該当する作品がありません。「すべて(20)」タブに戻すか、お気に入り・指示を追加してください。</div>`;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:32px; color:var(--text-sub);">該当する作品がありません。「全作品(30)」タブに戻すか、お気に入り・指示を追加してください。</div>`;
         return;
       }
 
@@ -3295,8 +4291,8 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       const opts = TATTOO_CATALOG.map(w => `<option value="${w.id}">${w.code}：${w.title_ja}</option>`).join("");
       selA.innerHTML = opts;
       selB.innerHTML = opts;
-      selA.value = userState.favorites[0] || 20;
-      selB.value = userState.favorites[1] || 6;
+      selA.value = userState.favorites[0] || 110;
+      selB.value = userState.favorites[1] || 104;
 
       const updateVS = () => {
         const wA = getEffectiveDesign(Number(selA.value));
@@ -3339,6 +4335,22 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
     // Studio Controls & Quick Brush-up Chips
     // ===================================================================
     const CHIP_DEFINITIONS = {
+      rooton_roots_wider: {
+        note: "Rootonロゴの「樹木の根（Tree Roots）」の本数と横幅を広げ、大地に力強くドーム状に張らせる",
+        apply: (p) => { p.is_davinci_rooton = true; p.root_branches = Math.min(11, (p.root_branches || 7) + 2); p.root_spread = Math.min(180, (p.root_spread || 120) + 25); p.root_depth = Math.min(145, (p.root_depth || 110) + 15); }
+      },
+      rooton_waves_more: {
+        note: "Rootonロゴの「左右4〜5重の共鳴波紋アーク」と「背骨の棘突起（Spinous Process）」を鮮明に強調する",
+        apply: (p) => { p.is_davinci_rooton = true; p.wave_arcs = 5; p.spine_notches = 12; p.s_amp = Math.max(44, p.s_amp); }
+      },
+      sun_flame_petals: {
+        note: "太陽を参考画像3・4の「内部リブ入り・長短交互にうねる立体炎型16花弁＋内周ドットリング」にする",
+        apply: (p) => { p.flare_style = "flame_petals_16"; p.flare_len = Math.max(76, p.flare_len); p.flare_wave_amp = Math.max(9.8, p.flare_wave_amp); p.inner_dot_ring = true; p.celestial_orbits = true; }
+      },
+      davinci_max_lines: {
+        note: "背景にレオナルド・ダ・ビンチの「ウィトルウィウス外接正方形・偏心天球軌道・黄金比測量作図線」を緻密に展開する",
+        apply: (p) => { p.is_davinci_rooton = true; p.davinci_mode = "da_vinci_max"; p.celestial_orbits = true; }
+      },
       thinner_line: {
         note: "線を全体的に細く繊細な1RLファインライン調にする",
         apply: (p) => { p.line_weight_main = Math.max(0.85, Number((p.line_weight_main - 0.25).toFixed(2))); p.line_weight_sub = Math.max(0.55, Number((p.line_weight_sub - 0.15).toFixed(2))); }
@@ -3349,7 +4361,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       },
       more_slender: {
         note: "縦軸を長く・横軸を絞って前腕に映えるスレンダー比率にする",
-        apply: (p) => { p.north_len = Math.min(420, p.north_len + 20); p.south_len = p.north_len; p.east_west_len = Math.max(180, p.east_west_len - 20); }
+        apply: (p) => { p.north_len = Math.min(420, p.north_len + 20); p.south_len = p.north_len; p.east_west_len = Math.max(150, p.east_west_len - 20); }
       },
       more_minimal: {
         note: "要素を引き算して余白(ネガティブスペース)と中心の抜けを増やす",
@@ -3439,12 +4451,17 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       setSlider("ctrl-x-size", "val-x-size", p.x_size);
       setSlider("ctrl-ring-r", "val-ring-r", p.ring_r_outer);
       setSlider("ctrl-gap", "val-gap", p.open_junction_gap);
+      setSlider("ctrl-root-spread", "val-root-spread", p.root_spread !== undefined ? p.root_spread : 120);
+      setSlider("ctrl-root-branches", "val-root-branches", p.root_branches !== undefined ? p.root_branches : (p.is_davinci_rooton ? 9 : 0));
+      setSlider("ctrl-wave-arcs", "val-wave-arcs", p.wave_arcs !== undefined ? p.wave_arcs : (p.is_davinci_rooton ? 4 : 0));
 
       document.getElementById("ctrl-needle-style").value = p.needle_style || "classic_facet";
       document.getElementById("ctrl-shading-mode").value = p.shading_mode;
       document.getElementById("ctrl-c1-style").value = p.c1_style;
       document.getElementById("ctrl-chevron-layout").value = p.chevron_layout;
       document.getElementById("ctrl-x-style").value = p.x_style;
+      document.getElementById("ctrl-flare-style").value = p.flare_style || "flame_petals_16";
+      document.getElementById("ctrl-davinci-mode").value = p.davinci_mode || (p.is_davinci_rooton ? "da_vinci_max" : "none");
 
       document.getElementById("brushup-memo-input").value = userState.notesById[activeDesign.id] || "";
       document.getElementById("global-memo-input").value = userState.globalMemo || "";
@@ -3467,7 +4484,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       const showGuide = document.getElementById("toggle-forearm-guide").checked;
       let targetDesign = activeDesign;
       if (comparingOriginal) {
-        const orig = TATTOO_CATALOG.find(item => item.id === activeDesign.id) || TATTOO_CATALOG[19];
+        const orig = TATTOO_CATALOG.find(item => item.id === activeDesign.id) || TATTOO_CATALOG[9] || TATTOO_CATALOG[0];
         targetDesign = orig;
       }
       const svgMarkup = renderTattooSVG(targetDesign, false, showGuide);
@@ -3494,7 +4511,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
 
       lines.push(`\n■ 現在スタジオで編集中のベース作品：${activeDesign.code}（${activeDesign.title_ja}）`);
       const p = activeDesign.params;
-      lines.push(`  ・現在の微調整パラメータ：構造=${NEEDLE_LABELS[p.needle_style]}, 縦=${p.north_len}, 横=${p.east_west_len}, C1=${p.c1_size}(${p.c1_style}), S字振幅=${p.s_amp}, シェブロン=${p.chevron_layout}(幅${p.chevron_size}), 太陽フレア長=${p.flare_len}, 三日月=${p.crescent_angle_deg}°(太さ${p.crescent_thickness}), ×印=${p.x_style}(サイズ${p.x_size}), 陰影=${p.shading_mode}`);
+      lines.push(`  ・現在の微調整パラメータ：構造=${NEEDLE_LABELS[p.needle_style]}, 縦=${p.north_len}, 横=${p.east_west_len}, C1=${p.c1_size}(${p.c1_style}), S字振幅=${p.s_amp}, シェブロン=${p.chevron_layout}(幅${p.chevron_size}), 太陽スタイル=${p.flare_style}(長${p.flare_len}), 三日月=${p.crescent_angle_deg}°(太さ${p.crescent_thickness}), ×印=${p.x_style}(サイズ${p.x_size}), 根=${p.root_branches || 0}本(幅${p.root_spread || 0}), 波紋=${p.wave_arcs || 0}重, ダヴィンチ背景=${p.davinci_mode || "none"}, 陰影=${p.shading_mode}`);
 
       // Collect all per-work notes
       const notedIds = Object.keys(userState.notesById).filter(id => (userState.notesById[id] || "").trim().length > 0);
@@ -3549,6 +4566,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
     function bindStudioControls() {
       const bindRange = (id, valId, paramKey, suffix = "", extraFn = null) => {
         const el = document.getElementById(id);
+        if (!el) return;
         el.addEventListener("input", () => {
           comparingOriginal = false;
           const v = parseFloat(el.value);
@@ -3573,8 +4591,11 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       bindRange("ctrl-crescent-ang", "val-crescent-ang", "crescent_angle_deg", "°");
       bindRange("ctrl-crescent-thick", "val-crescent-thick", "crescent_thickness");
       bindRange("ctrl-x-size", "val-x-size", "x_size");
-      bindRange("ctrl-ring-r", "val-ring-r", "ring_r_outer", "", (v) => { activeDesign.params.ring_r_inner = v - 11; });
+      bindRange("ctrl-ring-r", "val-ring-r", "ring_r_outer", "", (v) => { activeDesign.params.ring_r_inner = v - 12; });
       bindRange("ctrl-gap", "val-gap", "open_junction_gap");
+      bindRange("ctrl-root-spread", "val-root-spread", "root_spread", "", () => { activeDesign.params.is_davinci_rooton = true; });
+      bindRange("ctrl-root-branches", "val-root-branches", "root_branches", "", (v) => { if (v > 0) activeDesign.params.is_davinci_rooton = true; });
+      bindRange("ctrl-wave-arcs", "val-wave-arcs", "wave_arcs", "", (v) => { if (v > 0) activeDesign.params.is_davinci_rooton = true; });
 
       // Galaxy +/- Stepper Buttons
       document.querySelectorAll(".btn-step").forEach(btn => {
@@ -3594,6 +4615,7 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
 
       const bindSelect = (id, paramKey) => {
         const el = document.getElementById(id);
+        if (!el) return;
         el.addEventListener("change", () => {
           comparingOriginal = false;
           activeDesign.params[paramKey] = el.value;
@@ -3606,6 +4628,8 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       bindSelect("ctrl-c1-style", "c1_style");
       bindSelect("ctrl-chevron-layout", "chevron_layout");
       bindSelect("ctrl-x-style", "x_style");
+      bindSelect("ctrl-flare-style", "flare_style");
+      bindSelect("ctrl-davinci-mode", "davinci_mode");
 
       // Quick Instruction Chips
       document.querySelectorAll(".btn-chip").forEach(btn => {
@@ -3674,18 +4698,18 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
 
       document.getElementById("btn-download-custom").addEventListener("click", () => {
         const svgData = renderTattooSVG(activeDesign, false, false);
-        downloadSVGBlob(svgData, `tattoo_${String(activeDesign.id).padStart(2, '0')}_custom.svg`);
+        downloadSVGBlob(svgData, `${activeDesign.code.toLowerCase().replace(/[^a-z0-9]/g, "_")}_custom.svg`);
       });
 
       document.getElementById("btn-download-stencil").addEventListener("click", () => {
         const svgData = renderTattooSVG(activeDesign, true, false);
-        downloadSVGBlob(svgData, `tattoo_${String(activeDesign.id).padStart(2, '0')}_stencil.svg`);
+        downloadSVGBlob(svgData, `${activeDesign.code.toLowerCase().replace(/[^a-z0-9]/g, "_")}_stencil.svg`);
       });
 
       document.getElementById("btn-copy-ai-prompt").addEventListener("click", copyAIPromptToClipboard);
       document.getElementById("dock-btn-copy").addEventListener("click", copyAIPromptToClipboard);
 
-      // Synthesize Ideal Design No.21 from Favorites
+      // Synthesize Ideal Design from Favorites
       document.getElementById("btn-synthesize-favs").addEventListener("click", () => {
         const dna = analyzeFavoritesDNA();
         if (!dna) {
@@ -3693,18 +4717,18 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
           return;
         }
         activeDesign = {
-          id: 20,
-          code: "No.21 [DNA統合]",
-          series: "Series IV: ROOTON MASTERPIECE",
-          title_en: "Synthesized True North Custom",
+          id: 110,
+          code: "DV-10 [DNA統合]",
+          series: "Series V: DA VINCI × ROOTON（ダ・ヴィンチ天球図×ルートンロゴ×炎の太陽）",
+          title_en: "Synthesized True North & Rooton Custom",
           title_ja: "お気に入り傾向100%統合・理想ハイブリッド案",
           subtitle: "選択したお気に入り作品の黄金比平均×最頻構造を自動融合",
-          story: "お気に入りに選んだ作品のパラメータと構造を自動合成したあなた専用の第21作です。",
+          story: "お気に入りに選んだ作品のパラメータと構造を自動合成したあなた専用のカスタム案です。",
           aspect_label: `${dna.avgAspect} : 1（DNA統合）`,
           params: dna.synthesizedParams
         };
-        userState.customParamsById[20] = JSON.parse(JSON.stringify(dna.synthesizedParams));
-        userState.notesById[20] = `お気に入り作品（${userState.favorites.map(i => "No." + String(i).padStart(2, "0")).join("・")}）の傾向を自動統合したカスタム案`;
+        userState.customParamsById[110] = JSON.parse(JSON.stringify(dna.synthesizedParams));
+        userState.notesById[110] = `お気に入り作品（${userState.favorites.map(i => (TATTOO_CATALOG.find(w => w.id === i) || {code: "No." + i}).code).join("・")}）の傾向を自動統合したカスタム案`;
         saveUserState();
         syncControlsFromActive();
         updateLivePreview();
@@ -3797,12 +4821,14 @@ ${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill=
       document.getElementById("zoom-modal").classList.remove("open");
     });
     document.getElementById("btn-zoom-prev").addEventListener("click", () => {
-      const prevId = zoomModalId > 1 ? zoomModalId - 1 : 20;
-      openZoomModal(prevId);
+      const curIdx = TATTOO_CATALOG.findIndex(w => w.id === zoomModalId);
+      const prevIdx = curIdx > 0 ? curIdx - 1 : TATTOO_CATALOG.length - 1;
+      openZoomModal(TATTOO_CATALOG[prevIdx].id);
     });
     document.getElementById("btn-zoom-next").addEventListener("click", () => {
-      const nextId = zoomModalId < 20 ? zoomModalId + 1 : 1;
-      openZoomModal(nextId);
+      const curIdx = TATTOO_CATALOG.findIndex(w => w.id === zoomModalId);
+      const nextIdx = (curIdx >= 0 && curIdx < TATTOO_CATALOG.length - 1) ? curIdx + 1 : 0;
+      openZoomModal(TATTOO_CATALOG[nextIdx].id);
     });
     document.getElementById("btn-zoom-fav").addEventListener("click", () => {
       toggleFavorite(zoomModalId);
