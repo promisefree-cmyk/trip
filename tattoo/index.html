@@ -1,0 +1,3835 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0B1326">
+  <title>True Alignment, True North — タトゥーマスタースタジオ（Galaxy最適化・お気に入り傾向分析＆ブラッシュアップ編集）</title>
+  <style>
+    :root {
+      --bg-navy: #0B1326;
+      --bg-panel: #121D38;
+      --bg-card: #172546;
+      --bg-card-hover: #1D2F58;
+      --wood-gold: #C8A97E;
+      --wood-light: #E5CFA9;
+      --wood-dark: #8C6D46;
+      --text-main: #F4F1EA;
+      --text-sub: #B8C2D6;
+      --border-subtle: rgba(200, 169, 126, 0.26);
+      --paper-bg: #FAF8F5;
+      --skin-bg: #F1DFCE;
+      --stencil-bg: #F6F2FC;
+      --fav-pink: #E85D75;
+      --fav-pink-bg: rgba(232, 93, 117, 0.16);
+      --edit-green: #4CAF7D;
+      --edit-green-bg: rgba(76, 175, 125, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    body {
+      background-color: var(--bg-navy);
+      color: var(--text-main);
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.55;
+      padding-bottom: 92px; /* Space for Galaxy bottom thumb dock */
+    }
+
+    .container, section, .dna-panel, .studio-section, .brushup-box, .controls-panel, .control-box, .tattoo-card, .card-body {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* ===================================================================
+       1. Compact Galaxy Header
+       =================================================================== */
+    .hero-header {
+      background: linear-gradient(145deg, #080E1C 0%, #132140 60%, #1C2C4C 100%);
+      border-bottom: 1px solid var(--wood-gold);
+      padding: 18px 14px 14px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(200, 169, 126, 0.16);
+      border: 1px solid var(--wood-gold);
+      color: var(--wood-light);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .hero-title {
+      font-size: clamp(1.2rem, 4.5vw, 2.0rem);
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+    .hero-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      max-width: 780px;
+      margin: 0 auto 10px;
+    }
+    .quick-guide-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.74rem;
+      color: var(--wood-light);
+    }
+    .quick-guide-step {
+      background: rgba(11, 19, 38, 0.75);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    /* ===================================================================
+       2. Sticky Top Control Bar (Galaxy Thumb-Friendly)
+       =================================================================== */
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 95;
+      background: rgba(11, 19, 38, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+    }
+    .toolbar-row::-webkit-scrollbar {
+      display: none;
+    }
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .btn-tab {
+      background: var(--bg-panel);
+      color: var(--text-sub);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 34px;
+    }
+    .btn-tab.active {
+      background: var(--wood-gold);
+      color: #0B1326;
+      border-color: var(--wood-gold);
+      font-weight: 800;
+    }
+    .btn-tab.fav-filter.active {
+      background: var(--fav-pink);
+      color: #FFF;
+      border-color: var(--fav-pink);
+    }
+    .badge-count {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    /* ===================================================================
+       3. Main Container & Section Headings
+       =================================================================== */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 10px;
+    }
+    @media (min-width: 768px) {
+      .container {
+        padding: 24px 20px;
+      }
+    }
+
+    .section-heading {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--wood-gold);
+      padding-left: 10px;
+    }
+    .section-heading h2 {
+      font-size: clamp(1.05rem, 3.6vw, 1.38rem);
+      color: #FFF;
+      font-weight: 800;
+    }
+    .section-heading span {
+      font-size: 0.76rem;
+      color: var(--text-sub);
+    }
+
+    /* ===================================================================
+       4. Preference DNA Analyzer Panel (#section-dna)
+       =================================================================== */
+    .dna-panel {
+      background: linear-gradient(160deg, #13203D 0%, #19294F 100%);
+      border: 1.5px solid var(--wood-gold);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+    }
+    .dna-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .dna-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--wood-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .fav-tray {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 6px 2px 10px;
+      scrollbar-width: thin;
+    }
+    .fav-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(11, 19, 38, 0.85);
+      border: 1px solid var(--fav-pink);
+      border-radius: 10px;
+      padding: 4px 8px 4px 4px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .fav-chip-thumb {
+      width: 34px;
+      height: 42px;
+      background: var(--paper-bg);
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .fav-chip-thumb svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .fav-chip-info {
+      font-size: 0.74rem;
+      line-height: 1.25;
+    }
+    .fav-chip-code {
+      font-weight: 800;
+      color: var(--wood-gold);
+    }
+    .fav-chip-remove {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      padding: 2px 4px;
+      cursor: pointer;
+    }
+
+    .dna-diagnosis-box {
+      background: rgba(11, 19, 38, 0.72);
+      border-left: 3px solid var(--fav-pink);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    .dna-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .dna-metric-card {
+      background: rgba(11, 19, 38, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .dna-metric-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+    .dna-metric-val {
+      font-weight: 800;
+      color: var(--wood-light);
+    }
+    .dna-bar-bg {
+      width: 100%;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .dna-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--wood-gold), var(--fav-pink));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .dna-metric-sub {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .dna-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn-dna-synth {
+      flex: 1;
+      min-width: 240px;
+      background: linear-gradient(135deg, var(--fav-pink) 0%, #C84B61 100%);
+      color: #FFF;
+      border: none;
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.84rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(232, 93, 117, 0.35);
+    }
+    .btn-dna-vs {
+      background: rgba(200, 169, 126, 0.18);
+      color: var(--wood-light);
+      border: 1px solid var(--wood-gold);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    /* ===================================================================
+       5. VS Side-by-Side Comparison Panel (#vs-compare-panel)
+       =================================================================== */
+    .vs-panel {
+      display: none;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--wood-gold);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 22px;
+    }
+    .vs-panel.active {
+      display: block;
+    }
+    .vs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .vs-col {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .vs-stage {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      background: var(--paper-bg);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .vs-stage svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .vs-specs {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      display: grid;
+      gap: 3px;
+    }
+
+    /* ===================================================================
+       6. Galaxy-Optimized 20 Artworks Gallery Grid
+       =================================================================== */
+    .gallery-grid {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    /* Default: 2-Column on Galaxy Mobile, 4-Column on Desktop */
+    .gallery-grid.grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 900px) {
+      .gallery-grid.grid-2 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+    }
+    /* 1-Column Large View */
+    .gallery-grid.grid-1 {
+      grid-template-columns: minmax(0, 520px);
+      justify-content: center;
+      gap: 18px;
+    }
+    /* 3-Column Overview */
+    .gallery-grid.grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (min-width: 900px) {
+      .gallery-grid.grid-3 {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+    }
+
+    .tattoo-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+    .tattoo-card.selected {
+      border: 2px solid var(--wood-gold);
+      box-shadow: 0 0 0 2px rgba(200, 169, 126, 0.28);
+    }
+    .tattoo-card.is-fav {
+      border-color: var(--fav-pink);
+    }
+
+    .card-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      background: rgba(8, 14, 28, 0.78);
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 4px;
+    }
+    .card-code {
+      font-weight: 800;
+      color: var(--wood-gold);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .card-aspect {
+      font-size: 0.65rem;
+      background: rgba(200, 169, 126, 0.15);
+      color: var(--wood-light);
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 65%;
+    }
+
+    .card-svg-stage {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      background: var(--paper-bg);
+      position: relative;
+      cursor: pointer;
+    }
+    .card-svg-stage svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .card-zoom-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(11, 19, 38, 0.68);
+      color: #FFF;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 0.68rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    .card-note-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      right: 6px;
+      background: rgba(18, 29, 56, 0.9);
+      color: var(--wood-light);
+      border: 1px solid var(--wood-gold);
+      border-radius: 6px;
+      padding: 3px 6px;
+      font-size: 0.66rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-body {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+    .card-title-ja {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #FFF;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .gallery-grid.grid-1 .card-title-ja {
+      font-size: 1.05rem;
+      -webkit-line-clamp: unset;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    .card-tag {
+      font-size: 0.64rem;
+      background: rgba(11, 19, 38, 0.7);
+      color: var(--text-sub);
+      border: 1px solid rgba(200, 169, 126, 0.2);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .card-details-toggle {
+      font-size: 0.7rem;
+      color: var(--wood-light);
+      cursor: pointer;
+      margin-top: 2px;
+    }
+    .card-details-Toggle summary {
+      cursor: pointer;
+      color: var(--wood-gold);
+      font-size: 0.7rem;
+      user-select: none;
+    }
+    .card-story {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    /* Compact 3-col hides extra text for ultra-clean visual scan */
+    .gallery-grid.grid-3 .card-tags,
+    .gallery-grid.grid-3 .card-details-wrap,
+    .gallery-grid.grid-3 .card-aspect {
+      display: none;
+    }
+    .gallery-grid.grid-3 .card-title-ja {
+      font-size: 0.7rem;
+      -webkit-line-clamp: 1;
+    }
+
+    .card-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+    .btn-card {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 7px 4px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--border-subtle);
+      background: rgba(11, 19, 38, 0.85);
+      color: var(--text-main);
+      min-height: 35px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.15s ease;
+    }
+    .btn-card.btn-fav.active {
+      background: var(--fav-pink);
+      border-color: var(--fav-pink);
+      color: #FFF;
+    }
+    .btn-card.btn-edit-work {
+      background: rgba(200, 169, 126, 0.18);
+      border-color: var(--wood-gold);
+      color: var(--wood-light);
+    }
+
+    /* ===================================================================
+       7. Interactive Brush-up & Instruction Master Studio (#live-studio)
+       =================================================================== */
+    .studio-section {
+      background: var(--bg-panel);
+      border: 2px solid var(--wood-gold);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 32px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+    @media (min-width: 768px) {
+      .studio-section {
+        padding: 24px;
+      }
+    }
+
+    .studio-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .studio-title {
+      font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+      color: var(--wood-light);
+      font-weight: 800;
+    }
+
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (min-width: 1024px) {
+      .studio-grid {
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+      }
+    }
+
+    /* Sticky Preview on Mobile inside Studio so user sees live changes while tapping chips */
+    .preview-stage-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #0D162B;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 10px;
+      position: sticky;
+      top: 86px;
+      z-index: 40;
+    }
+    @media (max-width: 1023px) {
+      .preview-stage-wrap.compact-mobile .preview-canvas {
+        max-width: 210px;
+      }
+    }
+    .preview-canvas {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 4 / 5;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      position: relative;
+      transition: max-width 0.2s ease;
+    }
+    .preview-canvas svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .preview-toolbar-mini {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .btn-mini {
+      background: rgba(200, 169, 126, 0.15);
+      color: var(--wood-light);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-mini.active {
+      background: var(--wood-gold);
+      color: #0B1326;
+    }
+    .preview-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-action {
+      background: var(--wood-gold);
+      color: #0B1326;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-action.secondary {
+      background: transparent;
+      color: var(--wood-light);
+      border: 1px solid var(--wood-gold);
+    }
+
+    /* Brush-up Quick Instruction Chips Panel */
+    .brushup-box {
+      background: rgba(11, 19, 38, 0.82);
+      border: 1.5px solid var(--wood-gold);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .brushup-box h4 {
+      font-size: 0.92rem;
+      color: var(--wood-light);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chip-cat-label {
+      font-size: 0.74rem;
+      color: var(--wood-gold);
+      font-weight: 700;
+      margin: 8px 0 5px;
+    }
+    .chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .btn-chip {
+      background: #152342;
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-chip:active, .btn-chip.applied {
+      background: var(--edit-green-bg);
+      border-color: var(--edit-green);
+      color: #81E6B0;
+      font-weight: 800;
+    }
+
+    .memo-area-wrap {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .memo-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--wood-light);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .memo-textarea {
+      width: 100%;
+      min-height: 74px;
+      background: #080F1E;
+      color: #FFF;
+      border: 1px solid var(--wood-gold);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.84rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    /* AI Prompt Export Box */
+    .export-prompt-box {
+      background: linear-gradient(145deg, #101C35, #17284C);
+      border: 1.5px solid var(--edit-green);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .btn-copy-prompt {
+      width: 100%;
+      background: linear-gradient(135deg, #4CAF7D 0%, #368F62 100%);
+      color: #FFF;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 14px rgba(76, 175, 125, 0.35);
+    }
+    .prompt-preview-pre {
+      background: rgba(8, 14, 28, 0.85);
+      color: var(--text-sub);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+
+    /* Parameter Sliders Panel (with Galaxy +/- Touch Stepper Buttons) */
+    .controls-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 12px;
+    }
+    .control-box {
+      background: rgba(11, 19, 38, 0.68);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .control-box h4 {
+      font-size: 0.85rem;
+      color: var(--wood-light);
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(200, 169, 126, 0.18);
+      padding-bottom: 5px;
+    }
+    .slider-row {
+      margin-bottom: 10px;
+    }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+    .slider-val {
+      color: var(--wood-gold);
+      font-weight: 800;
+      font-family: monospace;
+    }
+    .slider-touch-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-step {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-panel);
+      color: var(--wood-light);
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--wood-gold);
+      cursor: pointer;
+      height: 24px;
+    }
+    select.studio-select {
+      width: 100%;
+      background: #0B1326;
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-top: 3px;
+    }
+
+    /* ===================================================================
+       8. Galaxy Bottom Thumb Navigation Dock
+       =================================================================== */
+    .bottom-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 120;
+      background: rgba(8, 14, 28, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1.5px solid var(--wood-gold);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+      gap: 6px;
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.55);
+    }
+    .dock-btn {
+      background: transparent;
+      color: var(--text-sub);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .dock-btn .dock-icon {
+      font-size: 1.05rem;
+    }
+    .dock-btn.active {
+      color: var(--wood-gold);
+      background: rgba(200, 169, 126, 0.14);
+    }
+
+    /* ===================================================================
+       9. Fullscreen Zoom & Swipe Modal (for Galaxy Detail Inspection)
+       =================================================================== */
+    .zoom-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(5, 10, 20, 0.96);
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+    }
+    .zoom-modal.open {
+      display: flex;
+    }
+    .zoom-modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: #FFF;
+    }
+    .zoom-modal-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      margin: 8px 0;
+    }
+    .zoom-modal-stage svg {
+      max-width: 100%;
+      max-height: 76vh;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .zoom-modal-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 78px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--wood-gold);
+      color: #0B1326;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.22s ease;
+      z-index: 250;
+      white-space: nowrap;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Spec Sheet Box */
+    .spec-sheet-section {
+      margin-top: 28px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .spec-card {
+      background: rgba(11, 19, 38, 0.65);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .spec-card h4 {
+      color: var(--wood-gold);
+      font-size: 0.86rem;
+      margin-bottom: 6px;
+    }
+    .spec-card li {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+    }
+    .spec-card ul {
+      padding-left: 16px;
+    }
+
+    /* Surface Mode overrides for SVG backgrounds */
+    body[data-surface="skin"] .flash-bg,
+    body[data-surface="skin"] .bg-mask,
+    body[data-surface="skin"] .facet-light {
+      fill: #F1DFCE !important;
+    }
+    body[data-surface="stencil"] .flash-bg {
+      fill: #F6F2FC !important;
+    }
+    body[data-surface="stencil"] svg path,
+    body[data-surface="stencil"] svg line,
+    body[data-surface="stencil"] svg polyline,
+    body[data-surface="stencil"] svg polygon,
+    body[data-surface="stencil"] svg circle {
+      stroke: #4A237A !important;
+    }
+    body[data-surface="stencil"] .facet-shaded,
+    body[data-surface="stencil"] .facet-light,
+    body[data-surface="stencil"] .bg-mask,
+    body[data-surface="stencil"] #inner-crescent path,
+    body[data-surface="stencil"] .shade-detail-node {
+      fill: none !important;
+    }
+    body[data-surface="stencil"] .shade-detail {
+      display: none !important;
+    }
+  </style>
+</head>
+<body data-surface="paper">
+
+  <!-- Toast -->
+  <div id="toast-msg" class="toast-msg">コピーしました！</div>
+
+  <!-- =================================================================== -->
+  <!-- 1. Compact Header                                                   -->
+  <!-- =================================================================== -->
+  <header class="hero-header">
+    <div class="hero-badge">GALAXY MASTER STUDIO × KOREAN FINE LINE × ONE PIECE VOW</div>
+    <h1 class="hero-title">True Alignment, True North — 全20作品マスターページ</h1>
+    <p class="hero-subtitle">
+      ①気になる作品に「♡お気に入り」を押す ➔ ②自動で「好みの傾向DNA」が判明＆理想案を自動合成 ➔ ③ワンタップ指示チップとメモでブラッシュアップ編集！
+    </p>
+    <div class="quick-guide-bar">
+      <span class="quick-guide-step">📱 Galaxy 2列/1列/3列/VS比較</span>
+      <span class="quick-guide-step">💖 お気に入り傾向DNA自動診断</span>
+      <span class="quick-guide-step">✏️ 指示チップ＆リアルタイム編集</span>
+    </div>
+  </header>
+
+  <!-- =================================================================== -->
+  <!-- 2. Sticky Galaxy Toolbar (Layout / Surface / Series & Fav Filter)   -->
+  <!-- =================================================================== -->
+  <nav class="top-toolbar">
+    <div class="toolbar-row">
+      <div class="btn-group" id="layout-switcher">
+        <button class="btn-tab active" data-grid-mode="grid-2">📱 2列比較</button>
+        <button class="btn-tab" data-grid-mode="grid-1">🖼️ 1列特大</button>
+        <button class="btn-tab" data-grid-mode="grid-3">⚡ 3列一覧</button>
+        <button class="btn-tab" id="btn-toggle-vs" data-grid-mode="vs">⚖️ 2枚VS比較</button>
+      </div>
+      <div class="btn-group" id="surface-switcher">
+        <button class="btn-tab active" data-surface-btn="paper">📄 白紙</button>
+        <button class="btn-tab" data-surface-btn="skin">💪 肌色</button>
+        <button class="btn-tab" data-surface-btn="stencil">🟣 下絵</button>
+      </div>
+    </div>
+    <div class="toolbar-row" id="filter-bar">
+      <div class="btn-group">
+        <button class="btn-tab active" data-filter="all">すべて <span class="badge-count">20</span></button>
+        <button class="btn-tab fav-filter" data-filter="fav" id="filter-fav-btn">💖 お気に入り <span class="badge-count" id="nav-fav-count">0</span></button>
+        <button class="btn-tab" data-filter="edited" id="filter-edited-btn">✏️ 指示・編集済 <span class="badge-count" id="nav-edit-count">0</span></button>
+        <button class="btn-tab" data-filter="Series I:">I. 誓いの× (01-05)</button>
+        <button class="btn-tab" data-filter="Series II:">II. 太陽と月 (06-10)</button>
+        <button class="btn-tab" data-filter="Series III:">III. 永久指針 (11-15)</button>
+        <button class="btn-tab" data-filter="Series IV:">IV. 引き算極致 (16-20)</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- =================================================================== -->
+    <!-- 3. VS Side-by-Side Comparison Panel (Toggled via ⚖️ 2枚VS比較)      -->
+    <!-- =================================================================== -->
+    <section class="vs-panel" id="vs-compare-panel">
+      <div class="dna-header">
+        <div class="dna-title">⚖️ 2作品を並べて徹底比較（Galaxyスプリット比較モード）</div>
+        <button class="btn-mini" id="btn-close-vs">✕ 閉じる</button>
+      </div>
+      <div class="vs-grid">
+        <div class="vs-col">
+          <select class="studio-select" id="vs-select-a"></select>
+          <div class="vs-stage" id="vs-stage-a"></div>
+          <div class="vs-specs" id="vs-specs-a"></div>
+          <button class="btn-card btn-edit-work" id="vs-edit-a">✏️ 左をベースに編集</button>
+        </div>
+        <div class="vs-col">
+          <select class="studio-select" id="vs-select-b"></select>
+          <div class="vs-stage" id="vs-stage-b"></div>
+          <div class="vs-specs" id="vs-specs-b"></div>
+          <button class="btn-card btn-edit-work" id="vs-edit-b">✏️ 右をベースに編集</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 4. Favorite Preference DNA Analyzer (#section-dna)                  -->
+    <!-- =================================================================== -->
+    <section class="dna-panel" id="section-dna">
+      <div class="dna-header">
+        <div class="dna-title">
+          <span>💖 お気に入り傾向DNAアナライザー</span>
+          <span class="badge-count" id="dna-fav-badge">選択中: 0作品</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-mini" id="btn-toggle-dna-bars">📊 6軸グラフ開閉</button>
+          <button class="btn-mini" id="btn-clear-favs">リセット</button>
+        </div>
+      </div>
+
+      <!-- Horizontal Tray of Favorited Works -->
+      <div class="fav-tray" id="fav-tray"></div>
+
+      <!-- Natural Japanese Auto-Diagnosis Summary -->
+      <div class="dna-diagnosis-box" id="dna-diagnosis-text">
+        下のギャラリーで心が動く作品に<strong>「♡ お気に入り」</strong>を押してください（複数選択OK）。選んだ作品の共通点（シルエット構造・C1ダイヤ・S字のうねり・太陽フレア・三日月・×印）をリアルタイムで数値化し、あなた専用の理想バランスを自動合成します！
+      </div>
+
+      <!-- 6-Axis Preference Bars (Collapsed by default on mobile so Gallery is immediately visible) -->
+      <div class="dna-grid" id="dna-bars-container" style="display:none;"></div>
+
+      <div class="dna-actions">
+        <button class="btn-dna-synth" id="btn-synthesize-favs">
+          ✨ お気に入りの傾向から「理想の統合デザイン(No.21)」を自動合成して編集する
+        </button>
+        <button class="btn-dna-vs" id="btn-fav-to-vs">
+          ⚖️ お気に入り上位2枚をVS比較する
+        </button>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 5. All 20 Artworks Gallery (Galaxy 2-col / 1-col / 3-col)           -->
+    <!-- =================================================================== -->
+    <section id="section-gallery">
+      <div class="section-heading">
+        <h2>🏴‍☠️ 全20作品ギャラリー（True Alignment, True North）</h2>
+        <span>画像をタップで拡大・比較 ／「♡お気に入り」で上の傾向DNAがリアルタイム更新</span>
+      </div>
+      <div class="gallery-grid grid-2" id="gallery-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 6. Master Brush-up & Instruction Studio (#live-studio)              -->
+    <!-- =================================================================== -->
+    <section class="studio-section" id="live-studio">
+      <div class="studio-header">
+        <div>
+          <div class="studio-title" id="studio-active-title">✏️ ブラッシュアップ指示＆微調整マスタースタジオ（選択中：No.20）</div>
+          <p style="font-size:0.76rem; color:var(--text-sub); margin-top:2px;">
+            ワンタップ指示チップを押すと「図柄への即時反映」と「ブラッシュアップ指示メモへの追記」が同時に行われます。
+          </p>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:0.78rem; color:var(--wood-light); cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <input type="checkbox" id="toggle-forearm-guide"> 前腕シルエット枠(8〜12cm)を表示
+          </label>
+        </div>
+      </div>
+
+      <div class="studio-grid">
+        <!-- Left (or Sticky Top on Galaxy): Live SVG Stage -->
+        <div class="preview-stage-wrap" id="studio-preview-wrap">
+          <div class="preview-canvas" id="live-svg-container">
+            <!-- Dynamic SVG injected here -->
+          </div>
+          <div class="preview-toolbar-mini">
+            <button class="btn-mini" id="btn-toggle-preview-size">🔍 プレビュー縮小/拡大(スマホ用)</button>
+            <button class="btn-mini" id="btn-compare-orig">👀 編集前(初期値)と比較</button>
+            <button class="btn-mini" id="btn-studio-fav">♡ この作品を気に入りに追加</button>
+          </div>
+          <div class="preview-actions">
+            <button class="btn-action" id="btn-download-custom">⬇ 微調整SVGを保存</button>
+            <button class="btn-action secondary" id="btn-download-stencil">⬇ 下絵(線画)SVGを保存</button>
+            <button class="btn-action secondary" id="btn-reset-preset">↺ 初期値に戻す</button>
+          </div>
+        </div>
+
+        <!-- Right: Quick Brush-up Instruction Chips + Memo + Precision Sliders -->
+        <div>
+
+          <!-- Box A: One-Tap Brush-up Instruction Chips & Free Memo -->
+          <div class="brushup-box">
+            <h4>
+              <span>💡 ワンタップ・ブラッシュアップ指示チップ（押すと即時プレビュー反映＋指示メモ追記）</span>
+            </h4>
+
+            <div class="chip-cat-label">【全体の印象・線の太さ・シルエット】</div>
+            <div class="chips-wrap" id="quick-instruction-chips">
+              <button class="btn-chip" data-chip="thinner_line">✨ もっと線を細く繊細に(1RL風)</button>
+              <button class="btn-chip" data-chip="bolder_axis">🔥 主軸の線を力強くくっきり(3RL)</button>
+              <button class="btn-chip" data-chip="more_slender">📐 もっと縦長・スレンダーに</button>
+              <button class="btn-chip" data-chip="more_minimal">🍃 引き算して余白を増やす</button>
+
+              <div class="chip-cat-label" style="width:100%;">【① 背骨S字・第1頸椎C1アトラス・7シェブロン】</div>
+              <button class="btn-chip" data-chip="c1_larger">👑 C1アトラスのダイヤをもっと強調</button>
+              <button class="btn-chip" data-chip="s_curve_more">〰️ 背骨のS字をもっと大きく優美に</button>
+              <button class="btn-chip" data-chip="s_curve_straight">📏 S字を抑えてシャープな直線軸に</button>
+              <button class="btn-chip" data-chip="chevrons_clear">脊椎 7つのシェブロン(V字)を鮮明に</button>
+
+              <div class="chip-cat-label" style="width:100%;">【② 羅針盤構造・アラバスタの「×」】</div>
+              <button class="btn-chip" data-chip="short_compass">🗡️ コンパス針を小さくして背骨を露出</button>
+              <button class="btn-chip" data-chip="split_corridor">🏛️ 中央に白い回廊を開けて背骨を見せる</button>
+              <button class="btn-chip" data-chip="x_prominent">✖️ 仲間の印「×」をもっと際立たせる</button>
+              <button class="btn-chip" data-chip="x_subtle">🤫 「×」をもっとさりげなく隠す</button>
+
+              <div class="chip-cat-label" style="width:100%;">【③④ 太陽フレア(ニカ) ＆ 三日月(D・光月)】</div>
+              <button class="btn-chip" data-chip="flare_nika">☀️ 太陽フレアを長く躍動的に(ニカ風)</button>
+              <button class="btn-chip" data-chip="flare_compact">🌤️ 太陽フレアを短く控えめに</button>
+              <button class="btn-chip" data-chip="crescent_sharp">🌙 三日月をもっと細く鋭く</button>
+              <button class="btn-chip" data-chip="crescent_cradle">🥣 三日月を下向き(器型)にして太陽を抱く</button>
+            </div>
+
+            <div class="memo-area-wrap">
+              <div>
+                <label class="memo-label" for="brushup-memo-input" id="memo-work-label">📝 この作品へのブラッシュアップ指示メモ（自由記述・音声入力OK）：</label>
+                <textarea class="memo-textarea" id="brushup-memo-input" placeholder="例：No.20のシルエットをベースに、C1アトラスのダイヤをもう少し大きくして、太陽フレアはNo.06のように長くうねらせたい…など自由に記入できます"></textarea>
+              </div>
+              <div>
+                <label class="memo-label" for="global-memo-input">📌 全体を通してのブラッシュアップ要望・組み合わせ指示：</label>
+                <textarea class="memo-textarea" id="global-memo-input" style="min-height:58px;" placeholder="例：No.04の背骨スリット構造とNo.20の王冠ダイヤを合体させたパターンを5枚見たい、前腕10cmで彫りたい 等"></textarea>
+              </div>
+            </div>
+
+            <!-- Export AI Instruction Sheet -->
+            <div class="export-prompt-box" id="section-export">
+              <button class="btn-copy-prompt" id="btn-copy-ai-prompt">
+                📋 お気に入り傾向＆ブラッシュアップ指示書をワンタップコピー（AIへ貼り付け用）
+              </button>
+              <pre class="prompt-preview-pre" id="ai-prompt-preview"></pre>
+            </div>
+          </div>
+
+          <!-- Box B: Precision Parameter Sliders (Touch-friendly with - / + buttons) -->
+          <div class="controls-panel">
+
+            <!-- Box 1: 線幅・シェーディング・全体比率 -->
+            <div class="control-box">
+              <h4>① 線の太さ ＆ 羅針盤シルエット構造</h4>
+              <div class="slider-row">
+                <div class="slider-header"><span>主軸の線の太さ (3RL相当)</span><span class="slider-val" id="val-lw-main">1.50px</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-lw-main" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-lw-main" min="0.8" max="2.6" step="0.05" value="1.5">
+                  <button class="btn-step" data-target="ctrl-lw-main" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>副軸・コロナの線の太さ (1RL相当)</span><span class="slider-val" id="val-lw-sub">0.95px</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-lw-sub" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-lw-sub" min="0.5" max="1.8" step="0.05" value="0.95">
+                  <button class="btn-step" data-target="ctrl-lw-sub" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>南北の針の長さ (縦軸)</span><span class="slider-val" id="val-n-len">380</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-n-len" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-n-len" min="280" max="425" step="5" value="380">
+                  <button class="btn-step" data-target="ctrl-n-len" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>東西の針の長さ (横軸)</span><span class="slider-val" id="val-ew-len">235</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-ew-len" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-ew-len" min="170" max="300" step="5" value="235">
+                  <button class="btn-step" data-target="ctrl-ew-len" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>羅針盤×背骨ニードル構造スタイル</span></div>
+                <select class="studio-select" id="ctrl-needle-style">
+                  <option value="classic_facet">王道フルレングス4方位ファセット</option>
+                  <option value="short_blade_long_spine">コンパクト羅針盤 × ロング背骨ニードル露出型</option>
+                  <option value="stepped_royal_needle">2段ステップド・ロイヤルニードル</option>
+                  <option value="split_spine_corridor">中空スプリット回廊 (背骨ホワイトスリット)</option>
+                  <option value="asymmetric_polaris">非対称ポラリス (北針ロング強調)</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>片側シェーディング手法</span></div>
+                <select class="studio-select" id="ctrl-shading-mode">
+                  <option value="greywash">2Dグレーウォッシュ (韓国風標準)</option>
+                  <option value="stipple">マイクロドット点描 (Stippling)</option>
+                  <option value="hybrid">ハイブリッド (グレー＋マイクロドット)</option>
+                  <option value="hatch">建築天球図ハッチング (極細平行線)</option>
+                  <option value="stencil">ステンシル線画のみ (塗りなし)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Box 2: 背骨S字・C1アトラス・7シェブロン -->
+            <div class="control-box">
+              <h4>② 背骨S字軸・第1頸椎C1アトラス・椎骨V字</h4>
+              <div class="slider-row">
+                <div class="slider-header"><span>第1頸椎C1アトラス ダイヤの大きさ</span><span class="slider-val" id="val-c1-size">21</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-c1-size" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-c1-size" min="10" max="30" step="1" value="21">
+                  <button class="btn-step" data-target="ctrl-c1-size" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>C1アトラス ダイヤの造形スタイル</span></div>
+                <select class="studio-select" id="ctrl-c1-style">
+                  <option value="crown_diamond">王冠ダブルダイヤ＋横突起ウィング (Crown)</option>
+                  <option value="split_diamond">白黒二分割ファセットダイヤ (Split)</option>
+                  <option value="double_hollow">中空二重ダイヤモンド (Hollow)</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>背骨S字流線のうねり振幅</span><span class="slider-val" id="val-s-amp">42</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-s-amp" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-s-amp" min="8" max="68" step="2" value="42">
+                  <button class="btn-step" data-target="ctrl-s-amp" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>椎骨シェブロン (V字) 配置バランス</span></div>
+                <select class="studio-select" id="ctrl-chevron-layout">
+                  <option value="golden_5_2">黄金比 5:2 配置 (上5・下2＝計7椎)</option>
+                  <option value="upper_lower_7">上下バランス配置 (北4・南3＝計7椎)</option>
+                  <option value="cervical_7_cluster">北針・頸椎7椎集中クラスター (C1〜C7)</option>
+                  <option value="spine_7_even">背骨全体7椎イーブン配置</option>
+                  <option value="all_blue_4_3">オールブルー 4:3 統合配置 (計7椎)</option>
+                  <option value="minimal_6">引き算ミニマル 6椎 (上3・下3)</option>
+                  <option value="minimal_5">引き算ミニマル 5椎 (上3・下2)</option>
+                  <option value="minimal_3">極限引き算 3椎 (上2・下1)</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>シェブロン (V字) の横幅サイズ</span><span class="slider-val" id="val-chevron-size">11.5</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-chevron-size" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-chevron-size" min="6" max="18" step="0.5" value="11.5">
+                  <button class="btn-step" data-target="ctrl-chevron-size" data-dir="1">＋</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Box 3: 太陽フレア（8本）＆ 内周三日月 -->
+            <div class="control-box">
+              <h4>③ 外周8本の太陽フレア ＆ 内周の三日月</h4>
+              <div class="slider-row">
+                <div class="slider-header"><span>太陽フレアの対角ペア開き角度</span><span class="slider-val" id="val-flare-spread">13.5°</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-flare-spread" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-flare-spread" min="7" max="24" step="0.5" value="13.5">
+                  <button class="btn-step" data-target="ctrl-flare-spread" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>太陽フレアの長さ</span><span class="slider-val" id="val-flare-len">72</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-flare-len" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-flare-len" min="36" max="115" step="2" value="72">
+                  <button class="btn-step" data-target="ctrl-flare-len" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>太陽フレアのウェーブうねり量</span><span class="slider-val" id="val-flare-wave">6.2</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-flare-wave" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-flare-wave" min="2" max="15" step="0.5" value="6.2">
+                  <button class="btn-step" data-target="ctrl-flare-wave" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>内周・三日月の配置角度 (180°=左, 0°=右, 90°=下)</span><span class="slider-val" id="val-crescent-ang">180°</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-crescent-ang" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-crescent-ang" min="0" max="345" step="15" value="180">
+                  <button class="btn-step" data-target="ctrl-crescent-ang" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>三日月アークの太さ</span><span class="slider-val" id="val-crescent-thick">15</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-crescent-thick" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-crescent-thick" min="8" max="26" step="1" value="15">
+                  <button class="btn-step" data-target="ctrl-crescent-thick" data-dir="1">＋</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Box 4: ONE PIECE 仲間の印「×」＆ リング径 -->
+            <div class="control-box">
+              <h4>④ ONE PIECE 仲間の印「×」＆ 中心二重リング</h4>
+              <div class="slider-row">
+                <div class="slider-header"><span>仲間の印「×（クロス）」のサイズ</span><span class="slider-val" id="val-x-size">58</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-x-size" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-x-size" min="24" max="84" step="2" value="58">
+                  <button class="btn-step" data-target="ctrl-x-size" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>「×」の幾何学融合スタイル</span></div>
+                <select class="studio-select" id="ctrl-x-style">
+                  <option value="core_diamond_x">中心核ダイヤモンド＋45°クロス (All Blue)</option>
+                  <option value="center_vow_x">アラバスタの誓い・シンプル中心クロス</option>
+                  <option value="diagonal_ring_x">対角リング貫通クロス (4つの海の交点)</option>
+                  <option value="flare_root_x">太陽フレア根元連動クロス (Dawn X)</option>
+                  <option value="floating_x">フローティング・ミニマルクロス</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>中心リング外径 (太陽二重環)</span><span class="slider-val" id="val-ring-r">88</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-ring-r" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-ring-r" min="66" max="110" step="2" value="88">
+                  <button class="btn-step" data-target="ctrl-ring-r" data-dir="1">＋</button>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>交点の抜け (Open Junction 滲み防止)</span><span class="slider-val" id="val-gap">0</span></div>
+                <div class="slider-touch-wrap">
+                  <button class="btn-step" data-target="ctrl-gap" data-dir="-1">−</button>
+                  <input type="range" id="ctrl-gap" min="0" max="18" step="2" value="0">
+                  <button class="btn-step" data-target="ctrl-gap" data-dir="1">＋</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- 7. Tattoo Artist Spec Sheet                                         -->
+    <!-- =================================================================== -->
+    <section class="spec-sheet-section">
+      <div class="section-heading" style="margin-bottom:8px;">
+        <h2>📋 彫り師にそのまま渡せる「施術オーダーシート（10年耐久・韓国風ファインライン仕様）」</h2>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-card">
+          <h4>1. ニードル＆線幅ヒエラルキー</h4>
+          <ul>
+            <li><strong>主軸ライン (重力軸・S字流線・4方位針・C1ダイヤ)</strong>：<code>3RL (Tight Bugpin 0.25mm)</code></li>
+            <li><strong>副軸ライン (太陽二重環・8本フレア・内周三日月・7シェブロン)</strong>：<code>1RL (Single Needle)</code></li>
+            <li><strong>点線・破線は完全不使用</strong>：すべて実線（Solid Line）で引き切る。</li>
+          </ul>
+        </div>
+        <div class="spec-card">
+          <h4>2. シェーディング＆インク配合</h4>
+          <ul>
+            <li><strong>コンパス片側陰影</strong>：<code>20%〜35% Greywash</code> または極細スティップリング（密度差ドット）。</li>
+            <li><strong>ハイライト</strong>：白インクのベタ塗りは避け、<strong>「彫らない肌の余白（Skin Break）」</strong>で白黒のシャープな切り返しを表現。</li>
+          </ul>
+        </div>
+        <div class="spec-card">
+          <h4>3. ステンシル転写時の絶対ルール</h4>
+          <ul>
+            <li><strong>解剖学的自然立位での転写</strong>：ベッドに寝た状態ではなく、必ず<strong>「立位で肩の力を抜き、腕を自然に下ろしたニュートラル姿勢」</strong>で中心垂直軸を合わせて転写する。</li>
+            <li><strong>推奨サイズ</strong>：前腕内側または上腕にて<strong>縦 9.5cm〜12.0cm</strong>。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =================================================================== -->
+  <!-- 8. Fullscreen Zoom & Swipe Modal                                    -->
+  <!-- =================================================================== -->
+  <div class="zoom-modal" id="zoom-modal">
+    <div class="zoom-modal-top">
+      <div id="zoom-modal-title" style="font-weight:800; font-size:0.9rem; color:var(--wood-light);">No.20</div>
+      <button class="btn-mini" id="btn-close-zoom">✕ 閉じる</button>
+    </div>
+    <div class="zoom-modal-stage" id="zoom-modal-stage"></div>
+    <div class="zoom-modal-bottom">
+      <button class="btn-mini" id="btn-zoom-prev">◀ 前の作品</button>
+      <button class="btn-card btn-fav" id="btn-zoom-fav" style="min-width:110px;">♡ お気に入り</button>
+      <button class="btn-card btn-edit-work" id="btn-zoom-edit" style="min-width:110px;">✏️ 指示・編集</button>
+      <button class="btn-mini" id="btn-zoom-next">次の作品 ▶</button>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- 9. Galaxy Bottom Thumb Navigation Dock                              -->
+  <!-- =================================================================== -->
+  <nav class="bottom-dock">
+    <button class="dock-btn active" data-scroll-to="section-gallery">
+      <span class="dock-icon">🖼️</span>
+      <span>20作品一覧</span>
+    </button>
+    <button class="dock-btn" data-scroll-to="section-dna">
+      <span class="dock-icon">💖</span>
+      <span>好み傾向(<span id="dock-fav-count">0</span>)</span>
+    </button>
+    <button class="dock-btn" data-scroll-to="live-studio">
+      <span class="dock-icon">✏️</span>
+      <span>指示・編集</span>
+    </button>
+    <button class="dock-btn" id="dock-btn-copy">
+      <span class="dock-icon">📋</span>
+      <span>指示書コピー</span>
+    </button>
+  </nav>
+
+  <script>
+    // SSOT Catalog Data (20 Masterworks)
+    const TATTOO_CATALOG = [
+  {
+    "id": 1,
+    "code": "No.01",
+    "series": "Series I: THE SILENT X（左腕の誓いと黄金比）",
+    "title_en": "The Vow of Alabasta",
+    "title_ja": "左腕の誓い・王道フルファセット黄金比",
+    "subtitle": "王道フルファセット針 × C1頂点ダイヤ × 中心45°クロス × 7シェブロン",
+    "story": "アラバスタの出航で左腕を高く掲げた「無言の×印」を羅針盤の中心核に秘め、北の針に第1頸椎アトラス（C1）の二分割ダイヤモンドを据えた王道にして原点の一作。7つのシェブロンが「7つの海・一味7人・頸椎7椎」を刻む。",
+    "aspect_label": "4 : 3（王道フルファセット）",
+    "params": {
+      "north_len": 350,
+      "south_len": 350,
+      "east_west_len": 250,
+      "needle_half_w": 20,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 88,
+      "ring_r_inner": 76,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 19,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 235,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 11.5,
+      "x_style": "center_vow_x",
+      "x_size": 52,
+      "flare_len": 68,
+      "flare_spread_deg": 14.0,
+      "flare_wave_amp": 6.0,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 140,
+      "crescent_thickness": 15,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 2,
+    "code": "No.02",
+    "series": "Series I: THE SILENT X（左腕の誓いと黄金比）",
+    "title_en": "Grand Line Spine Needle",
+    "title_ja": "偉大なる航路・コンパクト羅針盤×ロング背骨ニードル",
+    "subtitle": "中央の羅針盤を引き締め、上下に背骨S字と7シェブロンが露出する韓国風構造",
+    "story": "4方位のファセット針を中央リング周辺にシャープに凝縮し、その上下に「重力軸・S字流線・7つの椎骨シェブロン・C1アトラスダイヤ」が純粋なシングルニードル線画として伸びる、韓国タトゥーで最も人気の高い抜け感バランス。",
+    "aspect_label": "3 : 2（背骨ニードル露出型）",
+    "params": {
+      "north_len": 380,
+      "south_len": 380,
+      "east_west_len": 215,
+      "needle_half_w": 19,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 82,
+      "ring_r_inner": 72,
+      "open_junction_gap": 0,
+      "c1_y": -255,
+      "c1_size": 20,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 255,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 12.0,
+      "x_style": "diagonal_ring_x",
+      "x_size": 58,
+      "flare_len": 64,
+      "flare_spread_deg": 12.5,
+      "flare_wave_amp": 5.5,
+      "flare_style": "sleek_wave",
+      "crescent_side": "right",
+      "crescent_angle_deg": 0,
+      "crescent_span_deg": 138,
+      "crescent_thickness": 14,
+      "shading_mode": "stipple",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 3,
+    "code": "No.03",
+    "series": "Series I: THE SILENT X（左腕の誓いと黄金比）",
+    "title_en": "Crossed Needles of Trust",
+    "title_ja": "交差する信頼・ステップド2段ニードルと浮遊X",
+    "subtitle": "C1ダイヤで針幅が細く切り替わる2段構造×オープンジャンクション",
+    "story": "中心交点に1.5mm相当の「抜け（Open Junction）」を設け、南北のコンパス針がC1アトラスダイヤの位置で段差（ステップ）を描いて極細針へと変化する建築的シルエット。余白そのものが中心の「×」を際立たせる。",
+    "aspect_label": "4 : 3（2段ステップド針）",
+    "params": {
+      "north_len": 360,
+      "south_len": 360,
+      "east_west_len": 240,
+      "needle_half_w": 22,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 92,
+      "ring_r_inner": 80,
+      "open_junction_gap": 14,
+      "c1_y": -215,
+      "c1_size": 18,
+      "c1_style": "double_hollow",
+      "l5_anchor": true,
+      "l5_y": 215,
+      "s_amp": 34,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "spine_7_even",
+      "chevron_size": 10.5,
+      "x_style": "floating_x",
+      "x_size": 64,
+      "flare_len": 56,
+      "flare_spread_deg": 16.0,
+      "flare_wave_amp": 4.8,
+      "flare_style": "compact_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 165,
+      "crescent_span_deg": 132,
+      "crescent_thickness": 13,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.35,
+      "line_weight_sub": 0.85
+    }
+  },
+  {
+    "id": 4,
+    "code": "No.04",
+    "series": "Series I: THE SILENT X（左腕の誓いと黄金比）",
+    "title_en": "The Seventh Chevron & Split Corridor",
+    "title_ja": "7つの刻印・中空スプリット回廊とアトラスの王冠",
+    "subtitle": "南北の針の中央を白く抜き、背骨の7シェブロンを鮮明に浮かび上がらせる構造",
+    "story": "南北のファセット針の内部に「背骨の回廊（ホワイトスリット）」を設け、その空白の中に7つのシェブロンとC1クラウンダイヤを配置。針のシャープさと背骨幾何学の視認性を極限まで両立したデザイン。",
+    "aspect_label": "1.618 : 1（中空スプリット回廊）",
+    "params": {
+      "north_len": 385,
+      "south_len": 355,
+      "east_west_len": 228,
+      "needle_half_w": 24,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 84,
+      "ring_r_inner": 73,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 22,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 230,
+      "s_amp": 44,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "cervical_7_cluster",
+      "chevron_size": 12.0,
+      "x_style": "core_diamond_x",
+      "x_size": 52,
+      "flare_len": 70,
+      "flare_spread_deg": 13.5,
+      "flare_wave_amp": 6.0,
+      "flare_style": "converging_flame",
+      "crescent_side": "left",
+      "crescent_angle_deg": 195,
+      "crescent_span_deg": 145,
+      "crescent_thickness": 15,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.55,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 5,
+    "code": "No.05",
+    "series": "Series I: THE SILENT X（左腕の誓いと黄金比）",
+    "title_en": "Nakama's Horizon",
+    "title_ja": "仲間の水平線・クレセントボウルと非対称ポラリス",
+    "subtitle": "北針を高く掲げ、下向き三日月ボウルが中心の「×」を抱きかかえる構図",
+    "story": "北のポインター（True North）を長く誇り高く伸ばし、中心リングの下半分を三日月が器（ボウル）のように受け止める非対称バランス。アラバスタで天に突き上げた左腕のように、上部への推進力を強調した一作。",
+    "aspect_label": "非対称ポラリス（北針ロング）",
+    "params": {
+      "north_len": 405,
+      "south_len": 285,
+      "east_west_len": 255,
+      "needle_half_w": 21,
+      "needle_style": "asymmetric_polaris",
+      "ring_r_outer": 96,
+      "ring_r_inner": 84,
+      "open_junction_gap": 0,
+      "c1_y": -265,
+      "c1_size": 21,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 195,
+      "s_amp": 36,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 5,
+      "chevron_layout": "minimal_5",
+      "chevron_size": 11.5,
+      "x_style": "diagonal_ring_x",
+      "x_size": 62,
+      "flare_len": 66,
+      "flare_spread_deg": 15.0,
+      "flare_wave_amp": 5.8,
+      "flare_style": "diverging_corona",
+      "crescent_side": "bottom",
+      "crescent_angle_deg": 90,
+      "crescent_span_deg": 152,
+      "crescent_thickness": 17,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 6,
+    "code": "No.06",
+    "series": "Series II: DAWN OF THE WORLD（太陽と三日月・夜明けの誓い）",
+    "title_en": "Pulse of Nika — Drums of Liberation",
+    "title_ja": "解放の鼓動・躍動する8本の太陽ロングフレア",
+    "subtitle": "太陽（陽・ニカ）の長い8本S字フレアと大振幅の背骨S字が共鳴",
+    "story": "対角線上に放たれる8本の太陽フレアを長くダイナミックなS字ウェーブ（解放のドラム）として描いた作品。過緊張から身体を解き放ち、患者様が本来の自由な呼吸と笑顔を取り戻す「身体の夜明け」を象徴する。",
+    "aspect_label": "3 : 2（ニカ太陽ロングフレア）",
+    "params": {
+      "north_len": 355,
+      "south_len": 355,
+      "east_west_len": 230,
+      "needle_half_w": 18,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 86,
+      "ring_r_inner": 74,
+      "open_junction_gap": 0,
+      "c1_y": -240,
+      "c1_size": 19,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 240,
+      "s_amp": 50,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 11.5,
+      "x_style": "flare_root_x",
+      "x_size": 56,
+      "flare_len": 102,
+      "flare_spread_deg": 15.5,
+      "flare_wave_amp": 11.0,
+      "flare_style": "nika_flame",
+      "crescent_side": "left",
+      "crescent_angle_deg": 165,
+      "crescent_span_deg": 155,
+      "crescent_thickness": 16,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.55,
+      "line_weight_sub": 1.0
+    }
+  },
+  {
+    "id": 7,
+    "code": "No.07",
+    "series": "Series II: DAWN OF THE WORLD（太陽と三日月・夜明けの誓い）",
+    "title_en": "Kozuki Crescent & Solar Eclipse",
+    "title_ja": "夜明けを待つ三日月・大口径エクリプス二重環",
+    "subtitle": "中央の太陽二重リングを最大口径にし、深い三日月が日食のように抱く構図",
+    "story": "長い夜を越えて必ず昇る太陽（陽）と、静かに時を待つ光月の三日月（陰）。自律神経の交感神経と副交感神経が背骨の中心軸を介して美しく切り替わる様子を、大口径の日食（エクリプス）リングで表現。",
+    "aspect_label": "4 : 3（大口径エクリプス環）",
+    "params": {
+      "north_len": 340,
+      "south_len": 340,
+      "east_west_len": 260,
+      "needle_half_w": 19,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 108,
+      "ring_r_inner": 92,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 18,
+      "c1_style": "double_hollow",
+      "l5_anchor": false,
+      "l5_y": 235,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "spine_7_even",
+      "chevron_size": 11.0,
+      "x_style": "center_vow_x",
+      "x_size": 58,
+      "flare_len": 56,
+      "flare_spread_deg": 13.0,
+      "flare_wave_amp": 5.5,
+      "flare_style": "converging_flame",
+      "crescent_side": "right",
+      "crescent_angle_deg": 15,
+      "crescent_span_deg": 166,
+      "crescent_thickness": 21,
+      "shading_mode": "stipple",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 8,
+    "code": "No.08",
+    "series": "Series II: DAWN OF THE WORLD（太陽と三日月・夜明けの誓い）",
+    "title_en": "Will of D — Half-Moon Axis",
+    "title_ja": "Dの意志・右半月アークと反転S字の共鳴",
+    "subtitle": "垂直基準線と右内周の三日月が「D」の暗号を描き、反転S字が寄り添う",
+    "story": "中心を貫く垂直の重力軸と、右内周に沿うシャープな三日月アークが「D（半月）」のシルエットを浮かび上がらせる。受け継がれる意志を胸に、自らの軸で時代を切り拓く者への刻印。",
+    "aspect_label": "1.6 : 1（Dの半月シルエット）",
+    "params": {
+      "north_len": 370,
+      "south_len": 370,
+      "east_west_len": 225,
+      "needle_half_w": 22,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 88,
+      "ring_r_inner": 76,
+      "open_junction_gap": 0,
+      "c1_y": -230,
+      "c1_size": 20,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 230,
+      "s_amp": 44,
+      "s_freq": 1.0,
+      "s_phase": 3.14159,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.0,
+      "x_style": "core_diamond_x",
+      "x_size": 50,
+      "flare_len": 76,
+      "flare_spread_deg": 11.0,
+      "flare_wave_amp": 5.5,
+      "flare_style": "sleek_wave",
+      "crescent_side": "right",
+      "crescent_angle_deg": 0,
+      "crescent_span_deg": 170,
+      "crescent_thickness": 19,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 9,
+    "code": "No.09",
+    "series": "Series II: DAWN OF THE WORLD（太陽と三日月・夜明けの誓い）",
+    "title_en": "Solar Corona & C1 Polaris",
+    "title_ja": "太陽コロナと北極星アトラス（長短ペア光条）",
+    "subtitle": "北針の頂点近くに大型C1ダイヤを掲げ、長短リズムの8本太陽コロナが輝く",
+    "story": "夜空で唯一動かない北極星（ポラリス）のように、頭部と全身のバランスを司る第1頸椎アトラス（C1）を北針の頂点近くに大きく際立たせた一作。8本の太陽フレアが長短のリズムで輝き、左上内周の三日月と調和する。",
+    "aspect_label": "3 : 2（北極星C1＆長短コロナ）",
+    "params": {
+      "north_len": 400,
+      "south_len": 320,
+      "east_west_len": 235,
+      "needle_half_w": 20,
+      "needle_style": "asymmetric_polaris",
+      "ring_r_outer": 86,
+      "ring_r_inner": 75,
+      "open_junction_gap": 0,
+      "c1_y": -280,
+      "c1_size": 24,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 215,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 6,
+      "chevron_layout": "minimal_6",
+      "chevron_size": 11.5,
+      "x_style": "center_vow_x",
+      "x_size": 52,
+      "flare_len": 88,
+      "flare_spread_deg": 17.5,
+      "flare_wave_amp": 7.5,
+      "flare_style": "alternating_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 220,
+      "crescent_span_deg": 140,
+      "crescent_thickness": 15,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.55,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 10,
+    "code": "No.10",
+    "series": "Series II: DAWN OF THE WORLD（太陽と三日月・夜明けの誓い）",
+    "title_en": "Sunrise Dawn Horizon",
+    "title_ja": "世界の夜明け・三日月の揺りかごから昇る太陽",
+    "subtitle": "下部内周の三日月（夜）の上から中心の「×」と太陽フレアが昇る構図",
+    "story": "中心リングの下部に静かに横たわる三日月（夜）の上から、中心の「×」と8本の太陽フレア（夜明けの光）、そして天を指すC1アトラスの北針が立ち昇るドラマチックな構図。",
+    "aspect_label": "4 : 3（サンライズ夜明け構図）",
+    "params": {
+      "north_len": 365,
+      "south_len": 335,
+      "east_west_len": 248,
+      "needle_half_w": 23,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 92,
+      "ring_r_inner": 80,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 19,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 215,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 11.0,
+      "x_style": "diagonal_ring_x",
+      "x_size": 60,
+      "flare_len": 78,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 8.0,
+      "flare_style": "diverging_corona",
+      "crescent_side": "bottom",
+      "crescent_angle_deg": 90,
+      "crescent_span_deg": 162,
+      "crescent_thickness": 18,
+      "shading_mode": "hatch",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 11,
+    "code": "No.11",
+    "series": "Series III: ALL BLUE & ETERNAL POSE（4つの海の交点と永久指針）",
+    "title_en": "All Blue — Four Seas One Core",
+    "title_ja": "オールブルー・4つの海が交わる中心核ダイヤ",
+    "subtitle": "東西南北の4針と対角の長い「×」が中心ダイヤモンドでひとつに統合",
+    "story": "東・西・南・北の4つの海が1点に交わる奇跡の海「オールブルー」と、神経・筋肉・骨格・筋膜の4要素が統合される瞬間を重ね合わせた設計。中心核のダイヤモンドと大きな「×」がすべての針路を束ねる。",
+    "aspect_label": "4 : 3（オールブルー4軸統合）",
+    "params": {
+      "north_len": 350,
+      "south_len": 350,
+      "east_west_len": 265,
+      "needle_half_w": 22,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 88,
+      "ring_r_inner": 76,
+      "open_junction_gap": 0,
+      "c1_y": -230,
+      "c1_size": 19,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 230,
+      "s_amp": 34,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "all_blue_4_3",
+      "chevron_size": 11.0,
+      "x_style": "core_diamond_x",
+      "x_size": 74,
+      "flare_len": 64,
+      "flare_spread_deg": 13.0,
+      "flare_wave_amp": 5.2,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 138,
+      "crescent_thickness": 14,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 12,
+    "code": "No.12",
+    "series": "Series III: ALL BLUE & ETERNAL POSE（4つの海の交点と永久指針）",
+    "title_en": "Eternal Pose — Unshakeable Frame",
+    "title_ja": "エターナルポース・揺るぎない永久指針リング",
+    "subtitle": "エターナルポースの円環フレームのように広く美しい二重リングと直線の軸",
+    "story": "周囲の磁場やノイズに一切惑わされず、たったひとつの目的地だけを指し続ける「エターナルポース（永久指針）」。前腕の軸に真っ直ぐ通る垂直基準線とタイトなS字、C1アトラスダイヤが生涯ブレない信念を刻む。",
+    "aspect_label": "3 : 2（永久指針円環モデル）",
+    "params": {
+      "north_len": 375,
+      "south_len": 375,
+      "east_west_len": 235,
+      "needle_half_w": 18,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 102,
+      "ring_r_inner": 86,
+      "open_junction_gap": 0,
+      "c1_y": -255,
+      "c1_size": 19,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 255,
+      "s_amp": 26,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "spine_7_even",
+      "chevron_size": 11.5,
+      "x_style": "center_vow_x",
+      "x_size": 58,
+      "flare_len": 52,
+      "flare_spread_deg": 11.0,
+      "flare_wave_amp": 4.2,
+      "flare_style": "compact_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 170,
+      "crescent_span_deg": 142,
+      "crescent_thickness": 15,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 13,
+    "code": "No.13",
+    "series": "Series III: ALL BLUE & ETERNAL POSE（4つの海の交点と永久指針）",
+    "title_en": "Log Pose — Razor Forearm Stiletto",
+    "title_ja": "ログポース・前腕特化の超鋭角ロングスティレット",
+    "subtitle": "前腕の縦ラインを最もスマートに見せる約2.1:1スレンダーシルエット",
+    "story": "前腕（手首〜肘の間）の細長い筋肉・骨格ラインに最もスマートに収まるよう、南北の針を極限まで細く鋭く引き伸ばし、中央リングをコンパクトに凝縮した縦長シルエット。腕を下ろした時も掲げた時も凛とした軸が際立つ。",
+    "aspect_label": "2.1 : 1（前腕スレンダー特化）",
+    "params": {
+      "north_len": 415,
+      "south_len": 415,
+      "east_west_len": 185,
+      "needle_half_w": 15,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 70,
+      "ring_r_inner": 61,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 18,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 250,
+      "s_amp": 32,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 10.0,
+      "x_style": "center_vow_x",
+      "x_size": 44,
+      "flare_len": 54,
+      "flare_spread_deg": 13.0,
+      "flare_wave_amp": 4.5,
+      "flare_style": "sleek_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 135,
+      "crescent_thickness": 12,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.4,
+      "line_weight_sub": 0.85
+    }
+  },
+  {
+    "id": 14,
+    "code": "No.14",
+    "series": "Series III: ALL BLUE & ETERNAL POSE（4つの海の交点と永久指針）",
+    "title_en": "Red Line & Grand Line Architecture",
+    "title_ja": "2つの航路・建築図面ハッチングと対角クロス",
+    "subtitle": "極細平行線（リニア・ハッチング）で陰影を描いた知的な天球図スタイル",
+    "story": "世界を4つに分かつ「赤い土の大陸（Red Line）」と「偉大なる航路（Grand Line）」の交差を、コンパスローズと対角の「×」で表現。陰影をドットや塗りではなく極細の平行線（ハッチング）で刻んだ知的な一作。",
+    "aspect_label": "4 : 3（建築・天球図ハッチング）",
+    "params": {
+      "north_len": 350,
+      "south_len": 350,
+      "east_west_len": 250,
+      "needle_half_w": 21,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 88,
+      "ring_r_inner": 77,
+      "open_junction_gap": 0,
+      "c1_y": -230,
+      "c1_size": 18,
+      "c1_style": "double_hollow",
+      "l5_anchor": true,
+      "l5_y": 230,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.0,
+      "x_style": "diagonal_ring_x",
+      "x_size": 64,
+      "flare_len": 68,
+      "flare_spread_deg": 13.5,
+      "flare_wave_amp": 5.5,
+      "flare_style": "converging_flame",
+      "crescent_side": "right",
+      "crescent_angle_deg": 0,
+      "crescent_span_deg": 142,
+      "crescent_thickness": 15,
+      "shading_mode": "hatch",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 15,
+    "code": "No.15",
+    "series": "Series III: ALL BLUE & ETERNAL POSE（4つの海の交点と永久指針）",
+    "title_en": "Sacred Sacrum to Atlas Crown",
+    "title_ja": "聖なる仙骨（L5）からC1アトラスへ・天地貫通の軸",
+    "subtitle": "北のC1クラウンダイヤと南のL5アンカーダイヤが大きく対を成す物語",
+    "story": "12歳で経験した第5腰椎（L5）の痛みを克服した原体験（南針のアンカーダイヤ）から、WHO基準カイロプラクターとして人の天頂を支えるC1アトラス（北針のクラウンダイヤ）へ。自らの半生を1本の針に昇華したデザイン。",
+    "aspect_label": "1.65 : 1（C1–L5天地対称）",
+    "params": {
+      "north_len": 385,
+      "south_len": 385,
+      "east_west_len": 230,
+      "needle_half_w": 23,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 84,
+      "ring_r_inner": 73,
+      "open_junction_gap": 0,
+      "c1_y": -255,
+      "c1_size": 23,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 255,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "cervical_7_cluster",
+      "chevron_size": 11.5,
+      "x_style": "core_diamond_x",
+      "x_size": 54,
+      "flare_len": 68,
+      "flare_spread_deg": 13.0,
+      "flare_wave_amp": 5.8,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 140,
+      "crescent_thickness": 14,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 16,
+    "code": "No.16",
+    "series": "Series IV: ROOTON MASTERPIECE（緊張と脱力・引き算の極致）",
+    "title_en": "Bow & String — Tension & Release",
+    "title_ja": "弓と弦の力学・大振幅S字と垂直弦の交響",
+    "subtitle": "ピンと張った垂直線（弦）と、針の外側まで大きく優美にしなるS字（弓）",
+    "story": "Rootonの中核哲学「緊張と脱力（弓と弦の力学モデル）」をそのまま視覚化。真っ直ぐな重力軸（弦）と、コンパス針の外側まで大きくゆとりを持ってしなるS字流線（弓）が交わる場所に、痛みの解放と自由な航路が生まれる。",
+    "aspect_label": "3 : 2（弓と弦・最大S字振幅）",
+    "params": {
+      "north_len": 370,
+      "south_len": 370,
+      "east_west_len": 235,
+      "needle_half_w": 18,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 86,
+      "ring_r_inner": 75,
+      "open_junction_gap": 0,
+      "c1_y": -250,
+      "c1_size": 19,
+      "c1_style": "split_diamond",
+      "l5_anchor": true,
+      "l5_y": 250,
+      "s_amp": 58,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 5,
+      "chevron_layout": "minimal_5",
+      "chevron_size": 12.0,
+      "x_style": "center_vow_x",
+      "x_size": 52,
+      "flare_len": 68,
+      "flare_spread_deg": 13.5,
+      "flare_wave_amp": 6.5,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 175,
+      "crescent_span_deg": 148,
+      "crescent_thickness": 15,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 17,
+    "code": "No.17",
+    "series": "Series IV: ROOTON MASTERPIECE（緊張と脱力・引き算の極致）",
+    "title_en": "Poneglyph Micro-Stipple",
+    "title_ja": "歴史の本文・マイクロドット点描と7つの刻印",
+    "subtitle": "繊細な点描（スティップリング）陰影と2段ステップ針のクラシカル造形",
+    "story": "決して砕けない石版「ポーネグリフ」に刻まれた真実のように、コンパス針の片側を無数の繊細なマイクロドット（点描）でシェーディング。肌に柔らかく馴染みながら、C1ダイヤと「×」の誓いを永遠に残す。",
+    "aspect_label": "4 : 3（韓国風マイクロドット）",
+    "params": {
+      "north_len": 355,
+      "south_len": 355,
+      "east_west_len": 245,
+      "needle_half_w": 22,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 88,
+      "ring_r_inner": 77,
+      "open_junction_gap": 6,
+      "c1_y": -220,
+      "c1_size": 19,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 220,
+      "s_amp": 38,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "upper_lower_7",
+      "chevron_size": 11.0,
+      "x_style": "core_diamond_x",
+      "x_size": 52,
+      "flare_len": 64,
+      "flare_spread_deg": 13.0,
+      "flare_wave_amp": 5.5,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 140,
+      "crescent_thickness": 14,
+      "shading_mode": "stipple",
+      "line_weight_main": 1.45,
+      "line_weight_sub": 0.9
+    }
+  },
+  {
+    "id": 18,
+    "code": "No.18",
+    "series": "Series IV: ROOTON MASTERPIECE（緊張と脱力・引き算の極致）",
+    "title_en": "Whisper of Fine Line — 30% Margin",
+    "title_ja": "3割のゆとり・極限引き算のフローティング構造",
+    "subtitle": "シェブロンを3つに厳選・コンパクト羅針盤と最小フレアの超ミニマル美",
+    "story": "「3割のゆとり」という哲学をデザインの余白（ネガティブスペース）そのもので体現。椎骨シェブロンを黄金比の3つに引き算し、中心のオープンジャンクションと極細シングルニードル線で究極の軽やかさを実現。",
+    "aspect_label": "3 : 2（極限ミニマル・引き算）",
+    "params": {
+      "north_len": 360,
+      "south_len": 360,
+      "east_west_len": 205,
+      "needle_half_w": 16,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 78,
+      "ring_r_inner": 69,
+      "open_junction_gap": 16,
+      "c1_y": -240,
+      "c1_size": 17,
+      "c1_style": "double_hollow",
+      "l5_anchor": false,
+      "l5_y": 240,
+      "s_amp": 34,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 3,
+      "chevron_layout": "minimal_3",
+      "chevron_size": 11.0,
+      "x_style": "floating_x",
+      "x_size": 46,
+      "flare_len": 44,
+      "flare_spread_deg": 15.0,
+      "flare_wave_amp": 3.8,
+      "flare_style": "compact_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 128,
+      "crescent_thickness": 12,
+      "shading_mode": "greywash",
+      "line_weight_main": 1.3,
+      "line_weight_sub": 0.8
+    }
+  },
+  {
+    "id": 19,
+    "code": "No.19",
+    "series": "Series IV: ROOTON MASTERPIECE（緊張と脱力・引き算の極致）",
+    "title_en": "Laugh Tale Coordinates",
+    "title_ja": "最終地点の座標・4つの交点と二重螺旋の航路",
+    "subtitle": "4つのロードポーネグリフが交わる対角の長い「×」と二重S字が導く最終島",
+    "story": "4つの指針が交差する中心点「×」に浮かび上がる最終目的地（Laugh Tale / True North）。対角の8本フレアの根元と中心のロングクロスが幾何学的に連動し、一味の旅路の結晶を腕に刻む。",
+    "aspect_label": "4 : 3（4交点ロングクロス座標）",
+    "params": {
+      "north_len": 365,
+      "south_len": 365,
+      "east_west_len": 252,
+      "needle_half_w": 22,
+      "needle_style": "split_spine_corridor",
+      "ring_r_outer": 90,
+      "ring_r_inner": 78,
+      "open_junction_gap": 0,
+      "c1_y": -240,
+      "c1_size": 20,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 240,
+      "s_amp": 46,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": true,
+      "chevron_count": 7,
+      "chevron_layout": "all_blue_4_3",
+      "chevron_size": 11.0,
+      "x_style": "flare_root_x",
+      "x_size": 76,
+      "flare_len": 78,
+      "flare_spread_deg": 14.5,
+      "flare_wave_amp": 6.8,
+      "flare_style": "alternating_wave",
+      "crescent_side": "right",
+      "crescent_angle_deg": 0,
+      "crescent_span_deg": 146,
+      "crescent_thickness": 15,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  },
+  {
+    "id": 20,
+    "code": "No.20",
+    "series": "Series IV: ROOTON MASTERPIECE（緊張と脱力・引き算の極致）",
+    "title_en": "True Alignment, True North — Masterpiece",
+    "title_ja": "真の軸、真の北・船長の誓い（決定版マスターピース）",
+    "subtitle": "黄金比1.618:1・C1クラウン×7シェブロン×アラバスタのX×太陽と月の夜明け",
+    "story": "杉山船長が選んだすべての答え——「第1頸椎C1アトラスの特別なダイヤモンド」「黄金比で引き算された7つのシェブロンと優美なS字流線」「羅針盤の中心に秘めた仲間の印（×）とオールブルーの交点」「太陽（ニカ）と三日月（光月・D）が織りなす世界の夜明け」——を前腕8〜12cmの黄金比へと完全統合した最高傑作。",
+    "aspect_label": "1.618 : 1（黄金比・最終決定版）",
+    "params": {
+      "north_len": 380,
+      "south_len": 380,
+      "east_west_len": 235,
+      "needle_half_w": 20,
+      "needle_style": "stepped_royal_needle",
+      "ring_r_outer": 88,
+      "ring_r_inner": 76,
+      "open_junction_gap": 0,
+      "c1_y": -235,
+      "c1_size": 21,
+      "c1_style": "crown_diamond",
+      "l5_anchor": true,
+      "l5_y": 235,
+      "s_amp": 42,
+      "s_freq": 1.0,
+      "s_phase": 0.0,
+      "double_s": false,
+      "chevron_count": 7,
+      "chevron_layout": "golden_5_2",
+      "chevron_size": 11.5,
+      "x_style": "core_diamond_x",
+      "x_size": 58,
+      "flare_len": 72,
+      "flare_spread_deg": 13.5,
+      "flare_wave_amp": 6.2,
+      "flare_style": "classic_wave",
+      "crescent_side": "left",
+      "crescent_angle_deg": 180,
+      "crescent_span_deg": 146,
+      "crescent_thickness": 15,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.5,
+      "line_weight_sub": 0.95
+    }
+  }
+];
+
+    // Persistent User State (Favorites, Per-Work Edits & Notes, Global Memo)
+    const STORAGE_KEY = "true_north_tattoo_master_v2";
+    let userState = {
+      favorites: [20, 6, 4], // Default initial favorites so DNA analyzer is immediately alive!
+      customParamsById: {},
+      notesById: {},
+      chipsById: {},
+      globalMemo: ""
+    };
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        userState = Object.assign(userState, parsed);
+      }
+    } catch (e) {
+      console.warn("Storage load skipped:", e);
+    }
+
+    function saveUserState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userState));
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast-msg");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function fmt(val) {
+      return Number(val).toFixed(2);
+    }
+
+    function generateStippleCirclesJS(polyPoints, spacing = 4.2) {
+      const xs = polyPoints.map(p => p[0]);
+      const ys = polyPoints.map(p => p[1]);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+      function pointInPoly(x, y, poly) {
+        let inside = false;
+        const n = poly.length;
+        let [p1x, p1y] = poly[0];
+        for (let i = 1; i <= n; i++) {
+          const [p2x, p2y] = poly[i % n];
+          if (y > Math.min(p1y, p2y)) {
+            if (y <= Math.max(p1y, p2y)) {
+              if (x <= Math.max(p1x, p2x)) {
+                let xinters = p1x;
+                if (p1y !== p2y) {
+                  xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x;
+                }
+                if (p1x === p2x || x <= xinters) inside = !inside;
+              }
+            }
+          }
+          p1x = p2x; p1y = p2y;
+        }
+        return inside;
+      }
+
+      const circles = [];
+      let y = minY + spacing;
+      let row = 0;
+      while (y < maxY - spacing * 0.5) {
+        const xOffset = (row % 2 === 1) ? spacing * 0.5 : 0;
+        let x = minX + spacing + xOffset;
+        while (x < maxX - spacing * 0.5) {
+          if (pointInPoly(x, y, polyPoints)) {
+            const dist = Math.hypot(x - 400, y - 500);
+            const r = Math.max(0.38, Math.min(0.82, 0.85 - (dist / 380.0) * 0.44));
+            const op = Math.max(0.22, Math.min(0.68, 0.72 - (dist / 380.0) * 0.48));
+            circles.push(`<circle class="shade-detail" cx="${fmt(x)}" cy="${fmt(y)}" r="${fmt(r)}" fill="#141413" fill-opacity="${fmt(op)}"/>`);
+          }
+          x += spacing;
+        }
+        y += spacing * 0.88;
+        row++;
+      }
+      return circles.join("");
+    }
+
+    function generateHatchLinesJS(polyPoints, step = 3.8, isHoriz = false) {
+      const xs = polyPoints.map(p => p[0]);
+      const ys = polyPoints.map(p => p[1]);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const lines = [];
+      const n = polyPoints.length;
+
+      if (!isHoriz) {
+        let y = minY + step;
+        while (y < maxY - step * 0.5) {
+          const inter = [];
+          for (let i = 0; i < n; i++) {
+            const [x1, y1] = polyPoints[i];
+            const [x2, y2] = polyPoints[(i + 1) % n];
+            if ((y1 <= y && y < y2) || (y2 <= y && y < y1)) {
+              inter.push(x1 + ((y - y1) / (y2 - y1)) * (x2 - x1));
+            }
+          }
+          inter.sort((a, b) => a - b);
+          if (inter.length >= 2 && inter[inter.length - 1] - inter[0] > 2.4) {
+            lines.push(`<line class="shade-detail" x1="${fmt(inter[0] + 1.2)}" y1="${fmt(y)}" x2="${fmt(inter[inter.length - 1] - 1.2)}" y2="${fmt(y)}" stroke="#141413" stroke-width="0.55" stroke-opacity="0.42" stroke-linecap="round"/>`);
+          }
+          y += step;
+        }
+      } else {
+        let x = minX + step;
+        while (x < maxX - step * 0.5) {
+          const inter = [];
+          for (let i = 0; i < n; i++) {
+            const [x1, y1] = polyPoints[i];
+            const [x2, y2] = polyPoints[(i + 1) % n];
+            if ((x1 <= x && x < x2) || (x2 <= x && x < x1)) {
+              inter.push(y1 + ((x - x1) / (x2 - x1)) * (y2 - y1));
+            }
+          }
+          inter.sort((a, b) => a - b);
+          if (inter.length >= 2 && inter[inter.length - 1] - inter[0] > 2.4) {
+            lines.push(`<line class="shade-detail" x1="${fmt(x)}" y1="${fmt(inter[0] + 1.2)}" x2="${fmt(x)}" y2="${fmt(inter[inter.length - 1] - 1.2)}" stroke="#141413" stroke-width="0.55" stroke-opacity="0.42" stroke-linecap="round"/>`);
+          }
+          x += step;
+        }
+      }
+      return lines.join("");
+    }
+
+    function renderTattooSVG(design, forceStencil = false, includeForearmGuide = false) {
+      const p = design.params;
+      const cx = 400.0, cy = 500.0;
+      const nLen = Number(p.north_len);
+      const sLen = Number(p.south_len);
+      const ewLen = Number(p.east_west_len);
+      const nw = Number(p.needle_half_w);
+      const rOut = Number(p.ring_r_outer);
+      const rIn = Number(p.ring_r_inner);
+      const gap = Number(p.open_junction_gap);
+      const lwMain = Number(p.line_weight_main);
+      const lwSub = Number(p.line_weight_sub);
+      const shadingMode = forceStencil ? "stencil" : p.shading_mode;
+      const ink = "#121211";
+
+      // ③ 8本の太陽フレア
+      const sunFlares = [];
+      const flareLen = Number(p.flare_len);
+      const spread = Number(p.flare_spread_deg);
+      const waveAmp = Number(p.flare_wave_amp);
+      const flareStyle = p.flare_style;
+      const baseDiags = [-45.0, 45.0, 135.0, 225.0];
+      let fIdx = 0;
+
+      for (const diag of baseDiags) {
+        const offsets = [-spread * 0.5, spread * 0.5];
+        offsets.forEach((off, pairIdx) => {
+          const ang = (diag + off) * Math.PI / 180.0;
+          const perp = ang + Math.PI / 2.0;
+          const curLen = (flareStyle === "alternating_wave" && pairIdx === 1) ? flareLen * 0.74 : flareLen;
+          const startR = rOut + gap * 0.6;
+
+          const x0 = cx + startR * Math.cos(ang);
+          const y0 = cy + startR * Math.sin(ang);
+          const x3 = cx + (startR + curLen) * Math.cos(ang);
+          const y3 = cy + (startR + curLen) * Math.sin(ang);
+
+          const r1 = startR + curLen * 0.33;
+          const r2 = startR + curLen * 0.68;
+          let dirSign = (pairIdx === 0) ? 1.0 : -1.0;
+          let c2Sign = -dirSign * 0.9;
+          if (flareStyle === "converging_flame") {
+            dirSign = (pairIdx === 0) ? 1.0 : -1.0;
+            c2Sign = dirSign * 0.4;
+          } else if (flareStyle === "diverging_corona") {
+            dirSign = (pairIdx === 0) ? -1.0 : 1.0;
+            c2Sign = -dirSign * 0.9;
+          } else if (flareStyle === "nika_flame") {
+            dirSign = 1.0;
+            c2Sign = -0.95;
+          }
+
+          const cx1 = cx + r1 * Math.cos(ang) + (waveAmp * dirSign) * Math.cos(perp);
+          const cy1 = cy + r1 * Math.sin(ang) + (waveAmp * dirSign) * Math.sin(perp);
+          const cx2 = cx + r2 * Math.cos(ang) + (waveAmp * c2Sign) * Math.cos(perp);
+          const cy2 = cy + r2 * Math.sin(ang) + (waveAmp * c2Sign) * Math.sin(perp);
+
+          sunFlares.push(`<path class="sun-flare-item" data-flare-idx="${fIdx}" d="M ${fmt(x0)} ${fmt(y0)} C ${fmt(cx1)} ${fmt(cy1)}, ${fmt(cx2)} ${fmt(cy2)}, ${fmt(x3)} ${fmt(y3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 1.15)}" stroke-linecap="round"/>`);
+
+          if (flareStyle === "nika_flame" || flareStyle === "classic_wave" || flareStyle === "converging_flame") {
+            const iLen = curLen * 0.52;
+            const ix3 = cx + (startR + iLen) * Math.cos(ang);
+            const iy3 = cy + (startR + iLen) * Math.sin(ang);
+            const icx1 = cx + (startR + iLen * 0.45) * Math.cos(ang) + (waveAmp * 0.55 * dirSign) * Math.cos(perp);
+            const icy1 = cy + (startR + iLen * 0.45) * Math.sin(ang) + (waveAmp * 0.55 * dirSign) * Math.sin(perp);
+            sunFlares.push(`<path class="sun-flare-sub" d="M ${fmt(x0)} ${fmt(y0)} Q ${fmt(icx1)} ${fmt(icy1)}, ${fmt(ix3)} ${fmt(iy3)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.72)}" stroke-opacity="0.65" stroke-linecap="round"/>`);
+          }
+          fIdx++;
+        });
+      }
+
+      // ④ 内側の三日月
+      const cRad = Number(p.crescent_angle_deg) * Math.PI / 180.0;
+      const cSpan = Number(p.crescent_span_deg);
+      const halfSpan = (cSpan * 0.5) * Math.PI / 180.0;
+      const cThick = Number(p.crescent_thickness);
+      const crRadius = rIn - 9.0;
+      const tx1 = cx + crRadius * Math.cos(cRad - halfSpan);
+      const ty1 = cy + crRadius * Math.sin(cRad - halfSpan);
+      const tx2 = cx + crRadius * Math.cos(cRad + halfSpan);
+      const ty2 = cy + crRadius * Math.sin(cRad + halfSpan);
+      const halfChord = crRadius * Math.sin(halfSpan);
+      const sagittaOut = crRadius * (1.0 - Math.cos(halfSpan));
+      const sagittaIn = Math.max(2.5, sagittaOut - cThick);
+      const innerArcR = (halfChord * halfChord + sagittaIn * sagittaIn) / (2.0 * sagittaIn);
+      const largeArc = cSpan <= 180 ? 0 : 1;
+      const cFill = shadingMode !== "stencil" ? "rgba(18, 18, 17, 0.12)" : "none";
+      const crescentSVG = `<g id="inner-crescent"><path d="M ${fmt(tx1)} ${fmt(ty1)} A ${fmt(crRadius)} ${fmt(crRadius)} 0 ${largeArc} 1 ${fmt(tx2)} ${fmt(ty2)} A ${fmt(innerArcR)} ${fmt(innerArcR)} 0 0 0 ${fmt(tx1)} ${fmt(ty1)} Z" fill="${cFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.05)}" stroke-linejoin="round"/></g>`;
+
+      // ② 4方位のコンパスローズ (5構造スタイル対応)
+      const coreGap = Math.max(6.0, gap);
+      const ewW = nw * 0.80;
+      const shY = rOut * 0.52;
+      const c1YRel = Number(p.c1_y);
+      const l5YRel = Number(p.l5_y || Math.abs(c1YRel));
+      const needleStyle = p.needle_style || "classic_facet";
+      let nShaded, nLight, sShaded, sLight;
+
+      if (needleStyle === "short_blade_long_spine") {
+        const nBladeTip = cy - rOut * 1.62;
+        const sBladeTip = cy + rOut * 1.62;
+        nShaded = [[cx, nBladeTip], [cx + nw * 1.12, cy - shY], [cx, cy - coreGap]];
+        nLight  = [[cx, nBladeTip], [cx - nw * 1.12, cy - shY], [cx, cy - coreGap]];
+        sShaded = [[cx, sBladeTip], [cx - nw * 1.12, cy + shY], [cx, cy + coreGap]];
+        sLight  = [[cx, sBladeTip], [cx + nw * 1.12, cy + shY], [cx, cy + coreGap]];
+      } else if (needleStyle === "stepped_royal_needle") {
+        const neckNY = cy - rOut * 1.36;
+        const neckSY = cy + rOut * 1.36;
+        const slimW = nw * 0.24;
+        nShaded = [[cx, cy - nLen], [cx + slimW, neckNY], [cx + nw * 1.10, cy - shY], [cx, cy - coreGap]];
+        nLight  = [[cx, cy - nLen], [cx - slimW, neckNY], [cx - nw * 1.10, cy - shY], [cx, cy - coreGap]];
+        sShaded = [[cx, cy + sLen], [cx - slimW, neckSY], [cx - nw * 1.10, cy + shY], [cx, cy + coreGap]];
+        sLight  = [[cx, cy + sLen], [cx + slimW, neckSY], [cx + nw * 1.10, cy + shY], [cx, cy + coreGap]];
+      } else if (needleStyle === "split_spine_corridor") {
+        const cor = 6.2;
+        const wingNY = cy - rOut * 2.05;
+        const wingSY = cy + rOut * 2.05;
+        nShaded = [[cx + cor, wingNY], [cx + nw * 1.18, cy - shY], [cx + cor, cy - shY * 0.55]];
+        nLight  = [[cx - cor, wingNY], [cx - nw * 1.18, cy - shY], [cx - cor, cy - shY * 0.55]];
+        sShaded = [[cx - cor, wingSY], [cx - nw * 1.18, cy + shY], [cx - cor, cy + shY * 0.55]];
+        sLight  = [[cx + cor, wingSY], [cx + nw * 1.18, cy + shY], [cx + cor, cy + shY * 0.55]];
+      } else if (needleStyle === "asymmetric_polaris") {
+        const sShortY = cy + rOut * 1.78;
+        nShaded = [[cx, cy - nLen], [cx + nw * 1.05, cy - shY], [cx, cy - coreGap]];
+        nLight  = [[cx, cy - nLen], [cx - nw * 1.05, cy - shY], [cx, cy - coreGap]];
+        sShaded = [[cx, sShortY], [cx - nw * 0.95, cy + shY], [cx, cy + coreGap]];
+        sLight  = [[cx, sShortY], [cx + nw * 0.95, cy + shY], [cx, cy + coreGap]];
+      } else {
+        nShaded = [[cx, cy - nLen], [cx + nw, cy - shY], [cx, cy - coreGap]];
+        nLight  = [[cx, cy - nLen], [cx - nw, cy - shY], [cx, cy - coreGap]];
+        sShaded = [[cx, cy + sLen], [cx - nw, cy + shY], [cx, cy + coreGap]];
+        sLight  = [[cx, cy + sLen], [cx + nw, cy + shY], [cx, cy + coreGap]];
+      }
+
+      const needles = [
+        ["north", nShaded, nLight, false],
+        ["south", sShaded, sLight, false],
+        ["east",  [[cx + ewLen, cy], [cx + shY, cy + ewW], [cx + coreGap, cy]], [[cx + ewLen, cy], [cx + shY, cy - ewW], [cx + coreGap, cy]], true],
+        ["west",  [[cx - ewLen, cy], [cx - shY, cy - ewW], [cx - coreGap, cy]], [[cx - ewLen, cy], [cx - shY, cy + ewW], [cx - coreGap, cy]], true]
+      ];
+      const polyStr = pts => pts.map(pt => `${fmt(pt[0])},${fmt(pt[1])}`).join(" ");
+      const compassEls = [];
+      const maskFill = shadingMode === "stencil" ? "none" : "#FAF8F5";
+      const lightOpAttr = shadingMode === "stencil" ? "" : ' fill-opacity="0.96"';
+      const shadedOpAttr = shadingMode === "stencil" ? "" : ' fill-opacity="0.96"';
+
+      for (const [name, shadedP, lightP, isHoriz] of needles) {
+        compassEls.push(`<polygon class="facet-light bg-mask" data-needle="${name}" points="${polyStr(lightP)}" fill="${maskFill}"${lightOpAttr} stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+        if (shadingMode === "greywash") {
+          compassEls.push(`<polygon class="bg-mask" points="${polyStr(shadedP)}" fill="${maskFill}"${shadedOpAttr} stroke="none"/>`);
+          compassEls.push(`<polygon class="facet-shaded" data-needle="${name}" points="${polyStr(shadedP)}" fill="url(#greywashGrad)" stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+        } else if (shadingMode === "stipple") {
+          compassEls.push(`<polygon class="facet-shaded bg-mask" data-needle="${name}" points="${polyStr(shadedP)}" fill="${maskFill}"${shadedOpAttr} stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+          compassEls.push(generateStippleCirclesJS(shadedP, 4.2));
+        } else if (shadingMode === "hatch") {
+          compassEls.push(`<polygon class="facet-shaded bg-mask" data-needle="${name}" points="${polyStr(shadedP)}" fill="${maskFill}"${shadedOpAttr} stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+          compassEls.push(generateHatchLinesJS(shadedP, 3.8, isHoriz));
+        } else if (shadingMode === "hybrid") {
+          compassEls.push(`<polygon class="bg-mask" points="${polyStr(shadedP)}" fill="${maskFill}"${shadedOpAttr} stroke="none"/>`);
+          compassEls.push(`<polygon class="facet-shaded" data-needle="${name}" points="${polyStr(shadedP)}" fill="url(#greywashGrad)" stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+          compassEls.push(generateStippleCirclesJS(shadedP, 5.2));
+        } else {
+          compassEls.push(`<polygon class="facet-shaded" data-needle="${name}" points="${polyStr(shadedP)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`);
+        }
+      }
+
+      // 仲間の印「×」
+      const xSize = Number(p.x_size);
+      const xStyle = p.x_style;
+      const xD = xSize * 0.7071;
+      const vowX = [
+        `<line x1="${fmt(cx - xD)}" y1="${fmt(cy - xD)}" x2="${fmt(cx + xD)}" y2="${fmt(cy + xD)}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}" stroke-linecap="round"/>`,
+        `<line x1="${fmt(cx + xD)}" y1="${fmt(cy - xD)}" x2="${fmt(cx - xD)}" y2="${fmt(cy + xD)}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}" stroke-linecap="round"/>`
+      ];
+      if (xStyle === "core_diamond_x" || xStyle === "center_vow_x") {
+        const cd = 11.0, ix = 6.5;
+        vowX.push(`<polygon class="bg-mask" points="${fmt(cx)},${fmt(cy - cd)} ${fmt(cx + cd)},${fmt(cy)} ${fmt(cx)},${fmt(cy + cd)} ${fmt(cx - cd)},${fmt(cy)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub)}"/>`);
+        vowX.push(`<line x1="${fmt(cx - ix)}" y1="${fmt(cy - ix)}" x2="${fmt(cx + ix)}" y2="${fmt(cy + ix)}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.1)}"/><line x1="${fmt(cx + ix)}" y1="${fmt(cy - ix)}" x2="${fmt(cx - ix)}" y2="${fmt(cy + ix)}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.1)}"/>`);
+      } else if (xStyle === "diagonal_ring_x" || xStyle === "flare_root_x") {
+        const rx1 = rIn * 0.52, rx2 = rOut * 1.05;
+        for (const ad of [-45, 45, 135, 225]) {
+          const ra = ad * Math.PI / 180.0;
+          vowX.push(`<line x1="${fmt(cx + rx1 * Math.cos(ra))}" y1="${fmt(cy + rx1 * Math.sin(ra))}" x2="${fmt(cx + rx2 * Math.cos(ra))}" y2="${fmt(cy + rx2 * Math.sin(ra))}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linecap="round"/>`);
+        }
+      }
+
+      // ① 中心軸（重力軸＋S字＋C1アトラスダイヤ＋シェブロン）
+      const spineEls = [];
+      spineEls.push(`<line id="gravity-plumb-line" x1="${fmt(cx)}" y1="${fmt(cy - nLen - 22)}" x2="${fmt(cx)}" y2="${fmt(cy + sLen + 22)}" stroke="${ink}" stroke-width="${fmt(lwMain * 1.05)}" stroke-linecap="round"/>`);
+
+      const sAmp = Number(p.s_amp);
+      const sPhase = Number(p.s_phase || 0);
+      const sStart = cy - nLen * 0.82;
+      const sEnd = cy + sLen * 0.82;
+      const sPts = [], sPts2 = [];
+      const steps = 64;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const yv = sStart + t * (sEnd - sStart);
+        const env = Math.sin(Math.PI * t);
+        const wv = Math.sin(2.0 * Math.PI * t * Number(p.s_freq || 1) + sPhase);
+        sPts.push(`${fmt(cx + sAmp * env * wv)},${fmt(yv)}`);
+        if (p.double_s) {
+          sPts2.push(`${fmt(cx - sAmp * 0.55 * env * wv)},${fmt(yv)}`);
+        }
+      }
+      spineEls.push(`<polyline id="spine-s-curve" points="${sPts.join(" ")}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain * 1.1)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+      if (p.double_s && sPts2.length) {
+        spineEls.push(`<polyline id="spine-s-curve-secondary" points="${sPts2.join(" ")}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-opacity="0.78" stroke-linecap="round" stroke-linejoin="round"/>`);
+      }
+
+      // C1 Atlas Diamond
+      const c1Y = cy + Number(p.c1_y);
+      const c1S = Number(p.c1_size);
+      const c1W = c1S * 0.68;
+      const c1Style = p.c1_style;
+      const c1G = [`<g id="c1-atlas-diamond"><polygon class="bg-mask" points="${fmt(cx)},${fmt(c1Y - c1S)} ${fmt(cx + c1W)},${fmt(c1Y)} ${fmt(cx)},${fmt(c1Y + c1S)} ${fmt(cx - c1W)},${fmt(c1Y)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain * 1.05)}" stroke-linejoin="miter"/>`];
+      if ((c1Style === "split_diamond" || c1Style === "crown_diamond") && shadingMode !== "stencil") {
+        c1G.push(`<polygon class="shade-detail" points="${fmt(cx)},${fmt(c1Y - c1S)} ${fmt(cx + c1W)},${fmt(c1Y)} ${fmt(cx)},${fmt(c1Y + c1S)}" fill="${ink}" fill-opacity="0.82"/>`);
+      }
+      if (c1Style === "double_hollow" || c1Style === "crown_diamond") {
+        const icS = c1S * 0.52, icW = c1W * 0.52;
+        c1G.push(`<polygon class="bg-mask" points="${fmt(cx)},${fmt(c1Y - icS)} ${fmt(cx + icW)},${fmt(c1Y)} ${fmt(cx)},${fmt(c1Y + icS)} ${fmt(cx - icW)},${fmt(c1Y)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}"/>`);
+      }
+      if (c1Style === "crown_diamond") {
+        c1G.push(`<line x1="${fmt(cx - c1W - 6)}" y1="${fmt(c1Y)}" x2="${fmt(cx - c1W - 1.5)}" y2="${fmt(c1Y)}" stroke="${ink}" stroke-width="${fmt(lwSub)}" stroke-linecap="round"/><line x1="${fmt(cx + c1W + 1.5)}" y1="${fmt(c1Y)}" x2="${fmt(cx + c1W + 6)}" y2="${fmt(c1Y)}" stroke="${ink}" stroke-width="${fmt(lwSub)}" stroke-linecap="round"/>`);
+      }
+      c1G.push(`</g>`);
+      spineEls.push(c1G.join(""));
+
+      // L5 Anchor
+      if (p.l5_anchor) {
+        const l5Y = cy + Number(p.l5_y);
+        const l5S = c1S * 0.72, l5W = l5S * 0.68;
+        spineEls.push(`<g id="l5-anchor-diamond"><polygon class="bg-mask" points="${fmt(cx)},${fmt(l5Y - l5S)} ${fmt(cx + l5W)},${fmt(l5Y)} ${fmt(cx)},${fmt(l5Y + l5S)} ${fmt(cx - l5W)},${fmt(l5Y)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.1)}"/><line x1="${fmt(cx - l5W * 0.6)}" y1="${fmt(l5Y - l5S * 0.4)}" x2="${fmt(cx + l5W * 0.6)}" y2="${fmt(l5Y + l5S * 0.4)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.8)}"/><line x1="${fmt(cx + l5W * 0.6)}" y1="${fmt(l5Y - l5S * 0.4)}" x2="${fmt(cx - l5W * 0.6)}" y2="${fmt(l5Y + l5S * 0.4)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.8)}"/></g>`);
+      }
+
+      // Chevrons
+      const chSize = Number(p.chevron_size);
+      const layout = p.chevron_layout;
+      let northTop = Number(p.c1_y) + c1S + chSize * 0.65 + 10.0;
+      let northBot = -(rOut + chSize * 0.65 + 12.0);
+      if (northBot < northTop + 12.0) northBot = northTop + 12.0;
+
+      const l5SVal = p.l5_anchor ? (c1S * 0.72) : 0.0;
+      let southTop = rOut + chSize * 0.65 + 12.0;
+      let southBot = p.l5_anchor ? (Number(p.l5_y) - l5SVal - chSize * 0.65 - 10.0) : 185.0;
+      if (southBot < southTop + 12.0) southBot = southTop + 12.0;
+
+      function spanPoints(a, b, count) {
+        if (count <= 0) return [];
+        if (count === 1) return [(a + b) * 0.5];
+        const res = [];
+        for (let i = 0; i < count; i++) res.push(a + (b - a) * (i / (count - 1)));
+        return res;
+      }
+
+      const layoutCounts = {
+        upper_lower_7: [4, 3],
+        golden_5_2: [5, 2],
+        spine_7_even: [4, 3],
+        cervical_7_cluster: [7, 0],
+        all_blue_4_3: [4, 3],
+        minimal_6: [3, 3],
+        minimal_5: [3, 2],
+        minimal_3: [2, 1]
+      };
+      const [nCnt, sCnt] = layoutCounts[layout] || [4, 3];
+      let yOffsets;
+      if (layout === "spine_7_even") {
+        yOffsets = [...spanPoints(northTop + 4, northBot - 2, nCnt), ...spanPoints(southTop + 2, southBot - 4, sCnt)];
+      } else if (layout === "all_blue_4_3") {
+        yOffsets = [...spanPoints(northTop, northBot - 8, nCnt), ...spanPoints(southTop + 8, southBot, sCnt)];
+      } else {
+        yOffsets = [...spanPoints(northTop, northBot, nCnt), ...spanPoints(southTop, southBot, sCnt)];
+      }
+
+      const chG = [`<g id="spine-chevrons">`];
+      yOffsets.forEach((dy, idx) => {
+        const vy = cy + dy;
+        const dir = dy < 0 ? -1.0 : 1.0;
+        const cw = chSize * (Math.abs(dy) < 130 ? 0.92 : 1.0);
+        const chH = cw * 0.65 * dir;
+        chG.push(`<polyline class="spine-chevron" data-idx="${idx}" points="${fmt(cx - cw)},${fmt(vy + chH)} ${fmt(cx)},${fmt(vy)} ${fmt(cx + cw)},${fmt(vy + chH)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 1.05)}" stroke-linecap="round" stroke-linejoin="miter"/>`);
+        if (idx % 2 === 0) {
+          const md = 2.2, my = vy + chH * 1.35;
+          const mdFill = shadingMode === "stencil" ? "none" : ink;
+          const mdStroke = shadingMode === "stencil" ? ` stroke="${ink}" stroke-width="${fmt(lwSub * 0.8)}"` : "";
+          chG.push(`<polygon class="shade-detail-node" points="${fmt(cx)},${fmt(my - md)} ${fmt(cx + md)},${fmt(my)} ${fmt(cx)},${fmt(my + md)} ${fmt(cx - md)},${fmt(my)}" fill="${mdFill}"${mdStroke}/>`);
+        }
+      });
+      chG.push(`</g>`);
+      spineEls.push(chG.join(""));
+
+      let forearmOverlay = "";
+      if (includeForearmGuide) {
+        forearmOverlay = `<g id="forearm-silhouette-guide" opacity="0.22"><path d="M 190 40 C 215 320, 235 680, 255 960 M 610 40 C 585 320, 565 680, 545 960" fill="none" stroke="#8C6D46" stroke-width="2.5"/></g>`;
+      }
+
+      const defsBlock = shadingMode === "stencil" ? "" : `  <defs>
+    <linearGradient id="greywashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121211" stop-opacity="0.34"/>
+      <stop offset="55%" stop-color="#121211" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#121211" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>\n`;
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%" data-design-id="${design.id}" data-design-code="${design.code}">
+${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill="#FAF8F5"/>
+  ${forearmOverlay}
+  <g id="sun-flares">
+    <circle id="sun-ring-outer" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rOut)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain)}"/>
+    <circle id="sun-ring-inner" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rIn)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub)}"/>
+    ${sunFlares.join("\n    ")}
+  </g>
+  ${crescentSVG}
+  <g id="compass-rose">
+    ${compassEls.join("\n    ")}
+  </g>
+  <g id="vow-cross-x">
+    ${vowX.join("\n    ")}
+  </g>
+  <g id="axis-spine">
+    ${spineEls.join("\n    ")}
+  </g>
+</svg>`;
+    }
+
+    // Helper: Get design with user's custom parameters if edited
+    function getEffectiveDesign(id) {
+      const base = TATTOO_CATALOG.find(item => item.id === id) || TATTOO_CATALOG[19];
+      const copy = JSON.parse(JSON.stringify(base));
+      if (userState.customParamsById[id]) {
+        copy.params = Object.assign(copy.params, userState.customParamsById[id]);
+      }
+      return copy;
+    }
+
+    const NEEDLE_LABELS = {
+      classic_facet: "王道フルレングス針",
+      short_blade_long_spine: "背骨ロング露出型",
+      stepped_royal_needle: "2段ステップド針",
+      split_spine_corridor: "中空スプリット回廊",
+      asymmetric_polaris: "北針ロング非対称"
+    };
+    const SHADING_LABELS = {
+      greywash: "2Dグレーウォッシュ",
+      stipple: "ドット点描",
+      hybrid: "ハイブリッド陰影",
+      hatch: "平行線ハッチング",
+      stencil: "ステンシル線画"
+    };
+    const C1_LABELS = {
+      crown_diamond: "C1王冠ダイヤ",
+      split_diamond: "C1白黒分割ダイヤ",
+      double_hollow: "C1中空二重ダイヤ"
+    };
+    const X_LABELS = {
+      core_diamond_x: "中心核ダイヤ×印",
+      center_vow_x: "シンプル中心×印",
+      diagonal_ring_x: "対角リング貫通×印",
+      flare_root_x: "太陽根元連動×印",
+      floating_x: "浮遊ミニマル×印"
+    };
+
+    // Active State
+    let activeDesign = getEffectiveDesign(20);
+    let currentFilter = "all";
+    let comparingOriginal = false;
+    let zoomModalId = 20;
+
+    // ===================================================================
+    // Favorite Preference DNA Analyzer
+    // ===================================================================
+    function toggleFavorite(id) {
+      const idx = userState.favorites.indexOf(id);
+      if (idx >= 0) {
+        userState.favorites.splice(idx, 1);
+        showToast(`No.${String(id).padStart(2, "0")} をお気に入りから外しました`);
+      } else {
+        userState.favorites.push(id);
+        if (navigator.vibrate) navigator.vibrate(25);
+        showToast(`💖 No.${String(id).padStart(2, "0")} をお気に入りに追加！傾向を更新しました`);
+      }
+      saveUserState();
+      updateAllViews();
+    }
+
+    function analyzeFavoritesDNA() {
+      const favIds = userState.favorites;
+      const favCount = favIds.length;
+      document.getElementById("nav-fav-count").textContent = favCount;
+      document.getElementById("dock-fav-count").textContent = favCount;
+      document.getElementById("dna-fav-badge").textContent = `選択中: ${favCount}作品`;
+
+      const editedCount = Object.keys(userState.notesById).filter(k => (userState.notesById[k] || "").trim().length > 0).length
+                        + Object.keys(userState.customParamsById).length;
+      document.getElementById("nav-edit-count").textContent = editedCount;
+
+      const tray = document.getElementById("fav-tray");
+      const diagBox = document.getElementById("dna-diagnosis-text");
+      const barsContainer = document.getElementById("dna-bars-container");
+
+      if (favCount === 0) {
+        tray.innerHTML = `<div style="font-size:0.78rem; color:var(--text-sub); padding:4px;">まだお気に入りが選択されていません。ギャラリーの「♡ お気に入り」をタップしてください。</div>`;
+        diagBox.innerHTML = `上のギャラリーで心が動く作品に<strong>「♡ お気に入り」</strong>を押してください（複数選択OK）。選んだ作品の共通点（シルエット構造・C1ダイヤ・S字のうねり・太陽フレア・三日月・×印）をリアルタイムで数値化し、あなた専用の理想バランスを自動合成します！`;
+        barsContainer.innerHTML = "";
+        return null;
+      }
+
+      const favWorks = favIds.map(id => getEffectiveDesign(id));
+
+      // Render Favorite Tray
+      tray.innerHTML = favWorks.map(item => `
+        <div class="fav-chip" data-id="${item.id}">
+          <div class="fav-chip-thumb">${renderTattooSVG(item, false, false)}</div>
+          <div class="fav-chip-info" onclick="loadWorkIntoStudio(${item.id})">
+            <div class="fav-chip-code">${item.code}</div>
+            <div style="color:var(--text-main); max-width:110px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title_ja.split("・")[0]}</div>
+          </div>
+          <button class="fav-chip-remove" title="解除" onclick="event.stopPropagation(); toggleFavorite(${item.id});">✕</button>
+        </div>
+      `).join("");
+
+      // Calculate Mode & Averages
+      const countMap = (keyFn) => {
+        const m = {};
+        favWorks.forEach(w => {
+          const k = keyFn(w.params);
+          m[k] = (m[k] || 0) + 1;
+        });
+        return Object.entries(m).sort((a, b) => b[1] - a[1]);
+      };
+      const avg = (key) => favWorks.reduce((acc, w) => acc + Number(w.params[key] || 0), 0) / favCount;
+
+      const needleModes = countMap(p => p.needle_style || "classic_facet");
+      const topNeedle = needleModes[0][0];
+      const topNeedlePct = Math.round((needleModes[0][1] / favCount) * 100);
+
+      const c1Modes = countMap(p => p.c1_style);
+      const topC1 = c1Modes[0][0];
+      const topC1Pct = Math.round((c1Modes[0][1] / favCount) * 100);
+
+      const xModes = countMap(p => p.x_style);
+      const topX = xModes[0][0];
+      const topXPct = Math.round((xModes[0][1] / favCount) * 100);
+
+      const shadeModes = countMap(p => p.shading_mode);
+      const topShade = shadeModes[0][0];
+      const topShadePct = Math.round((shadeModes[0][1] / favCount) * 100);
+
+      const avgAspect = (avg("north_len") / avg("east_west_len")).toFixed(2);
+      const avgSAmp = Math.round(avg("s_amp"));
+      const avgFlareLen = Math.round(avg("flare_len"));
+      const avgC1Size = Math.round(avg("c1_size"));
+
+      const sCurveTendency = avgSAmp >= 43 ? "優美・大振幅S字派" : (avgSAmp <= 34 ? "シャープ・直線軸派" : "黄金比ナチュラルS字派");
+      const flareTendency = avgFlareLen >= 74 ? "躍動ロング(ニカ太陽)派" : (avgFlareLen <= 58 ? "引き算ショート余白派" : "王道バランスコロナ派");
+
+      diagBox.innerHTML = `
+        <strong>📊 【お気に入り${favCount}作品の傾向診断】</strong><br>
+        現在の好みは、シルエットが<strong>「${NEEDLE_LABELS[topNeedle]}（一致度${topNeedlePct}%）」</strong>、縦横比が<strong>「平均 ${avgAspect} : 1」</strong>、第1頸椎アトラスは<strong>「${C1_LABELS[topC1]}（サイズ平均${avgC1Size}）」</strong>、背骨のS字は<strong>「${sCurveTendency}（平均振幅${avgSAmp}）」</strong>、太陽フレアは<strong>「${flareTendency}」</strong>、中心の誓いは<strong>「${X_LABELS[topX]}」</strong>に強く惹かれています！
+      `;
+
+      const metrics = [
+        {
+          label: "① 羅針盤×背骨構造の好み",
+          val: `${NEEDLE_LABELS[topNeedle]} (${topNeedlePct}%)`,
+          pct: topNeedlePct,
+          sub: `2位以下: ${needleModes.slice(1).map(x => NEEDLE_LABELS[x[0]]).join(" / ") || "単一集中"}`
+        },
+        {
+          label: "② 縦長プロポーション傾向",
+          val: `${avgAspect} : 1 (黄金比系)`,
+          pct: Math.min(100, Math.round(((avgAspect - 1.2) / 0.9) * 100)),
+          sub: `縦軸平均 ${Math.round(avg("north_len"))}px × 横軸平均 ${Math.round(avg("east_west_len"))}px`
+        },
+        {
+          label: "③ 背骨S字のうねり＆C1ダイヤ",
+          val: `${sCurveTendency}`,
+          pct: Math.min(100, Math.round((avgSAmp / 58) * 100)),
+          sub: `${C1_LABELS[topC1]} (${topC1Pct}%) / S字振幅平均 ${avgSAmp}px`
+        },
+        {
+          label: "④ 太陽フレア(陽)の広がり",
+          val: `${flareTendency}`,
+          pct: Math.min(100, Math.round((avgFlareLen / 102) * 100)),
+          sub: `フレア長平均 ${avgFlareLen}px / 開き角 ${avg("flare_spread_deg").toFixed(1)}°`
+        },
+        {
+          label: "⑤ 仲間の印「×」＆三日月配置",
+          val: `${X_LABELS[topX]} (${topXPct}%)`,
+          pct: topXPct,
+          sub: `クロスサイズ平均 ${Math.round(avg("x_size"))}px`
+        },
+        {
+          label: "⑥ シェーディング質感の好み",
+          val: `${SHADING_LABELS[topShade]} (${topShadePct}%)`,
+          pct: topShadePct,
+          sub: `主軸線幅平均 ${avg("line_weight_main").toFixed(2)}px`
+        }
+      ];
+
+      barsContainer.innerHTML = metrics.map(m => `
+        <div class="dna-metric-card">
+          <div class="dna-metric-head">
+            <span>${m.label}</span>
+            <span class="dna-metric-val">${m.val}</span>
+          </div>
+          <div class="dna-bar-bg"><div class="dna-bar-fill" style="width:${m.pct}%;"></div></div>
+          <div class="dna-metric-sub">${m.sub}</div>
+        </div>
+      `).join("");
+
+      return {
+        topNeedle, topC1, topX, topShade, avgAspect, avgSAmp, avgFlareLen, avgC1Size,
+        synthesizedParams: {
+          north_len: Math.round(avg("north_len") / 5) * 5,
+          south_len: Math.round(avg("south_len") / 5) * 5,
+          east_west_len: Math.round(avg("east_west_len") / 5) * 5,
+          needle_half_w: Math.round(avg("needle_half_w")),
+          needle_style: topNeedle,
+          ring_r_outer: Math.round(avg("ring_r_outer") / 2) * 2,
+          ring_r_inner: Math.round(avg("ring_r_outer") / 2) * 2 - 11,
+          open_junction_gap: Math.round(avg("open_junction_gap") / 2) * 2,
+          c1_y: Math.round(avg("c1_y") / 5) * 5,
+          c1_size: Math.round(avg("c1_size")),
+          c1_style: topC1,
+          l5_anchor: true,
+          l5_y: Math.abs(Math.round(avg("c1_y") / 5) * 5),
+          s_amp: Math.round(avg("s_amp") / 2) * 2,
+          s_freq: 1.0,
+          s_phase: 0.0,
+          double_s: countMap(p => Boolean(p.double_s))[0][0] === "true",
+          chevron_count: 7,
+          chevron_layout: countMap(p => p.chevron_layout)[0][0],
+          chevron_size: Number(avg("chevron_size").toFixed(1)),
+          x_style: topX,
+          x_size: Math.round(avg("x_size") / 2) * 2,
+          flare_len: Math.round(avg("flare_len") / 2) * 2,
+          flare_spread_deg: Number(avg("flare_spread_deg").toFixed(1)),
+          flare_wave_amp: Number(avg("flare_wave_amp").toFixed(1)),
+          flare_style: countMap(p => p.flare_style)[0][0],
+          crescent_side: countMap(p => p.crescent_side)[0][0],
+          crescent_angle_deg: Math.round(avg("crescent_angle_deg") / 15) * 15,
+          crescent_span_deg: Math.round(avg("crescent_span_deg")),
+          crescent_thickness: Math.round(avg("crescent_thickness")),
+          shading_mode: topShade,
+          line_weight_main: Number(avg("line_weight_main").toFixed(2)),
+          line_weight_sub: Number(avg("line_weight_sub").toFixed(2))
+        }
+      };
+    }
+
+    // ===================================================================
+    // Gallery Rendering (Galaxy 2-col / 1-col / 3-col)
+    // ===================================================================
+    function renderGallery() {
+      const grid = document.getElementById("gallery-grid");
+      grid.innerHTML = "";
+
+      const filtered = TATTOO_CATALOG.filter(item => {
+        if (currentFilter === "all") return true;
+        if (currentFilter === "fav") return userState.favorites.includes(item.id);
+        if (currentFilter === "edited") {
+          return Boolean((userState.notesById[item.id] && userState.notesById[item.id].trim()) || userState.customParamsById[item.id]);
+        }
+        return item.series.startsWith(currentFilter);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:32px; color:var(--text-sub);">該当する作品がありません。「すべて(20)」タブに戻すか、お気に入り・指示を追加してください。</div>`;
+        return;
+      }
+
+      filtered.forEach(baseItem => {
+        const item = getEffectiveDesign(baseItem.id);
+        const isFav = userState.favorites.includes(item.id);
+        const note = (userState.notesById[item.id] || "").trim();
+        const isEdited = Boolean(note || userState.customParamsById[item.id]);
+
+        const card = document.createElement("article");
+        card.className = "tattoo-card" + (item.id === activeDesign.id ? " selected" : "") + (isFav ? " is-fav" : "");
+        card.dataset.id = item.id;
+
+        const svgThumb = renderTattooSVG(item, false, false);
+        const p = item.params;
+
+        card.innerHTML = `
+          <div class="card-top-bar">
+            <span class="card-code">${item.code}${isEdited ? " ✏️" : ""}</span>
+            <span class="card-aspect">${NEEDLE_LABELS[p.needle_style] || item.aspect_label}</span>
+          </div>
+          <div class="card-svg-stage" title="タップで拡大プレビュー">
+            ${svgThumb}
+            <button class="card-zoom-btn" type="button">🔍 拡大</button>
+            ${note ? `<div class="card-note-badge">📝 ${note}</div>` : ""}
+          </div>
+          <div class="card-body">
+            <h3 class="card-title-ja">${item.title_ja}</h3>
+            <div class="card-tags">
+              <span class="card-tag">${C1_LABELS[p.c1_style]}</span>
+              <span class="card-tag">S字:${p.s_amp}</span>
+              <span class="card-tag">${SHADING_LABELS[p.shading_mode]}</span>
+            </div>
+            <div class="card-details-wrap">
+              <details class="card-details-toggle">
+                <summary>📖 物語・詳細仕様</summary>
+                <p class="card-story">${item.story}</p>
+              </details>
+            </div>
+            <div class="card-footer">
+              <button class="btn-card btn-fav ${isFav ? "active" : ""}" type="button">
+                ${isFav ? "💖 お気に入り済" : "♡ お気に入り"}
+              </button>
+              <button class="btn-card btn-edit-work" type="button">
+                ✏️ 指示・編集
+              </button>
+            </div>
+          </div>
+        `;
+
+        card.querySelector(".card-svg-stage").addEventListener("click", () => openZoomModal(item.id));
+        card.querySelector(".btn-fav").addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleFavorite(item.id);
+        });
+        card.querySelector(".btn-edit-work").addEventListener("click", (e) => {
+          e.stopPropagation();
+          loadWorkIntoStudio(item.id, true);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function loadWorkIntoStudio(id, scroll = true) {
+      comparingOriginal = false;
+      activeDesign = getEffectiveDesign(id);
+      syncControlsFromActive();
+      updateLivePreview();
+      renderGallery();
+      if (scroll) {
+        document.getElementById("live-studio").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    // ===================================================================
+    // VS Side-by-Side Comparator
+    // ===================================================================
+    function initVSComparator() {
+      const selA = document.getElementById("vs-select-a");
+      const selB = document.getElementById("vs-select-b");
+      const opts = TATTOO_CATALOG.map(w => `<option value="${w.id}">${w.code}：${w.title_ja}</option>`).join("");
+      selA.innerHTML = opts;
+      selB.innerHTML = opts;
+      selA.value = userState.favorites[0] || 20;
+      selB.value = userState.favorites[1] || 6;
+
+      const updateVS = () => {
+        const wA = getEffectiveDesign(Number(selA.value));
+        const wB = getEffectiveDesign(Number(selB.value));
+        document.getElementById("vs-stage-a").innerHTML = renderTattooSVG(wA, false, false);
+        document.getElementById("vs-stage-b").innerHTML = renderTattooSVG(wB, false, false);
+        const specHtml = (w) => `
+          <div><strong>構造:</strong> ${NEEDLE_LABELS[w.params.needle_style]}</div>
+          <div><strong>C1/S字:</strong> ${C1_LABELS[w.params.c1_style]} / 振幅${w.params.s_amp}</div>
+          <div><strong>太陽/×印:</strong> フレア長${w.params.flare_len} / ${X_LABELS[w.params.x_style]}</div>
+        `;
+        document.getElementById("vs-specs-a").innerHTML = specHtml(wA);
+        document.getElementById("vs-specs-b").innerHTML = specHtml(wB);
+      };
+
+      selA.addEventListener("change", updateVS);
+      selB.addEventListener("change", updateVS);
+      document.getElementById("vs-edit-a").addEventListener("click", () => loadWorkIntoStudio(Number(selA.value), true));
+      document.getElementById("vs-edit-b").addEventListener("click", () => loadWorkIntoStudio(Number(selB.value), true));
+      updateVS();
+      window.refreshVSComparator = updateVS;
+    }
+
+    // ===================================================================
+    // Fullscreen Zoom Modal
+    // ===================================================================
+    function openZoomModal(id) {
+      zoomModalId = id;
+      const w = getEffectiveDesign(id);
+      const isFav = userState.favorites.includes(id);
+      document.getElementById("zoom-modal-title").textContent = `${w.code} — ${w.title_ja}`;
+      document.getElementById("zoom-modal-stage").innerHTML = renderTattooSVG(w, false, false);
+      const favBtn = document.getElementById("btn-zoom-fav");
+      favBtn.textContent = isFav ? "💖 お気に入り済" : "♡ お気に入り";
+      favBtn.classList.toggle("active", isFav);
+      document.getElementById("zoom-modal").classList.add("open");
+    }
+
+    // ===================================================================
+    // Studio Controls & Quick Brush-up Chips
+    // ===================================================================
+    const CHIP_DEFINITIONS = {
+      thinner_line: {
+        note: "線を全体的に細く繊細な1RLファインライン調にする",
+        apply: (p) => { p.line_weight_main = Math.max(0.85, Number((p.line_weight_main - 0.25).toFixed(2))); p.line_weight_sub = Math.max(0.55, Number((p.line_weight_sub - 0.15).toFixed(2))); }
+      },
+      bolder_axis: {
+        note: "中心重力軸と主軸の線を力強くくっきり(3RL強調)させる",
+        apply: (p) => { p.line_weight_main = Math.min(2.4, Number((p.line_weight_main + 0.25).toFixed(2))); }
+      },
+      more_slender: {
+        note: "縦軸を長く・横軸を絞って前腕に映えるスレンダー比率にする",
+        apply: (p) => { p.north_len = Math.min(420, p.north_len + 20); p.south_len = p.north_len; p.east_west_len = Math.max(180, p.east_west_len - 20); }
+      },
+      more_minimal: {
+        note: "要素を引き算して余白(ネガティブスペース)と中心の抜けを増やす",
+        apply: (p) => { p.open_junction_gap = Math.min(14, p.open_junction_gap + 8); p.chevron_layout = "minimal_5"; p.flare_len = Math.max(44, p.flare_len - 12); }
+      },
+      c1_larger: {
+        note: "第1頸椎C1アトラスの王冠ダイヤモンドをより大きく誇り高く強調する",
+        apply: (p) => { p.c1_size = Math.min(28, p.c1_size + 4); p.c1_style = "crown_diamond"; }
+      },
+      s_curve_more: {
+        note: "背骨のS字カーブ(生理的弯曲)をもっと大きく優美にしならせる",
+        apply: (p) => { p.s_amp = Math.min(64, p.s_amp + 10); }
+      },
+      s_curve_straight: {
+        note: "S字の振れ幅をタイトに抑えて、ブレない直線軸を際立たせる",
+        apply: (p) => { p.s_amp = Math.max(16, p.s_amp - 12); }
+      },
+      chevrons_clear: {
+        note: "7つの椎骨シェブロン(V字)がコンパス針に埋もれないよう鮮明に張り出させる",
+        apply: (p) => { p.chevron_size = Math.min(16, Number((p.chevron_size + 2.5).toFixed(1))); p.needle_style = "stepped_royal_needle"; }
+      },
+      short_compass: {
+        note: "中央コンパス針をコンパクトに締め、上下の背骨ニードルとC1ダイヤを長く露出させる",
+        apply: (p) => { p.needle_style = "short_blade_long_spine"; }
+      },
+      split_corridor: {
+        note: "南北の針の中央に白いスリット回廊を開け、背骨シェブロンを中に浮かび上がらせる",
+        apply: (p) => { p.needle_style = "split_spine_corridor"; }
+      },
+      x_prominent: {
+        note: "中心のアラバスタの誓い「×」とオールブルー核ダイヤを大きく際立たせる",
+        apply: (p) => { p.x_size = Math.min(80, p.x_size + 12); p.x_style = "core_diamond_x"; }
+      },
+      x_subtle: {
+        note: "中心の「×」を小さくさりげないフローティング構造で隠す",
+        apply: (p) => { p.x_size = Math.max(32, p.x_size - 12); p.x_style = "floating_x"; }
+      },
+      flare_nika: {
+        note: "8本の太陽フレアをニカ(解放の鼓動)のように長く躍動的なウェーブにする",
+        apply: (p) => { p.flare_len = Math.min(108, p.flare_len + 18); p.flare_wave_amp = Math.min(12, Number((p.flare_wave_amp + 2.5).toFixed(1))); p.flare_style = "nika_flame"; }
+      },
+      flare_compact: {
+        note: "太陽フレアを短く控えめにして、羅針盤と背骨の軸を主役にする",
+        apply: (p) => { p.flare_len = Math.max(42, p.flare_len - 16); p.flare_style = "compact_wave"; }
+      },
+      crescent_sharp: {
+        note: "内周の三日月をより細く鋭い剃刀アークに引き締める",
+        apply: (p) => { p.crescent_thickness = Math.max(9, p.crescent_thickness - 4); }
+      },
+      crescent_cradle: {
+        note: "三日月を下向き(クレセントボウル・器型)に配置し、中心の×と太陽を下から抱きかかえる構図にする",
+        apply: (p) => { p.crescent_angle_deg = 90; p.crescent_side = "bottom"; }
+      }
+    };
+
+    function syncControlsFromActive() {
+      const p = activeDesign.params;
+      const isFav = userState.favorites.includes(activeDesign.id);
+      document.getElementById("studio-active-title").textContent =
+        `✏️ ブラッシュアップ指示＆微調整スタジオ（編集対象：${activeDesign.code} ${activeDesign.title_ja}）`;
+      document.getElementById("memo-work-label").textContent =
+        `📝 ${activeDesign.code}（${activeDesign.title_ja}）へのブラッシュアップ指示メモ：`;
+
+      const studioFavBtn = document.getElementById("btn-studio-fav");
+      studioFavBtn.textContent = isFav ? "💖 お気に入り登録済" : "♡ この作品をお気に入りに追加";
+      studioFavBtn.classList.toggle("active", isFav);
+
+      const setSlider = (id, valId, val, suffix = "") => {
+        const el = document.getElementById(id);
+        const vel = document.getElementById(valId);
+        if (el) el.value = val;
+        if (vel) vel.textContent = val + suffix;
+      };
+
+      setSlider("ctrl-lw-main", "val-lw-main", p.line_weight_main, "px");
+      setSlider("ctrl-lw-sub", "val-lw-sub", p.line_weight_sub, "px");
+      setSlider("ctrl-n-len", "val-n-len", p.north_len);
+      setSlider("ctrl-ew-len", "val-ew-len", p.east_west_len);
+      setSlider("ctrl-c1-size", "val-c1-size", p.c1_size);
+      setSlider("ctrl-s-amp", "val-s-amp", p.s_amp);
+      setSlider("ctrl-chevron-size", "val-chevron-size", p.chevron_size);
+      setSlider("ctrl-flare-spread", "val-flare-spread", p.flare_spread_deg, "°");
+      setSlider("ctrl-flare-len", "val-flare-len", p.flare_len);
+      setSlider("ctrl-flare-wave", "val-flare-wave", p.flare_wave_amp);
+      setSlider("ctrl-crescent-ang", "val-crescent-ang", p.crescent_angle_deg, "°");
+      setSlider("ctrl-crescent-thick", "val-crescent-thick", p.crescent_thickness);
+      setSlider("ctrl-x-size", "val-x-size", p.x_size);
+      setSlider("ctrl-ring-r", "val-ring-r", p.ring_r_outer);
+      setSlider("ctrl-gap", "val-gap", p.open_junction_gap);
+
+      document.getElementById("ctrl-needle-style").value = p.needle_style || "classic_facet";
+      document.getElementById("ctrl-shading-mode").value = p.shading_mode;
+      document.getElementById("ctrl-c1-style").value = p.c1_style;
+      document.getElementById("ctrl-chevron-layout").value = p.chevron_layout;
+      document.getElementById("ctrl-x-style").value = p.x_style;
+
+      document.getElementById("brushup-memo-input").value = userState.notesById[activeDesign.id] || "";
+      document.getElementById("global-memo-input").value = userState.globalMemo || "";
+
+      const activeChips = userState.chipsById[activeDesign.id] || [];
+      document.querySelectorAll(".btn-chip").forEach(btn => {
+        btn.classList.toggle("applied", activeChips.includes(btn.dataset.chip));
+      });
+
+      updateAIPromptPreview();
+    }
+
+    function persistActiveParams() {
+      userState.customParamsById[activeDesign.id] = JSON.parse(JSON.stringify(activeDesign.params));
+      saveUserState();
+      updateAIPromptPreview();
+    }
+
+    function updateLivePreview() {
+      const showGuide = document.getElementById("toggle-forearm-guide").checked;
+      let targetDesign = activeDesign;
+      if (comparingOriginal) {
+        const orig = TATTOO_CATALOG.find(item => item.id === activeDesign.id) || TATTOO_CATALOG[19];
+        targetDesign = orig;
+      }
+      const svgMarkup = renderTattooSVG(targetDesign, false, showGuide);
+      document.getElementById("live-svg-container").innerHTML = svgMarkup;
+    }
+
+    function generateAIPromptText() {
+      const dna = analyzeFavoritesDNA();
+      const favList = userState.favorites.map(id => {
+        const w = TATTOO_CATALOG.find(x => x.id === id);
+        return w ? `${w.code}(${w.title_ja})` : `No.${id}`;
+      }).join("、");
+
+      const lines = [];
+      lines.push("【タトゥーデザイン・ブラッシュアップ指示書（Galaxyマスタースタジオ出力）】");
+      lines.push(`■ お気に入り選択作品（${userState.favorites.length}枚）：${favList || "未選択"}`);
+      if (dna) {
+        lines.push(`■ 自動分析された好みの傾向：`);
+        lines.push(`  ・羅針盤×背骨構造：${NEEDLE_LABELS[dna.topNeedle]}`);
+        lines.push(`  ・平均縦横比：${dna.avgAspect} : 1`);
+        lines.push(`  ・C1アトラス＆S字：${C1_LABELS[dna.topC1]}（サイズ${dna.avgC1Size}） / S字振幅平均 ${dna.avgSAmp}px`);
+        lines.push(`  ・太陽フレア＆×印：フレア長平均 ${dna.avgFlareLen}px / ${X_LABELS[dna.topX]} / ${SHADING_LABELS[dna.topShade]}`);
+      }
+
+      lines.push(`\n■ 現在スタジオで編集中のベース作品：${activeDesign.code}（${activeDesign.title_ja}）`);
+      const p = activeDesign.params;
+      lines.push(`  ・現在の微調整パラメータ：構造=${NEEDLE_LABELS[p.needle_style]}, 縦=${p.north_len}, 横=${p.east_west_len}, C1=${p.c1_size}(${p.c1_style}), S字振幅=${p.s_amp}, シェブロン=${p.chevron_layout}(幅${p.chevron_size}), 太陽フレア長=${p.flare_len}, 三日月=${p.crescent_angle_deg}°(太さ${p.crescent_thickness}), ×印=${p.x_style}(サイズ${p.x_size}), 陰影=${p.shading_mode}`);
+
+      // Collect all per-work notes
+      const notedIds = Object.keys(userState.notesById).filter(id => (userState.notesById[id] || "").trim().length > 0);
+      if (notedIds.length > 0) {
+        lines.push(`\n■ 作品別のブラッシュアップ指示メモ：`);
+        notedIds.forEach(id => {
+          const w = TATTOO_CATALOG.find(x => x.id === Number(id));
+          const label = w ? `${w.code}` : `No.${id}`;
+          lines.push(`  ・[${label}] ${userState.notesById[id].trim()}`);
+        });
+      }
+
+      if ((userState.globalMemo || "").trim()) {
+        lines.push(`\n■ 全体への追加ブラッシュアップ要望：`);
+        lines.push(`  ${userState.globalMemo.trim()}`);
+      }
+
+      return lines.join("\n");
+    }
+
+    function updateAIPromptPreview() {
+      const txt = generateAIPromptText();
+      const pre = document.getElementById("ai-prompt-preview");
+      if (pre) pre.textContent = txt;
+    }
+
+    function copyAIPromptToClipboard() {
+      const txt = generateAIPromptText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => {
+          showToast("📋 ブラッシュアップ指示書をコピーしました！そのままチャットに貼り付けられます");
+        });
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast("📋 ブラッシュアップ指示書をコピーしました！");
+      }
+    }
+
+    function updateAllViews() {
+      analyzeFavoritesDNA();
+      renderGallery();
+      syncControlsFromActive();
+      updateLivePreview();
+      if (window.refreshVSComparator) window.refreshVSComparator();
+    }
+
+    function bindStudioControls() {
+      const bindRange = (id, valId, paramKey, suffix = "", extraFn = null) => {
+        const el = document.getElementById(id);
+        el.addEventListener("input", () => {
+          comparingOriginal = false;
+          const v = parseFloat(el.value);
+          activeDesign.params[paramKey] = v;
+          if (extraFn) extraFn(v);
+          document.getElementById(valId).textContent = v + suffix;
+          persistActiveParams();
+          updateLivePreview();
+        });
+      };
+
+      bindRange("ctrl-lw-main", "val-lw-main", "line_weight_main", "px");
+      bindRange("ctrl-lw-sub", "val-lw-sub", "line_weight_sub", "px");
+      bindRange("ctrl-n-len", "val-n-len", "north_len", "", (v) => { activeDesign.params.south_len = v; });
+      bindRange("ctrl-ew-len", "val-ew-len", "east_west_len");
+      bindRange("ctrl-c1-size", "val-c1-size", "c1_size");
+      bindRange("ctrl-s-amp", "val-s-amp", "s_amp");
+      bindRange("ctrl-chevron-size", "val-chevron-size", "chevron_size");
+      bindRange("ctrl-flare-spread", "val-flare-spread", "flare_spread_deg", "°");
+      bindRange("ctrl-flare-len", "val-flare-len", "flare_len");
+      bindRange("ctrl-flare-wave", "val-flare-wave", "flare_wave_amp");
+      bindRange("ctrl-crescent-ang", "val-crescent-ang", "crescent_angle_deg", "°");
+      bindRange("ctrl-crescent-thick", "val-crescent-thick", "crescent_thickness");
+      bindRange("ctrl-x-size", "val-x-size", "x_size");
+      bindRange("ctrl-ring-r", "val-ring-r", "ring_r_outer", "", (v) => { activeDesign.params.ring_r_inner = v - 11; });
+      bindRange("ctrl-gap", "val-gap", "open_junction_gap");
+
+      // Galaxy +/- Stepper Buttons
+      document.querySelectorAll(".btn-step").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const input = document.getElementById(btn.dataset.target);
+          if (!input) return;
+          const step = parseFloat(input.step || "1");
+          const dir = parseFloat(btn.dataset.dir || "1");
+          const min = parseFloat(input.min);
+          const max = parseFloat(input.max);
+          let next = Number((parseFloat(input.value) + step * dir).toFixed(2));
+          next = Math.max(min, Math.min(max, next));
+          input.value = next;
+          input.dispatchEvent(new Event("input"));
+        });
+      });
+
+      const bindSelect = (id, paramKey) => {
+        const el = document.getElementById(id);
+        el.addEventListener("change", () => {
+          comparingOriginal = false;
+          activeDesign.params[paramKey] = el.value;
+          persistActiveParams();
+          updateLivePreview();
+        });
+      };
+      bindSelect("ctrl-needle-style", "needle_style");
+      bindSelect("ctrl-shading-mode", "shading_mode");
+      bindSelect("ctrl-c1-style", "c1_style");
+      bindSelect("ctrl-chevron-layout", "chevron_layout");
+      bindSelect("ctrl-x-style", "x_style");
+
+      // Quick Instruction Chips
+      document.querySelectorAll(".btn-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.chip;
+          const def = CHIP_DEFINITIONS[key];
+          if (!def) return;
+          comparingOriginal = false;
+          def.apply(activeDesign.params);
+
+          userState.chipsById[activeDesign.id] = userState.chipsById[activeDesign.id] || [];
+          if (!userState.chipsById[activeDesign.id].includes(key)) {
+            userState.chipsById[activeDesign.id].push(key);
+          }
+
+          const curMemo = (userState.notesById[activeDesign.id] || "").trim();
+          if (!curMemo.includes(def.note)) {
+            userState.notesById[activeDesign.id] = curMemo ? `${curMemo} ／ ${def.note}` : def.note;
+          }
+
+          persistActiveParams();
+          syncControlsFromActive();
+          updateLivePreview();
+          renderGallery();
+          showToast(`✨ 指示反映：「${def.note}」`);
+        });
+      });
+
+      // Memo Textareas
+      document.getElementById("brushup-memo-input").addEventListener("input", (e) => {
+        userState.notesById[activeDesign.id] = e.target.value;
+        saveUserState();
+        updateAIPromptPreview();
+      });
+      document.getElementById("global-memo-input").addEventListener("input", (e) => {
+        userState.globalMemo = e.target.value;
+        saveUserState();
+        updateAIPromptPreview();
+      });
+
+      document.getElementById("toggle-forearm-guide").addEventListener("change", updateLivePreview);
+
+      document.getElementById("btn-toggle-preview-size").addEventListener("click", () => {
+        document.getElementById("studio-preview-wrap").classList.toggle("compact-mobile");
+      });
+
+      document.getElementById("btn-compare-orig").addEventListener("click", (e) => {
+        comparingOriginal = !comparingOriginal;
+        e.currentTarget.classList.toggle("active", comparingOriginal);
+        e.currentTarget.textContent = comparingOriginal ? "👀 編集中に戻す" : "👀 編集前(初期値)と比較";
+        updateLivePreview();
+      });
+
+      document.getElementById("btn-studio-fav").addEventListener("click", () => {
+        toggleFavorite(activeDesign.id);
+      });
+
+      document.getElementById("btn-reset-preset").addEventListener("click", () => {
+        delete userState.customParamsById[activeDesign.id];
+        delete userState.notesById[activeDesign.id];
+        delete userState.chipsById[activeDesign.id];
+        saveUserState();
+        loadWorkIntoStudio(activeDesign.id, false);
+        showToast("↺ 初期デザインにリセットしました");
+      });
+
+      document.getElementById("btn-download-custom").addEventListener("click", () => {
+        const svgData = renderTattooSVG(activeDesign, false, false);
+        downloadSVGBlob(svgData, `tattoo_${String(activeDesign.id).padStart(2, '0')}_custom.svg`);
+      });
+
+      document.getElementById("btn-download-stencil").addEventListener("click", () => {
+        const svgData = renderTattooSVG(activeDesign, true, false);
+        downloadSVGBlob(svgData, `tattoo_${String(activeDesign.id).padStart(2, '0')}_stencil.svg`);
+      });
+
+      document.getElementById("btn-copy-ai-prompt").addEventListener("click", copyAIPromptToClipboard);
+      document.getElementById("dock-btn-copy").addEventListener("click", copyAIPromptToClipboard);
+
+      // Synthesize Ideal Design No.21 from Favorites
+      document.getElementById("btn-synthesize-favs").addEventListener("click", () => {
+        const dna = analyzeFavoritesDNA();
+        if (!dna) {
+          showToast("先に1つ以上の作品に「♡ お気に入り」を押してください！");
+          return;
+        }
+        activeDesign = {
+          id: 20,
+          code: "No.21 [DNA統合]",
+          series: "Series IV: ROOTON MASTERPIECE",
+          title_en: "Synthesized True North Custom",
+          title_ja: "お気に入り傾向100%統合・理想ハイブリッド案",
+          subtitle: "選択したお気に入り作品の黄金比平均×最頻構造を自動融合",
+          story: "お気に入りに選んだ作品のパラメータと構造を自動合成したあなた専用の第21作です。",
+          aspect_label: `${dna.avgAspect} : 1（DNA統合）`,
+          params: dna.synthesizedParams
+        };
+        userState.customParamsById[20] = JSON.parse(JSON.stringify(dna.synthesizedParams));
+        userState.notesById[20] = `お気に入り作品（${userState.favorites.map(i => "No." + String(i).padStart(2, "0")).join("・")}）の傾向を自動統合したカスタム案`;
+        saveUserState();
+        syncControlsFromActive();
+        updateLivePreview();
+        document.getElementById("live-studio").scrollIntoView({ behavior: "smooth", block: "start" });
+        showToast("✨ お気に入りの傾向から理想の統合デザインを生成しました！");
+      });
+
+      document.getElementById("btn-fav-to-vs").addEventListener("click", () => {
+        const vsPanel = document.getElementById("vs-compare-panel");
+        vsPanel.classList.add("active");
+        if (userState.favorites.length >= 2) {
+          document.getElementById("vs-select-a").value = userState.favorites[0];
+          document.getElementById("vs-select-b").value = userState.favorites[1];
+          if (window.refreshVSComparator) window.refreshVSComparator();
+        }
+        vsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      document.getElementById("btn-clear-favs").addEventListener("click", () => {
+        userState.favorites = [];
+        saveUserState();
+        updateAllViews();
+        showToast("お気に入りをリセットしました");
+      });
+
+      document.getElementById("btn-toggle-dna-bars").addEventListener("click", () => {
+        const bars = document.getElementById("dna-bars-container");
+        bars.style.display = (bars.style.display === "none") ? "grid" : "none";
+      });
+    }
+
+    function downloadSVGBlob(svgContent, filename) {
+      const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Layout Mode Switcher (2-col / 1-col / 3-col / VS)
+    document.querySelectorAll("#layout-switcher [data-grid-mode]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.gridMode;
+        if (mode === "vs") {
+          const vsPanel = document.getElementById("vs-compare-panel");
+          vsPanel.classList.toggle("active");
+          btn.classList.toggle("active", vsPanel.classList.contains("active"));
+          if (vsPanel.classList.contains("active")) {
+            vsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          return;
+        }
+        document.querySelectorAll("#layout-switcher [data-grid-mode]:not(#btn-toggle-vs)").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const grid = document.getElementById("gallery-grid");
+        grid.classList.remove("grid-1", "grid-2", "grid-3");
+        grid.classList.add(mode);
+      });
+    });
+
+    document.getElementById("btn-close-vs").addEventListener("click", () => {
+      document.getElementById("vs-compare-panel").classList.remove("active");
+      document.getElementById("btn-toggle-vs").classList.remove("active");
+    });
+
+    // Filter & Surface Buttons
+    document.querySelectorAll("[data-filter]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter;
+        renderGallery();
+      });
+    });
+
+    document.querySelectorAll("[data-surface-btn]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-surface-btn]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.body.dataset.surface = btn.dataset.surfaceBtn;
+      });
+    });
+
+    // Zoom Modal Buttons
+    document.getElementById("btn-close-zoom").addEventListener("click", () => {
+      document.getElementById("zoom-modal").classList.remove("open");
+    });
+    document.getElementById("btn-zoom-prev").addEventListener("click", () => {
+      const prevId = zoomModalId > 1 ? zoomModalId - 1 : 20;
+      openZoomModal(prevId);
+    });
+    document.getElementById("btn-zoom-next").addEventListener("click", () => {
+      const nextId = zoomModalId < 20 ? zoomModalId + 1 : 1;
+      openZoomModal(nextId);
+    });
+    document.getElementById("btn-zoom-fav").addEventListener("click", () => {
+      toggleFavorite(zoomModalId);
+      openZoomModal(zoomModalId);
+    });
+    document.getElementById("btn-zoom-edit").addEventListener("click", () => {
+      document.getElementById("zoom-modal").classList.remove("open");
+      loadWorkIntoStudio(zoomModalId, true);
+    });
+
+    // Bottom Dock Navigation
+    document.querySelectorAll(".bottom-dock [data-scroll-to]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".bottom-dock .dock-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (btn.dataset.scrollTo === "section-dna") {
+          document.getElementById("dna-bars-container").style.display = "grid";
+        }
+        const target = document.getElementById(btn.dataset.scrollTo);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    // Init All
+    initVSComparator();
+    bindStudioControls();
+    updateAllViews();
+  </script>
+</body>
+</html>
