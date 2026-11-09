@@ -50,7 +50,7 @@
       padding-bottom: 92px; /* Space for Galaxy bottom thumb dock */
     }
 
-    .container, section, .dna-panel, .studio-section, .brushup-box, .controls-panel, .control-box, .tattoo-card, .card-body {
+    header, nav, main, .container, section, .dna-panel, .studio-section, .studio-grid > *, .brushup-box, .controls-panel, .control-box, .tattoo-card, .card-body {
       min-width: 0;
       max-width: 100%;
     }
@@ -674,7 +674,7 @@
 
     .studio-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 18px;
       align-items: start;
     }
@@ -1139,13 +1139,13 @@
   <!-- 1. Compact Header                                                   -->
   <!-- =================================================================== -->
   <header class="hero-header">
-    <div class="hero-badge">NAUTICAL CHART × DA VINCI × ROOTON SPINE & FLAME SUN STUDIO</div>
-    <h1 class="hero-title">True Alignment, True North — 航海図コンパス×ダ・ヴィンチ×Rooton統合マスターページ</h1>
+    <div class="hero-badge">MIDDLE FINGER × BLACK/WHITE COMPASS × SOLAR CORONA × LOTUS ARCH</div>
+    <h1 class="hero-title">True Alignment, True North — 中指タトゥー×黒白羅針盤×背景太陽マスタースタジオ</h1>
     <p class="hero-subtitle">
-      ①大航海8方位/16方位コンパスローズ＆航路図 × ②炎の太陽16花弁＆三日月 × ③ダ・ヴィンチ天球作図 × ④Rooton棘突起S字背骨＆4重波紋（根っこなし仕様）新作10選！
+      ①画像1の黒ベタ×白抜き8方位コンパス＆斜め交差矢 × ②羅針盤の背景と一体化した太陽コロナ＆サンバースト × ③画像2の中指アイ・ダイヤ＆尖頭ドットロータス新作10選！
     </p>
     <div class="quick-guide-bar">
-      <span class="quick-guide-step">🧭 新作：航海図×ダ・ヴィンチ×Rooton 10選</span>
+      <span class="quick-guide-step">🧭 新作：中指×黒白羅針盤×背景太陽 10選</span>
       <span class="quick-guide-step">💖 お気に入り傾向DNA自動診断</span>
       <span class="quick-guide-step">✏️ 指示チップ＆リアルタイム編集</span>
     </div>
@@ -1171,7 +1171,7 @@
     </div>
     <div class="toolbar-row" id="filter-bar">
       <div class="btn-group">
-        <button class="btn-tab active" data-filter="Series V:">🔥 ダ・ヴィンチ×Rooton新作 <span class="badge-count">10</span></button>
+        <button class="btn-tab active" data-filter="Series V:">🔥 中指×黒白羅針盤×背景太陽 <span class="badge-count">10</span></button>
         <button class="btn-tab" data-filter="all">全作品 <span class="badge-count">30</span></button>
         <button class="btn-tab fav-filter" data-filter="fav" id="filter-fav-btn">💖 お気に入り <span class="badge-count" id="nav-fav-count">0</span></button>
         <button class="btn-tab" data-filter="edited" id="filter-edited-btn">✏️ 指示・編集済 <span class="badge-count" id="nav-edit-count">0</span></button>
@@ -1250,7 +1250,7 @@
     <!-- =================================================================== -->
     <section id="section-gallery">
       <div class="section-heading">
-        <h2>🏴‍☠️ ダ・ヴィンチ×Rooton新作10選 ＆ 全30作品ギャラリー</h2>
+        <h2>🏴‍☠️ 中指の背（Middle Finger）特化：黒白8方位羅針盤 × 背景の太陽コロナ × 尖頭ロータス10選</h2>
         <span>画像をタップで拡大・比較 ／「♡お気に入り」で上の傾向DNAがリアルタイム更新</span>
       </div>
       <div class="gallery-grid grid-2" id="gallery-grid">
@@ -1303,12 +1303,12 @@
               <span>💡 ワンタップ・ブラッシュアップ指示チップ（押すと即時プレビュー反映＋指示メモ追記）</span>
             </h4>
 
-            <div class="chip-cat-label">【🧭 航海図コンパスローズ × ダ・ヴィンチ天球図 × Rooton背骨＆4重波紋 × 炎の太陽】</div>
+            <div class="chip-cat-label">【🧭 中指デザイン特化：画像1の黒白8方位コンパス × 背景の太陽オーラ × 画像2の尖頭ドットロータス】</div>
             <div class="chips-wrap" id="quick-instruction-chips">
-              <button class="btn-chip" data-chip="rooton_roots_wider">🧭 根っこをなくして羅針盤を「8方位の航海図（Nautical Chart）」にする</button>
-              <button class="btn-chip" data-chip="rooton_waves_more">〰️ ルートンの「4重共鳴波紋」と「背骨の棘突起」を強調</button>
-              <button class="btn-chip" data-chip="sun_flame_petals">☀️ 太陽を画像3・4の「立体炎型16花弁」にする</button>
-              <button class="btn-chip" data-chip="davinci_max_lines">📐 背景の「ポルトラーノ海図ラムライン＆ダ・ヴィンチ作図線」を緻密にする</button>
+              <button class="btn-chip" data-chip="rooton_roots_wider">🧭 画像1の「黒ベタ×白抜き8方位羅針盤」と「指輪アイ・ダイヤ＆尖頭ロータス」を強調</button>
+              <button class="btn-chip" data-chip="rooton_waves_more">〰️ 下部波サークル＆外周S字リボン＆共鳴波紋を強調</button>
+              <button class="btn-chip" data-chip="sun_flame_petals">☀️ 羅針盤の背景の「太陽コロナ＆縦長サンバースト放射光」を強調</button>
+              <button class="btn-chip" data-chip="davinci_max_lines">📐 背景の「黒アーク・ベゼル＆太陽幾何学オーラ」を緻密にする</button>
 
               <div class="chip-cat-label" style="width:100%;">【全体の印象・線の太さ・シルエット】</div>
               <button class="btn-chip" data-chip="thinner_line">✨ もっと線を細く繊細に(1RL風)</button>
@@ -1687,54 +1687,55 @@
   {
     "id": 101,
     "code": "DV-01",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Portolan Grand Chart & Flame Sun Compass",
-    "title_ja": "王道ポルトラーノ航海図と太陽の羅針盤（8方位ウィンドローズ）",
-    "subtitle": "大航海時代の8方位コンパスローズ × ラムライン航路網 × 炎の太陽16花弁＆三日月 × Rooton棘突起S字背骨＆4重波紋",
-    "story": "樹木の根をなくし、南針まで一直線に抜けるシャープな縦長シルエットへ進化した王道モデル。中央には白黒ファセットの「8方位航海図コンパスローズ（東西南北＋45°副方位針＝仲間の印×）」と「二重ジンバル方位環」、外周にはポルトラーノ海図の「ラムライン航路網」、そして炎の太陽16花弁とRootonのS字背骨・4重波紋が融合した一作。",
-    "aspect_label": "1.618 : 1（王道ポルトラーノ航海図）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Solar Halo Compass & Finger Lotus Arch",
+    "title_ja": "中指ロイヤル・黒白羅針盤と背景太陽＆尖頭ドットアーチ（王道融合）",
+    "subtitle": "画像1の黒ベタ×白抜き8方位羅針盤＆分割ベゼル × 背後の太陽コロナ × 画像2の中指3連尖頭ドットアーチ",
+    "story": "中指の背（幅15〜18mm）に完璧に収まる王道モデル。最前面には画像1の「片側100%黒ベタ・片側白抜きのパキッとした8方位羅針盤＆黒アーク分割ベゼル」、そのすぐ背後に「うねる太陽の炎花弁と放射サンバースト光条」を背景オーラとして融合。下部（指輪ゾーン）には画像2の「内周ドット付き3連尖頭ロータスアーチ＆アイ・ダイヤ」、さらにS字リボン・波サークル・黒矢じり▼と関節フェードドットが一直線に抜けるデザイン。",
+    "aspect_label": "3.5 : 1（中指ゴールデン比率・王道融合）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 375,
-      "south_len": 375,
-      "east_west_len": 232,
-      "needle_half_w": 19,
+      "mf_variant": 1,
+      "north_len": 355,
+      "south_len": 365,
+      "east_west_len": 112,
+      "needle_half_w": 16,
       "needle_style": "stepped_royal_needle",
-      "ring_r_outer": 78,
-      "ring_r_inner": 64,
+      "ring_r_outer": 62,
+      "ring_r_inner": 49,
       "open_junction_gap": 0,
-      "c1_y": -245,
-      "c1_size": 19,
+      "c1_y": -210,
+      "c1_size": 16,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 215,
-      "s_amp": 38,
+      "l5_y": 135,
+      "s_amp": 54,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "golden_5_2",
-      "chevron_size": 11.0,
+      "chevron_size": 9.5,
       "x_style": "core_diamond_x",
       "x_size": 68,
-      "flare_len": 74,
+      "flare_len": 48,
       "flare_spread_deg": 15.0,
-      "flare_wave_amp": 9.5,
+      "flare_wave_amp": 7.5,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 180,
       "crescent_span_deg": 150,
-      "crescent_thickness": 16,
+      "crescent_thickness": 14,
       "shading_mode": "hybrid",
-      "line_weight_main": 1.45,
-      "line_weight_sub": 0.9,
+      "line_weight_main": 1.55,
+      "line_weight_sub": 0.92,
       "root_branches": 0,
-      "root_spread": 118,
-      "root_depth": 115,
-      "wave_arcs": 4,
-      "wave_radius_start": 108,
-      "wave_span_deg": 68,
-      "spine_notches": 10,
+      "root_spread": 80,
+      "root_depth": 90,
+      "wave_arcs": 3,
+      "wave_radius_start": 78,
+      "wave_span_deg": 56,
+      "spine_notches": 7,
       "davinci_mode": "vitruvian_full",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -1743,54 +1744,55 @@
   {
     "id": 102,
     "code": "DV-02",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Solar Flame Astrolabe & Nautical Rose",
-    "title_ja": "炎の太陽16花弁と天球航海図（画像3・4太陽デザイン特化）",
-    "subtitle": "長短交互にうねる16枚の立体炎花弁 × 海図の8方位ファセット副針 × 上下の天球スターバースト",
-    "story": "画像3・4の「S字にうねる16枚の太陽炎花弁（二重カリグラフィリブ＋先端3連ドット）」と「4層ペッパースティップルの三日月」を主役に据え、根を排したことで南北のコンパス針と上下の天球軌道リングが前腕の上でスッキリと縦に抜ける航海図デザイン。",
-    "aspect_label": "2.2 : 1（太陽16花弁×天球海図）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Ring Band Mandala & Black-Facet Compass",
+    "title_ja": "リングバンド・5弁マンダラと漆黒ファセット羅針盤（画像2指輪ゾーン特化）",
+    "subtitle": "画像2の「指輪と重なるダブルリングバンド＆5弁尖頭ドットマンダラ」× 画像1の黒白羅針盤＆背景太陽",
+    "story": "画像2のように「中指に指輪をはめた状態でも単体でも最高に映える」ジュエリー構図。指輪ラインに二重クレセントバンドと大きなアイ・ダイヤモンドを据え、その下に5枚の尖頭ドット花弁マンダラをワイドに展開。上部には背景太陽コロナを背負った黒×白8方位コンパスローズが輝く。",
+    "aspect_label": "3.2 : 1（画像2直系・指輪バンド＆5弁マンダラ）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 365,
-      "south_len": 365,
-      "east_west_len": 150,
-      "needle_half_w": 15,
-      "needle_style": "short_blade_long_spine",
-      "ring_r_outer": 86,
-      "ring_r_inner": 70,
+      "mf_variant": 2,
+      "north_len": 340,
+      "south_len": 360,
+      "east_west_len": 118,
+      "needle_half_w": 17,
+      "needle_style": "classic_facet",
+      "ring_r_outer": 58,
+      "ring_r_inner": 46,
       "open_junction_gap": 0,
-      "c1_y": -235,
-      "c1_size": 17,
+      "c1_y": -195,
+      "c1_size": 15,
       "c1_style": "split_diamond",
       "l5_anchor": true,
-      "l5_y": 215,
-      "s_amp": 34,
+      "l5_y": 125,
+      "s_amp": 44,
       "s_freq": 1.0,
       "s_phase": 0.0,
-      "double_s": true,
+      "double_s": false,
       "chevron_count": 7,
       "chevron_layout": "upper_lower_7",
-      "chevron_size": 10.0,
+      "chevron_size": 9.0,
       "x_style": "center_vow_x",
       "x_size": 62,
-      "flare_len": 88,
+      "flare_len": 52,
       "flare_spread_deg": 15.5,
-      "flare_wave_amp": 11.0,
+      "flare_wave_amp": 8.0,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 175,
       "crescent_span_deg": 162,
-      "crescent_thickness": 19,
+      "crescent_thickness": 15,
       "shading_mode": "stipple",
-      "line_weight_main": 1.45,
+      "line_weight_main": 1.52,
       "line_weight_sub": 0.9,
       "root_branches": 0,
-      "root_spread": 105,
-      "root_depth": 105,
+      "root_spread": 82,
+      "root_depth": 95,
       "wave_arcs": 3,
-      "wave_radius_start": 128,
-      "wave_span_deg": 54,
-      "spine_notches": 9,
+      "wave_radius_start": 74,
+      "wave_span_deg": 52,
+      "spine_notches": 7,
       "davinci_mode": "astrolabe_rings",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -1799,54 +1801,55 @@
   {
     "id": 103,
     "code": "DV-03",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "16-Wind Rhumb Line Master Sea Chart",
-    "title_ja": "大航海16方位ラムライン海図と第1頸椎アトラス（海図背景特化）",
-    "subtitle": "外周8つの副羅針ノードから交差するポルトラーノ航路網 × 16方位ダイヤ標 × 二重外接海図フレーム",
-    "story": "大航海時代の船長が用いた「ポルトラーノ海図（Portolan Chart）」のラムライン航路網とダ・ヴィンチの天球図を最も贅沢に展開。外周8つの副羅針ノードから伸びる極細の航路直線と二重方位環の中心から、8方位のコンパスローズとRootonの背骨軸が浮かび上がる知的な一枚。",
-    "aspect_label": "4 : 3（16方位ポルトラーノ海図特化）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Arrow of True North & Flowing S-Ribbon",
+    "title_ja": "真北の矢羽根・S字リボンと波の黒白羅針盤（画像1完全直系×中指仕様）",
+    "subtitle": "画像1の「頂点矢羽根＋三日月＋黒白8方位スター＋45°片矢＋右外周S字リボン＋波サークル＋黒矢じり▼」完全再現",
+    "story": "画像1のすべての造形要素（上端の大きな矢羽根・下向き黒三日月と太陽球・パキッとした黒×白8方位コンパス・右側の太黒アークベゼル・北西へ貫く1本の45°矢・右外周を大きく回り込む優美なS字リボン・下部の波サークル・最下端の黒ベタ矢じり▼）を、背景の太陽コロナ＆中指の尖頭ドットアーチと融合した直系モデル。",
+    "aspect_label": "3.6 : 1（画像1忠実再現・S字リボン＆矢羽根）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 385,
-      "south_len": 385,
-      "east_west_len": 265,
-      "needle_half_w": 21,
-      "needle_style": "classic_facet",
-      "ring_r_outer": 74,
-      "ring_r_inner": 60,
+      "mf_variant": 3,
+      "north_len": 370,
+      "south_len": 375,
+      "east_west_len": 116,
+      "needle_half_w": 16,
+      "needle_style": "short_blade_long_spine",
+      "ring_r_outer": 60,
+      "ring_r_inner": 48,
       "open_junction_gap": 0,
-      "c1_y": -250,
-      "c1_size": 20,
+      "c1_y": -215,
+      "c1_size": 16,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 220,
-      "s_amp": 40,
+      "l5_y": 140,
+      "s_amp": 62,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "golden_5_2",
-      "chevron_size": 11.0,
+      "chevron_size": 9.0,
       "x_style": "diagonal_ring_x",
-      "x_size": 74,
-      "flare_len": 64,
+      "x_size": 70,
+      "flare_len": 44,
       "flare_spread_deg": 14.0,
-      "flare_wave_amp": 8.0,
+      "flare_wave_amp": 6.8,
       "flare_style": "flame_petals_8",
       "crescent_side": "right",
       "crescent_angle_deg": 0,
       "crescent_span_deg": 148,
-      "crescent_thickness": 15,
-      "shading_mode": "hatch",
-      "line_weight_main": 1.4,
-      "line_weight_sub": 0.85,
+      "crescent_thickness": 14,
+      "shading_mode": "hybrid",
+      "line_weight_main": 1.55,
+      "line_weight_sub": 0.92,
       "root_branches": 0,
-      "root_spread": 95,
-      "root_depth": 95,
-      "wave_arcs": 4,
-      "wave_radius_start": 102,
-      "wave_span_deg": 64,
-      "spine_notches": 9,
+      "root_spread": 75,
+      "root_depth": 85,
+      "wave_arcs": 3,
+      "wave_radius_start": 76,
+      "wave_span_deg": 60,
+      "spine_notches": 8,
       "davinci_mode": "da_vinci_max",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -1855,54 +1858,55 @@
   {
     "id": 104,
     "code": "DV-04",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Rooton Nautical Emblem — Spine & 4 Tidal Waves",
-    "title_ja": "ルートン海図紋章・棘突起S字背骨と4重の潮流波紋（ロゴ純化型）",
-    "subtitle": "根を排して純化したRootonの「棘突起S字背骨＆左右4重の潮流波紋」× 8方位海図コンパス",
-    "story": "Rootonロゴから根っこを取り除き、最も美しい「大振幅S字を描く棘突起付きの背骨」と「左右4重に広がる共鳴波紋（海図の潮流等深線）」にフォーカスしたエンブレム。南端がシャープな羅針盤の針へと収束するため、腕に乗せたときのシルエットが抜群に洗練される。",
-    "aspect_label": "1.75 : 1（Rooton背骨＆4重潮流主役型）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Double Lotus Cathedral & Solar Eclipse Rose",
+    "title_ja": "上下対称ロータスアーチと太陽コロナ羅針盤（双方向ドットアーチ型）",
+    "subtitle": "黒白8方位羅針盤＆背景太陽の「上下両方」に画像2の内周ドット付き尖頭ロータスアーチを展開",
+    "story": "中央のパキッとした黒×白8方位コンパスと背景の太陽コロナを核として、ナックル（拳）側と指先側の『上下両方』へ画像2の「内周ドット付き尖頭ロータスアーチ＆アイ・ダイヤ」をシンメトリーに展開。中指全体がひとつの繊細なゴシック・リングジュエリーのように輝く一作。",
+    "aspect_label": "3.4 : 1（上下対称ダブルロータス＆太陽コロナ）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 355,
-      "south_len": 355,
-      "east_west_len": 175,
-      "needle_half_w": 16,
+      "mf_variant": 4,
+      "north_len": 350,
+      "south_len": 350,
+      "east_west_len": 110,
+      "needle_half_w": 15,
       "needle_style": "short_blade_long_spine",
-      "ring_r_outer": 66,
-      "ring_r_inner": 54,
+      "ring_r_outer": 56,
+      "ring_r_inner": 44,
       "open_junction_gap": 0,
-      "c1_y": -235,
-      "c1_size": 18,
+      "c1_y": -205,
+      "c1_size": 17,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 210,
-      "s_amp": 52,
+      "l5_y": 135,
+      "s_amp": 50,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "cervical_7_cluster",
-      "chevron_size": 11.5,
+      "chevron_size": 9.2,
       "x_style": "core_diamond_x",
-      "x_size": 58,
-      "flare_len": 60,
+      "x_size": 60,
+      "flare_len": 46,
       "flare_spread_deg": 14.5,
-      "flare_wave_amp": 7.5,
+      "flare_wave_amp": 7.0,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 180,
       "crescent_span_deg": 145,
-      "crescent_thickness": 14,
+      "crescent_thickness": 13,
       "shading_mode": "hybrid",
       "line_weight_main": 1.5,
-      "line_weight_sub": 0.92,
+      "line_weight_sub": 0.9,
       "root_branches": 0,
-      "root_spread": 135,
-      "root_depth": 115,
+      "root_spread": 88,
+      "root_depth": 95,
       "wave_arcs": 4,
-      "wave_radius_start": 94,
-      "wave_span_deg": 82,
-      "spine_notches": 12,
+      "wave_radius_start": 72,
+      "wave_span_deg": 70,
+      "spine_notches": 9,
       "davinci_mode": "vitruvian_clean",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -1911,54 +1915,55 @@
   {
     "id": 105,
     "code": "DV-05",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Polaris True North Navigation Chart",
-    "title_ja": "北極星ポラリス航路図・北針ロング非対称コンパス",
-    "subtitle": "北極星C1アトラスへ長く鋭く伸びる北針（415px）× 子午線ラムライン航路網 × 三日月の揺りかご",
-    "story": "海図の北極星（True North）を指し示す長い北針（415px）と大C1王冠ダイヤが天へ突き抜け、下部は根をなくしてシャープに引き締めた南針（335px）とL5アンカーダイヤが重力軸を 고정する非対称ポラリス航海図。",
-    "aspect_label": "非対称ポラリス海図（北針ロング）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Vertical Oval Sun & Knuckle-to-Tip Spire",
+    "title_ja": "縦長オーバル太陽と北極星ロングスパイア（中指を最も細く長く見せる4.0:1）",
+    "subtitle": "中指の横幅にピタリと収まる縦長楕円太陽コロナ × 極長ノース＆サウス黒白針 × スリム槍先アーチ",
+    "story": "中指の側面へ一切はみ出さないよう、横針をタイトに絞り、羅針盤の背景にある太陽花弁を上下方向に大きく伸びる「縦長オーバル（楕円）コロナ」で設計。拳（MCP関節）から第一関節手前まで一直線に貫く極長の黒×白コンパス針により、中指が最も細く長く見えるスタイル。",
+    "aspect_label": "4.0 : 1（中指スリム特化・縦長オーバル太陽）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 415,
-      "south_len": 335,
-      "east_west_len": 215,
-      "needle_half_w": 20,
+      "mf_variant": 5,
+      "north_len": 405,
+      "south_len": 395,
+      "east_west_len": 90,
+      "needle_half_w": 13,
       "needle_style": "asymmetric_polaris",
-      "ring_r_outer": 76,
-      "ring_r_inner": 63,
+      "ring_r_outer": 50,
+      "ring_r_inner": 39,
       "open_junction_gap": 0,
-      "c1_y": -280,
-      "c1_size": 23,
+      "c1_y": -230,
+      "c1_size": 18,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 195,
-      "s_amp": 42,
+      "l5_y": 145,
+      "s_amp": 38,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "golden_5_2",
-      "chevron_size": 11.5,
+      "chevron_size": 8.5,
       "x_style": "core_diamond_x",
-      "x_size": 64,
-      "flare_len": 72,
+      "x_size": 56,
+      "flare_len": 56,
       "flare_spread_deg": 14.5,
-      "flare_wave_amp": 9.0,
+      "flare_wave_amp": 7.5,
       "flare_style": "flame_petals_16",
       "crescent_side": "bottom",
       "crescent_angle_deg": 90,
       "crescent_span_deg": 156,
-      "crescent_thickness": 17,
+      "crescent_thickness": 13,
       "shading_mode": "greywash",
-      "line_weight_main": 1.5,
-      "line_weight_sub": 0.9,
+      "line_weight_main": 1.48,
+      "line_weight_sub": 0.88,
       "root_branches": 0,
-      "root_spread": 135,
-      "root_depth": 115,
-      "wave_arcs": 4,
-      "wave_radius_start": 106,
-      "wave_span_deg": 68,
-      "spine_notches": 10,
+      "root_spread": 70,
+      "root_depth": 80,
+      "wave_arcs": 3,
+      "wave_radius_start": 66,
+      "wave_span_deg": 62,
+      "spine_notches": 8,
       "davinci_mode": "vitruvian_full",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -1967,54 +1972,55 @@
   {
     "id": 106,
     "code": "DV-06",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Grand Line Quadrant Chart & Silent X",
-    "title_ja": "4つの海の航路図と仲間の誓い「×」（8方位ワイド・ウィンドローズ）",
-    "subtitle": "東西南北の4主針と45°の大型ファセット副針「×」が4つの海（All Blue）を結ぶ大航海コンパス",
-    "story": "4つの海を分かつ東西南北の主針と、偉大なる航路およびアラバスタの誓いを象徴する45°対角の白黒ファセット副方位針「×」を大きく展開した本格8方位ウィンドローズ。外周の海図フレームとラムラインが航海のロマンを刻む。",
-    "aspect_label": "5 : 4（8方位ワイド航海図＆対角X）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Silent X Twin Arrows & Solar Bezel Compass",
+    "title_ja": "サイレント・クロス双矢「×」と太陽ベゼル羅針盤（仲間の誓い特化）",
+    "subtitle": "羅針盤の背後で大きく交差する2本の45°黒矢（アラバスタの×印）× 背景太陽花弁 × 下部尖頭ドットアーチ",
+    "story": "画像1で羅針盤の背後を斜めに貫く矢を、北西・北東へ大きく交差する「2本のクロスアロー（＝仲間の印×）」へと昇華。8方位の黒×白コンパス針の隙間から背景の太陽花弁と2本の矢じり・矢羽根が力強く突き出し、下部は画像2の尖頭ドットアーチで引き締めた一作。",
+    "aspect_label": "3.3 : 1（45°クロス双矢「×」×太陽ベゼル）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 365,
+      "mf_variant": 6,
+      "north_len": 360,
       "south_len": 365,
-      "east_west_len": 280,
-      "needle_half_w": 22,
+      "east_west_len": 122,
+      "needle_half_w": 17,
       "needle_style": "split_spine_corridor",
-      "ring_r_outer": 82,
-      "ring_r_inner": 68,
+      "ring_r_outer": 62,
+      "ring_r_inner": 49,
       "open_junction_gap": 0,
-      "c1_y": -235,
-      "c1_size": 20,
+      "c1_y": -205,
+      "c1_size": 17,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 215,
-      "s_amp": 38,
+      "l5_y": 132,
+      "s_amp": 48,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "all_blue_4_3",
-      "chevron_size": 11.5,
+      "chevron_size": 9.2,
       "x_style": "flare_root_x",
-      "x_size": 82,
-      "flare_len": 76,
+      "x_size": 76,
+      "flare_len": 48,
       "flare_spread_deg": 15.0,
-      "flare_wave_amp": 9.5,
+      "flare_wave_amp": 7.2,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 180,
       "crescent_span_deg": 152,
-      "crescent_thickness": 16,
+      "crescent_thickness": 14,
       "shading_mode": "hybrid",
-      "line_weight_main": 1.5,
+      "line_weight_main": 1.55,
       "line_weight_sub": 0.92,
       "root_branches": 0,
-      "root_spread": 125,
-      "root_depth": 110,
+      "root_spread": 84,
+      "root_depth": 92,
       "wave_arcs": 4,
-      "wave_radius_start": 114,
-      "wave_span_deg": 70,
-      "spine_notches": 9,
+      "wave_radius_start": 78,
+      "wave_span_deg": 66,
+      "spine_notches": 8,
       "davinci_mode": "da_vinci_max",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -2023,53 +2029,54 @@
   {
     "id": 107,
     "code": "DV-07",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Lunar Eclipse & 5 Tidal Contours Chart",
-    "title_ja": "太陽と月の潮汐海図・大口径エクリプスと5重共鳴波",
-    "subtitle": "大口径の二重方位環に宿る深い三日月 × 16枚の炎花弁 × 海流と自律神経を示す5重波紋アーク",
-    "story": "大口径の方位ジンバル環の中心で、太陽（交感神経）と深い三日月（副交感神経・月の引力）が調和し、その左右へ海図の等深線のように5重のRooton共鳴波紋が広がる設計。根をなくしたことで円環と縦軸の対比が際立つ。",
-    "aspect_label": "3 : 2（大口径エクリプス潮汐海図）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Crescent Crown, Dawn Sun & Wave Anchor",
+    "title_ja": "大口径エクリプス太陽コロナと三日月クラウン（背景太陽16花弁強調）",
+    "subtitle": "大口径の黒アークベゼル背後から咲き誇る16枚の大型太陽炎花弁 ＋ 上部黒三日月冠 ＋ 下部波＆ドットアーチ",
+    "story": "10作品の中で最も「背景の太陽（16枚のうねる炎花弁コロナ）」と「黒三日月ベゼル（日食エクリプス）」のスケール感を強調したモデル。太陽の炎の冠の中からパキッとした黒×白8方位羅針盤が浮かび上がり、下部へは画像2の尖頭ドットアーチと波サークルが連なる。",
+    "aspect_label": "3.1 : 1（大口径エクリプス×16枚太陽コロナ主役）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 360,
+      "mf_variant": 7,
+      "north_len": 355,
       "south_len": 360,
-      "east_west_len": 200,
+      "east_west_len": 126,
       "needle_half_w": 17,
       "needle_style": "short_blade_long_spine",
-      "ring_r_outer": 94,
-      "ring_r_inner": 76,
+      "ring_r_outer": 68,
+      "ring_r_inner": 54,
       "open_junction_gap": 0,
-      "c1_y": -235,
-      "c1_size": 18,
+      "c1_y": -210,
+      "c1_size": 16,
       "c1_style": "double_hollow",
       "l5_anchor": true,
-      "l5_y": 215,
-      "s_amp": 44,
+      "l5_y": 135,
+      "s_amp": 52,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "spine_7_even",
-      "chevron_size": 10.5,
+      "chevron_size": 9.0,
       "x_style": "center_vow_x",
-      "x_size": 66,
-      "flare_len": 80,
+      "x_size": 64,
+      "flare_len": 58,
       "flare_spread_deg": 14.5,
-      "flare_wave_amp": 10.2,
+      "flare_wave_amp": 8.5,
       "flare_style": "flame_petals_16",
       "crescent_side": "right",
       "crescent_angle_deg": 15,
       "crescent_span_deg": 170,
-      "crescent_thickness": 22,
+      "crescent_thickness": 16,
       "shading_mode": "stipple",
-      "line_weight_main": 1.45,
+      "line_weight_main": 1.52,
       "line_weight_sub": 0.9,
       "root_branches": 0,
-      "root_spread": 115,
-      "root_depth": 105,
+      "root_spread": 90,
+      "root_depth": 95,
       "wave_arcs": 5,
-      "wave_radius_start": 124,
-      "wave_span_deg": 78,
+      "wave_radius_start": 84,
+      "wave_span_deg": 74,
       "spine_notches": 9,
       "davinci_mode": "astrolabe_rings",
       "celestial_orbits": true,
@@ -2079,54 +2086,55 @@
   {
     "id": 108,
     "code": "DV-08",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Forearm Slender Meridian Sea Chart",
-    "title_ja": "前腕スレンダー子午線海図（2.5:1 超縦長スティレット）",
-    "subtitle": "前腕の縦ラインを最もスマートに見せる2.5:1比率・子午線ラムラインと8方位タイトコンパス",
-    "story": "前腕の中央に彫った際、手首まで一直線に美しく抜ける2.5:1の超スレンダー航海図。下部の根をなくし、横幅も135pxに引き締めることで、韓国風ファインラインならではの研ぎ澄まされた縦長シルエットを実現。",
-    "aspect_label": "2.5 : 1（前腕特化・子午線スティレット）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Fine-Line Stipple Sun & Noir Compass",
+    "title_ja": "シンメトリー・ノワール羅針盤と点描レースアーチ（非対称リボンなし・純粋対称型）",
+    "subtitle": "外周の非対称S字リボンをあえて排し、黒白8方位羅針盤・背景太陽・点描ロータスアーチを完全左右対称に配置",
+    "story": "外周を回る非対称のS字リボンをあえてなくし、画像2のような「完全左右対称（シンメトリー）の美しさ」に特化したミニマル・ノワール仕様。背景の繊細な太陽コロナと最前面の100%黒ベタ8方位スター、そして下部の点描レースアーチが寸分の狂いもない左右対称で中指を飾る。",
+    "aspect_label": "3.7 : 1（完全シンメトリー・点描レースアーチ）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 410,
-      "south_len": 400,
-      "east_west_len": 135,
-      "needle_half_w": 14,
+      "mf_variant": 8,
+      "north_len": 385,
+      "south_len": 380,
+      "east_west_len": 102,
+      "needle_half_w": 15,
       "needle_style": "short_blade_long_spine",
-      "ring_r_outer": 68,
-      "ring_r_inner": 55,
+      "ring_r_outer": 54,
+      "ring_r_inner": 43,
       "open_junction_gap": 0,
-      "c1_y": -250,
-      "c1_size": 17,
+      "c1_y": -205,
+      "c1_size": 15,
       "c1_style": "split_diamond",
       "l5_anchor": true,
-      "l5_y": 225,
-      "s_amp": 30,
+      "l5_y": 125,
+      "s_amp": 36,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "upper_lower_7",
-      "chevron_size": 9.5,
+      "chevron_size": 8.5,
       "x_style": "core_diamond_x",
-      "x_size": 54,
-      "flare_len": 68,
+      "x_size": 58,
+      "flare_len": 42,
       "flare_spread_deg": 14.5,
-      "flare_wave_amp": 8.8,
+      "flare_wave_amp": 6.4,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 180,
       "crescent_span_deg": 148,
-      "crescent_thickness": 14,
+      "crescent_thickness": 13,
       "shading_mode": "greywash",
-      "line_weight_main": 1.38,
-      "line_weight_sub": 0.85,
+      "line_weight_main": 1.48,
+      "line_weight_sub": 0.86,
       "root_branches": 0,
-      "root_spread": 86,
-      "root_depth": 100,
+      "root_spread": 72,
+      "root_depth": 82,
       "wave_arcs": 3,
-      "wave_radius_start": 92,
-      "wave_span_deg": 58,
-      "spine_notches": 10,
+      "wave_radius_start": 68,
+      "wave_span_deg": 54,
+      "spine_notches": 7,
       "davinci_mode": "vitruvian_clean",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -2135,54 +2143,55 @@
   {
     "id": 109,
     "code": "DV-09",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "Renaissance Cartographer's Engraving Chart",
-    "title_ja": "ルネサンス海図師のエングレービング手稿（銅版画ハッチング×中空回廊）",
-    "subtitle": "古典海図の平行線ハッチング陰影 × 中空スプリット回廊 × 8方位ウィンドローズとS字背骨",
-    "story": "16世紀の海図師（Cartographer）が銅版画で刻んだ海図の平行線ハッチング技法を採用。南北のコンパス針の中央を白く抜いたスプリット回廊の中に、Rootonの棘突起S字背骨と7シェブロンが鮮明に浮かび上がる。",
-    "aspect_label": "1.618 : 1（古典海図エングレービング仕様）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "Twin Caduceus S-Ribbons & Gothic Ring",
+    "title_ja": "ツインS字スパイナル・リボン（左右二重螺旋）とゴシック尖頭アーチ",
+    "subtitle": "羅針盤と背景太陽を左右両方から優美に包み込む「二重螺旋のS字背骨リボン」× 黒白8方位コンパス",
+    "story": "画像1の外周S字リボンを「左右対称に交差しながら流れる2本の二重螺旋リボン（背骨と自律神経の調和）」として展開。背景の太陽コロナと最前面の黒×白8方位羅針盤を左右から抱き込み、指輪ゾーンのゴシック尖頭ドットアーチと波サークルへ収束する芸術的ピース。",
+    "aspect_label": "3.4 : 1（左右二重螺旋S字リボン×ゴシック尖頭）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 380,
-      "south_len": 380,
-      "east_west_len": 235,
-      "needle_half_w": 22,
+      "mf_variant": 9,
+      "north_len": 368,
+      "south_len": 370,
+      "east_west_len": 114,
+      "needle_half_w": 16,
       "needle_style": "split_spine_corridor",
-      "ring_r_outer": 78,
-      "ring_r_inner": 64,
+      "ring_r_outer": 58,
+      "ring_r_inner": 46,
       "open_junction_gap": 0,
-      "c1_y": -250,
-      "c1_size": 21,
+      "c1_y": -210,
+      "c1_size": 17,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 220,
-      "s_amp": 40,
+      "l5_y": 135,
+      "s_amp": 56,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "cervical_7_cluster",
-      "chevron_size": 11.5,
+      "chevron_size": 9.0,
       "x_style": "diagonal_ring_x",
-      "x_size": 70,
-      "flare_len": 70,
+      "x_size": 66,
+      "flare_len": 46,
       "flare_spread_deg": 14.0,
-      "flare_wave_amp": 8.5,
+      "flare_wave_amp": 7.0,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 190,
       "crescent_span_deg": 148,
-      "crescent_thickness": 15,
+      "crescent_thickness": 14,
       "shading_mode": "hatch",
-      "line_weight_main": 1.45,
-      "line_weight_sub": 0.88,
+      "line_weight_main": 1.52,
+      "line_weight_sub": 0.9,
       "root_branches": 0,
-      "root_spread": 130,
-      "root_depth": 115,
+      "root_spread": 86,
+      "root_depth": 94,
       "wave_arcs": 4,
-      "wave_radius_start": 106,
-      "wave_span_deg": 68,
-      "spine_notches": 10,
+      "wave_radius_start": 74,
+      "wave_span_deg": 64,
+      "spine_notches": 9,
       "davinci_mode": "da_vinci_max",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -2191,54 +2200,55 @@
   {
     "id": 110,
     "code": "DV-10",
-    "series": "Series V: NAUTICAL CHART × DA VINCI × ROOTON（航海図コンパス×ダ・ヴィンチ×ルートン背骨）",
-    "title_en": "True Alignment, True North — Master Nautical Chart",
-    "title_ja": "真の軸、真の針路・大航海ポルトラーノ海図マスターピース（決定版）",
-    "subtitle": "①8方位/16方位の海図コンパスローズ＆二重方位環 × ②ポルトラーノ航路ラムライン × ③炎の太陽16花弁＆三日月 × ④Rooton背骨＆4重波紋",
-    "story": "樹木の根をなくし、羅針盤を「大航海時代のポルトラーノ航海図（Nautical Chart）」へと昇華させた最終決定版。東西南北の4主針と45°の白黒ファセット副方位針「×」が織りなす8方位ウィンドローズ、二重ジンバル方位環と16方位ダイヤ標、外周8ノードから交差するラムライン航路網、そして炎の太陽16花弁とRootonの棘突起S字背骨・4重波紋が完璧な黄金比で結晶した最高傑作。",
-    "aspect_label": "1.618 : 1（航海図マスターピース決定版）",
+    "series": "Series V: MIDDLE FINGER COMPASS × SUN HALO × LOTUS ARCH（中指専用：画像1羅針盤×背景太陽×画像2ドットアーチ）",
+    "title_en": "True North Middle Finger Grand Masterpiece",
+    "title_ja": "真の軸・中指グランドマスターピース（画像1羅針盤×背景太陽×画像2アーチ決定版）",
+    "subtitle": "①前景：画像1の黒×白8方位羅針盤・分割ベゼル・矢羽根・三日月・S字リボン・波・黒矢じり × ②背景：太陽炎コロナ × ③画像2の中指尖頭ドットアーチ",
+    "story": "ご提示いただいたすべてのイメージを「中指（Middle Finger）の黄金キャンバス」に結晶させた最終決定版。最前面で圧倒的な存在感を放つ「画像1の黒ベタ×白抜き8方位羅針盤・太黒アーク分割ベゼル・45°細矢・頂点矢羽根・三日月・右外周S字リボン・下部波サークル・黒矢じり▼」、そのすぐ背後でハロー抜きを伴って輝く「16枚の太陽炎コロナ＆放射ドット光条」、そして中指の指輪ゾーンから指先へ連なる「画像2の内周ドット付き3連尖頭ロータスアーチ＆アイ・ダイヤ＆関節フェードドット」が三位一体となった最高傑作。",
+    "aspect_label": "3.5 : 1（中指タトゥー究極決定版）",
     "params": {
       "is_davinci_rooton": true,
-      "north_len": 385,
-      "south_len": 385,
-      "east_west_len": 238,
-      "needle_half_w": 20,
+      "mf_variant": 10,
+      "north_len": 375,
+      "south_len": 378,
+      "east_west_len": 116,
+      "needle_half_w": 16,
       "needle_style": "stepped_royal_needle",
-      "ring_r_outer": 80,
-      "ring_r_inner": 66,
+      "ring_r_outer": 62,
+      "ring_r_inner": 49,
       "open_junction_gap": 0,
-      "c1_y": -250,
-      "c1_size": 22,
+      "c1_y": -212,
+      "c1_size": 17,
       "c1_style": "crown_diamond",
       "l5_anchor": true,
-      "l5_y": 220,
-      "s_amp": 40,
+      "l5_y": 138,
+      "s_amp": 56,
       "s_freq": 1.0,
       "s_phase": 0.0,
       "double_s": true,
       "chevron_count": 7,
       "chevron_layout": "golden_5_2",
-      "chevron_size": 11.5,
+      "chevron_size": 9.5,
       "x_style": "core_diamond_x",
-      "x_size": 72,
-      "flare_len": 78,
+      "x_size": 70,
+      "flare_len": 50,
       "flare_spread_deg": 14.5,
-      "flare_wave_amp": 9.8,
+      "flare_wave_amp": 7.5,
       "flare_style": "flame_petals_16",
       "crescent_side": "left",
       "crescent_angle_deg": 180,
       "crescent_span_deg": 154,
-      "crescent_thickness": 16,
+      "crescent_thickness": 14,
       "shading_mode": "hybrid",
-      "line_weight_main": 1.5,
+      "line_weight_main": 1.55,
       "line_weight_sub": 0.92,
       "root_branches": 0,
-      "root_spread": 140,
-      "root_depth": 122,
+      "root_spread": 88,
+      "root_depth": 96,
       "wave_arcs": 4,
-      "wave_radius_start": 110,
-      "wave_span_deg": 72,
-      "spine_notches": 11,
+      "wave_radius_start": 78,
+      "wave_span_deg": 68,
+      "spine_notches": 8,
       "davinci_mode": "da_vinci_max",
       "celestial_orbits": true,
       "inner_dot_ring": true
@@ -3639,7 +3649,492 @@
       return els.join("\n    ");
     }
 
+    function renderMiddleFingerSVG(design, forceStencil = false, includeForearmGuide = false) {
+      const p = design.params;
+      const cx = 400.0, cy = 415.0;
+      const variant = Number(p.mf_variant || ((Number(design.id || 101) - 100) || 1));
+
+      const rOut = Math.max(46.0, Math.min(72.0, Number(p.ring_r_outer) * 0.78));
+      const rIn = rOut - (variant === 7 ? 11.5 : 9.0);
+      const ewCompass = Math.max(82.0, Math.min(132.0, Number(p.east_west_len) * 0.62));
+      const nCompass = Math.max(118.0, Math.min(168.0, Number(p.north_len) * 0.56));
+      const ringY = cy + rOut + 34.0;
+      const sCompass = ringY - cy - 12.0;
+      const nw = Math.max(13.5, Math.min(20.5, Number(p.needle_half_w) * 0.68));
+      const lwMain = Number(p.line_weight_main);
+      const lwSub = Number(p.line_weight_sub);
+      const shadingMode = forceStencil ? "stencil" : p.shading_mode;
+      const isStencil = (shadingMode === "stencil");
+      const ink = "#121211";
+      const maskFill = isStencil ? "none" : "#FAF8F5";
+      const solidFill = isStencil ? "none" : ink;
+
+      // 0. 背景レイヤー（中指の輪郭ガイド ＆ 太陽の背景幾何学オーラ）
+      const dvEls = [`<g id="davinci-vitruvian-background" opacity="0.88">`];
+      dvEls.push(
+        `<path d="M 272 40 C 266 320, 268 680, 276 960 M 528 40 C 534 320, 532 680, 524 960" fill="none" stroke="${ink}" stroke-width="0.38" stroke-opacity="0.16"/>`
+      );
+      if (includeForearmGuide) {
+        dvEls.push(
+          `<path d="M 272 40 C 266 320, 268 680, 276 960 M 528 40 C 534 320, 532 680, 524 960" fill="none" stroke="#8C6D46" stroke-width="2.0" stroke-opacity="0.35"/>`
+        );
+      }
+
+      const rEcc = rOut * 1.26;
+      for (const [aStart, aEnd] of [[-78, -102], [-15, 15], [165, 195], [-55, -25], [-155, -125], [25, 55], [125, 155]]) {
+        const a1 = aStart * Math.PI / 180.0, a2 = aEnd * Math.PI / 180.0;
+        const x1 = cx + rEcc * Math.cos(a1), y1 = cy + rEcc * Math.sin(a1);
+        const x2 = cx + rEcc * Math.cos(a2), y2 = cy + rEcc * Math.sin(a2);
+        const sweep = aEnd >= aStart ? 1 : 0;
+        dvEls.push(
+          `<path d="M ${fmt(x1)} ${fmt(y1)} A ${fmt(rEcc)} ${fmt(rEcc)} 0 0 ${sweep} ${fmt(x2)} ${fmt(y2)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.45)}" stroke-opacity="0.36"/>`
+        );
+      }
+
+      const arcW = variant === 7 ? 8.2 : 6.0;
+      const rMid = (rOut + rIn) * 0.5;
+      for (const [b1Deg, b2Deg] of [[-58.0, 58.0], [198.0, 242.0]]) {
+        const b1 = b1Deg * Math.PI / 180.0, b2 = b2Deg * Math.PI / 180.0;
+        const bx1 = cx + rMid * Math.cos(b1), by1 = cy + rMid * Math.sin(b1);
+        const bx2 = cx + rMid * Math.cos(b2), by2 = cy + rMid * Math.sin(b2);
+        dvEls.push(
+          `<path d="M ${fmt(bx1)} ${fmt(by1)} A ${fmt(rMid)} ${fmt(rMid)} 0 0 1 ${fmt(bx2)} ${fmt(by2)}" fill="none" stroke="${ink}" stroke-width="${fmt( isStencil ? lwSub : arcW )}" stroke-opacity="${isStencil ? "0.8" : "0.95"}" stroke-linecap="butt"/>`
+        );
+      }
+
+      for (const degL of [-170, -155, -140, -125, -110, 110, 125, 140, 155, 170]) {
+        const rl = degL * Math.PI / 180.0;
+        dvEls.push(
+          `<line x1="${fmt(cx + rIn * Math.cos(rl))}" y1="${fmt(cy + rIn * Math.sin(rl))}" x2="${fmt(cx + rOut * Math.cos(rl))}" y2="${fmt(cy + rOut * Math.sin(rl))}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.55)}" stroke-opacity="0.58"/>`
+        );
+      }
+
+      const sunRayAngles = [
+        -76, -68, -60, -52, -38, -30, -22, -14,
+        14, 22, 30, 38, 52, 60, 68, 76,
+        112, 122, 130, 142, 152, 164,
+        -164, -152, -142, -130, -122, -112
+      ];
+      sunRayAngles.forEach((degR, idxR) => {
+        const rr = degR * Math.PI / 180.0;
+        const vStretch = 1.0 + (variant === 5 ? 0.55 : 0.36) * Math.abs(Math.sin(rr));
+        const r0 = rOut + 2.0;
+        const r1 = rOut + ((idxR % 2 === 0) ? 26.0 : 16.0) * vStretch;
+        dvEls.push(
+          `<line x1="${fmt(cx + r0 * Math.cos(rr))}" y1="${fmt(cy + r0 * Math.sin(rr))}" x2="${fmt(cx + r1 * Math.cos(rr))}" y2="${fmt(cy + r1 * Math.sin(rr))}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.52)}" stroke-opacity="0.54" stroke-linecap="round"/>`
+        );
+        if (idxR % 3 === 0 && !isStencil) {
+          for (const [dOff, dRad, dOp] of [[4.5, 0.90, 0.72], [8.5, 0.62, 0.50], [12.0, 0.40, 0.32]]) {
+            const rd = r1 + dOff;
+            dvEls.push(
+              `<circle class="shade-detail" cx="${fmt(cx + rd * Math.cos(rr))}" cy="${fmt(cy + rd * Math.sin(rr))}" r="${fmt(dRad)}" fill="${ink}" fill-opacity="${fmt(dOp)}"/>`
+            );
+          }
+        }
+      });
+      dvEls.push(`</g>`);
+      const davinciLayerSVG = dvEls.join("\n  ");
+
+      // ③ 太陽を羅針盤の背景デザインと融合させた「縦長オーバル・ソーラーコロナ」（#sun-flares）
+      const sunFlaresPaths = [];
+      const baseFlareLen = Math.max(18.0, Math.min(34.0, Number(p.flare_len) * 0.54));
+      const spread = Number(p.flare_spread_deg);
+      const waveAmp = Number(p.flare_wave_amp) * 0.52;
+      const flareStyle = p.flare_style;
+      const baseDiags = [-45.0, 45.0, 135.0, 225.0];
+      let fIdx = 0;
+
+      for (const diag of baseDiags) {
+        const offsets = [-spread * 0.48, spread * 0.48];
+        offsets.forEach((off, pairIdx) => {
+          const ang = (diag + off) * Math.PI / 180.0;
+          const vFactor = 0.85 + 0.38 * Math.abs(Math.sin(ang));
+          const curLen = baseFlareLen * vFactor;
+          const wSign = (pairIdx === 0) ? 1.0 : -1.0;
+          const halfBase = 4.6 * Math.PI / 180.0;
+          const [outerD, ribD, extraEls] = buildFlamePetalPathJS(cx, cy, rOut + 1.2, curLen, ang, halfBase, waveAmp, wSign, ink, lwSub * 0.85, true, shadingMode);
+          const petalFill = isStencil ? "none" : "rgba(18, 18, 17, 0.08)";
+          sunFlaresPaths.push(
+            `<path class="sun-flare-item" data-flare-idx="${fIdx}" d="${outerD}" fill="${petalFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.92)}" stroke-linejoin="round"/>`,
+            `<path class="sun-flare-rib" d="${ribD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.58)}" stroke-opacity="0.65" stroke-linecap="round"/>`
+          );
+          if (extraEls) sunFlaresPaths.push(extraEls);
+          fIdx++;
+        });
+        if (flareStyle === "flame_petals_16" || variant === 7 || variant === 10) {
+          const sAng = diag * Math.PI / 180.0;
+          const [sOuterD, sRibD] = buildFlamePetalPathJS(cx, cy, rOut + 1.2, baseFlareLen * 0.68, sAng, 3.2 * Math.PI / 180.0, waveAmp * 0.65, 1.0, ink, lwSub * 0.78, false, shadingMode);
+          const petalFill = isStencil ? "none" : "rgba(18, 18, 17, 0.06)";
+          sunFlaresPaths.push(
+            `<path class="sun-flare-tongue" d="${sOuterD}" fill="${petalFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.78)}" stroke-linejoin="round"/>`,
+            `<path class="sun-flare-rib" d="${sRibD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.50)}" stroke-opacity="0.55" stroke-linecap="round"/>`
+          );
+        }
+      }
+
+      // ④ 内側の三日月 ＆ 北針頂部の「下向き黒三日月＋小太陽オーブ」（#inner-crescent）
+      const cRad = Number(p.crescent_angle_deg) * Math.PI / 180.0;
+      const cSpan = Number(p.crescent_span_deg);
+      const halfSpan = (cSpan * 0.5) * Math.PI / 180.0;
+      const cThick = Math.min(Number(p.crescent_thickness) * 0.68, rIn * 0.34);
+      const crRadius = rIn - 5.0;
+      const tx1 = cx + crRadius * Math.cos(cRad - halfSpan);
+      const ty1 = cy + crRadius * Math.sin(cRad - halfSpan);
+      const tx2 = cx + crRadius * Math.cos(cRad + halfSpan);
+      const ty2 = cy + crRadius * Math.sin(cRad + halfSpan);
+      const inMidR = crRadius - cThick;
+      const ctrlR = inMidR - cThick * 0.35;
+      const icx = cx + ctrlR * Math.cos(cRad);
+      const icy = cy + ctrlR * Math.sin(cRad);
+      const crescentD = `M ${fmt(tx1)} ${fmt(ty1)} A ${fmt(crRadius)} ${fmt(crRadius)} 0 0 1 ${fmt(tx2)} ${fmt(ty2)} Q ${fmt(icx)} ${fmt(icy)}, ${fmt(tx1)} ${fmt(ty1)} Z`;
+
+      const topCrY = cy - nCompass - 26.0;
+      const topCrR = variant === 7 ? 18.0 : 15.5;
+      const topCrD = `M ${fmt(cx - topCrR)} ${fmt(topCrY + 5.0)} A ${fmt(topCrR)} ${fmt(topCrR)} 0 1 1 ${fmt(cx + topCrR)} ${fmt(topCrY + 5.0)} A ${fmt(topCrR * 0.78)} ${fmt(topCrR * 0.70)} 0 1 0 ${fmt(cx - topCrR)} ${fmt(topCrY + 5.0)} Z`;
+      const crescentSVG = `<g id="inner-crescent"><path d="${crescentD}" fill="${isStencil ? "none" : "rgba(18, 18, 17, 0.14)"}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.95)}" stroke-linejoin="round"/><path d="${topCrD}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.10)}" stroke-linejoin="round"/><path class="facet-light" d="M ${fmt(cx - 6.2)} ${fmt(topCrY + 4.5)} A 6.2 6.2 0 1 1 ${fmt(cx + 6.2)} ${fmt(topCrY + 4.5)} A 6.2 6.2 0 1 1 ${fmt(cx - 6.2)} ${fmt(topCrY + 4.5)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.05)}"/></g>`;
+      const lunarStippleSVG = buildLunarPepperStippleJS(cx, cy, rIn + 1.5, Number(p.crescent_angle_deg), Number(p.crescent_span_deg), cThick, ink, shadingMode);
+
+      // ⑤ 中指マンダラ・尖頭ロータスアーチ ＆ 指輪バンド ＆ アイ・ダイヤ ＆ 外周S字リボン（#rooton-logo-integration）
+      const rootonEls = [`<g id="rooton-logo-integration"><g id="nautical-wind-rose-subpoints">`];
+      const ringW = ewCompass * (variant === 2 ? 0.94 : 0.82);
+      if (!isStencil) {
+        rootonEls.push(
+          `<path class="bg-mask" d="M ${fmt(cx - ringW)} ${fmt(ringY - 12.0)} Q ${fmt(cx)} ${fmt(ringY + 14.0)}, ${fmt(cx + ringW)} ${fmt(ringY - 12.0)}" fill="none" stroke="${maskFill}" stroke-width="5.5" stroke-linecap="round"/>`
+        );
+      }
+      rootonEls.push(
+        `<path d="M ${fmt(cx - ringW)} ${fmt(ringY - 12.0)} Q ${fmt(cx)} ${fmt(ringY + 14.0)}, ${fmt(cx + ringW)} ${fmt(ringY - 12.0)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain * 1.05)}" stroke-linecap="round"/>`,
+        `<path d="M ${fmt(cx - ringW * 0.94)} ${fmt(ringY - 5.0)} Q ${fmt(cx)} ${fmt(ringY + 21.0)}, ${fmt(cx + ringW * 0.94)} ${fmt(ringY - 5.0)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linecap="round"/>`
+      );
+
+      const eyeY = ringY + 6.0;
+      const eyeH = (variant === 2 || variant === 6 || variant === 10) ? 16.5 : 14.0;
+      const eyeW = (variant === 2 || variant === 6 || variant === 10) ? 12.5 : 10.5;
+      rootonEls.push(
+        `<path class="facet-light" d="M ${fmt(cx)} ${fmt(eyeY - eyeH)} Q ${fmt(cx + eyeW)} ${fmt(eyeY)}, ${fmt(cx)} ${fmt(eyeY + eyeH)} Q ${fmt(cx - eyeW)} ${fmt(eyeY)}, ${fmt(cx)} ${fmt(eyeY - eyeH)} Z" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}"/>`,
+        `<polygon class="facet-shaded" points="${fmt(cx)},${fmt(eyeY - eyeH * 0.55)} ${fmt(cx + eyeW * 0.42)},${fmt(eyeY)} ${fmt(cx)},${fmt(eyeY + eyeH * 0.55)} ${fmt(cx - eyeW * 0.42)},${fmt(eyeY)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.80)}"/>`
+      );
+
+      const lotusLayers = variant === 3 ? 1 : ((variant === 5 || variant === 8) ? 2 : 3);
+      let lastArchTipY = ringY + 90.0;
+      for (let lIdx = 0; lIdx < lotusLayers; lIdx++) {
+        const archTopY = ringY + 4.0 + lIdx * 18.0;
+        const archW = ringW * (0.86 - lIdx * 0.21);
+        const archH = 64.0 + lIdx * 28.0;
+        const tipY = archTopY + archH;
+        lastArchTipY = Math.max(lastArchTipY, tipY);
+        rootonEls.push(
+          `<path class="finger-lotus-arch" d="M ${fmt(cx - archW)} ${fmt(archTopY - 7.0)} C ${fmt(cx - archW * 0.85)} ${fmt(archTopY + archH * 0.45)}, ${fmt(cx - archW * 0.18)} ${fmt(tipY - 16.0)}, ${fmt(cx)} ${fmt(tipY)} C ${fmt(cx + archW * 0.18)} ${fmt(tipY - 16.0)}, ${fmt(cx + archW * 0.85)} ${fmt(archTopY + archH * 0.45)}, ${fmt(cx + archW)} ${fmt(archTopY - 7.0)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * (1.12 - lIdx * 0.12))}" stroke-linecap="round"/>`
+        );
+        const inW = archW - 6.0;
+        const inTipY = tipY - 8.5;
+        rootonEls.push(
+          `<path d="M ${fmt(cx - inW)} ${fmt(archTopY - 5.5)} C ${fmt(cx - inW * 0.82)} ${fmt(archTopY + archH * 0.42)}, ${fmt(cx - inW * 0.16)} ${fmt(inTipY - 14.0)}, ${fmt(cx)} ${fmt(inTipY)} C ${fmt(cx + inW * 0.16)} ${fmt(inTipY - 14.0)}, ${fmt(cx + inW * 0.82)} ${fmt(archTopY + archH * 0.42)}, ${fmt(cx + inW)} ${fmt(archTopY - 5.5)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.55)}" stroke-opacity="0.75" stroke-linecap="round"/>`
+        );
+        if (!isStencil) {
+          const dotSteps = 10 - lIdx;
+          for (let ds = 1; ds < dotSteps; ds++) {
+            const t = ds / dotSteps, mt = 1.0 - t;
+            for (const sideS of [-1.0, 1.0]) {
+              const x0D = cx + sideS * (inW - 4.0), y0D = archTopY - 4.5;
+              const c1xD = cx + sideS * (inW * 0.75), c1yD = archTopY + archH * 0.38;
+              const c2xD = cx + sideS * (inW * 0.15), c2yD = inTipY - 15.0;
+              const x3D = cx, y3D = inTipY - 4.0;
+              const dx = (mt**3)*x0D + 3*(mt**2)*t*c1xD + 3*mt*(t**2)*c2xD + (t**3)*x3D;
+              const dy = (mt**3)*y0D + 3*(mt**2)*t*c1yD + 3*mt*(t**2)*c2yD + (t**3)*y3D;
+              rootonEls.push(
+                `<circle class="shade-detail" cx="${fmt(dx)}" cy="${fmt(dy)}" r="${fmt(1.05 - lIdx * 0.12)}" fill="${ink}" fill-opacity="0.84"/>`
+              );
+            }
+          }
+        }
+      }
+
+      for (const sideS of [-1.0, 1.0]) {
+        const sx0 = cx + sideS * (ringW * 0.76), sy0 = ringY + 2.0;
+        const sx1 = cx + sideS * (ringW * (variant === 2 ? 1.08 : 0.96)), sy1 = ringY + 42.0;
+        const sx2 = cx + sideS * (ringW * 0.40), sy2 = ringY + 72.0;
+        rootonEls.push(
+          `<path d="M ${fmt(sx0)} ${fmt(sy0)} Q ${fmt(sx1)} ${fmt(sy1)}, ${fmt(sx2)} ${fmt(sy2)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.92)}" stroke-linecap="round"/>`
+        );
+        if (variant === 2 || variant === 4 || variant === 10) {
+          const sx3 = cx + sideS * (ringW * 0.94), sy3 = ringY - 4.0;
+          const sx4 = cx + sideS * (ringW * 1.16), sy4 = ringY + 22.0;
+          const sx5 = cx + sideS * (ringW * 0.72), sy5 = ringY + 42.0;
+          rootonEls.push(
+            `<path d="M ${fmt(sx3)} ${fmt(sy3)} Q ${fmt(sx4)} ${fmt(sy4)}, ${fmt(sx5)} ${fmt(sy5)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.78)}" stroke-linecap="round"/>`
+          );
+        }
+      }
+
+      if (variant === 4) {
+        const upRingY = cy - rOut - 28.0;
+        for (let lIdx = 0; lIdx < 2; lIdx++) {
+          const uW = ringW * (0.76 - lIdx * 0.22);
+          const uH = 54.0 + lIdx * 22.0;
+          const uTipY = upRingY - uH;
+          rootonEls.push(
+            `<path d="M ${fmt(cx - uW)} ${fmt(upRingY + 6.0)} C ${fmt(cx - uW * 0.82)} ${fmt(upRingY - uH * 0.45)}, ${fmt(cx - uW * 0.18)} ${fmt(uTipY + 14.0)}, ${fmt(cx)} ${fmt(uTipY)} C ${fmt(cx + uW * 0.18)} ${fmt(uTipY + 14.0)}, ${fmt(cx + uW * 0.82)} ${fmt(upRingY - uH * 0.45)}, ${fmt(cx + uW)} ${fmt(upRingY + 6.0)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.95)}" stroke-linecap="round"/>`
+          );
+        }
+      }
+      rootonEls.push(`</g>`);
+
+      rootonEls.push(`<g id="rooton-resonance-waves">`);
+      const waveCount = Number(p.wave_arcs !== undefined ? p.wave_arcs : 3);
+      for (let i = 0; i < waveCount; i++) {
+        const rw = rOut + 14.0 + i * 9.5;
+        const sw = Math.max(0.48, lwSub * (0.96 - i * 0.15));
+        const op = Math.max(0.35, 0.82 - i * 0.16);
+        for (const sideAng of [0.0, Math.PI]) {
+          const a1 = sideAng - (24.0 - i * 3.0) * Math.PI / 180.0;
+          const a2 = sideAng + (24.0 - i * 3.0) * Math.PI / 180.0;
+          rootonEls.push(
+            `<path class="rooton-wave-arc" d="M ${fmt(cx + rw * Math.cos(a1))} ${fmt(cy + rw * Math.sin(a1))} A ${fmt(rw)} ${fmt(rw)} 0 0 1 ${fmt(cx + rw * Math.cos(a2))} ${fmt(cy + rw * Math.sin(a2))}" fill="none" stroke="${ink}" stroke-width="${fmt(sw)}" stroke-opacity="${fmt(op)}" stroke-linecap="round"/>`
+          );
+        }
+      }
+
+      const waveCy = lastArchTipY + 32.0;
+      const waveR = 21.0;
+      rootonEls.push(
+        `<circle class="facet-light" cx="${fmt(cx)}" cy="${fmt(waveCy)}" r="${fmt(waveR)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.88)}"/>`,
+        `<path d="M ${fmt(cx - 25.0)} ${fmt(waveCy + 2.0)} Q ${fmt(cx - 11.0)} ${fmt(waveCy - 11.0)}, ${fmt(cx)} ${fmt(waveCy)} T ${fmt(cx + 25.0)} ${fmt(waveCy - 2.0)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain * 1.02)}" stroke-linecap="round"/>`,
+        `<path d="M ${fmt(cx - 18.0)} ${fmt(waveCy + 8.5)} Q ${fmt(cx - 7.0)} ${fmt(waveCy - 2.5)}, ${fmt(cx + 4.0)} ${fmt(waveCy + 6.0)} T ${fmt(cx + 20.0)} ${fmt(waveCy + 3.5)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.88)}" stroke-linecap="round"/>`,
+        `</g>`
+      );
+
+      const sTopY = topCrY - 26.0;
+      const sBotY = waveCy + 34.0;
+      const sOutX = cx + rOut + 34.0;
+      const sRibbonD = `M ${fmt(cx + 4.0)} ${fmt(sTopY)} C ${fmt(cx - 32.0)} ${fmt(topCrY - 4.0)}, ${fmt(cx - 24.0)} ${fmt(topCrY + 26.0)}, ${fmt(cx + 18.0)} ${fmt(cy - rOut - 24.0)} C ${fmt(sOutX + 18.0)} ${fmt(cy - 30.0)}, ${fmt(sOutX + 14.0)} ${fmt(cy + 85.0)}, ${fmt(cx - 22.0)} ${fmt(sBotY)}`;
+      if (variant !== 8) {
+        if (!isStencil) {
+          rootonEls.push(
+            `<path class="bg-mask" d="${sRibbonD}" fill="none" stroke="${maskFill}" stroke-width="${fmt(lwMain * 2.4)}" stroke-linecap="round"/>`
+          );
+        }
+        rootonEls.push(
+          `<path id="rooton-spine-ribbon" d="${sRibbonD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain * 1.05)}" stroke-linecap="round"/>`
+        );
+        const sSubD = `M ${fmt(cx + 8.0)} ${fmt(sTopY + 6.0)} C ${fmt(cx - 24.0)} ${fmt(topCrY)}, ${fmt(cx - 18.0)} ${fmt(topCrY + 28.0)}, ${fmt(cx + 24.0)} ${fmt(cy - rOut - 20.0)} C ${fmt(sOutX + 24.0)} ${fmt(cy - 26.0)}, ${fmt(sOutX + 20.0)} ${fmt(cy + 88.0)}, ${fmt(cx - 14.0)} ${fmt(sBotY - 6.0)}`;
+        rootonEls.push(
+          `<path d="${sSubD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.58)}" stroke-opacity="0.68" stroke-linecap="round"/>`
+        );
+        if (variant === 9) {
+          const sLeftD = `M ${fmt(cx - 4.0)} ${fmt(sTopY)} C ${fmt(cx + 32.0)} ${fmt(topCrY - 4.0)}, ${fmt(cx + 24.0)} ${fmt(topCrY + 26.0)}, ${fmt(cx - 18.0)} ${fmt(cy - rOut - 24.0)} C ${fmt(cx - rOut - 52.0)} ${fmt(cy - 30.0)}, ${fmt(cx - rOut - 48.0)} ${fmt(cy + 85.0)}, ${fmt(cx + 22.0)} ${fmt(sBotY)}`;
+          rootonEls.push(
+            `<path d="${sLeftD}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}" stroke-opacity="0.88" stroke-linecap="round"/>`
+          );
+        }
+      } else {
+        rootonEls.push(
+          `<line id="rooton-spine-ribbon" x1="${fmt(cx)}" y1="${fmt(sTopY)}" x2="${fmt(cx)}" y2="${fmt(sBotY)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}"/>`
+        );
+      }
+
+      rootonEls.push(`<g id="rooton-spinous-notches">`);
+      for (const [nyOff, nxOff] of [[-44.0, 24.0], [-22.0, 31.0], [0.0, 34.0], [22.0, 34.0], [44.0, 30.0], [66.0, 24.0], [88.0, 16.0]]) {
+        const nx = cx + rOut + nxOff, ny = cy + nyOff;
+        rootonEls.push(
+          `<path class="spine-notch-tooth" d="M ${fmt(nx)} ${fmt(ny - 3.4)} Q ${fmt(nx + 7.0)} ${fmt(ny)}, ${fmt(nx)} ${fmt(ny + 3.4)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linecap="round"/>`
+        );
+      }
+      rootonEls.push(`</g></g>`);
+      const rootonLogoSVG = rootonEls.join("\n  ");
+
+      // ② 最前景の主役：画像1の「完全黒ベタ × 完全白抜き 8方位コンパスローズ」（#compass-rose）
+      const compassEls = [];
+      const diagLen = rOut * 1.20;
+      const diagW = nw * 0.58;
+      for (const [dName, dDeg] of [["NE", -45.0], ["SE", 45.0], ["SW", 135.0], ["NW", 225.0]]) {
+        const rad = dDeg * Math.PI / 180.0;
+        const perp = rad + Math.PI / 2.0;
+        const tx = cx + diagLen * Math.cos(rad), ty = cy + diagLen * Math.sin(rad);
+        const shR = 12.5;
+        const lx = cx + shR * Math.cos(rad) - diagW * Math.cos(perp), ly = cy + shR * Math.sin(rad) - diagW * Math.sin(perp);
+        const rx = cx + shR * Math.cos(rad) + diagW * Math.cos(perp), ry = cy + shR * Math.sin(rad) + diagW * Math.sin(perp);
+        compassEls.push(
+          `<polygon class="facet-light" points="${fmt(cx)},${fmt(cy)} ${fmt(lx)},${fmt(ly)} ${fmt(tx)},${fmt(ty)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.05)}" stroke-linejoin="miter"/>`,
+          `<polygon class="facet-shaded" points="${fmt(cx)},${fmt(cy)} ${fmt(rx)},${fmt(ry)} ${fmt(tx)},${fmt(ty)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.05)}" stroke-linejoin="miter"/>`
+        );
+      }
+
+      const cardinalSpecs = [
+        ["N", -90.0, nCompass, nw],
+        ["E", 0.0, ewCompass, nw * 0.85],
+        ["S", 90.0, sCompass, nw * 0.92],
+        ["W", 180.0, ewCompass, nw * 0.85]
+      ];
+      for (const [cName, cDeg, cLen, cHw] of cardinalSpecs) {
+        const rad = cDeg * Math.PI / 180.0;
+        const perp = rad + Math.PI / 2.0;
+        const tx = cx + cLen * Math.cos(rad), ty = cy + cLen * Math.sin(rad);
+        const shR = 15.0;
+        const lx = cx + shR * Math.cos(rad) - cHw * Math.cos(perp), ly = cy + shR * Math.sin(rad) - cHw * Math.sin(perp);
+        const rx = cx + shR * Math.cos(rad) + cHw * Math.cos(perp), ry = cy + shR * Math.sin(rad) + cHw * Math.sin(perp);
+        if (!isStencil) {
+          compassEls.push(
+            `<path class="bg-mask" d="M ${fmt(tx)} ${fmt(ty)} L ${fmt(lx)} ${fmt(ly)} L ${fmt(cx)} ${fmt(cy)} L ${fmt(rx)} ${fmt(ry)} Z" fill="none" stroke="${maskFill}" stroke-width="3.6" stroke-linejoin="miter"/>`
+          );
+        }
+        compassEls.push(
+          `<polygon class="facet-light" data-needle="${cName}" points="${fmt(cx)},${fmt(cy)} ${fmt(lx)},${fmt(ly)} ${fmt(tx)},${fmt(ty)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`,
+          `<polygon class="facet-shaded" data-needle="${cName}" points="${fmt(cx)},${fmt(cy)} ${fmt(rx)},${fmt(ry)} ${fmt(tx)},${fmt(ty)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwMain)}" stroke-linejoin="miter" stroke-miterlimit="6"/>`
+        );
+      }
+      compassEls.push(
+        `<circle class="facet-light" cx="${fmt(cx)}" cy="${fmt(cy)}" r="4.8" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}"/>`,
+        `<circle cx="${fmt(cx)}" cy="${fmt(cy)}" r="1.7" fill="${ink}"/>`
+      );
+
+      // 斜め45°を貫く矢（#vow-cross-x）
+      const vowXElements = [];
+      const arrLen = rOut * (variant === 6 ? 1.72 : 1.54);
+      const arrowAngles = variant === 3 ? [-135.0] : [-135.0, -45.0];
+      for (const aDeg of arrowAngles) {
+        const rad = aDeg * Math.PI / 180.0;
+        const perp = rad + Math.PI / 2.0;
+        const tipX = cx + arrLen * Math.cos(rad), tipY = cy + arrLen * Math.sin(rad);
+        const tailX = cx - (arrLen * 0.92) * Math.cos(rad), tailY = cy - (arrLen * 0.92) * Math.sin(rad);
+        vowXElements.push(
+          `<line x1="${fmt(tailX)}" y1="${fmt(tailY)}" x2="${fmt(tipX)}" y2="${fmt(tipY)}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.08)}" stroke-linecap="round"/>`
+        );
+        const barbR = arrLen - 12.0;
+        const bLx = cx + barbR * Math.cos(rad) - 4.8 * Math.cos(perp), bLy = cy + barbR * Math.sin(rad) - 4.8 * Math.sin(perp);
+        const bRx = cx + barbR * Math.cos(rad) + 4.8 * Math.cos(perp), bRy = cy + barbR * Math.sin(rad) + 4.8 * Math.sin(perp);
+        const bInX = cx + (arrLen - 8.0) * Math.cos(rad), bInY = cy + (arrLen - 8.0) * Math.sin(rad);
+        vowXElements.push(
+          `<polygon class="shade-detail-node" points="${fmt(tipX)},${fmt(tipY)} ${fmt(bLx)},${fmt(bLy)} ${fmt(bInX)},${fmt(bInY)} ${fmt(bRx)},${fmt(bRy)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.88)}"/>`
+        );
+        for (const fStep of [0.72, 0.80, 0.88]) {
+          const fx = cx - (arrLen * fStep) * Math.cos(rad), fy = cy - (arrLen * fStep) * Math.sin(rad);
+          const flx = fx - 5.5 * Math.cos(rad) - 4.5 * Math.cos(perp), fly = fy - 5.5 * Math.sin(rad) - 4.5 * Math.sin(perp);
+          const frx = fx - 5.5 * Math.cos(rad) + 4.5 * Math.cos(perp), fry = fy - 5.5 * Math.sin(rad) + 4.5 * Math.sin(perp);
+          vowXElements.push(
+            `<polyline points="${fmt(flx)},${fmt(fly)} ${fmt(fx)},${fmt(fy)} ${fmt(frx)},${fmt(fry)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.80)}" stroke-linecap="round"/>`
+          );
+        }
+      }
+
+      // ① 中心軸（#axis-spine）
+      const spineElements = [];
+      const axisTop = topCrY - 52.0;
+      const axisBot = waveCy + 56.0;
+      spineElements.push(
+        `<line id="gravity-plumb-line" x1="${fmt(cx)}" y1="${fmt(axisTop)}" x2="${fmt(cx)}" y2="${fmt(axisBot)}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}" stroke-linecap="round"/>`
+      );
+      const sPts = [];
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40.0;
+        const yv = (cy - nCompass) + t * (waveCy - (cy - nCompass));
+        const xv = cx + 9.5 * Math.sin(Math.PI * t) * Math.sin(2.0 * Math.PI * t);
+        sPts.push(`${fmt(xv)},${fmt(yv)}`);
+      }
+      spineElements.push(
+        `<polyline id="spine-s-curve" points="${sPts.join(" ")}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.78)}" stroke-opacity="0.72" stroke-linecap="round"/>`
+      );
+
+      const fTopY = axisTop - 58.0;
+      const fBotY = axisTop + 4.0;
+      spineElements.push(
+        `<g id="top-arrow-feather"><line x1="${fmt(cx)}" y1="${fmt(fTopY - 8.0)}" x2="${fmt(cx)}" y2="${fmt(fBotY + 6.0)}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}" stroke-linecap="round"/><path d="M ${fmt(cx)} ${fmt(fTopY)} C ${fmt(cx - 16.5)} ${fmt(fTopY + 16.0)}, ${fmt(cx - 14.0)} ${fmt(fBotY - 12.0)}, ${fmt(cx)} ${fmt(fBotY)} C ${fmt(cx + 14.0)} ${fmt(fBotY - 12.0)}, ${fmt(cx + 16.5)} ${fmt(fTopY + 16.0)}, ${fmt(cx)} ${fmt(fTopY)} Z" fill="${isStencil ? "none" : "rgba(18, 18, 17, 0.08)"}" stroke="${ink}" stroke-width="${fmt(lwSub * 1.02)}" stroke-linejoin="round"/>`
+      );
+      for (let fbI = 1; fbI <= 5; fbI++) {
+        const fby = fTopY + fbI * 9.8;
+        const fbw = 11.2 * Math.sin(Math.PI * (fbI / 6.0));
+        spineElements.push(
+          `<line x1="${fmt(cx)}" y1="${fmt(fby + 3.5)}" x2="${fmt(cx - fbw)}" y2="${fmt(fby - 3.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.68)}"/><line x1="${fmt(cx)}" y1="${fmt(fby + 3.5)}" x2="${fmt(cx + fbw)}" y2="${fmt(fby - 3.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.68)}"/>`
+        );
+      }
+      spineElements.push(`</g>`);
+
+      const c1Y = topCrY - 24.0;
+      const c1S = Number(p.c1_size) * 0.78;
+      const c1W = c1S * 0.68;
+      spineElements.push(
+        `<g id="c1-atlas-diamond"><polygon class="facet-light" points="${fmt(cx)},${fmt(c1Y - c1S)} ${fmt(cx - c1W)},${fmt(c1Y)} ${fmt(cx)},${fmt(c1Y + c1S)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}"/><polygon class="facet-shaded" points="${fmt(cx)},${fmt(c1Y - c1S)} ${fmt(cx + c1W)},${fmt(c1Y)} ${fmt(cx)},${fmt(c1Y + c1S)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwMain * 0.95)}"/></g>`
+      );
+
+      const arrTipY = axisBot + 28.0;
+      const arrWingY = axisBot - 4.0;
+      const arrNotchY = axisBot + 4.5;
+      const arrHw = 14.5;
+      spineElements.push(
+        `<g id="bottom-arrowhead"><polygon class="facet-light" points="${fmt(cx)},${fmt(arrTipY)} ${fmt(cx - arrHw)},${fmt(arrWingY)} ${fmt(cx)},${fmt(arrNotchY)}" fill="${maskFill}" stroke="${ink}" stroke-width="${fmt(lwMain)}"/><polygon class="facet-shaded" points="${fmt(cx)},${fmt(arrTipY)} ${fmt(cx + arrHw)},${fmt(arrWingY)} ${fmt(cx)},${fmt(arrNotchY)}" fill="${solidFill}" stroke="${ink}" stroke-width="${fmt(lwMain)}"/><line x1="${fmt(cx - 6.0)}" y1="${fmt(axisBot - 32.0)}" x2="${fmt(cx - 6.0)}" y2="${fmt(axisBot - 8.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.78)}"/><line x1="${fmt(cx + 6.0)}" y1="${fmt(axisBot - 28.0)}" x2="${fmt(cx + 6.0)}" y2="${fmt(axisBot - 10.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.78)}"/></g>`
+      );
+
+      const chevGroup = [`<g id="spine-chevrons">`];
+      const chW = 8.5;
+      const yPositions = [
+        cy - rOut - 18.0, cy - rOut - 30.0, cy - rOut - 42.0, cy - rOut - 54.0,
+        Math.max(ringY + 36.0, 500.0 + rOut + 18.0),
+        Math.max(ringY + 50.0, 500.0 + rOut + 32.0),
+        Math.max(ringY + 64.0, 500.0 + rOut + 46.0)
+      ];
+      yPositions.forEach((vy, idxC) => {
+        const dirS = vy < cy ? -1.0 : 1.0;
+        const chH = 5.2 * dirS;
+        chevGroup.push(
+          `<polyline class="spine-chevron" data-idx="${idxC}" points="${fmt(cx - chW)},${fmt(vy + chH)} ${fmt(cx)},${fmt(vy)} ${fmt(cx + chW)},${fmt(vy + chH)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.92)}" stroke-linecap="round"/>`
+        );
+      });
+      chevGroup.push(`</g>`);
+      spineElements.push(chevGroup.join("\n      "));
+
+      const celestialEls = [`<g id="celestial-axis-orbits">`];
+      const topTermY = fTopY - 12.0;
+      celestialEls.push(`<line x1="${fmt(cx)}" y1="${fmt(Math.max(24.0, topTermY - 36.0))}" x2="${fmt(cx)}" y2="${fmt(topTermY)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.80)}" stroke-linecap="round"/>`);
+      for (const [dOff, dR] of [[8.0, 2.3], [18.0, 1.6], [27.0, 1.05], [44.0, 1.7], [53.0, 1.0], [61.0, 0.60]]) {
+        if (topTermY - dOff > 14.0) {
+          celestialEls.push(`<circle cx="${fmt(cx)}" cy="${fmt(topTermY - dOff)}" r="${fmt(dR)}" fill="${ink}"/>`);
+        }
+      }
+      const botTermY = arrTipY + 8.0;
+      celestialEls.push(`<line x1="${fmt(cx)}" y1="${fmt(botTermY)}" x2="${fmt(cx)}" y2="${fmt(Math.min(975.0, botTermY + 38.0))}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.80)}" stroke-linecap="round"/>`);
+      for (const [dOff, dR] of [[10.0, 2.4], [20.0, 1.65], [30.0, 1.1], [48.0, 1.7], [57.0, 1.0], [65.0, 0.60]]) {
+        if (botTermY + dOff < 986.0) {
+          celestialEls.push(`<circle cx="${fmt(cx)}" cy="${fmt(botTermY + dOff)}" r="${fmt(dR)}" fill="${ink}"/>`);
+        }
+      }
+      celestialEls.push(`</g>`);
+
+      const defsBlock = isStencil ? "" : `  <defs>
+    <linearGradient id="greywashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121211" stop-opacity="0.34"/>
+      <stop offset="55%" stop-color="#121211" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#121211" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>\n`;
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%" data-design-id="${design.id}" data-design-code="${design.code}">
+${defsBlock}  <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill="#FAF8F5"/>
+  ${davinciLayerSVG}
+  <g id="sun-flares">
+    <circle id="sun-ring-outer" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rOut)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwMain)}"/>
+    <circle id="sun-ring-inner" cx="${fmt(cx)}" cy="${fmt(cy)}" r="${fmt(rIn)}" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub)}"/>
+    ${sunFlaresPaths.join("\n    ")}
+  </g>
+  ${crescentSVG}
+  ${lunarStippleSVG}
+  ${rootonLogoSVG}
+  <g id="vow-cross-x">
+    ${vowXElements.join("\n    ")}
+  </g>
+  <g id="compass-rose">
+    ${compassEls.join("\n    ")}
+  </g>
+  <g id="axis-spine">
+    ${spineElements.join("\n    ")}
+  </g>
+  ${celestialEls.join("\n  ")}
+</svg>`;
+    }
+
     function renderTattooSVG(design, forceStencil = false, includeForearmGuide = false) {
+      if (design.params && design.params.is_davinci_rooton) {
+        return renderMiddleFingerSVG(design, forceStencil, includeForearmGuide);
+      }
       const p = design.params;
       const cx = 400.0, cy = 500.0;
       const nLen = Number(p.north_len);
