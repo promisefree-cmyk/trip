@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>🏴‍☠️ 自作PC 完全乗り換え＆共通脳ポータル | Rooton</title>
+  <style>
+    :root {
+      --bg: #0f1412;
+      --card: #18201c;
+      --card-hover: #1f2a25;
+      --gold: #d4af37;
+      --gold-light: #f3dc8a;
+      --green: #2ea043;
+      --text: #f3efe6;
+      --muted: #9aa8a0;
+      --border: rgba(212, 175, 55, 0.28);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px 60px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(135deg, #1b2620 0%, #121815 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      color: #fff;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 18px 24px;
+      background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+      color: #0f1412;
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      margin: 14px 0 10px;
+      text-align: center;
+    }
+    .hero-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(212, 175, 55, 0.5);
+    }
+    .steps {
+      margin: 12px 0 0;
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .steps li { margin-bottom: 6px; }
+    .cmd-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0a0e0c;
+      border: 1px solid #2e3b34;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 10px;
+    }
+    .cmd-box code {
+      flex: 1;
+      color: #7ee787;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: #26332c;
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #32443a; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .pkg-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: #121815;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 14px 16px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .pkg-card:hover {
+      border-color: var(--gold);
+      background: var(--card-hover);
+    }
+    .pkg-info { flex: 1; }
+    .pkg-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .pkg-desc {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .pkg-meta {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--gold-light);
+      background: rgba(212, 175, 55, 0.12);
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-left: 6px;
+    }
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #233029;
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .dl-btn:hover {
+      background: var(--gold);
+      color: #0f1412;
+    }
+    .note {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">🏴‍☠️ 麦わらの一味7人 × 自作PC 完全移行ポータル</span>
+      <h1>MacBook ➔ 自作PC（Windows）ワンクリック移行センター</h1>
+      <p class="subtitle">Googleドライブを経由せず、このページから直接「ホームページ全データ」「Obsidian共通脳」「マスタースタジオ」「予約・電子カルテSaaS」「7人クルー設定」を自作PCへ一括導入できます。</p>
+    </div>
+
+    <div class="section">
+      <h2>⚡ 方法1（一番カンタン・推奨）：全自動インストーラー（.bat）で一括導入</h2>
+      <p style="margin:0 0 8px;font-size:14px;">自作PCでこのページを開き、下のボタンからバッチファイルをダウンロードしてダブルクリックするだけで、全7パッケージの自動ダウンロード・解凍・共通脳リンク作成・デスクトップショートカット作成まで全自動で完了します。</p>
+      <a class="hero-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/01_%E8%87%AA%E4%BD%9C%50%43%E4%B8%80%E6%8B%AC%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97_Windows.bat?k=rt9k4m7x2v8p" download="01_自作PC一括セットアップ_Windows.bat">
+        🚀 01_自作PC一括セットアップ_Windows.bat をダウンロード（1KB）
+      </a>
+      <ol class="steps">
+        <li>ダウンロードした <strong>01_自作PC一括セットアップ_Windows.bat</strong> をダブルクリックして実行します。（「WindowsによってPCが保護されました」と出た場合は「詳細情報」➔「実行」をクリック）</li>
+        <li>自動的にホームページ・共通脳・スタジオ等（全7個のZIP）をダウンロードし、自作PCの最適な場所へ配置します。</li>
+        <li>完了すると、自作PCのデスクトップに <strong>「Rooton_公式HP」「Rooton_マスタースタジオ」「Rooton_予約カルテSaaS」「Obsidian_共通の脳」</strong> のショートカットが作られます！</li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>💻 方法2：PowerShell に1行貼り付けて一発セットアップ（ファイル保存すら不要）</h2>
+      <p style="margin:0;font-size:13.5px;color:var(--muted);">自作PCで「スタート」を右クリック ➔「ターミナル（または PowerShell）」を開き、下のコマンドをコピー＆貼り付けて Enter を押すだけでも全自動移行が始まります。</p>
+      <div class="cmd-box">
+        <code id="psCmd">irm "https://promisefree-cmyk.github.io/trip/pc-setup/setup_win.ps1" | iex</code>
+        <button class="copy-btn" onclick="copyPs()">📋 コピー</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📦 個別パッケージ直接ダウンロード（全7ファイル＋ガイド）</h2>
+      <p style="margin:0;font-size:13.5px;color:var(--muted);">個別にZIPファイルを自作PCへ保存したい場合は、こちらから1クリックで直接ダウンロードできます。</p>
+      <div class="grid">
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">① 公式ホームページ完全版（rooton-claude）<span class="pkg-meta">825 MB</span></div>
+            <div class="pkg-desc">全ページHTML/PHP・画像・動画・WordPressテーマZIP・17項目自動検閲テスト・本番一発デプロイツール一式</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/rooton_claude_homepage.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">② Obsidian 共通の脳（Claude(年収5億) / caudex-quest）<span class="pkg-meta">17 MB</span></div>
+            <div class="pkg-desc">はじめに読む.md・絶対禁止マスター・7人クルーチートシート・引き継ぎ記録・Windows用ジャンクション設定</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/obsidian_caudex_quest.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">③ マスタースタジオ＆パラパラ漫画生成（douga）<span class="pkg-meta">65 MB</span></div>
+            <div class="pkg-desc">blog-studio.html・ショート動画生成・Instagramカルーセル6枚生成・パラパラ漫画スタジオ</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/douga_master_studio.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">④ 予約・70言語問診・電子カルテSaaS（wise-darwin）<span class="pkg-meta">1.2 MB</span></div>
+            <div class="pkg-desc">予約システム・カルテOCR翻訳・暗号化マスターキー（.master_key）＆SQLiteデータベース完全同梱</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/wise_darwin_chiro_saas.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">⑤ Antigravity ＆ Claude 7人クルー設定＋WP認証（configs）<span class="pkg-meta">2.4 MB</span></div>
+            <div class="pkg-desc">.gemini / .claude の麦わらの一味7人プラグイン・ルール・本番WordPress自動更新用Cookie</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/antigravity_claude_configs.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">⑥ お出かけ＆旅行マスター バックエンド（会話）<span class="pkg-meta">22 MB</span></div>
+            <div class="pkg-desc">サンジ専任のお出かけ・旅行プランナーサーバー＆キャッシュデータ一式</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/kaiwa_travel_backend.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">⑦ Instagram 自動投稿エンジン（Instagram）<span class="pkg-meta">38 KB</span></div>
+            <div class="pkg-desc">Playwright ベースの Instagram カルーセル・リール自動投稿ツール</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/instagram_autoposter.zip?k=rt9k4m7x2v8p" download>⬇ ZIP保存</a>
+        </div>
+
+        <div class="pkg-card">
+          <div class="pkg-info">
+            <div class="pkg-title">📖 00_自作PC乗り換え＆共通脳ガイド.md<span class="pkg-meta">ガイド</span></div>
+            <div class="pkg-desc">記憶の優先順位（Tier 0〜3）・オーケストレーション手順・HP運用ガイド</div>
+          </div>
+          <a class="dl-btn" href="https://final-latina-duo-zoo.trycloudflare.com/pc-setup/00_%E8%87%AA%E4%BD%9C%50%43%E4%B9%97%E3%82%8A%E6%8F%9B%E3%81%88%EF%BC%86%E5%85%B1%E9%80%9A%E8%84%B3%E3%82%AC%E3%82%A4%E3%83%89.md?k=rt9k4m7x2v8p" download>⬇ 保存</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyPs() {
+      const text = document.getElementById('psCmd').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.innerText = '✅ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>
