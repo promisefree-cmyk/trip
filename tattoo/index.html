@@ -1090,10 +1090,20 @@
     body[data-surface="parchment"] .facet-light {
       fill: #F5EBD6 !important;
     }
+    body[data-surface="parchment"] polyline.bg-mask,
+    body[data-surface="parchment"] path.bg-mask {
+      fill: none !important;
+      stroke: #F5EBD6 !important;
+    }
     body[data-surface="skin"] .flash-bg,
     body[data-surface="skin"] .bg-mask,
     body[data-surface="skin"] .facet-light {
       fill: #F1DFCE !important;
+    }
+    body[data-surface="skin"] polyline.bg-mask,
+    body[data-surface="skin"] path.bg-mask {
+      fill: none !important;
+      stroke: #F1DFCE !important;
     }
     body[data-surface="stencil"] .flash-bg {
       fill: #F6F2FC !important;
@@ -1109,9 +1119,12 @@
     body[data-surface="stencil"] .facet-light,
     body[data-surface="stencil"] .bg-mask,
     body[data-surface="stencil"] #inner-crescent path,
-    body[data-surface="stencil"] .shade-detail-node {
+    body[data-surface="stencil"] .shade-detail-node,
+    body[data-surface="stencil"] .celestial-starburst {
       fill: none !important;
     }
+    body[data-surface="stencil"] polyline.bg-mask,
+    body[data-surface="stencil"] path.bg-mask,
     body[data-surface="stencil"] .shade-detail {
       display: none !important;
     }
@@ -3530,9 +3543,10 @@
       return els.join("\n    ");
     }
 
-    function buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub) {
+    function buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub, shadingMode = "hybrid") {
       const els = ['<g id="celestial-axis-orbits">'];
       const orbR = 16.0;
+      const starFill = shadingMode === "stencil" ? "none" : ink;
       for (const [sign, axisL] of [[-1.0, nLen], [1.0, sLen]]) {
         const orbY = cy + sign * (rOut + 64.0);
         els.push(`<circle cx="${fmt(cx)}" cy="${fmt(orbY)}" r="10.2" fill="none" stroke="${ink}" stroke-width="${fmt(lwSub * 0.52)}" stroke-opacity="0.62"/>`);
@@ -3546,7 +3560,7 @@
         const tipY = cy + sign * (axisL + 22.0);
         const armV = 12.5, armH = 8.2, cWaist = 1.8;
         const starD = `M ${fmt(cx)} ${fmt(tipY - armV)} Q ${fmt(cx + cWaist)} ${fmt(tipY - cWaist)}, ${fmt(cx + armH)} ${fmt(tipY)} Q ${fmt(cx + cWaist)} ${fmt(tipY + cWaist)}, ${fmt(cx)} ${fmt(tipY + armV)} Q ${fmt(cx - cWaist)} ${fmt(tipY + cWaist)}, ${fmt(cx - armH)} ${fmt(tipY)} Q ${fmt(cx - cWaist)} ${fmt(tipY - cWaist)}, ${fmt(cx)} ${fmt(tipY - armV)} Z`;
-        els.push(`<path class="celestial-starburst" d="${starD}" fill="${ink}" fill-opacity="0.86" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linejoin="round"/>`);
+        els.push(`<path class="celestial-starburst" d="${starD}" fill="${starFill}" fill-opacity="0.86" stroke="${ink}" stroke-width="${fmt(lwSub * 0.85)}" stroke-linejoin="round"/>`);
         els.push(`<line x1="${fmt(cx - 4.0)}" y1="${fmt(tipY - 4.0)}" x2="${fmt(cx + 4.0)}" y2="${fmt(tipY + 4.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.65)}" stroke-linecap="round"/><line x1="${fmt(cx + 4.0)}" y1="${fmt(tipY - 4.0)}" x2="${fmt(cx - 4.0)}" y2="${fmt(tipY + 4.0)}" stroke="${ink}" stroke-width="${fmt(lwSub * 0.65)}" stroke-linecap="round"/>`);
         for (const [dOff, dR, dOp] of [[16.5, 0.95, 0.78], [20.5, 0.65, 0.55], [24.0, 0.42, 0.35]]) {
           els.push(`<circle cx="${fmt(cx)}" cy="${fmt(tipY + sign * dOff)}" r="${fmt(dR)}" fill="${ink}" fill-opacity="${fmt(dOp)}"/>`);
@@ -3677,11 +3691,11 @@
         }
       }
 
-      if (p.inner_dot_ring) {
+      if (p.inner_dot_ring && shadingMode !== "stencil") {
         const dotR = rIn - 4.2;
         for (let dIdx = 0; dIdx < 36; dIdx++) {
           const dAng = dIdx * (2.0 * Math.PI / 36.0);
-          sunFlares.push(`<circle class="sun-inner-dot" cx="${fmt(cx + dotR * Math.cos(dAng))}" cy="${fmt(cy + dotR * Math.sin(dAng))}" r="0.95" fill="${ink}" fill-opacity="0.72"/>`);
+          sunFlares.push(`<circle class="shade-detail sun-inner-dot" cx="${fmt(cx + dotR * Math.cos(dAng))}" cy="${fmt(cy + dotR * Math.sin(dAng))}" r="0.95" fill="${ink}" fill-opacity="0.72"/>`);
         }
       }
 
@@ -3916,7 +3930,7 @@
       const davinciMode = p.davinci_mode !== undefined ? p.davinci_mode : (p.is_davinci_rooton ? "vitruvian_full" : "none");
       const davinciLayer = buildDaVinciBlueprintJS(cx, cy, rOut, nLen, ewLen, davinciMode, ink, lwSub);
       const rootonLayer = buildRootonLogoElementsJS(cx, cy, p, ink, maskFill, shadingMode);
-      const celestialLayer = p.celestial_orbits ? buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub) : "";
+      const celestialLayer = p.celestial_orbits ? buildCelestialOrbitsJS(cx, cy, rOut, nLen, sLen, ink, lwSub, shadingMode) : "";
       const lunarStippleLayer = p.is_davinci_rooton ? buildLunarPepperStippleJS(cx, cy, rIn, Number(p.crescent_angle_deg), Number(p.crescent_span_deg), Number(p.crescent_thickness), ink, shadingMode) : "";
 
       const defsBlock = shadingMode === "stencil" ? "" : `  <defs>
