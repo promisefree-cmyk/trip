@@ -205,8 +205,13 @@
     /* 1. プロ仕様パイプライン・フィルタ＆コンパクト記事セレクター */
     .pipeline-tabs {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
+    }
+    @media (max-width: 640px) {
+      .pipeline-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     .pipeline-tab {
@@ -3614,7 +3619,12 @@
           vidEl.src = nextVidSrc;
         }
       }
-      if (img2El) img2El.src = `output/carousels/${aid}/slide_02_check.jpg?v=${cacheBust}`;
+      if (img2El) {
+        const s2Url = (xc.x_media_preview && xc.x_media_preview.slides && xc.x_media_preview.slides[0] && xc.x_media_preview.slides[0].url)
+          ? xc.x_media_preview.slides[0].url
+          : `output/carousels/${aid}/slide_02_check.jpg?v=${cacheBust}`;
+        img2El.src = s2Url;
+      }
       if (img3El) img3El.src = `output/carousels/${aid}/slide_03_chain.jpg?v=${cacheBust}`;
       if (img5El) img5El.src = `output/carousels/${aid}/slide_05_care.jpg?v=${cacheBust}`;
 
