@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚓ タトゥー全体比較 ＆ パーツ別（A・B・C・D）組み合わせボード</title>
+<style>
+  :root {
+    --bg: #0B1326;
+    --card-bg: #131F3A;
+    --paper: #F5EBD6;
+    --gold: #C8A97E;
+    --gold-light: #E5CFA9;
+    --text: #F5EBD6;
+    --muted: #B8C4D9;
+    --accent: #D97706;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Meiryo", sans-serif;
+    line-height: 1.5;
+    padding: 14px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  .hero {
+    text-align: center;
+    padding: 16px 12px;
+    border-bottom: 2px solid var(--gold);
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(18px, 3.5vw, 26px);
+    color: var(--gold-light);
+    margin-bottom: 6px;
+  }
+  .hero p {
+    font-size: clamp(12.5px, 2.2vw, 15px);
+    color: var(--muted);
+  }
+
+  /* クイック組み合わせビルダー */
+  .builder-box {
+    background: linear-gradient(145deg, #162444, #0F1A32);
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .builder-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--gold-light);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .builder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .b-group {
+    background: rgba(11, 19, 38, 0.75);
+    border: 1px solid rgba(200, 169, 126, 0.4);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .b-label {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--gold-light);
+    margin-bottom: 6px;
+  }
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pill {
+    background: #1C2C50;
+    color: var(--text);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .pill.active {
+    background: var(--gold);
+    color: #0B1326;
+    font-weight: 900;
+  }
+  .note-input {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--gold);
+    background: #0B1326;
+    color: #FFF;
+    font-size: 13.5px;
+    margin-bottom: 10px;
+  }
+  .copy-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(200, 169, 126, 0.12);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px dashed var(--gold);
+  }
+  .preview-msg {
+    font-size: 13.5px;
+    color: var(--gold-light);
+    font-weight: 700;
+    flex: 1;
+    min-width: 220px;
+  }
+  .copy-btn {
+    background: var(--gold);
+    color: #0B1326;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* セクション共通 */
+  .sec-block {
+    margin-bottom: 26px;
+    background: var(--card-bg);
+    border: 1px solid rgba(200, 169, 126, 0.45);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .sec-head {
+    font-size: clamp(16px, 2.8vw, 20px);
+    font-weight: 800;
+    color: var(--gold-light);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(200, 169, 126, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--gold);
+    color: #0B1326;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 2px 10px;
+    border-radius: 5px;
+  }
+
+  /* 4枚比較グリッド */
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 960px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  }
+
+  .card {
+    background: var(--paper);
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head {
+    background: #0B1326;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--gold);
+  }
+  .card-code {
+    display: inline-block;
+    background: var(--gold);
+    color: #0B1326;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin-bottom: 3px;
+  }
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--gold-light);
+    line-height: 1.3;
+  }
+  .img-wrap {
+    width: 100%;
+    background: var(--paper);
+    position: relative;
+    cursor: zoom-in;
+  }
+  .img-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  /* パーツ切り抜き表示 */
+  .part-crop {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    position: relative;
+    background: var(--paper);
+    cursor: zoom-in;
+  }
+  .part-crop img {
+    width: 100%;
+    position: absolute;
+    left: 0;
+  }
+  .card-foot {
+    background: #0B1326;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 7px 9px;
+    border-top: 1px solid rgba(200,169,126,0.35);
+    line-height: 1.35;
+    flex: 1;
+  }
+  .select-this-btn {
+    margin-top: 6px;
+    width: 100%;
+    background: rgba(200, 169, 126, 0.2);
+    color: var(--gold-light);
+    border: 1px solid var(--gold);
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .select-this-btn:hover {
+    background: var(--gold);
+    color: #0B1326;
+  }
+
+  /* まとめボード画像 */
+  .full-board-img {
+    width: 100%;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    margin-top: 8px;
+    cursor: zoom-in;
+  }
+
+  /* タップ拡大モーダル */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 10, 20, 0.92);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal.open { display: flex; }
+  .modal img {
+    max-width: 96vw;
+    max-height: 90vh;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    background: var(--paper);
+  }
+  .modal-close {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    background: var(--gold);
+    color: #0B1326;
+    border: none;
+    font-weight: 900;
+    font-size: 16px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>⚓ タトゥー全体比較 ＆ パーツ別（A・B・C・D）組み合わせボード</h1>
+  <p>画像はすべてタップで拡大できます。気に入ったパーツ番号（A-1〜D-2）を選んで組み合わせ＆修正指示を作れます！</p>
+</div>
+
+<!-- 1. ワンタップ組み合わせ＆修正指示ジェネレーター -->
+<div class="builder-box">
+  <div class="builder-title">🧩 好きなパーツをポチッと選んで組み合わせ作成（一番下でコピーできます）</div>
+  <div class="builder-grid">
+    <div class="b-group">
+      <div class="b-label">☀️ パーツA【ウェーブ太陽×羅針盤】</div>
+      <div class="pill-row" data-part="A">
+        <button class="pill active" onclick="pickPart('A','A-1（ドット陰影ウェーブ太陽×8方位針）', this)">A-1 王道波太陽</button>
+        <button class="pill" onclick="pickPart('A','A-2（海図外輪リング付×ウェーブ太陽）', this)">A-2 海図外輪付</button>
+        <button class="pill" onclick="pickPart('A','A-3（黒ベタ×白抜き2トーン波太陽）', this)">A-3 黒白2トーン</button>
+        <button class="pill" onclick="pickPart('A','A-4（飛び出し抑えめ内蔵コロナ）', this)">A-4 内蔵コロナ</button>
+      </div>
+    </div>
+    <div class="b-group">
+      <div class="b-label">⚓ パーツC【下部：第2頸椎「軸椎 C2」】</div>
+      <div class="pill-row" data-part="C">
+        <button class="pill active" onclick="pickPart('C','C-1（歯突起ピボット＋上関節面＋W字二又棘突起）', this)">C-1 歯突起＋上関節面＋W底</button>
+        <button class="pill" onclick="pickPart('C','C-2（歯突起ダイヤ＋左右の横突孔丸リング）', this)">C-2 左右の丸穴リング</button>
+        <button class="pill" onclick="pickPart('C','C-3（中指用・スリム歯突起スピア）', this)">C-3 中指スリム軸椎</button>
+        <button class="pill" onclick="pickPart('C','C-4（突起・穴なしシンプル三日月）', this)">C-4 シンプル三日月</button>
+      </div>
+    </div>
+    <div class="b-group">
+      <div class="b-label">🦴 パーツB【縦軸：S字カーブ＋7つの節】</div>
+      <div class="pill-row" data-part="B">
+        <button class="pill active" onclick="pickPart('B','B-1（陰影付き立体6角ブロック7節）', this)">B-1 立体ブロック7節</button>
+        <button class="pill" onclick="pickPart('B','B-2（陰影なしクリーン線画7節）', this)">B-2 クリーン線画7節</button>
+        <button class="pill" onclick="pickPart('B','B-3（極細フラット菱形7節）', this)">B-3 極細フラット7節</button>
+      </div>
+    </div>
+    <div class="b-group">
+      <div class="b-label">💍 パーツD【上部：輪＆横木】</div>
+      <div class="pill-row" data-part="D">
+        <button class="pill active" onclick="pickPart('D','D-1（陰影付き立体ダイヤ横木＆二重輪）', this)">D-1 立体横木</button>
+        <button class="pill" onclick="pickPart('D','D-2（陰影なしスリム横木）', this)">D-2 スリム横木</button>
+      </div>
+    </div>
+  </div>
+  <input type="text" id="customNote" class="note-input" placeholder="ここに直したい箇所を自由に入力（例：C-1の一番下の黒いW字はなくして、太陽の波をもう少し太くして 等）" oninput="updateMsg()">
+  <div class="copy-bar">
+    <div class="preview-msg" id="previewMsg">組み合わせ：太陽＝A-1 ／ 下部（軸椎C2）＝C-1 ／ 縦軸＝B-1 ／ 上部＝D-1</div>
+    <button class="copy-btn" onclick="copyMsg()">📋 この指示文をコピーする</button>
+  </div>
+</div>
+
+<!-- 2. 全体デザイン 4パターン横並び比較 -->
+<div class="sec-block">
+  <div class="sec-head">
+    <span class="badge">全体比較</span>
+    <span>全体デザイン 4パターン比較（画像をタップすると大きく拡大します）</span>
+  </div>
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-code">全体案 ①（腕・王道C2）</span>
+        <div class="card-title">軸椎C2「歯突起ピボット＋上関節面＋W字二又棘突起」型</div>
+      </div>
+      <div class="img-wrap" onclick="openModal('c2_pattern_1.jpg')"><img src="c2_pattern_1.jpg" alt="全体案1"></div>
+      <div class="card-foot">
+        ☀️ 太陽: <b>A-1</b> ／ ⚓ 下部C2: <b>C-1</b> ／ 🦴 縦軸: <b>B-1</b><br>
+        中央の立体「歯突起（デンズ）」＋左右の上関節面ショルダー＋底のW字二又棘突起。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-code">全体案 ②（腕・横突孔＆外輪）</span>
+        <div class="card-title">軸椎C2「歯突起ダイヤ＋左右の横突孔リング」型</div>
+      </div>
+      <div class="img-wrap" onclick="openModal('c2_pattern_2.jpg')"><img src="c2_pattern_2.jpg" alt="全体案2"></div>
+      <div class="card-foot">
+        ☀️ 太陽: <b>A-2</b> ／ ⚓ 下部C2: <b>C-2</b> ／ 🦴 縦軸: <b>B-1</b><br>
+        軸椎特有の「左右の横突孔（丸いペアリング）」を下部に組み込み、太陽の背後に海図外輪を追加。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-code">全体案 ③（中指・スリム縦長）</span>
+        <div class="card-title">中指用「黒白2トーン波太陽＋スマート軸椎C2」型</div>
+      </div>
+      <div class="img-wrap" onclick="openModal('c2_pattern_3.jpg')"><img src="c2_pattern_3.jpg" alt="全体案3"></div>
+      <div class="card-foot">
+        ☀️ 太陽: <b>A-3</b> ／ ⚓ 下部C2: <b>C-3</b> ／ 🦴 縦軸: <b>B-2</b><br>
+        太陽の波刃もコンパス針と同じ「黒ベタ×白抜き」で統一。中指でも10年後まで潰れない設計。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-code">全体案 ④（下部シンプル比較）</span>
+        <div class="card-title">ウェーブ太陽シンクロ × シンプル三日月クラウン型</div>
+      </div>
+      <div class="img-wrap" onclick="openModal('c2_pattern_4.jpg')"><img src="c2_pattern_4.jpg" alt="全体案4"></div>
+      <div class="card-foot">
+        ☀️ 太陽: <b>A-1</b> ／ ⚓ 下部: <b>C-4</b> ／ 🦴 縦軸: <b>B-1</b><br>
+        下部の出っ張りや穴をなくしてシンプルな三日月アーチに抑え、中央の波太陽を際立たせた型。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. パーツA：ウェーブ太陽 × 羅針盤の比較 -->
+<div class="sec-block">
+  <div class="sec-head">
+    <span class="badge">パーツ A</span>
+    <span>【ウェーブ太陽 × 羅針盤のシンクロ部】（ダサい2本ゆらゆら線を廃止し、羅針盤と一体化した波太陽）</span>
+  </div>
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-head"><span class="card-code">A-1</span><div class="card-title">ドット陰影ウェーブ太陽 × 8方位針</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_1.jpg')"><img src="c2_pattern_1.jpg" style="top: -42%;"></div>
+      <div class="card-foot">
+        8本の直線針の間から、繊細なドット陰影付きの太いS字ウェーブ太陽がうねり出る王道シンクロ。
+        <button class="select-this-btn" onclick="quickPick('A','A-1（ドット陰影ウェーブ太陽×8方位針）',0)">☀️ A-1 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">A-2</span><div class="card-title">海図外輪リング付き × ウェーブ太陽</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_2.jpg')"><img src="c2_pattern_2.jpg" style="top: -42%;"></div>
+      <div class="card-foot">
+        ウェーブ太陽の背後に「航海図の大外輪サークル」を重ね、中心リング内にも渦巻きを入れた精密型。
+        <button class="select-this-btn" onclick="quickPick('A','A-2（海図外輪リング付×ウェーブ太陽）',1)">☀️ A-2 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">A-3</span><div class="card-title">黒ベタ×白抜き2トーン波太陽（中指推奨）</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_3.jpg')"><img src="c2_pattern_3.jpg" style="top: -56%;"></div>
+      <div class="card-foot">
+        太陽のウェーブ刃もコンパス針と全く同じ「片側漆黒ベタ×片側純白抜き」に完全統一！
+        <button class="select-this-btn" onclick="quickPick('A','A-3（黒ベタ×白抜き2トーン波太陽）',2)">☀️ A-3 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">A-4</span><div class="card-title">ベゼル内蔵コロナ型（外周飛び出しなし）</div></div>
+      <div class="part-crop" onclick="openModal('finger_slender.jpg')"><img src="finger_slender.jpg" style="top: -58%;"></div>
+      <div class="card-foot">
+        外周への波の飛び出しを抑え、二重リングのすぐ外側にコンパクトな波コロナを収めた極スマート型。
+        <button class="select-this-btn" onclick="quickPick('A','A-4（飛び出し抑えめ内蔵コロナ）',3)">☀️ A-4 を選ぶ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. パーツC：錨の下部＝第2頸椎「軸椎（C2 Axis）」イメージの比較 -->
+<div class="sec-block">
+  <div class="sec-head">
+    <span class="badge">パーツ C</span>
+    <span>【錨の下部：第2頸椎「軸椎（C2 Axis）」イメージ】（中央の歯突起デンズ・上関節面・二又棘突起・横突孔）</span>
+  </div>
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-head"><span class="card-code">C-1</span><div class="card-title">歯突起ピボット＋上関節面＋W字二又棘突起</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_1.jpg')"><img src="c2_pattern_1.jpg" style="top: -92%;"></div>
+      <div class="card-foot">
+        中央に聳え立つ立体「歯突起（デンズ）」＋左右に張った「上関節面ショルダー」＋底の黒い「W字・二又棘突起」。
+        <button class="select-this-btn" onclick="quickPick('C','C-1（歯突起ピボット＋上関節面＋W字二又棘突起）',0)">⚓ C-1 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">C-2</span><div class="card-title">歯突起ダイヤ＋左右の横突孔ペアリング</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_2.jpg')"><img src="c2_pattern_2.jpg" style="top: -92%;"></div>
+      <div class="card-foot">
+        軸椎を上から見た特徴である「左右の横突孔（2つの丸いリング穴）」と中央の菱形「歯突起」をアンカー土台に融合。
+        <button class="select-this-btn" onclick="quickPick('C','C-2（歯突起ダイヤ＋左右の横突孔丸リング）',1)">⚓ C-2 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">C-3</span><div class="card-title">中指用・スマート歯突起スピア＆引き締め腕</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_3.jpg')"><img src="c2_pattern_3.jpg" style="top: -115%;"></div>
+      <div class="card-foot">
+        中指の横幅に収まるようアームの広がりをキュッと引き締め、中央にシャープな菱形「歯突起」を据えたスリム型。
+        <button class="select-this-btn" onclick="quickPick('C','C-3（中指用・スリム歯突起スピア）',2)">⚓ C-3 を選ぶ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-code">C-4</span><div class="card-title">シンプル三日月クラウン（突起・穴なし）</div></div>
+      <div class="part-crop" onclick="openModal('c2_pattern_4.jpg')"><img src="c2_pattern_4.jpg" style="top: -92%;"></div>
+      <div class="card-foot">
+        下部の凹凸（上関節面や丸穴）をなくし、S字軸の7番目の節がそのまま滑らかな三日月アンカーへ繋がるシンプル型。
+        <button class="select-this-btn" onclick="quickPick('C','C-4（突起・穴なしシンプル三日月）',3)">⚓ C-4 を選ぶ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 一覧ボード画像（1枚で全部見たいとき用） -->
+<div class="sec-block">
+  <div class="sec-head">
+    <span class="badge">一覧シート</span>
+    <span>1枚にまとめた比較シート（タップで拡大）</span>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">▼ パーツ別・拡大比較ボード（原画版）</p>
+  <img class="full-board-img" src="flash_parts_selector_board.png" alt="パーツ別比較ボード" onclick="openModal('flash_parts_selector_board.png')">
+  <p style="font-size:13px; color:var(--muted); margin:14px 0 6px;">▼ パーツ別・拡大比較カタログ（SVGベクター線画版）</p>
+  <img class="full-board-img" src="parts_comparison_catalog.png" alt="SVGパーツ別カタログ" onclick="openModal('parts_comparison_catalog.png')">
+</div>
+
+<!-- 拡大モーダル -->
+<div class="modal" id="imgModal" onclick="closeModal()">
+  <button class="modal-close" onclick="closeModal()">✕ 閉じる</button>
+  <img id="modalImg" src="" alt="拡大プレビュー">
+</div>
+
+<script>
+  const state = {
+    A: 'A-1（ドット陰影ウェーブ太陽×8方位針）',
+    C: 'C-1（歯突起ピボット＋上関節面＋W字二又棘突起）',
+    B: 'B-1（陰影付き立体6角ブロック7節）',
+    D: 'D-1（陰影付き立体ダイヤ横木＆二重輪）'
+  };
+
+  function pickPart(part, val, btn) {
+    state[part] = val;
+    const row = document.querySelector(`.pill-row[data-part="${part}"]`);
+    if (row) {
+      row.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+    }
+    if (btn) btn.classList.add('active');
+    updateMsg();
+  }
+
+  function quickPick(part, val, idx) {
+    const row = document.querySelector(`.pill-row[data-part="${part}"]`);
+    const btns = row ? row.querySelectorAll('.pill') : [];
+    pickPart(part, val, btns[idx]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateMsg() {
+    const note = document.getElementById('customNote').value.trim();
+    let msg = `組み合わせ：太陽＝${state.A} ／ 下部（軸椎C2）＝${state.C} ／ 縦軸＝${state.B} ／ 上部＝${state.D}`;
+    if (note) {
+      msg += ` ／ 修正指示：${note}`;
+    }
+    document.getElementById('previewMsg').textContent = msg;
+  }
+
+  function copyMsg() {
+    const txt = document.getElementById('previewMsg').textContent;
+    navigator.clipboard.writeText(txt).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✅ コピーしました！そのままチャットに貼り付けてください';
+      setTimeout(() => { btn.textContent = '📋 この指示文をコピーする'; }, 3000);
+    });
+  }
+
+  function openModal(src) {
+    document.getElementById('modalImg').src = src;
+    document.getElementById('imgModal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('imgModal').classList.remove('open');
+  }
+</script>
+</body>
+</html>
