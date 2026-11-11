@@ -421,36 +421,24 @@
 <body>
 
 <div class="hero">
-  <h1>⚓ 【円なし・12本短太太陽】太陽12本（+4本追加）× 太い4本羅針盤 × 小ぶり少節数の背骨</h1>
-  <p>ご指示の通り、①太陽の炎をさらに4本足して「計12本（各象限3本ずつ）」の短くて太いデザインにし、②右のゲージ（スライダー）を動かすと原画デザインもリアルタイムに変化するように改修し、③下のパーツ別デザイン一覧を完全に削除しました！</p>
+  <h1>⚓ 【太陽×羅針盤 融合マスター（画像1枚表示）】太陽一体型コンパスローズ × 小ぶり少節数の背骨</h1>
+  <p>ご指示の通り、①画像を1枚のみのシンプル表示に統一し、②不自然だった太陽の曲線を廃止して「8方位の羅針盤と8本の太陽フレアが根元から隙間なく一体融合した太陽×羅針盤デザイン」に刷新しました！（右のゲージでリアルタイム微調整が可能です）</p>
   <div class="locked-badges">
-    <span class="l-badge">⭕ 完全円なし（シンプル背景）</span>
-    <span class="l-badge">☀️ 太陽＝短くて太い12本フレア（8本＋4本追加）</span>
-    <span class="l-badge">🎛️ ゲージ連動＝原画＆SVGがリアルタイム変化</span>
+    <span class="l-badge">🖼️ 画像1枚シンプル表示</span>
+    <span class="l-badge">☀️🧭 太陽×羅針盤 完全融合デザイン</span>
+    <span class="l-badge">🎛️ ゲージリアルタイム連動</span>
   </div>
 </div>
 
 <div class="workspace">
-  <!-- 左カラム：原画ライブキャンバス＆ベクター表示 -->
+  <!-- 左カラム：単一マスター画像1枚のみ表示 -->
   <div class="canvas-panel">
-    <div class="view-tabs">
-      <button class="v-tab active" onclick="setViewMode('flash_no_circle', this)">✨ ① 原画ライブ編集（大画面・ゲージ連動）</button>
-      <button class="v-tab" onclick="setViewMode('flash_both', this)">🖼️ 原画 2案を比較（ゲージ連動）</button>
-      <button class="v-tab" onclick="setViewMode('both_modes', this)">📐 ベクターSVG 2種比較</button>
-      <button class="v-tab" onclick="setViewMode('stencil', this)">📄 ステンシル線画</button>
-    </div>
-
     <div class="stage-grid single" id="stageGrid">
       <div class="stage-box" id="boxFlashNoCircle" onclick="zoomBox(this)">
-        <span class="stage-label">✨ ① 原画マスター（12本短太太陽・ゲージリアルタイム連動）</span>
+        <span class="stage-label">✨ 太陽×羅針盤 融合マスター（タップで拡大・右のゲージでリアルタイム変化）</span>
         <canvas id="liveFlashCanvas" width="848" height="1264" style="width:100%;height:auto;display:block;"></canvas>
       </div>
-      <div class="stage-box" id="boxFlashInnerRing" style="display:none;" onclick="zoomBox(this)">
-        <span class="stage-label">✨ ② 原画ワイド版（12本肉厚太陽・ゲージ連動）</span>
-        <canvas id="liveFlashCanvas2" width="848" height="1264" style="width:100%;height:auto;display:block;"></canvas>
-      </div>
-      <div class="stage-box" id="boxSvg" style="display:none;" onclick="zoomBox(this)">
-        <span class="stage-label">📐 ベクターSVG①：完全円なし・12本短太太陽</span>
+      <div id="hiddenTestSvgs" style="display:none;">
         <svg id="masterSvg" xmlns="http://www.w3.org/2000/svg" viewBox="130 85 540 785" width="100%" height="100%" data-design-id="110" data-design-code="DV-10">
   <defs>
     <linearGradient id="greywashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -593,9 +581,6 @@
     <circle class="facet-light" cx="400.00" cy="465.00" r="4.2" fill="#FAF8F5" stroke="#121211" stroke-width="1.52"/><circle cx="400.00" cy="465.00" r="1.5" fill="#121211"/>
   </g>
 </svg>
-      </div>
-      <div class="stage-box" id="boxCleanLine" style="display:none;" onclick="zoomBox(this)">
-        <span class="stage-label">📐 ベクターSVG②：スッキリ線画・12本短太太陽</span>
         <svg id="cleanLineSvg" xmlns="http://www.w3.org/2000/svg" viewBox="130 85 540 785" width="100%" height="100%" data-design-id="109" data-design-code="DV-09">
   <defs>
     <linearGradient id="greywashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -738,9 +723,6 @@
     <circle class="facet-light" cx="400.00" cy="465.00" r="4.2" fill="#FAF8F5" stroke="#121211" stroke-width="1.52"/><circle cx="400.00" cy="465.00" r="1.5" fill="#121211"/>
   </g>
 </svg>
-      </div>
-      <div class="stage-box" id="boxStencil" style="display:none;" onclick="zoomBox(this)">
-        <span class="stage-label">全体ステンシル線画（彫り師転写用）</span>
         <svg id="stencilSvg" xmlns="http://www.w3.org/2000/svg" viewBox="130 85 540 785" width="100%" height="100%" data-design-id="110" data-design-code="DV-10">
   <rect class="flash-bg" x="0" y="0" width="800" height="1000" fill="#FAF8F5"/>
   <g id="davinci-blueprint" opacity="0.60">
@@ -846,34 +828,34 @@
     </div>
   </div>
 
-  <!-- 右カラム：リアルタイム微調整ゲージのみ（下部パーツ別デザインは完全削除） -->
+  <!-- 右カラム：リアルタイム微調整ゲージのみ -->
   <div class="editor-panel">
 
     <div class="ed-box">
       <div class="ed-title">
-        <span>🎛️ リアルタイム微調整ゲージ（動かすと左のデザインが即座に変わります）</span>
-        <button class="reset-btn" onclick="resetSliders()">↺ 初期値（12本・100%）に戻す</button>
+        <span>🎛️ リアルタイム微調整ゲージ（動かすと左の1枚画像が即座に変わります）</span>
+        <button class="reset-btn" onclick="resetSliders()">↺ 初期値（100%）に戻す</button>
       </div>
       <div class="slider-grid">
         <div class="sl-item">
-          <div class="sl-head"><span>☀️ 太陽の炎の本数（4本刻み）</span><span id="val-sunCount">12本</span></div>
-          <input type="range" id="sl-sunCount" min="4" max="20" step="4" value="12" oninput="applyLiveTransforms()">
+          <div class="sl-head"><span>☀️ 太陽フレアの本数（融合数）</span><span id="val-sunCount">8本（＋8方位針＝16連融合）</span></div>
+          <input type="range" id="sl-sunCount" min="4" max="16" step="4" value="8" oninput="applyLiveTransforms()">
         </div>
         <div class="sl-item">
-          <div class="sl-head"><span>☀️ 太陽の炎の長さ（短 ⇄ 長）</span><span id="val-sunLen">100%</span></div>
-          <input type="range" id="sl-sunLen" min="55" max="155" value="100" oninput="applyLiveTransforms()">
+          <div class="sl-head"><span>☀️ 太陽フレアの長さ（短 ⇄ 長）</span><span id="val-sunLen">100%</span></div>
+          <input type="range" id="sl-sunLen" min="65" max="145" value="100" oninput="applyLiveTransforms()">
         </div>
         <div class="sl-item">
-          <div class="sl-head"><span>☀️ 太陽の炎の太さ（細 ⇄ 太）</span><span id="val-sunThick">100%</span></div>
-          <input type="range" id="sl-sunThick" min="60" max="165" value="100" oninput="applyLiveTransforms()">
+          <div class="sl-head"><span>☀️ 太陽×羅針盤の結合太さ（細 ⇄ 太）</span><span id="val-sunThick">100%</span></div>
+          <input type="range" id="sl-sunThick" min="70" max="145" value="100" oninput="applyLiveTransforms()">
         </div>
         <div class="sl-item">
-          <div class="sl-head"><span>☀️ 太陽のうねり（直線 ⇄ 強波）</span><span id="val-sunWave">100%</span></div>
-          <input type="range" id="sl-sunWave" min="0" max="170" value="100" oninput="applyLiveTransforms()">
+          <div class="sl-head"><span>☀️ 太陽フレアの揺らぎ（直線 ⇄ 炎波）</span><span id="val-sunWave">100%</span></div>
+          <input type="range" id="sl-sunWave" min="0" max="160" value="100" oninput="applyLiveTransforms()">
         </div>
         <div class="sl-item">
-          <div class="sl-head"><span>🧭 羅針盤（4本針）のサイズ</span><span id="val-sunS">100%</span></div>
-          <input type="range" id="sl-sunS" min="70" max="135" value="100" oninput="applyLiveTransforms()">
+          <div class="sl-head"><span>🧭 羅針盤（主針＋対角針）サイズ</span><span id="val-sunS">100%</span></div>
+          <input type="range" id="sl-sunS" min="75" max="135" value="100" oninput="applyLiveTransforms()">
         </div>
         <div class="sl-item">
           <div class="sl-head"><span>🦴 背骨（椎骨）の太さ・横幅</span><span id="val-shankW">100%</span></div>
@@ -906,7 +888,7 @@
 <!-- 画面下部固定・ワンタップコピーバー -->
 <div class="sticky-dock">
   <div class="dock-inner">
-    <div class="preview-msg" id="previewMsg">【円なし・12本短太太陽マスター】 変更指示：（右のゲージを動かすか文字を入力してください）</div>
+    <div class="preview-msg" id="previewMsg">【太陽×羅針盤 融合マスター】 変更指示：（右のゲージを動かすか文字を入力してください）</div>
     <button class="copy-btn" onclick="copyMsg()">📋 このゲージ設定・修正指示をコピーする</button>
   </div>
 </div>
@@ -920,12 +902,12 @@
 <script>
   const activeChips = new Set();
 
-  // 原画ライブレンダリング用の画像アセット
+  // 原画ライブレンダリング用の画像アセット（1枚シンプル表示）
   const imgBaseNoSun = new Image();
   const imgInitial1 = new Image();
-  const imgInitial2 = new Image();
   let assetsReady = false;
   let stippleCanvas = null;
+  let stippleDarkCanvas = null;
   let compassLayerCanvas = null;
   let wingsLayerCanvas = null;
 
@@ -933,22 +915,20 @@
     let loaded = 0;
     const onPartLoad = () => {
       loaded++;
-      if (loaded === 1 && imgInitial1.complete) {
+      if (imgInitial1.complete) {
         const c1 = document.getElementById('liveFlashCanvas');
-        if (c1) c1.getContext('2d').drawImage(imgInitial1, 0, 0);
+        if (c1 && !assetsReady) c1.getContext('2d').drawImage(imgInitial1, 0, 0);
       }
-      if (loaded >= 3) {
+      if (loaded >= 2) {
         prepareOffscreenLayers();
         assetsReady = true;
         renderAllLiveCanvases();
       }
     };
     imgInitial1.onload = onPartLoad;
-    imgInitial2.onload = onPartLoad;
     imgBaseNoSun.onload = onPartLoad;
-    imgInitial1.src = 'c2_flash2_no_circle.jpg?v=14';
-    imgInitial2.src = 'c2_flash2_inner_ring_only.jpg?v=14';
-    imgBaseNoSun.src = 'c2_base_no_sun.jpg?v=14';
+    imgInitial1.src = 'c2_flash2_no_circle.jpg?v=15';
+    imgBaseNoSun.src = 'c2_base_no_sun.jpg?v=15';
   }
 
   function prepareOffscreenLayers() {
@@ -976,7 +956,7 @@
     }
     cctx.putImageData(cid, 0, 0);
 
-    // 2. 下部C2横突起ウイングの切り抜きレイヤー（y=890..1240 で中央の背骨部分 x=354..494, y<1015 を除外）
+    // 2. 下部C2横突起ウイングの切り抜きレイヤー
     wingsLayerCanvas = document.createElement('canvas');
     wingsLayerCanvas.width = w;
     wingsLayerCanvas.height = h;
@@ -995,35 +975,111 @@
     }
     wctx.putImageData(wid, 0, 0);
 
-    // 3. 太陽のドットシェーディング（スティップル）質感テクスチャ
+    // 3. 太陽フレア＆45°対角コンパス針用の2種スティップル質感テクスチャ
     stippleCanvas = document.createElement('canvas');
     stippleCanvas.width = w;
     stippleCanvas.height = h;
+    stippleDarkCanvas = document.createElement('canvas');
+    stippleDarkCanvas.width = w;
+    stippleDarkCanvas.height = h;
     const sctx = stippleCanvas.getContext('2d');
+    const sdctx = stippleDarkCanvas.getContext('2d');
     const sid = sctx.createImageData(w, h);
+    const sdid = sdctx.createImageData(w, h);
     const sd = sid.data;
-    let seed = 42;
+    const sdd = sdid.data;
+    let seed = 77;
     const rand = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
     for (let y = 320; y < 940; y++) {
       for (let x = 110; x < 740; x++) {
         const dist = Math.hypot(x - cx, y - cy);
         if (dist < 300) {
-          const td = Math.max(0, Math.min(1, (dist - 28) / 145));
-          let dark = Math.floor(88 + 95 * (1 - td) + (rand() * 68 - 34));
-          dark = Math.max(32, Math.min(212, dark));
-          const val = 236 - dark;
+          const td = Math.max(0, Math.min(1, (dist - 36) / 135));
+          const n = rand() * 68 - 34;
+          let dark1 = Math.floor(118 + 92 * (1 - td) + n);
+          dark1 = Math.max(42, Math.min(215, dark1));
+          const v1 = 238 - dark1;
           const idx = (y * w + x) * 4;
-          sd[idx] = val;
-          sd[idx + 1] = Math.floor(val * 0.94);
-          sd[idx + 2] = Math.floor(val * 0.84);
+          sd[idx] = v1;
+          sd[idx + 1] = Math.floor(v1 * 0.93);
+          sd[idx + 2] = Math.floor(v1 * 0.82);
           sd[idx + 3] = 255;
+
+          let dark2 = Math.floor(198 + 30 * (1 - td) + n * 0.45);
+          dark2 = Math.max(165, Math.min(228, dark2));
+          const v2 = 238 - dark2;
+          sdd[idx] = v2;
+          sdd[idx + 1] = Math.floor(v2 * 0.95);
+          sdd[idx + 2] = Math.floor(v2 * 0.88);
+          sdd[idx + 3] = 255;
         }
       }
     }
     sctx.putImageData(sid, 0, 0);
+    sdctx.putImageData(sdid, 0, 0);
   }
 
-  function renderSingleFlashCanvas(canvasEl, isWidePreset) {
+  function drawFusedFacetedRay(ctx, cx, cy, deg, rTip, rShoulder, halfWScale, waveAmp, waveSign, fillPat, lwOuter, lwRib, taperExp) {
+    const ang = deg * Math.PI / 180;
+    const ux = Math.cos(ang), uy = Math.sin(ang);
+    const px = -uy, py = ux;
+    const hwBase = rShoulder * Math.tan(23.0 * Math.PI / 180) * halfWScale;
+
+    const leftPts = [[cx, cy]], rightPts = [[cx, cy]], midPts = [[cx, cy]];
+    const steps = 48;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const rCur = rShoulder + t * (rTip - rShoulder);
+      let sway = 0, locAng = ang;
+      if (waveAmp > 0) {
+        sway = waveAmp * Math.sin(t * Math.PI * 1.50) * Math.pow(1.0 - t, 0.72) * waveSign;
+        const dSway = (waveAmp * Math.PI * 1.50 / Math.max(20, rTip - rShoulder)) * Math.cos(t * Math.PI * 1.50) * Math.pow(1.0 - t, 0.72) * waveSign;
+        locAng = ang + Math.atan(dSway * 0.45);
+      }
+      const nx = -Math.sin(locAng), ny = Math.cos(locAng);
+      const hw = hwBase * Math.pow(1.0 - t, taperExp);
+      const mx = cx + rCur * ux + sway * px;
+      const my = cy + rCur * uy + sway * py;
+      midPts.push([mx, my]);
+      leftPts.push([mx - hw * nx, my - hw * ny]);
+      rightPts.push([mx + hw * nx, my + hw * ny]);
+    }
+
+    // 左ファセット（明部：アイボリー）
+    ctx.beginPath();
+    leftPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    for (let i = midPts.length - 1; i >= 0; i--) ctx.lineTo(midPts[i][0], midPts[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = '#F4E6CB';
+    ctx.fill();
+
+    // 右ファセット（暗部：スティップル陰影）
+    ctx.beginPath();
+    midPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    for (let i = rightPts.length - 1; i >= 0; i--) ctx.lineTo(rightPts[i][0], rightPts[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = fillPat;
+    ctx.fill();
+
+    // 外周輪郭線（根元から先端まで一筆書き）
+    ctx.beginPath();
+    leftPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    for (let i = rightPts.length - 1; i >= 1; i--) ctx.lineTo(rightPts[i][0], rightPts[i][1]);
+    ctx.closePath();
+    ctx.strokeStyle = '#12100E';
+    ctx.lineWidth = lwOuter;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // 中心稜線
+    ctx.beginPath();
+    midPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    ctx.strokeStyle = '#141210';
+    ctx.lineWidth = lwRib;
+    ctx.stroke();
+  }
+
+  function renderSingleFlashCanvas(canvasEl) {
     if (!canvasEl || !assetsReady) return;
     const ctx = canvasEl.getContext('2d');
     const w = 848, h = 1264, cx = 424, cy = 631;
@@ -1039,9 +1095,9 @@
     const botW = parseInt(document.getElementById('sl-botW').value, 10) / 100;
     const botH = parseInt(document.getElementById('sl-botH').value, 10) / 100;
 
-    // すべて初期値(100% & 12本)のときは事前レンダリング済みの最高画質マスターを表示
-    if (sunCount === 12 && sunLen === 1 && sunThick === 1 && sunWave === 1 && compS === 1 && shankW === 1 && topW === 1 && topH === 1 && botW === 1 && botH === 1) {
-      ctx.drawImage(isWidePreset ? imgInitial2 : imgInitial1, 0, 0);
+    // すべて初期値(100% & 8本)のときは事前レンダリング済みの最高画質マスターを表示
+    if (sunCount === 8 && sunLen === 1 && sunThick === 1 && sunWave === 1 && compS === 1 && shankW === 1 && topW === 1 && topH === 1 && botW === 1 && botH === 1) {
+      ctx.drawImage(imgInitial1, 0, 0);
       return;
     }
 
@@ -1058,7 +1114,7 @@
       cx - (spSrcW / 2) * shankW, spSrcY, spSrcW * shankW, spSrcH
     );
 
-    // 3. 上部（C2の頭）を topW, topH でスケーリング描画（下端 y=236 を基点）
+    // 3. 上部（C2の頭）を topW, topH でスケーリング描画
     const topSrcX = 305, topSrcY = 38, topSrcW = 238, topSrcH = 198;
     ctx.drawImage(
       imgBaseNoSun,
@@ -1066,7 +1122,7 @@
       cx - (topSrcW / 2) * topW, 236 - topSrcH * topH, topSrcW * topW, topSrcH * topH
     );
 
-    // 4. 下部（C2横突起ウイング）を botW, botH でスケーリング描画（基点 cx=424, y=1025）
+    // 4. 下部（C2横突起ウイング）を botW, botH でスケーリング描画
     ctx.save();
     ctx.translate(cx, 1025);
     ctx.scale(botW, botH);
@@ -1074,94 +1130,43 @@
     ctx.drawImage(wingsLayerCanvas, 0, 0);
     ctx.restore();
 
-    // 5. 太陽の炎（sunCount本・長さsunLen・太さsunThick・うねりsunWave）をリアルタイム描画
+    const stipplePat = ctx.createPattern(stippleCanvas, 'no-repeat') || '#8E8271';
+    const stippleDarkPat = ctx.createPattern(stippleDarkCanvas, 'no-repeat') || '#221F1B';
+
+    // 5. 第1層：羅針盤と根元から一体融合した「広基底ソーラーフレア」
     const perQuad = Math.max(1, Math.round(sunCount / 4));
-    const degs = [];
+    const solarDegs = [];
     [-90, 0, 90, 180].forEach(qb => {
-      for (let k = 1; k <= perQuad; k++) {
-        degs.push(qb + (90 / (perQuad + 1)) * k);
+      if (perQuad === 1) {
+        solarDegs.push(qb + 45);
+      } else if (perQuad === 2) {
+        solarDegs.push(qb + 22.5, qb + 67.5);
+      } else if (perQuad === 3) {
+        solarDegs.push(qb + 18.0, qb + 45.0, qb + 72.0);
+      } else {
+        solarDegs.push(qb + 15.0, qb + 33.0, qb + 57.0, qb + 75.0);
       }
     });
 
-    const baseLen = (isWidePreset ? 148.0 : 136.0) * sunLen;
-    const countWidthScale = perQuad === 1 ? 1.45 : (perQuad === 2 ? 1.22 : (perQuad === 3 ? 1.0 : 0.82));
-    const bellyHw = (isWidePreset ? 18.5 : 16.8) * sunThick * countWidthScale;
-    const rootHw = (isWidePreset ? 13.5 : 12.5) * sunThick * countWidthScale;
-    const waveAmp = (isWidePreset ? 10.8 : 9.8) * sunWave;
-    const rBase = 24.0;
-
-    // 外側を先に、各象限の中央を後に描くレイヤー順序
-    const order = [];
-    for (let i = 0; i < degs.length; i++) if (i % perQuad !== Math.floor(perQuad / 2)) order.push(i);
-    for (let i = 0; i < degs.length; i++) if (i % perQuad === Math.floor(perQuad / 2)) order.push(i);
-
-    const stipplePat = ctx.createPattern(stippleCanvas, 'no-repeat');
-
-    order.forEach(idx => {
-      const deg = degs[idx];
-      const ang = deg * Math.PI / 180;
-      const ux = Math.cos(ang), uy = Math.sin(ang);
-      const px = -uy, py = ux;
+    solarDegs.forEach((deg, idx) => {
       const wSign = (idx % 2 === 0) ? 1.0 : -1.0;
-      const isMid = (perQuad === 3 && (idx % 3 === 1));
-      const curLen = baseLen * (isMid ? 1.06 : 0.96);
-
-      const leftPts = [], rightPts = [], midPts = [];
-      const steps = 48;
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const rCur = rBase + t * curLen;
-        const sway = waveAmp * Math.sin(t * Math.PI * 1.92) * (1.0 - 0.10 * t) * wSign;
-        const dSway = (waveAmp * Math.PI * 1.92 / Math.max(20, curLen)) * Math.cos(t * Math.PI * 1.92) * (1.0 - 0.10 * t) * wSign;
-        const locAng = ang + Math.atan(dSway * 0.55);
-        const nx = -Math.sin(locAng), ny = Math.cos(locAng);
-
-        const belly = Math.sin(Math.min(1.0, t * 1.15) * Math.PI * 0.82);
-        const taper = Math.pow(1.0 - t, 0.62);
-        const hw = (rootHw * (1.0 - t * 0.45) + bellyHw * belly) * taper;
-
-        const mx = cx + rCur * ux + sway * px;
-        const my = cy + rCur * uy + sway * py;
-        midPts.push([mx, my]);
-        leftPts.push([mx - hw * nx, my - hw * ny]);
-        rightPts.push([mx + hw * nx, my + hw * ny]);
-      }
-
-      // 左ファセット（明部：アイボリー）
-      ctx.beginPath();
-      leftPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
-      for (let i = midPts.length - 1; i >= 0; i--) ctx.lineTo(midPts[i][0], midPts[i][1]);
-      ctx.closePath();
-      ctx.fillStyle = '#F4E6CB';
-      ctx.fill();
-
-      // 右ファセット（暗部：スティップル陰影）
-      ctx.beginPath();
-      midPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
-      for (let i = rightPts.length - 1; i >= 0; i--) ctx.lineTo(rightPts[i][0], rightPts[i][1]);
-      ctx.closePath();
-      ctx.fillStyle = stipplePat || '#8E8271';
-      ctx.fill();
-
-      // 外周輪郭線
-      ctx.beginPath();
-      leftPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
-      for (let i = rightPts.length - 1; i >= 0; i--) ctx.lineTo(rightPts[i][0], rightPts[i][1]);
-      ctx.closePath();
-      ctx.strokeStyle = '#141210';
-      ctx.lineWidth = 3.2;
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-
-      // 中心S字リブ線
-      ctx.beginPath();
-      midPts.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
-      ctx.strokeStyle = '#201D19';
-      ctx.lineWidth = 2.0;
-      ctx.stroke();
+      drawFusedFacetedRay(
+        ctx, cx, cy, deg,
+        148.0 * sunLen, 48.0 * sunThick, 1.05 * sunThick,
+        7.2 * sunWave, wSign, stipplePat, 2.9, 1.9, 0.82
+      );
     });
 
-    // 6. 4本羅針盤を compS でスケーリングして最前面に合成
+    // 6. 第2層：45°対角コンパス針（4本の東西南北主針と太陽フレアを一体結合する直線2トーン針）
+    [-45.0, 45.0, 135.0, 225.0].forEach(deg => {
+      drawFusedFacetedRay(
+        ctx, cx, cy, deg,
+        186.0 * compS, 42.0 * compS * sunThick, 0.98 * sunThick,
+        0.0, 1.0, stippleDarkPat, 3.2, 2.1, 0.98
+      );
+    });
+
+    // 7. 第3層：東西南北の4本主針を compS でスケーリングして最前面に合成
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(compS, compS);
@@ -1171,40 +1176,7 @@
   }
 
   function renderAllLiveCanvases() {
-    renderSingleFlashCanvas(document.getElementById('liveFlashCanvas'), false);
-    renderSingleFlashCanvas(document.getElementById('liveFlashCanvas2'), true);
-  }
-
-  function setViewMode(mode, btn) {
-    document.querySelectorAll('.v-tab').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    const grid = document.getElementById('stageGrid');
-    const bF1 = document.getElementById('boxFlashNoCircle');
-    const bF2 = document.getElementById('boxFlashInnerRing');
-    const bSvg = document.getElementById('boxSvg');
-    const bClean = document.getElementById('boxCleanLine');
-    const bStencil = document.getElementById('boxStencil');
-
-    [bF1, bF2, bSvg, bClean, bStencil].forEach(el => { if (el) el.style.display = 'none'; });
-
-    if (mode === 'flash_both') {
-      grid.classList.remove('single');
-      bF1.style.display = 'block';
-      bF2.style.display = 'block';
-    } else if (mode === 'flash_no_circle') {
-      grid.classList.add('single');
-      bF1.style.display = 'block';
-    } else if (mode === 'flash_inner_only') {
-      grid.classList.add('single');
-      bF2.style.display = 'block';
-    } else if (mode === 'both_modes') {
-      grid.classList.remove('single');
-      bSvg.style.display = 'block';
-      bClean.style.display = 'block';
-    } else if (mode === 'stencil') {
-      grid.classList.add('single');
-      bStencil.style.display = 'block';
-    }
+    renderSingleFlashCanvas(document.getElementById('liveFlashCanvas'));
   }
 
   function setGroupScale(svgRoot, selector, cx, cy, sx, sy) {
@@ -1232,7 +1204,7 @@
     const botW = parseInt(document.getElementById('sl-botW').value, 10) / 100;
     const botH = parseInt(document.getElementById('sl-botH').value, 10) / 100;
 
-    document.getElementById('val-sunCount').textContent = sunCount + '本';
+    document.getElementById('val-sunCount').textContent = sunCount + '本（＋8方位針）';
     document.getElementById('val-sunLen').textContent = Math.round(sunLen * 100) + '%';
     document.getElementById('val-sunThick').textContent = Math.round(sunThick * 100) + '%';
     document.getElementById('val-sunWave').textContent = Math.round(sunWave * 100) + '%';
@@ -1243,10 +1215,10 @@
     document.getElementById('val-botW').textContent = Math.round(botW * 100) + '%';
     document.getElementById('val-botH').textContent = Math.round(botH * 100) + '%';
 
-    // 1. 原画キャンバスを60fpsリアルタイム再描画！
+    // 1. 単一マスター原画キャンバスを60fpsリアルタイム再描画！
     renderAllLiveCanvases();
 
-    // 2. ベクターSVGも同時にリアルタイム変形！
+    // 2. 内部SVGも同期
     ['masterSvg', 'cleanLineSvg', 'stencilSvg'].forEach(id => {
       const root = document.getElementById(id);
       if (!root) return;
@@ -1260,7 +1232,7 @@
   }
 
   function resetSliders() {
-    document.getElementById('sl-sunCount').value = 12;
+    document.getElementById('sl-sunCount').value = 8;
     ['sl-sunLen', 'sl-sunThick', 'sl-sunWave', 'sl-topW', 'sl-topH', 'sl-sunS', 'sl-shankW', 'sl-botW', 'sl-botH'].forEach(id => {
       document.getElementById(id).value = 100;
     });
@@ -1281,10 +1253,10 @@
     const botH = document.getElementById('sl-botH').value;
 
     const slChanges = [];
-    if (sunCount !== '12') slChanges.push(`太陽の本数=${sunCount}本`);
+    if (sunCount !== '8') slChanges.push(`太陽フレア本数=${sunCount}本`);
     if (sunLen !== '100') slChanges.push(`太陽の長さ=${sunLen}%`);
-    if (sunThick !== '100') slChanges.push(`太陽の太さ=${sunThick}%`);
-    if (sunWave !== '100') slChanges.push(`太陽のうねり=${sunWave}%`);
+    if (sunThick !== '100') slChanges.push(`太陽×羅針盤の結合太さ=${sunThick}%`);
+    if (sunWave !== '100') slChanges.push(`太陽の揺らぎ=${sunWave}%`);
     if (sunS !== '100') slChanges.push(`羅針盤サイズ=${sunS}%`);
     if (shankW !== '100') slChanges.push(`背骨の横幅=${shankW}%`);
     if (topW !== '100') slChanges.push(`上部横幅=${topW}%`);
@@ -1301,7 +1273,7 @@
     }
 
     const body = parts.length > 0 ? parts.join(' ｜ ') : '（右のゲージを動かすか文字を入力してください）';
-    document.getElementById('previewMsg').textContent = `【円なし・12本短太太陽マスター】 ${body}`;
+    document.getElementById('previewMsg').textContent = `【太陽×羅針盤 融合マスター】 ${body}`;
   }
 
   function copyMsg() {
