@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 2：第2頸椎（C2）＆短太背骨 4案比較（Galaxy確認用）</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 115px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin-bottom:10px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div style="text-align:center;"><span class="badge">✅ Step1確定：【B-3】太い円＋太い太陽炎8本＋8方位針</span></div>
+<h1>🦴 Step 2：リアルな第2頸椎（C2）× 短太背骨 4案比較</h1>
+<div class="sub">刃物のような尖りを完全に廃止し、本物の第2頸椎（軸椎）の丸みある骨格で4パターン作りました！上下の組み合わせも自由です。</div>
+
+<div class="full-box" onclick="zoomImg('step2_c2.jpg?v=1')">
+  <img src="step2_c2.jpg?v=1" alt="Step 2 C2背骨4案一覧">
+</div>
+
+<div class="grid">
+  <div class="card" id="card-S-1">
+    <img src="step2_s1.jpg?v=1" onclick="zoomImg(this.src)" alt="S-1案">
+    <div class="c-title">【S-1】上：正面リアルC2 × 下：丸い骨アンカー型</div>
+    <div class="c-desc">上は親指型の歯突起＆なだらかな上関節面（正面像）。下は先端がぷっくり丸い骨結節で広がるアンカー型C2。</div>
+    <button class="pick-btn" onclick="pickBase('S-1')">この【S-1】をベースにする</button>
+  </div>
+  <div class="card" id="card-S-2">
+    <img src="step2_s2.jpg?v=1" onclick="zoomImg(this.src)" alt="S-2案">
+    <div class="c-title">【S-2】上：正面リアルC2 × 下：リアルC2単体型</div>
+    <div class="c-desc">上は正面像のC2。下は横への広がりを無くし、本物のC2の横突孔と二股の棘突起でスッキリ締めた形。</div>
+    <button class="pick-btn" onclick="pickBase('S-2')">この【S-2】をベースにする</button>
+  </div>
+  <div class="card" id="card-S-3">
+    <img src="step2_s3.jpg?v=1" onclick="zoomImg(this.src)" alt="S-3案">
+    <div class="c-title">【S-3】上：後方立体C2 × 下：丸い骨アンカー型</div>
+    <div class="c-desc">上は後ろ斜め上から見た椎弓＆歯突起の立体C2（背骨も後方棘突起）。下は丸みある骨アンカー型C2。</div>
+    <button class="pick-btn" onclick="pickBase('S-3')">この【S-3】をベースにする</button>
+  </div>
+  <div class="card" id="card-S-4">
+    <img src="step2_s4.jpg?v=1" onclick="zoomImg(this.src)" alt="S-4案">
+    <div class="c-title">【S-4】上：後方立体C2 × 下：リアルC2単体型</div>
+    <div class="c-desc">上も下も本物のC2後方・水平骨格そのままの、横広がりがないストイックなカイロ解剖学スタイル。</div>
+    <button class="pick-btn" onclick="pickBase('S-4')">この【S-4】をベースにする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">💡 上・中・下のパーツ別カスタム組み合わせも選べます（必要な場合のみタップ）</div>
+  <div class="chips">
+    <button class="chip" onclick="pickOpt('top','上＝正面C2（S-1/S-2の上）',this)">上＝正面C2（S-1/S-2）</button>
+    <button class="chip" onclick="pickOpt('top','上＝後方立体C2（S-3/S-4の上）',this)">上＝後方立体C2（S-3/S-4）</button>
+  </div>
+  <div class="chips" style="margin-top:8px;">
+    <button class="chip" onclick="pickOpt('mid','中央の背骨＝正面の丸い椎体（S-1/S-2の中央）',this)">背骨＝正面の椎体（S-1/S-2）</button>
+    <button class="chip" onclick="pickOpt('mid','中央の背骨＝後方の椎弓・棘突起（S-3/S-4の中央）',this)">背骨＝後方の棘突起（S-3/S-4）</button>
+  </div>
+  <div class="chips" style="margin-top:8px;">
+    <button class="chip" onclick="pickOpt('bot','下＝丸い骨アンカー型（S-1/S-3の下）',this)">下＝丸い骨アンカー型（S-1/S-3）</button>
+    <button class="chip" onclick="pickOpt('bot','下＝リアルC2単体型（S-2/S-4の下）',this)">下＝リアルC2単体型（S-2/S-4）</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">微調整したい点があれば選んでください（そのままB-3と合体なら一番左をタップ！）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'このまま確定して【B-3】と合体させた完成案を見る')">✅ このまま確定して【B-3】と合体させる！</button>
+    <button class="chip" onclick="toggleTag(this,'下の横への張り出しをもう少し控えめにしたい')">下の張り出しをもう少し控えめに</button>
+    <button class="chip" onclick="toggleTag(this,'背骨をあと1節増やして少しだけ縦に余裕を持たせたい')">背骨をあと1節だけ増やす</button>
+    <button class="chip" onclick="toggleTag(this,'背骨をもっと短くしたい')">背骨をもっと短くする</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="例：上はS-1で、下はS-4の形にしたい 等、自由に入力OK" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const opts = { top: '', mid: '', bot: '' };
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['S-1','S-2','S-3','S-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function pickOpt(g, val, btn) {
+    if (opts[g] === val) { opts[g] = ''; btn.classList.remove('active'); }
+    else {
+      opts[g] = val;
+      btn.parentElement.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('ベース＝【' + basePick + '】');
+    const mix = [opts.top, opts.mid, opts.bot].filter(Boolean);
+    if (mix.length) p.push('部位指定＝' + mix.join('・'));
+    if (tags.size) p.push(Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step2 C2背骨選択】 ' + p.join(' ／ ') : '【Step2 C2背骨選択】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function copyAns() {
+    navigator.clipboard.writeText(getSummary()).then(() => {
+      const b = document.getElementById('copyBtn');
+      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+      setTimeout(upd, 3000);
+    });
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
