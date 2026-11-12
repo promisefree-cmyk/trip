@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 3：【S-1】C2背骨 × 【B-3】太陽・羅針盤 合体4案（Galaxy確認用）</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 120px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge-wrap { text-align:center; margin-bottom:8px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin:2px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .sec-label { font-size:14px; font-weight:900; color:#FFD27D; margin:14px 0 8px; padding-left:6px; border-left:4px solid #C8A97E; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="badge-wrap">
+  <span class="badge">✅ 太陽×羅針盤：【B-3】</span>
+  <span class="badge">✅ C2背骨ベース：【S-1】</span>
+</div>
+<h1>☀️🧭🦴 Step 3：【S-1】×【B-3】合体デザイン 4案比較</h1>
+<div class="sub">画像はタップで大きく拡大できます！<br>上段（M-1・M-2）は純粋な【S-1×B-3】、下段（M-3・M-4）は先ほどのお話にあった「折れた骨の記憶＆軸を通す」も組み込んだ比較案です。</div>
+
+<div class="full-box" onclick="zoomImg('step3_final.jpg?v=1')">
+  <img src="step3_final.jpg?v=1" alt="Step 3 S-1×B-3 合体4案一覧">
+</div>
+
+<div class="sec-label">① 純粋な【S-1】短太C2背骨 × 【B-3】太陽・羅針盤（2バランス）</div>
+<div class="grid">
+  <div class="card" id="card-M-1">
+    <img src="step3_m1.jpg?v=1" onclick="zoomImg(this.src)" alt="M-1案">
+    <div class="c-title">【M-1】S-1 × B-3（羅針盤大きめ・重厚バランス）</div>
+    <div class="c-desc">【B-3】の太い陰影リングと8本の太陽の炎を堂々と大きく重ね、C2の上下の丸い骨格と力強く一体化させた案。</div>
+    <button class="pick-btn" onclick="pickBase('M-1')">この【M-1】をベースにする</button>
+  </div>
+  <div class="card" id="card-M-2">
+    <img src="step3_m2.jpg?v=1" onclick="zoomImg(this.src)" alt="M-2案">
+    <div class="c-title">【M-2】S-1 × B-3（骨の輪郭くっきり王道バランス）</div>
+    <div class="c-desc">羅針盤を少し引き締めることで、【S-1】の上の関節面や下のぷっくり丸い骨アンカーの形がよりハッキリ見える王道案。</div>
+    <button class="pick-btn" onclick="pickBase('M-2')">この【M-2】をベースにする</button>
+  </div>
+</div>
+
+<div class="sec-label">② 【S-1】に「折れた骨の記憶（分離症）＆軸を通す」も融合させた案</div>
+<div class="grid">
+  <div class="card" id="card-M-3">
+    <img src="step3_m3.jpg?v=1" onclick="zoomImg(this.src)" alt="M-3案">
+    <div class="c-title">【M-3】S-1（折れた骨入り）× B-3（針は骨の中に収める）</div>
+    <div class="c-desc">【S-1】のシルエットはそのままに、リング下の骨に「ヒビ・分離」を刻み、羅針盤の縦針が骨の中をまっすぐ貫く案。</div>
+    <button class="pick-btn" onclick="pickBase('M-3')">この【M-3】をベースにする</button>
+  </div>
+  <div class="card" id="card-M-4">
+    <img src="step3_m4.jpg?v=1" onclick="zoomImg(this.src)" alt="M-4案">
+    <div class="c-title">【M-4】S-1（折れた骨入り）× B-3（上下に1本の軸が貫通）</div>
+    <div class="c-desc">折れた骨を貫いて、上の歯突起の先から下の骨の先まで「ブレない1本の軸（筋を通す）」がスッと突き抜ける案。</div>
+    <button class="pick-btn" onclick="pickBase('M-4')">この【M-4】をベースにする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">💡 サイズ・位置・ディテールの微調整があれば選んでください（複数タップOK）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'このまま確定して「完成1枚絵＆彫り師用ステンシル線画」へ進む')">✅ このまま確定して完成1枚絵を作る！</button>
+    <button class="chip" onclick="toggleTag(this,'太陽×羅針盤をもう少し小さくして骨をもっと見せたい')">羅針盤をもう少し小さく（骨を見せる）</button>
+    <button class="chip" onclick="toggleTag(this,'太陽×羅針盤をもう少し大きくしたい')">羅針盤をもう少し大きく</button>
+    <button class="chip" onclick="toggleTag(this,'太陽×羅針盤の位置をもう少し上にしたい')">羅針盤の位置を少し上へ</button>
+    <button class="chip" onclick="toggleTag(this,'太陽×羅針盤の位置をもう少し下にしたい')">羅針盤の位置を少し下へ</button>
+    <button class="chip" onclick="toggleTag(this,'ヒビ・折れた骨の表現は無し（きれいな骨のまま）にする')">骨のヒビは無しにする</button>
+    <button class="chip" onclick="toggleTag(this,'折れた骨（分離）の表現をもっと分かりやすく入れたい')">折れた骨をもっと分かりやすく</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="例：M-2をベースにして、M-4の上下に抜ける軸線だけ足したい 等、何でも自由に入力OK" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['M-1','M-2','M-3','M-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('ベース＝【' + basePick + '】');
+    if (tags.size) p.push('調整＝' + Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step3 S-1×B-3合体】 ' + p.join(' ／ ') : '【Step3 S-1×B-3合体】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function copyAns() {
+    navigator.clipboard.writeText(getSummary()).then(() => {
+      const b = document.getElementById('copyBtn');
+      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+      setTimeout(upd, 3000);
+    });
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
