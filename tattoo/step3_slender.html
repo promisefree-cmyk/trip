@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 3改訂：骨を「もとの太さ」に戻した【S-1×B-3】4案比較（Galaxy確認用）</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 120px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge-wrap { text-align:center; margin-bottom:8px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin:2px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .sec-label { font-size:14px; font-weight:900; color:#FFD27D; margin:14px 0 8px; padding-left:6px; border-left:4px solid #C8A97E; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="badge-wrap">
+  <span class="badge">✅ 太陽×羅針盤：【B-3】</span>
+  <span class="badge">✅ C2上下モチーフ：【S-1（丸み）】</span>
+  <span class="badge">✨ 修正：骨をもとのスリムな太さへ復元</span>
+</div>
+<h1>🦴☀️🧭 Step 3改訂：骨を「もとの太さ」に戻した4案比較</h1>
+<div class="sub">画像はタップで大きく拡大できます！<br>上段（T-1・T-2）は初期デザインのすっきり細長い背骨の太さ、下段（T-3・T-4）は縦を少し引き締めた細身バランスです。</div>
+
+<div class="full-box" onclick="zoomImg('step3_slender.jpg?v=1')">
+  <img src="step3_slender.jpg?v=1" alt="Step 3改訂 もとの太さの背骨×B-3 4案一覧">
+</div>
+
+<div class="sec-label">① 初期デザインの「すっきり細長い背骨の太さ」に戻した2案</div>
+<div class="grid">
+  <div class="card" id="card-T-1">
+    <img src="step3_t1.jpg?v=1" onclick="zoomImg(this.src)" alt="T-1案">
+    <div class="c-title">【T-1】元の細さ（縦長スリム）× きれいな骨</div>
+    <div class="c-desc">初期デザインの細い背骨の太さに戻し、上下は刃物ではなく【S-1】の丸みあるC2骨格にして【B-3】を重ねた案。</div>
+    <button class="pick-btn" onclick="pickBase('T-1')">この【T-1】をベースにする</button>
+  </div>
+  <div class="card" id="card-T-2">
+    <img src="step3_t2.jpg?v=1" onclick="zoomImg(this.src)" alt="T-2案">
+    <div class="c-title">【T-2】元の細さ（縦長スリム）× 折れた骨＋上下軸貫通</div>
+    <div class="c-desc">元の細い背骨のまま、リング下の骨に「分離・ヒビ」を刻み、上から下までブレない1本の軸（筋を通す）が貫く案。</div>
+    <button class="pick-btn" onclick="pickBase('T-2')">この【T-2】をベースにする</button>
+  </div>
+</div>
+
+<div class="sec-label">② 細身のまま「縦の長さを少しコンパクト」に引き締めた2案</div>
+<div class="grid">
+  <div class="card" id="card-T-3">
+    <img src="step3_t3.jpg?v=1" onclick="zoomImg(this.src)" alt="T-3案">
+    <div class="c-title">【T-3】少し短めスリム × きれいな骨</div>
+    <div class="c-desc">太すぎた前回よりグッと細くしつつ、縦の長さを少し引き締めてまとまりを出した純粋骨格案。</div>
+    <button class="pick-btn" onclick="pickBase('T-3')">この【T-3】をベースにする</button>
+  </div>
+  <div class="card" id="card-T-4">
+    <img src="step3_t4.jpg?v=1" onclick="zoomImg(this.src)" alt="T-4案">
+    <div class="c-title">【T-4】少し短めスリム × 折れた骨（針は骨の中）</div>
+    <div class="c-desc">少し短めの細身背骨で、リング下の骨に「分離・ヒビ」を入れ、羅針盤の縦針を骨の中に収めた案。</div>
+    <button class="pick-btn" onclick="pickBase('T-4')">この【T-4】をベースにする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">💡 太さ・長さ・ヒビ・軸の細かい組み合わせも選べます（複数タップOK）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'このまま確定して「完成1枚絵＆彫り師用ステンシル線画」へ進む')">✅ このまま確定して完成1枚絵を作る！</button>
+    <button class="chip" onclick="toggleTag(this,'もっと骨を細くしたい')">もっと骨を細くしたい</button>
+    <button class="chip" onclick="toggleTag(this,'もう少しだけ骨を太くしたい')">もう少しだけ骨を太くしたい</button>
+    <button class="chip" onclick="toggleTag(this,'縦をもっと長くしたい')">縦をもっと長くしたい</button>
+    <button class="chip" onclick="toggleTag(this,'縦をもっと短くしたい')">縦をもっと短くしたい</button>
+    <button class="chip" onclick="toggleTag(this,'骨のヒビ・分離は無し（きれいな骨）にする')">骨のヒビは無しにする</button>
+    <button class="chip" onclick="toggleTag(this,'骨のヒビ・分離を入れる')">骨のヒビを入れる</button>
+    <button class="chip" onclick="toggleTag(this,'上下に突き抜ける1本の軸線を入れる')">上下貫通の軸線を入れる</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="例：T-1の細さ・長さで、下の横広がりをもう少し控えめにしたい 等、自由に入力OK" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['T-1','T-2','T-3','T-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('ベース＝【' + basePick + '】');
+    if (tags.size) p.push('調整＝' + Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step3改 骨の太さ確認】 ' + p.join(' ／ ') : '【Step3改 骨の太さ確認】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function copyAns() {
+    navigator.clipboard.writeText(getSummary()).then(() => {
+      const b = document.getElementById('copyBtn');
+      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+      setTimeout(upd, 3000);
+    });
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
