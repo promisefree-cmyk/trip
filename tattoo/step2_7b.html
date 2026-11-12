@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 2改：C2軸×7個の骨×5個目の分離骨折 4案比較</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 120px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin-bottom:8px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div style="text-align:center;"><span class="badge">✅ 軸を通す・筋を通す：C2軸椎（1個目）〜7個目（5個目＝分離骨折）</span></div>
+<h1>🦴 Step 2改：7個の骨 × 5個目の分離骨折 4案比較</h1>
+<div class="sub">すべて上から数えて【合計7個】、そして【5個目】だけがパキッとヒビ割れ・分離しているデザインです！</div>
+
+<div class="full-box" onclick="zoomImg('step2_7b.jpg?v=1')">
+  <img src="step2_7b.jpg?v=1" alt="7個の骨・5個目分離 4案一覧">
+</div>
+
+<div class="grid">
+  <div class="card" id="card-L-1">
+    <img src="step2_l1.jpg?v=1" onclick="zoomImg(this.src)" alt="L-1案">
+    <div class="c-title">【L-1】芯ライン貫通 × 縦スッキリ7椎型</div>
+    <div class="c-desc">C2の頭から7個目の下端まで1本の真っ直ぐな「軸ライン」が、割れた5個目も貫いて通る縦スッキリ型。</div>
+    <button class="pick-btn" onclick="pickBase('L-1')">この【L-1】をベースにする</button>
+  </div>
+  <div class="card" id="card-L-2">
+    <img src="step2_l2.jpg?v=1" onclick="zoomImg(this.src)" alt="L-2案">
+    <div class="c-title">【L-2】骨の整列のみ × 縦スッキリ7椎型</div>
+    <div class="c-desc">縦線は引かず、7個の骨のブレない垂直整列だけで「筋を通す」を表現したシンプルな縦7椎型。</div>
+    <button class="pick-btn" onclick="pickBase('L-2')">この【L-2】をベースにする</button>
+  </div>
+  <div class="card" id="card-L-3">
+    <img src="step2_l3.jpg?v=1" onclick="zoomImg(this.src)" alt="L-3案">
+    <div class="c-title">【L-3】芯ライン貫通 × 下部・丸い骨ベース7椎型</div>
+    <div class="c-desc">1本の真っ直ぐな「軸ライン」が7椎すべてを貫き、一番下の7個目が横突孔のある丸い骨ベースで締まる形。</div>
+    <button class="pick-btn" onclick="pickBase('L-3')">この【L-3】をベースにする</button>
+  </div>
+  <div class="card" id="card-L-4">
+    <img src="step2_l4.jpg?v=1" onclick="zoomImg(this.src)" alt="L-4案">
+    <div class="c-title">【L-4】骨の整列のみ × 下部・丸い骨ベース7椎型</div>
+    <div class="c-desc">縦線なしで7個の骨が真っ直ぐ連なり、5個目が分離骨折、7個目が丸い骨ベースでどっしり支える形。</div>
+    <button class="pick-btn" onclick="pickBase('L-4')">この【L-4】をベースにする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">🧭 次のStep 3で確定済みの【B-3（太陽×羅針盤）】をどこに重ねたいですか？</div>
+  <div class="chips">
+    <button class="chip" onclick="pickOpt('pos','ちょうど真ん中（3〜4個目あたり）に太陽×羅針盤を置き、そのすぐ下の「折れた5個目」がしっかり見えるようにする（おすすめ！）',this)">🌟 真ん中（3〜4個目）に太陽×羅針盤を置き、すぐ下の「折れた5個目」をしっかり見せる</button>
+    <button class="chip" onclick="pickOpt('pos','羅針盤の縦の長い針そのものが「1本の芯（軸）」として、折れた5個目の骨の真ん中をズバッと貫くようにする',this)">⚡ 羅針盤の縦針そのものが「軸」として折れた5個目を貫く</button>
+    <button class="chip" onclick="pickOpt('pos','両方の重ね方パターンを画像で見比べたい',this)">両方を見比べたい</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">🦴 骨や「芯」の微調整があれば選んでください（そのまま合体へ進むなら一番左！）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'この骨デザインで確定して【B-3（太陽×羅針盤）】と合体させる！')">✅ この骨で確定して【B-3】と合体させる！</button>
+    <button class="chip" onclick="toggleTag(this,'芯は骨の上に線を引くのではなく「骨の内部を貫通して割れた隙間から芯が覗く立体的な軸」にしたい')">芯を「骨の内部を貫通し、割れた隙間から覗く立体ロッド」にする</button>
+    <button class="chip" onclick="toggleTag(this,'7個目（一番下）は前回のS-1のような上向きの丸い骨アンカーにしたい')">7個目を前回のS-1（上向きの丸い骨アンカー）にする</button>
+    <button class="chip" onclick="toggleTag(this,'5個目の割れ・ズレをもう少し控えめにしたい')">5個目の割れをもう少し控えめに</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="その他、5個目の割れ方や軸の見せ方など自由に入力OK" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const opts = { pos: '' };
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['L-1','L-2','L-3','L-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function pickOpt(g, val, btn) {
+    if (opts[g] === val) { opts[g] = ''; btn.classList.remove('active'); }
+    else {
+      opts[g] = val;
+      btn.parentElement.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('ベース骨＝【' + basePick + '】');
+    if (opts.pos) p.push('太陽×羅針盤の位置＝' + opts.pos);
+    if (tags.size) p.push(Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step2改 7椎×5番目分離】 ' + p.join(' ／ ') : '【Step2改 7椎×5番目分離】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function copyAns() {
+    navigator.clipboard.writeText(getSummary()).then(() => {
+      const b = document.getElementById('copyBtn');
+      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+      setTimeout(upd, 3000);
+    });
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
