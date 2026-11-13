@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 7：【E-3】ベース・クレーターを減らして一目で「月」とわかる4案（Galaxy確認用）</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 120px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge-wrap { text-align:center; margin-bottom:8px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin:2px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .sec-label { font-size:14px; font-weight:900; color:#FFD27D; margin:14px 0 8px; padding-left:6px; border-left:4px solid #C8A97E; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="badge-wrap">
+  <span class="badge">✅ フチぼかしベース：【E-3】確定</span>
+  <span class="badge">🌕 修正：クレーターを減らし、誰もが「月！」とわかるデザインへ</span>
+</div>
+<h1>🌕✨ Step 7：一目で「月」と認知できる4つの月デザイン</h1>
+<div class="sub">画像はタップで大きく拡大できます！<br>【E-3】の陽炎ぼかしフチ＆太陽フレアはそのままに、ゴツゴツした穴を減らして「誰もがパッと見て月とわかる4パターン」に整えました。</div>
+
+<div class="full-box" onclick="zoomImg('step7_moon.jpg?v=1')">
+  <img src="step7_moon.jpg?v=1" alt="Step 7 一目で月とわかる4案一覧">
+</div>
+
+<div class="sec-label">① 見慣れた「満月の模様」＆「三日月の明暗」で月とわかる2案</div>
+<div class="grid">
+  <div class="card" id="card-K-1">
+    <img src="step7_k1.jpg?v=1" onclick="zoomImg(this.src)" alt="K-1案">
+    <div class="c-title">【K-1】月の海（満月の淡い模様）＋ 控えめクレーター</div>
+    <div class="c-desc">ボコボコした穴をグッと減らし、夜空で見上げる「満月の淡い模様（月の海）」と少数の小さなクレーターで上品に表現した月。</div>
+    <button class="pick-btn" onclick="pickBase('K-1')">この【K-1】にする</button>
+  </div>
+  <div class="card" id="card-K-2">
+    <img src="step7_k2.jpg?v=1" onclick="zoomImg(this.src)" alt="K-2案">
+    <div class="c-title">【K-2】三日月の明暗グラデ ＋ 控えめクレーター</div>
+    <div class="c-desc">誰が見ても0.5秒で「月！」とわかる三日月型の光と影のコントラストをつけ、クレーターを3〜4個に絞った立体月。</div>
+    <button class="pick-btn" onclick="pickBase('K-2')">この【K-2】にする</button>
+  </div>
+</div>
+
+<div class="sec-label">② 「三日月シルエット内蔵」＆「すっきり引き算の満月」2案</div>
+<div class="grid">
+  <div class="card" id="card-K-3">
+    <img src="step7_k3.jpg?v=1" onclick="zoomImg(this.src)" alt="K-3案">
+    <div class="c-title">【K-3】見慣れた満月の濃淡模様（クレーター極小2〜3個）</div>
+    <div class="c-desc">ボコボコした穴をほぼ無くし、誰もが夜空で見覚えのある満月の優しい濃淡シルエットを中心に描いた月。</div>
+    <button class="pick-btn" onclick="pickBase('K-3')">この【K-3】にする</button>
+  </div>
+  <div class="card" id="card-K-4">
+    <img src="step7_k4.jpg?v=1" onclick="zoomImg(this.src)" alt="K-4案">
+    <div class="c-title">【K-4】クレーター4〜5個だけの「すっきり輝く満月」</div>
+    <div class="c-desc">【E-3】からクレーターを大幅に引き算し、なめらかに光る月肌にワンポイントで数個だけ丸いクレーターを添えた王道案。</div>
+    <button class="pick-btn" onclick="pickBase('K-4')">この【K-4】にする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">💡 完成に向けた確認（複数タップOK）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'これで100%確定！「完成1枚の高解像度デザイン＆彫り師用ステンシル線画」を作成する')">🎉 これで確定！完成1枚絵＆ステンシルを作る！</button>
+    <button class="chip" onclick="toggleTag(this,'さらにクレーターを減らしたい（2〜3個でいい）')">さらにクレーターを減らす（2〜3個）</button>
+    <button class="chip" onclick="toggleTag(this,'クレーターはゼロにして「月の濃淡模様」だけにしたい')">クレーターは0個（模様と陰影だけ）にする</button>
+    <button class="chip" onclick="toggleTag(this,'三日月の向きを左右反転させたい')">三日月の向きを逆にする</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="さらに細かく調整したい点があれば何でも自由に入力OK！" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['K-1','K-2','K-3','K-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('決定ベース＝【' + basePick + '】');
+    if (tags.size) p.push('指示＝' + Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step7 月デザイン確認】 ' + p.join(' ／ ') : '【Step7 月デザイン確認】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function copyAns() {
+    navigator.clipboard.writeText(getSummary()).then(() => {
+      const b = document.getElementById('copyBtn');
+      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+      setTimeout(upd, 3000);
+    });
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
