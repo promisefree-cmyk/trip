@@ -1,0 +1,20 @@
+{
+  "name": "J.A.R.V.I.S. 総司令室",
+  "short_name": "JARVIS",
+  "description": "個人統合オペレーション＆状態モニター（Galaxy & Watch 8 対応）",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090C10",
+  "theme_color": "#090C10",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

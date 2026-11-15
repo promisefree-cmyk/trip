@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="J.A.R.V.I.S. 総司令室アイコン">
+  <defs>
+    <radialGradient id="obsidianGlow" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#151C28" />
+      <stop offset="100%" stop-color="#090C10" />
+    </radialGradient>
+    <linearGradient id="champagneGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E6C762" />
+      <stop offset="55%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#9F7E1C" />
+    </linearGradient>
+    <linearGradient id="cyanPulse" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.15" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="1" />
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.15" />
+    </linearGradient>
+  </defs>
+
+  <!-- Obsidian Rounded Base -->
+  <rect width="512" height="512" rx="112" fill="url(#obsidianGlow)" />
+  <rect x="20" y="20" width="472" height="472" rx="96" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2" />
+
+  <!-- Tier 3 Whisper Geometric Construction Ring -->
+  <circle cx="256" cy="256" r="176" fill="none" stroke="#D4AF37" stroke-opacity="0.24" stroke-width="1.6" stroke-dasharray="6 10" />
+  <circle cx="256" cy="256" r="144" fill="none" stroke="#94A3B8" stroke-opacity="0.18" stroke-width="1.4" />
+
+  <!-- Tier 1 Primary Golden Compass Diamond (with Halo Skin-Break gap at center) -->
+  <path d="M256 76 L274 204 L256 192 L238 204 Z" fill="url(#champagneGold)" />
+  <path d="M256 436 L274 308 L256 320 L238 308 Z" fill="url(#champagneGold)" opacity="0.82" />
+
+  <!-- Tier 2 Acoustic Pulse Wave (Center Axis) -->
+  <path d="M84 256 C128 256, 144 256, 166 242 C184 230, 194 196, 210 256 C224 310, 238 164, 256 164 C274 164, 288 310, 302 256 C318 196, 328 230, 346 242 C368 256, 384 256, 428 256"
+        fill="none" stroke="url(#cyanPulse)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Active Emerald Node -->
+  <circle cx="256" cy="164" r="7" fill="#090C10" />
+  <circle cx="256" cy="164" r="4.5" fill="#10B981" />
+</svg>

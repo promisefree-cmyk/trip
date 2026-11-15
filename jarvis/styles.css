@@ -1,0 +1,1076 @@
+/* ==========================================================================
+   J.A.R.V.I.S. OS — Obsidian Command Center Design System
+   Palette: Obsidian #090C10 / Card #11161F / Champagne Gold #D4AF37
+            Emerald #10B981 / Whisper Cyan #38BDF8
+   Devices: Desktop (1440x900), Galaxy S26 Ultra (412x915), Galaxy Watch 8 (280x280)
+   ========================================================================== */
+
+:root {
+  --bg-void: #090C10;
+  --bg-surface: #11161F;
+  --bg-elevated: #161D29;
+  --bg-hover: #1C2534;
+  --border-hairline: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-gold: rgba(212, 175, 55, 0.36);
+  --text-main: #F3F6FA;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+  --accent-gold: #D4AF37;
+  --accent-gold-soft: rgba(212, 175, 55, 0.14);
+  --status-ok: #10B981;
+  --status-ok-soft: rgba(16, 185, 129, 0.14);
+  --status-wave: #38BDF8;
+  --status-warn: #F59E0B;
+  --status-warn-soft: rgba(245, 158, 11, 0.15);
+  --status-danger: #EF4444;
+  --status-danger-soft: rgba(239, 68, 68, 0.14);
+
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+
+  --font-sans: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-num: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background-color: var(--bg-void);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+input,
+a {
+  font-family: inherit;
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   1. Top Slim Header (56px) with Quiet Light Waveform
+   ========================================================================== */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 56px;
+  background: rgba(9, 12, 16, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.top-bar-inner {
+  max-width: 1220px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--status-ok);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.65);
+  flex-shrink: 0;
+}
+
+.live-dot.offline {
+  background-color: var(--status-warn);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-left: 8px;
+  border-left: 1px solid var(--border-hairline);
+  white-space: nowrap;
+}
+
+.wave-holder {
+  flex: 1 1 140px;
+  max-width: 300px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#wave-canvas {
+  width: 100%;
+  height: 28px;
+  display: block;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.briefing-pill-desktop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.briefing-pill-desktop strong {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+/* ==========================================================================
+   2. Main Container & Mobile Briefing Strip
+   ========================================================================== */
+.command-shell {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 16px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.briefing-strip-mobile {
+  display: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  font-size: 13px;
+  color: var(--text-muted);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.briefing-strip-mobile strong {
+  color: var(--accent-gold);
+}
+
+/* ==========================================================================
+   3. Approval Gate Banner (Slim 0-state / Expanded Decision Cards)
+   ========================================================================== */
+.approval-zone {
+  width: 100%;
+}
+
+.approval-empty-bar {
+  min-height: 50px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.approval-empty-text {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approval-check-mark {
+  color: var(--status-ok);
+  font-weight: 700;
+}
+
+.subtle-action-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.subtle-action-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-gold);
+}
+
+.approval-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.approval-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08) 0%, var(--bg-surface) 100%);
+  border: 1px solid var(--border-gold);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.approval-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.approval-category {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--accent-gold-soft);
+  color: var(--accent-gold);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.approval-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.approval-summary {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.approval-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   4. Asymmetric Command Grid (60% Primary Systems / 40% Health & Dock)
+   ========================================================================== */
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.panel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.panel-note {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* System Status Cards */
+.systems-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sys-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sys-card[data-state="ok"] {
+  border-left: 3px solid var(--status-ok);
+}
+
+.sys-card[data-state="warn"] {
+  border-left: 3px solid var(--status-warn);
+}
+
+.sys-card[data-state="idle"] {
+  border-left: 3px solid var(--text-dim);
+}
+
+.sys-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sys-info {
+  min-width: 0;
+}
+
+.sys-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sys-sub {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.ok {
+  background: var(--status-ok-soft);
+  color: var(--status-ok);
+}
+
+.status-badge.warn {
+  background: var(--status-warn-soft);
+  color: var(--status-warn);
+}
+
+.status-badge.idle {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-muted);
+}
+
+.status-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sys-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Tactile Buttons (All >= 46px height for effortless thumb tapping) */
+.cmd-btn {
+  min-height: 46px;
+  padding: 0 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+.cmd-btn:hover {
+  background: var(--bg-hover);
+}
+
+.cmd-btn:active {
+  transform: scale(0.99);
+}
+
+.cmd-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.cmd-btn.gold {
+  background: var(--accent-gold-soft);
+  border-color: var(--border-gold);
+  color: #F5DF8B;
+}
+
+.cmd-btn.gold:hover {
+  background: rgba(212, 175, 55, 0.22);
+}
+
+.cmd-btn.emerald {
+  background: var(--status-ok-soft);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #6EE7B7;
+}
+
+.cmd-btn.emerald:hover {
+  background: rgba(16, 185, 129, 0.22);
+}
+
+.cmd-btn.danger-soft {
+  background: var(--status-danger-soft);
+  border-color: rgba(239, 68, 68, 0.34);
+  color: #FCA5A5;
+}
+
+.cmd-btn.danger-soft:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* ==========================================================================
+   5. PC Health Meter, Maintenance Controls & Warp Dock
+   ========================================================================== */
+.quiet-banner {
+  padding: 10px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.quiet-banner[data-quiet="quiet"] {
+  border-color: rgba(16, 185, 129, 0.28);
+  color: #A7F3D0;
+}
+
+.quiet-banner[data-quiet="active"] {
+  border-color: var(--border-gold);
+  color: #FDE68A;
+}
+
+.quiet-banner[data-quiet="busy"] {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #FECACA;
+}
+
+.meters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.meter-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  padding: 10px 11px;
+}
+
+.meter-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+}
+
+.meter-val {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 2px;
+  display: block;
+}
+
+.meter-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.meter-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-top: 7px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--status-wave);
+  transition: width 0.35s ease;
+}
+
+.briefing-schedule-note {
+  padding-top: 10px;
+  border-top: 1px solid var(--border-hairline);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.maint-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.maint-actions .cmd-btn {
+  justify-content: flex-start;
+  padding: 0 16px;
+  min-height: 48px;
+}
+
+/* 1-Tap Warp Dock */
+.warp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.warp-tile {
+  min-height: 54px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.warp-tile:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-gold);
+}
+
+.warp-icon {
+  font-size: 19px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.warp-meta {
+  min-width: 0;
+}
+
+.warp-name {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warp-desc {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   6. Bottom Voice & One-Line Order Bar
+   ========================================================================== */
+.order-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+
+.order-form {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.order-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-void);
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.order-input::placeholder {
+  color: var(--text-dim);
+}
+
+.voice-btn {
+  min-width: 50px;
+  min-height: 48px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+}
+
+.voice-btn.listening {
+  border-color: var(--status-danger);
+  background: var(--status-danger-soft);
+  color: #FCA5A5;
+}
+
+.send-order-btn {
+  min-width: 84px;
+  min-height: 48px;
+  flex: 0 0 auto;
+}
+
+.orders-history {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-item {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.order-item-text {
+  color: var(--text-main);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-item-meta {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-family: var(--font-num);
+}
+
+/* ==========================================================================
+   7. Owner Pairing Gate Screen (Remote Unpaired State — Zero Internal Info)
+   ========================================================================== */
+.pairing-screen {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+}
+
+.pairing-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pairing-badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-gold-soft);
+  color: var(--accent-gold);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pairing-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.pairing-desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.pairing-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-void);
+  color: var(--text-main);
+  font-family: var(--font-num);
+  font-size: 14px;
+}
+
+.pairing-error {
+  margin: 0;
+  font-size: 13px;
+  color: #FCA5A5;
+}
+
+/* ==========================================================================
+   8. Pairing Info Modal (Local PC View Only) & Toast Feedback
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.code-box {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-void);
+  border: 1px solid var(--border-hairline);
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--accent-gold);
+  word-break: break-all;
+}
+
+.toast-box {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 90;
+  max-width: min(92vw, 460px);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  background: #17202E;
+  border: 1px solid var(--border-gold);
+  color: var(--text-main);
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* ==========================================================================
+   9. Galaxy Watch 8 Mode (280x280 Circular / ?mode=watch)
+   ========================================================================== */
+.watch-shell {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 18px 18px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.watch-header {
+  text-align: center;
+  padding: 2px 10px 4px;
+}
+
+.watch-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.watch-quiet-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.watch-dots-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: 7px 6px;
+  text-align: center;
+}
+
+.watch-mini-lamp {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.watch-mini-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.watch-mini-dot.ok {
+  background: var(--status-ok);
+}
+
+.watch-mini-dot.warn {
+  background: var(--status-warn);
+}
+
+.watch-approval-box {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.14) 0%, var(--bg-surface) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: center;
+}
+
+.watch-approval-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.watch-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.watch-btn.gold {
+  background: var(--accent-gold-soft);
+  border-color: var(--border-gold);
+  color: #F5DF8B;
+}
+
+.watch-btn.emerald {
+  background: var(--status-ok-soft);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6EE7B7;
+}
+
+body.watch-mode .top-bar,
+body.watch-mode .command-shell {
+  display: none !important;
+}
+
+/* ==========================================================================
+   10. Responsive Breakpoints (Galaxy S26 Ultra 412px & Watch <=310px)
+   ========================================================================== */
+@media (max-width: 920px) {
+  .main-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .briefing-pill-desktop {
+    display: none;
+  }
+
+  .briefing-strip-mobile {
+    display: flex;
+  }
+}
+
+@media (max-width: 560px) {
+  .brand-sub {
+    display: none;
+  }
+
+  .wave-holder {
+    max-width: 120px;
+  }
+
+  .warp-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .approval-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meters-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .meter-val {
+    font-size: 15px;
+  }
+
+  .order-form {
+    flex-wrap: wrap;
+  }
+
+  .order-input {
+    flex: 1 1 100%;
+  }
+
+  .voice-btn,
+  .send-order-btn {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
