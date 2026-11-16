@@ -6885,7 +6885,7 @@
           const hotelMoveAfter = isTaxi ? 10 : 15;
           const spotsExceedCheckin = (sEnd + hotelMoveAfter) > targetCheckinLimitMin;
           const overrunNote = spotsExceedCheckin
-            ? `⚠️ このスポットまで1日目に回ると終了が ${fmtClock(sEnd)}（宿到着 ${fmtClock(sEnd + hotelMoveAfter)}頃）となり、ご飯前のチェックイン目安（${fmtClock(targetCheckinLimitMin)}）を超過します。下の「📅 2日目へ回す」または上のリプランニング提案での調整がおすすめです！`
+            ? `⚠️ このスポットまで1日目に回ると終了が ${fmtClock(sEnd)}（宿到着 ${fmtClock(sEnd + hotelMoveAfter)}頃）となり、ご飯前のチェックイン目安（${fmtClock(targetCheckinLimitMin)}）を超過します。下の「📅 2日目へ回す」または上のスケジュール調整案での調整がおすすめです！`
             : "";
 
           days.day1.push(
@@ -7139,7 +7139,7 @@
         if (overrunMin > 0) {
           diagnostics.status = overrunMin >= 35 ? "overrun" : "tight";
           diagnostics.headline = `⚠️ スケジュール診断：1日目の観光＋移動が詰まっており、ホテル到着が【${fmtClock(projectedCheckinMin)}頃】になります（夕食前のチェックイン目安 ${fmtClock(targetCheckinLimitMin)} を約${overrunMin}分超過）`;
-          diagnostics.summary = `${isHotelDinner ? `宿の夕食（18:00開始）に間に合わせるには、ご飯前の ${fmtClock(targetCheckinLimitMin)} までに『${hotelShort}』へチェックインするのが理想です。` : `外食ディナー（18:15開始）の前に荷物を置いてひと息つくには、${fmtClock(targetCheckinLimitMin)} 頃までのチェックインがおすすめです。`} 以下のいずれかのボタンを1クリックするだけで、無理のないスケジュールに自動リプランニングできます！`;
+          diagnostics.summary = `${isHotelDinner ? `宿の夕食（18:00開始）に間に合わせるには、ご飯前の ${fmtClock(targetCheckinLimitMin)} までに『${hotelShort}』へチェックインするのが理想です。` : `外食ディナー（18:15開始）の前に荷物を置いてひと息つくには、${fmtClock(targetCheckinLimitMin)} 頃までのチェックインがおすすめです。`} 以下のいずれかのボタンを1タップするだけで、無理のないスケジュールに自動調整できます！`;
         } else if (projectedCheckinMin >= targetCheckinLimitMin - 15 && day1Spots.length >= 3) {
           diagnostics.status = "tight";
           diagnostics.headline = `🟡 スケジュール診断：回れますが1日目がややタイトです（ホテルチェックイン予測：${fmtClock(projectedCheckinMin)} ／ 目安 ${fmtClock(targetCheckinLimitMin)}）`;
