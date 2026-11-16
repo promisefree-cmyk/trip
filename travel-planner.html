@@ -528,18 +528,23 @@
 
     .candidate-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+      gap: 12px;
       align-items: stretch;
     }
-    @media (max-width: 980px) {
+    @media (max-width: 680px) {
       .candidate-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
       }
     }
-    @media (max-width: 640px) {
-      .candidate-grid {
+    body.view-mode-single .candidate-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 680px) {
+      body.view-mode-single .candidate-grid {
         grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
       }
     }
     .candidate-card {
@@ -2344,6 +2349,503 @@
     .sec-inline-add-btn:hover {
       background: #ccfbf1;
     }
+
+    /* =========================================================================
+       V2 COMPACT & MULTI-CARD GALLERY UX OVERHAUL (Mobile-First Clarity)
+       ========================================================================= */
+    :root {
+      --bg-main: #FAF8F4;
+      --bg-card: #FFFFFF;
+      --bg-accent: #EEF4F0;
+      --primary: #1B3B2B;
+      --primary-mid: #254F3A;
+      --gold: #B88E3E;
+      --border: #E3E7E4;
+    }
+    .hero-header {
+      padding: 12px 14px;
+    }
+    .hero-title {
+      font-size: clamp(16px, 4vw, 21px);
+      letter-spacing: 0.01em;
+    }
+    .hero-sub {
+      display: none;
+    }
+    .container {
+      padding: 12px 10px 36px;
+    }
+
+    /* Top Unified Compact Plan & Search Bar */
+    .universal-search-portal {
+      background: #fff;
+      color: var(--text-main);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 18px rgba(27, 59, 43, 0.07);
+      border: 1.5px solid var(--border);
+    }
+    .compact-plan-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .mode-seg {
+      display: inline-flex;
+      background: #F1F4F2;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 2px;
+      flex: 0 0 auto;
+    }
+    .mode-seg-btn {
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 8px 12px;
+      min-height: 38px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+    .mode-seg-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(27, 59, 43, 0.18);
+    }
+    .quick-trip-select-wrap {
+      flex: 1 1 220px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+    }
+    .quick-trip-select {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 30px 8px 12px;
+      border-radius: 10px;
+      border: 1.5px solid #CBD5CE;
+      background-color: #F8FAF9;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .quick-search-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .quick-search-row .usp-input-wrap {
+      flex: 1 1 auto;
+    }
+    .quick-search-row .usp-input {
+      padding: 9px 32px 9px 12px;
+      font-size: 13.5px;
+      min-height: 40px;
+      border-width: 1.5px;
+    }
+    .quick-search-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0 15px;
+      min-height: 40px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .quick-search-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Progressive Disclosure Details Panel for Advanced Search & Chips */
+    .usp-more-details {
+      margin-top: 8px;
+      border-top: 1px solid #EEF2EF;
+      padding-top: 8px;
+    }
+    .usp-more-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      padding: 4px 2px;
+      user-select: none;
+    }
+    .usp-more-summary::-webkit-details-marker { display: none; }
+    .usp-more-caret {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .usp-more-details[open] .usp-more-caret::after { content: "閉じる ▲"; }
+    .usp-more-details:not([open]) .usp-more-caret::after { content: "開く ▾"; }
+    .usp-more-body {
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .usp-more-body .usp-q-label {
+      color: var(--primary);
+    }
+    .usp-more-body .usp-chip {
+      background: #F4F7F5;
+      color: #1E293B;
+      border: 1px solid #CBD5CE;
+    }
+    .usp-more-body .usp-chip:hover {
+      background: #E2ECE6;
+    }
+    @media (max-width: 640px) {
+      .mode-seg {
+        width: 100%;
+      }
+      .mode-seg-btn {
+        flex: 1 1 0;
+        text-align: center;
+        padding: 8px 6px;
+      }
+      .usp-selects {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .usp-select {
+        font-size: 12px;
+        padding: 8px 6px;
+      }
+    }
+
+    /* Compact Filter & Grid Toggle Strip */
+    .compact-toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .filter-scroll-strip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+      flex: 1 1 auto;
+    }
+    .filter-scroll-strip::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 6px 11px;
+      min-height: 34px;
+      font-size: 11.5px;
+    }
+    .view-toggle-group {
+      display: inline-flex;
+      background: #F1F4F2;
+      border-radius: 8px;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+    .view-toggle-btn {
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 8px;
+      min-height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .view-toggle-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* Multi-Shop Comparison Cards (Zero Text Overlap on Photos!) */
+    .selector-section-title {
+      margin: 14px 0 8px;
+      padding: 8px 11px;
+      font-size: 13.5px;
+    }
+    .candidate-card {
+      border-width: 1.5px;
+      border-radius: 12px;
+    }
+    .candidate-card.selected {
+      border-width: 2px;
+      border-color: #0d9488;
+      background: #F6FCFA;
+    }
+    .card-photo-wrap {
+      aspect-ratio: 16 / 10;
+      background: #EAECE9;
+    }
+    .card-photo {
+      object-fit: cover;
+      background: #EAECE9;
+    }
+    .card-check-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      color: #475569;
+      border: 1.5px solid rgba(15, 23, 42, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+      z-index: 2;
+    }
+    .card-check-dot.on {
+      background: #0d9488;
+      color: #fff;
+      border-color: #0f766e;
+    }
+    .card-zoom-mini {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.58);
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .card-compact-body {
+      padding: 8px 9px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .card-mini-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      min-height: 18px;
+    }
+    .card-mini-area {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #475569;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1 1 auto;
+    }
+    .card-mini-tag {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #EEF4F0;
+      color: var(--primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .candidate-card.selected .card-mini-tag {
+      background: #CCFBF1;
+      color: #0F766E;
+    }
+    .card-compact-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.32;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.6em;
+    }
+    .card-mini-price {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--primary);
+      background: #F4F6F5;
+      padding: 2px 6px;
+      border-radius: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      align-self: flex-start;
+      max-width: 100%;
+    }
+    .card-compact-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    body.view-mode-single .card-compact-title,
+    body.view-mode-single .card-compact-desc {
+      -webkit-line-clamp: unset;
+      min-height: 0;
+    }
+    .card-detail-details {
+      margin-top: auto;
+      padding-top: 5px;
+      border-top: 1px solid #EEF2F0;
+    }
+    .card-detail-summary {
+      list-style: none;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #0F766E;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 0;
+      user-select: none;
+    }
+    .card-detail-summary::-webkit-details-marker { display: none; }
+    .card-detail-details[open] .card-detail-summary span::after { content: " ▲"; }
+    .card-detail-details:not([open]) .card-detail-summary span::after { content: " ▾"; }
+    .card-detail-panel {
+      padding-top: 6px;
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.48;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .card-mini-btn {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      color: #334155;
+      border-radius: 6px;
+      padding: 4px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* Slim Collapsible Section Proposal Bar */
+    .section-propose-details {
+      margin: 8px 0 16px;
+      background: #F8FAF9;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+    }
+    .section-propose-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--primary);
+      width: 100%;
+    }
+    .section-propose-summary > span {
+      flex: 1 1 0%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .section-propose-summary::-webkit-details-marker { display: none; }
+    .spb-quick-add-btn {
+      background: #0d9488;
+      color: #fff;
+      border: none;
+      border-radius: 99px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tl-thumb {
+      object-fit: cover;
+      background: #EAECE9;
+    }
+
+    /* Compact 2x2 Schedule Condition Grid */
+    .control-bar {
+      padding: 10px 12px;
+      gap: 8px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    @media (max-width: 820px) {
+      .control-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .switch-label {
+      font-size: 11px;
+    }
+    .pill-toggle {
+      flex-wrap: nowrap;
+      padding: 3px;
+    }
+    .pill-btn {
+      flex: 1 1 0;
+      padding: 7px 4px;
+      font-size: 11px;
+      min-height: 34px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Hide duplicate dinner-checkin-bar since it's cleanly integrated into control-bar */
+    .dinner-checkin-bar {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -2355,12 +2857,12 @@
   <header class="hero-header">
     <div class="hero-inner">
       <div>
-        <h1 class="hero-title">🌿✈️ 国内外お出かけ＆旅行マスタープランナー</h1>
-        <p class="hero-sub">日帰りお出かけ・日本全国の温泉旅から世界中の海外リゾートまで、出発地に合わせて候補検索＆朝から晩までのスケジュールを自動設計</p>
+        <h1 class="hero-title">お出かけ＆旅行プランナー</h1>
+        <p class="hero-sub">候補をタップして比較・選択するだけで朝から晩までの日程を自動作成</p>
       </div>
       <div class="header-actions">
-        <button class="line-top-btn" onclick="copyLineSummary()">📲 LINE用しおりをコピー</button>
-        <button class="qr-open-btn" onclick="openQrModal()">📱 スマホQR・URL共有</button>
+        <button class="line-top-btn" onclick="copyLineSummary()">LINEしおりコピー</button>
+        <button class="qr-open-btn" onclick="openQrModal()">QR共有</button>
       </div>
     </div>
   </header>
@@ -2368,159 +2870,155 @@
   <main class="container">
 
     <!-- =====================================================================
-         UNIVERSAL KEYWORD SEARCH ENGINE (国内外・全世界・全ジャンル対応)
+         COMPACT UNIFIED PLAN SWITCHER & SEARCH BAR (Zero Visual Clutter)
          ===================================================================== -->
     <section class="universal-search-portal" id="sec-universal-search">
-      <div class="usp-top-row">
-        <div class="usp-title">
-          <span>🔍 国内外なんでもフリーワード検索 ＆ プラン自動生成</span>
-          <span class="usp-badge">キーワード空欄でも検索OK</span>
+      <!-- Row 1: 3-Way Mode Segment + Instant Plan Dropdown -->
+      <div class="compact-plan-bar" id="active-result-banner">
+        <div class="mode-seg" role="tablist" aria-label="旅行モード切替">
+          <button type="button" class="mode-seg-btn active" id="btn-mode-outing" onclick="setPrimaryMode('outing')">日帰り</button>
+          <button type="button" class="mode-seg-btn" id="btn-mode-travel" onclick="setPrimaryMode('travel')">国内泊</button>
+          <button type="button" class="mode-seg-btn" id="btn-mode-overseas" onclick="setPrimaryMode('overseas')">海外</button>
+        </div>
+        <div class="quick-trip-select-wrap">
+          <select id="quick-trip-select" class="quick-trip-select" aria-label="プランを選択" onchange="selectTrip(this.value)"></select>
+        </div>
+        <span id="arb-mode-label" style="display:none;"></span>
+        <span id="arb-plan-title" style="display:none;"></span>
+      </div>
+
+      <!-- Row 2: Simple 1-Line Search Input + Create Button -->
+      <div class="quick-search-row">
+        <div class="usp-input-wrap">
+          <input
+            type="search"
+            id="uni-search-input"
+            class="usp-input"
+            placeholder="行き先・温泉・店名で新規プラン作成（例：箱根 / 神楽坂 / ソウル）"
+            onkeydown="if(event.key==='Enter'){runUniversalPlanSearch();}"
+          >
+          <button class="usp-clear-btn" onclick="clearUniversalSearch()" title="クリア">✕</button>
+        </div>
+        <button class="quick-search-btn" id="btn-main-search" onclick="runUniversalPlanSearch()">🔍 検索</button>
+      </div>
+
+      <!-- Live Animated Search Progress Indicator -->
+      <div class="search-status-box" id="search-status-box">
+        <div class="search-status-top">
+          <span class="ai-spinner" id="search-spinner"></span>
+          <div>
+            <div id="search-status-text">🔍 検索中...</div>
+            <div id="search-status-sub" style="font-size:11.5px; font-weight:700; opacity:0.85; margin-top:2px;"></div>
+          </div>
+        </div>
+        <div class="ai-progress-wrap" id="search-progress-wrap">
+          <div class="ai-progress-track">
+            <div class="ai-progress-fill" id="search-progress-fill"></div>
+          </div>
+          <div class="ai-steps-row">
+            <span class="ai-step-pill active" id="ai-step-1">① 宿・スパ検索</span>
+            <span class="ai-step-pill" id="ai-step-2">② 観光・グルメ抽出</span>
+            <span class="ai-step-pill" id="ai-step-3">③ 日程作成</span>
+          </div>
         </div>
       </div>
 
-      <div class="usp-search-box">
-        <!-- 🚉 出発地・最寄駅設定バー（初期値は空欄・現在地GPS取得 または 最寄駅自由入力） -->
-        <div class="usp-origin-bar">
-          <span class="usp-origin-label">🚉 出発地・最寄駅：</span>
-          <div class="usp-origin-input-wrap">
-            <input
-              type="text"
-              id="origin-station-input"
-              class="usp-origin-input"
-              value=""
-              placeholder="最寄駅や出発地を入力（未入力・現在地でもOK）"
-              onchange="setOriginStation(this.value)"
-              onkeydown="if(event.key==='Enter'){setOriginStation(this.value); this.blur();}"
-            >
-            <button type="button" class="usp-clear-btn" onclick="clearOriginStation()" title="出発地をクリア">✕</button>
+      <!-- Row 3: Optional Expandable Details (Origin, Genre, Popular Quick Chips) -->
+      <details class="usp-more-details" id="usp-more-details">
+        <summary class="usp-more-summary">
+          <span>⚙️ 出発駅・ジャンル絞り込み・人気エリアから選ぶ</span>
+          <span class="usp-more-caret"></span>
+        </summary>
+        <div class="usp-more-body">
+          <div class="usp-origin-bar" style="margin-bottom:0;">
+            <span class="usp-origin-label">🚉 出発駅：</span>
+            <div class="usp-origin-input-wrap">
+              <input
+                type="text"
+                id="origin-station-input"
+                class="usp-origin-input"
+                value=""
+                placeholder="最寄駅を入力（未入力でもOK）"
+                onchange="setOriginStation(this.value)"
+                onkeydown="if(event.key==='Enter'){setOriginStation(this.value); this.blur();}"
+              >
+              <button type="button" class="usp-clear-btn" onclick="clearOriginStation()" title="出発地をクリア">✕</button>
+            </div>
+            <button type="button" class="usp-gps-btn" id="btn-gps-origin" onclick="detectCurrentLocationOrigin()">📍 現在地</button>
+            <div class="usp-origin-presets">
+              <button type="button" class="usp-origin-chip" onclick="setOriginStation('新宿駅')">新宿駅</button>
+              <button type="button" class="usp-origin-chip" onclick="setOriginStation('渋谷駅')">渋谷駅</button>
+              <button type="button" class="usp-origin-chip" onclick="setOriginStation('東京駅')">東京駅</button>
+              <button type="button" class="usp-origin-chip" onclick="setOriginStation('品川駅')">品川駅</button>
+              <button type="button" class="usp-origin-chip" onclick="setOriginStation('横浜駅')">横浜駅</button>
+            </div>
           </div>
-          <button type="button" class="usp-gps-btn" id="btn-gps-origin" onclick="detectCurrentLocationOrigin()">
-            📍 現在地から取得
-          </button>
-          <div class="usp-origin-presets">
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('新宿駅')">新宿駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('渋谷駅')">渋谷駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('池袋駅')">池袋駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('東京駅')">東京駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('品川駅')">品川駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('上野駅')">上野駅</button>
-            <button type="button" class="usp-origin-chip" onclick="setOriginStation('横浜駅')">横浜駅</button>
-          </div>
-        </div>
 
-        <div class="usp-input-row">
-          <div class="usp-input-wrap">
-            <input
-              type="search"
-              id="uni-search-input"
-              class="usp-input"
-              placeholder="行き先・国名・温泉・店名など自由入力（空欄のまま検索してもOK！）"
-              onkeydown="if(event.key==='Enter'){runUniversalPlanSearch();}"
-            >
-            <button class="usp-clear-btn" onclick="clearUniversalSearch()" title="クリア">✕</button>
-          </div>
           <div class="usp-selects">
             <select id="uni-search-mode" class="usp-select" onchange="onSearchDropdownChange('mode')">
-              <option value="auto">🔄 日帰り/国内泊/海外を自動判定</option>
-              <option value="outing">🚶 日帰り・お出かけ（半日〜1日）</option>
-              <option value="travel">🗾 国内宿泊旅行（1泊2日〜連泊）</option>
-              <option value="overseas">🌍 海外旅行（アジア・ハワイ・欧米・全世界）</option>
+              <option value="auto">日数：自動判定</option>
+              <option value="outing">日帰り・半日</option>
+              <option value="travel">国内宿泊</option>
+              <option value="overseas">海外旅行</option>
             </select>
             <select id="uni-search-genre" class="usp-select" onchange="onSearchDropdownChange('genre')">
-              <option value="all">🌟 すべて（ホテル/スパ＋観光＋グルメ）</option>
-              <option value="サウナ・温泉・岩盤浴・スパ・タラソテラピー">🧖‍♀️ サウナ・温泉・スパ・岩盤浴重視</option>
-              <option value="名店グルメ・ミシュラン・食べログ百名店・新オープン">🍽️ 人気グルメ・名店・新オープン重視</option>
-              <option value="五つ星ホテル・露天風呂付き客室・プールヴィラ">🏨 五つ星ホテル・露天付客室・ヴィラ重視</option>
-              <option value="自然リトリート・世界遺産・街歩き散歩・サイクリング">🌲 自然・世界遺産・街歩き・e-Bike重視</option>
-              <option value="カフェ・スイーツ・ベーカリー・アフタヌーンティー">☕ カフェ・甘味・アフタヌーンティー重視</option>
+              <option value="all">重視：バランスよく</option>
+              <option value="サウナ・温泉・岩盤浴・スパ・タラソテラピー">温泉・サウナ重視</option>
+              <option value="名店グルメ・ミシュラン・食べログ百名店・新オープン">名店グルメ重視</option>
+              <option value="五つ星ホテル・露天風呂付き客室・プールヴィラ">宿・ホテル重視</option>
+              <option value="自然リトリート・世界遺産・街歩き散歩・サイクリング">自然・街歩き重視</option>
+              <option value="カフェ・スイーツ・ベーカリー・アフタヌーンティー">カフェ・甘味重視</option>
             </select>
           </div>
-        </div>
 
-        <div class="usp-btn-row">
-          <button class="usp-main-btn" id="btn-main-search" onclick="runUniversalPlanSearch()">
-            🗓️ 行き先・条件で「全体プラン」を新規作成（空欄でもOK）
+          <button class="usp-pin-btn" id="btn-pin-search" onclick="proposeMoreFromTopSearch()" style="padding:9px 12px; font-size:12px;">
+            ➕ 今のプランを残したまま候補だけ追加検索
           </button>
-          <button class="usp-pin-btn" id="btn-pin-search" onclick="proposeMoreFromTopSearch()">
-            ➕ 今の選択を維持したまま、条件に合う「他の観光地・宿・店」を追加提案
-          </button>
-        </div>
 
-        <!-- Live Animated Search Progress Indicator (Right below buttons so user always sees loading motion!) -->
-        <div class="search-status-box" id="search-status-box">
-          <div class="search-status-top">
-            <span class="ai-spinner" id="search-spinner"></span>
-            <div>
-              <div id="search-status-text">🔍 検索中...</div>
-              <div id="search-status-sub" style="font-size:11.5px; font-weight:700; opacity:0.85; margin-top:2px;"></div>
+          <div class="usp-quick-groups" style="margin-top:2px;">
+            <div class="usp-q-row">
+              <span class="usp-q-label">🗾 国内人気：</span>
+              <button class="usp-chip" onclick="quickUniversalSearch('草津温泉', 'travel')">草津温泉</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('日光・鬼怒川温泉', 'travel')">日光・鬼怒川</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('河口湖・富士五湖', 'travel')">河口湖</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('那須高原 リトリート', 'travel')">那須高原</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('京都 嵐山・祇園', 'travel')">京都</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('金沢 兼六園・近江町市場', 'travel')">金沢</button>
+            </div>
+            <div class="usp-q-row">
+              <span class="usp-q-label">🚶 日帰り：</span>
+              <button class="usp-chip" onclick="quickUniversalSearch('神楽坂 路地裏グルメ＆散歩', 'outing')">神楽坂</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('清澄白河・蔵前 カフェ＆散歩', 'outing')">清澄白河</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('横浜みなとみらい・中華街・万葉倶楽部', 'outing')">みなとみらい</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('川越 小江戸食べ歩き＆温泉', 'outing')">川越</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('秩父・長瀞 自然＆祭の湯', 'outing')">秩父・長瀞</button>
+            </div>
+            <div class="usp-q-row">
+              <span class="usp-q-label">🌍 海外人気：</span>
+              <button class="usp-chip" onclick="quickUniversalSearch('韓国 ソウル 明洞・聖水・韓屋村・スパ', 'overseas')">ソウル</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('台湾 台北・北投温泉・九份', 'overseas')">台北＆九份</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('ハワイ ホノルル・ワイキキ・カイルア', 'overseas')">ハワイ</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('タイ バンコク ルーフトップ・スパ・寺院', 'overseas')">バンコク</button>
+              <button class="usp-chip" onclick="quickUniversalSearch('バリ島 ウブド 森林プールヴィラ＆スパ', 'overseas')">バリ島</button>
             </div>
           </div>
-          <div class="ai-progress-wrap" id="search-progress-wrap">
-            <div class="ai-progress-track">
-              <div class="ai-progress-fill" id="search-progress-fill"></div>
-            </div>
-            <div class="ai-steps-row">
-              <span class="ai-step-pill active" id="ai-step-1">① 🏨 人気ホテル・スパ検索中</span>
-              <span class="ai-step-pill" id="ai-step-2">② 🌲🍽️ 観光・名店グルメ抽出中</span>
-              <span class="ai-step-pill" id="ai-step-3">③ 📸 写真＆時間別プラン作成中</span>
-            </div>
-          </div>
         </div>
-      </div>
+      </details>
 
-      <!-- Quick One-Tap Search Chips (Overseas + Domestic + Outing + Pinpoint) -->
-      <div class="usp-quick-groups">
-        <div class="usp-q-row">
-          <span class="usp-q-label">🌍 海外ワンタップ検索：</span>
-          <button class="usp-chip" onclick="quickUniversalSearch('韓国 ソウル 明洞・聖水・韓屋村・スパ', 'overseas')">🇰🇷 韓国・ソウル</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('台湾 台北・北投温泉・九份', 'overseas')">🇹🇼 台湾・台北＆九份</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('ハワイ ホノルル・ワイキキ・カイルア', 'overseas')">🌺 ハワイ・ホノルル</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('タイ バンコク ルーフトップ・スパ・寺院', 'overseas')">🇹🇭 タイ・バンコク</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('バリ島 ウブド 森林プールヴィラ＆スパ', 'overseas')">🇮🇩 バリ島・ウブド</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('シンガポール マリーナベイ・セントーサ', 'overseas')">🇸🇬 シンガポール</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('フィンランド ヘルシンキ 本場サウナ＆北欧デザイン', 'overseas')">🇫🇮 フィンランド本場サウナ</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('フランス パリ 美術館・ビストロ・街歩き', 'overseas')">🇫🇷 フランス・パリ</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('イタリア ローマ・フィレンツェ・ヴェネツィア', 'overseas')">🇮🇹 イタリア周遊</button>
-        </div>
-        <div class="usp-q-row">
-          <span class="usp-q-label">🗾 国内ワンタップ検索：</span>
-          <button class="usp-chip" onclick="quickUniversalSearch('草津温泉', 'travel')">♨️ 草津温泉</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('日光・鬼怒川温泉', 'travel')">⛩️ 日光・鬼怒川</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('河口湖・富士五湖', 'travel')">🗻 河口湖・富士山</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('那須高原 リトリート', 'travel')">🌿 那須高原</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('京都 嵐山・祇園', 'travel')">🍁 京都・嵐山</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('金沢 兼六園・近江町市場', 'travel')">🦀 金沢・加賀</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('北海道 札幌・小樽・定山渓', 'travel')">⛄ 北海道・札幌小樽</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('福岡 博多グルメ・糸島', 'travel')">🍜 福岡・博多</button>
-        </div>
-        <div class="usp-q-row">
-          <span class="usp-q-label">🚶 日帰りワンタップ検索：</span>
-          <button class="usp-chip" onclick="quickUniversalSearch('神楽坂 路地裏グルメ＆散歩', 'outing')">🍷 神楽坂ランチ＆散歩</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('清澄白河・蔵前 カフェ＆散歩', 'outing')">☕ 清澄白河・蔵前カフェ</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('横浜みなとみらい・中華街・万葉倶楽部', 'outing')">🚢 横浜みなとみらい</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('川越 小江戸食べ歩き＆温泉', 'outing')">🍠 川越・小江戸</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('秩父・長瀞 自然＆祭の湯', 'outing')">⛰️ 秩父・長瀞</button>
-          <button class="usp-chip" onclick="quickUniversalSearch('銀座・丸の内・日本橋 名店ランチ＆散歩', 'outing')">🛍️ 銀座・日本橋</button>
-        </div>
-        <div class="usp-q-row">
-          <span class="usp-q-label">➕ お店・サウナ追加検索：</span>
-          <button class="usp-chip" onclick="quickPinpointSearch('都内 人気サウナ 黄金湯 かるまる サウナ東京', 'hotel')">🧖‍♀️ 都内人気サウナ（黄金湯・かるまる等）</button>
-          <button class="usp-chip" onclick="quickPinpointSearch('谷根千 上野 浅草 新オープン カフェ ビストロ', 'food')">✨ 上野・浅草・谷根千 新オープン店</button>
-          <button class="usp-chip" onclick="quickPinpointSearch('文京区 上野 浅草 食べログ百名店 焼肉', 'food')">🥩 食べログ百名店 焼肉</button>
-          <button class="usp-chip" onclick="quickPinpointSearch('上野 浅草 神田 絶品うなぎ 老舗', 'food')">🍱 老舗うなぎ名店</button>
-          <button class="usp-chip" onclick="quickPinpointSearch('都内 人気パフェ かき氷 甘味処', 'food')">🍨 パフェ・甘味・スイーツ</button>
-        </div>
-      </div>
+      <!-- Hidden Legacy Preset Drawer Container (Preserved for JS compatibility) -->
+      <section class="preset-switcher-drawer" id="sec-top-mode" style="margin-top:8px;">
+        <div class="sub-tabs-label" id="sub-tabs-heading" style="font-size:12px; margin-bottom:6px;">📍 プランを選択：</div>
+        <div class="dest-tabs" id="dest-tabs-container" style="margin-bottom:4px;"></div>
+      </section>
 
-      <!-- Pinpoint Search Results Drawer (Add directly to current plan) -->
+      <!-- Pinpoint Search Results Drawer -->
       <div class="pinpoint-drawer" id="pinpoint-results-drawer">
         <div class="pinpoint-header">
-          <div style="flex:1 1 260px;">
-            <strong id="pinpoint-drawer-title" style="font-size:15px; color:var(--primary);">🔎 ピンポイント追加検索結果</strong>
-            <div style="font-size:11.5px; color:var(--text-muted);">気に入った候補のボタンをタップすると、下のプラン＆スケジュールに即座に組み込まれます！</div>
+          <div style="flex:1 1 240px;">
+            <strong id="pinpoint-drawer-title" style="font-size:14px; color:var(--primary);">🔎 追加検索結果</strong>
             <div class="pinpoint-inline-search">
-              <input type="search" id="pinpoint-inline-input" class="pinpoint-inline-input" placeholder="追加したい店名・スポット名・ジャンルを入力（空欄でおまかせ検索も可）" onkeydown="if(event.key==='Enter'){runInlinePinpointFromDrawer();}">
-              <button type="button" class="pinpoint-inline-btn" onclick="runInlinePinpointFromDrawer()">🔎 再検索</button>
+              <input type="search" id="pinpoint-inline-input" class="pinpoint-inline-input" placeholder="追加したい店名・スポット名" onkeydown="if(event.key==='Enter'){runInlinePinpointFromDrawer();}">
+              <button type="button" class="pinpoint-inline-btn" onclick="runInlinePinpointFromDrawer()">再検索</button>
             </div>
           </div>
           <button class="lightbox-close" style="background:#64748b; padding:6px 12px; font-size:12px;" onclick="closePinpointDrawer()">閉じる ✕</button>
@@ -2530,227 +3028,169 @@
     </section>
 
     <!-- =====================================================================
-         ACTIVE PLAN / SEARCH RESULT BANNER & COMPACT PLAN SWITCHER (Zero Confusion!)
-         ===================================================================== -->
-    <div class="active-result-banner" id="active-result-banner">
-      <div class="arb-left">
-        <span class="arb-label" id="arb-mode-label">🎯 現在表示中のプラン・検索結果（下のカードをタップして自由に組み合わせ可能）</span>
-        <div class="arb-title" id="arb-plan-title">ご近所・都内スパ（ラクーア・庭の湯・スパメッツァ）</div>
-      </div>
-      <button type="button" class="arb-toggle-btn" id="arb-switcher-btn" onclick="togglePresetSwitcherDrawer()">
-        📂 他の定番プラン・検索履歴から切り替える ▼
-      </button>
-    </div>
-
-    <!-- Collapsible Preset & Saved Search Switcher (Opened on demand or via bottom nav) -->
-    <section class="preset-switcher-drawer" id="sec-top-mode">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <strong style="font-size:13px; color:var(--primary);">📂 モード＆プラン切り替え（検索で作成したプランもここに保存されます）</strong>
-        <button type="button" onclick="togglePresetSwitcherDrawer(false)" style="border:none; background:#e2e8f0; color:#334155; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:800; cursor:pointer;">閉じる ▲</button>
-      </div>
-      <div class="compact-mode-pills">
-        <button class="compact-mode-pill active" id="btn-mode-outing" onclick="setPrimaryMode('outing')">
-          🧖‍♀️ ① 日帰り・お出かけ定番
-        </button>
-        <button class="compact-mode-pill" id="btn-mode-travel" onclick="setPrimaryMode('travel')">
-          🗾 ② 国内旅行（全国温泉＆リゾート）
-        </button>
-        <button class="compact-mode-pill" id="btn-mode-overseas" onclick="setPrimaryMode('overseas')">
-          🌍 ③ 海外旅行（アジア・ハワイ・欧州）
-        </button>
-      </div>
-      <div class="sub-tabs-label" id="sub-tabs-heading" style="font-size:12px; margin-bottom:6px;">📍 プランを選択：</div>
-      <div class="dest-tabs" id="dest-tabs-container" style="margin-bottom:4px;"></div>
-    </section>
-
-    <!-- =====================================================================
          OVERSEAS PRO FLIGHT / TIME-DIFF / VISA / CURRENCY BAR
          ===================================================================== -->
     <section class="overseas-meta-bar" id="overseas-meta-bar">
       <div class="om-header">
         <div class="om-title">
-          <span id="om-header-title">🛂✈️ 海外渡航プロ情報 ＆ 空港スマートアクセス</span>
+          <span id="om-header-title">🛂✈️ 海外渡航ガイド ＆ 空港アクセス</span>
         </div>
         <span id="om-country-badge" style="font-size:11px; font-weight:800; background:rgba(255,255,255,0.2); padding:3px 10px; border-radius:99px;">海外リトリート</span>
       </div>
       <div class="om-grid">
         <div class="om-card">
-          <div class="om-label" id="om-airport-label">✈️ 出発地→空港ルート＆飛行時間</div>
+          <div class="om-label" id="om-airport-label">✈️ 空港アクセス＆飛行時間</div>
           <div class="om-val" id="om-airport">-</div>
         </div>
         <div class="om-card">
-          <div class="om-label">🕒 日本との時差</div>
+          <div class="om-label">🕒 時差</div>
           <div class="om-val" id="om-timediff">-</div>
         </div>
         <div class="om-card">
-          <div class="om-label">🛂 ビザ・電子渡航認証・入国審査</div>
+          <div class="om-label">🛂 ビザ・入国準備</div>
           <div class="om-val" id="om-visa">-</div>
         </div>
         <div class="om-card">
-          <div class="om-label">💳 現地通貨・決済・チップ目安</div>
+          <div class="om-label">💳 通貨・決済</div>
           <div class="om-val" id="om-currency">-</div>
         </div>
         <div class="om-card">
-          <div class="om-label">🚕 現地配車アプリ＆eSIM通信</div>
+          <div class="om-label">🚕 現地移動＆通信</div>
           <div class="om-val" id="om-transport">-</div>
         </div>
       </div>
     </section>
 
     <!-- =====================================================================
-         STEP 1: VISUAL CANDIDATE BUILDER (Uncropped 16:9 Photos)
+         STEP 1: COMPACT MULTI-SHOP COMPARISON GALLERY (2 Columns on Mobile!)
          ===================================================================== -->
     <section class="step-banner" id="visual-builder-section">
-      <div class="step-header">
-        <h2 id="builder-main-title"><span class="step-badge">STEP 1</span> 写真と注目ポイントを見比べて候補をタップ選択</h2>
-        <span style="font-size:11.5px; color:var(--text-muted);">※写真の「🔍拡大」で全体表示 ／「📷別写真」で他アングル切替 ／ タップでスケジュールに自動反映</span>
+      <div class="compact-toolbar-row">
+        <div class="filter-scroll-strip" role="toolbar" aria-label="ジャンル絞り込み">
+          <button class="filter-btn active" onclick="setFilter('all')" id="flt-all">すべて</button>
+          <button class="filter-btn" onclick="setFilter('sauna')" id="flt-sauna">サウナ</button>
+          <button class="filter-btn" onclick="setFilter('stone')" id="flt-stone">岩盤浴</button>
+          <button class="filter-btn" onclick="setFilter('walk')" id="flt-walk">散歩・自然</button>
+          <button class="filter-btn" onclick="setFilter('cycle')" id="flt-cycle">自転車</button>
+          <button class="filter-btn" onclick="setFilter('buzz')" id="flt-buzz">話題・名店</button>
+        </div>
+        <div class="view-toggle-group" role="group" aria-label="カード表示切替">
+          <button type="button" class="view-toggle-btn active" id="btn-view-grid" onclick="setCardViewMode('grid')">⊞ 一覧</button>
+          <button type="button" class="view-toggle-btn" id="btn-view-single" onclick="setCardViewMode('single')">▭ 大きく</button>
+        </div>
       </div>
+      <input type="hidden" id="inline-card-filter" value="">
 
-      <!-- Filter Bar + Inline Text Filter -->
-      <div class="filter-bar">
-        <span class="filter-label">🔍 気分・条件で絞り込み：</span>
-        <button class="filter-btn active" onclick="setFilter('all')" id="flt-all">すべて表示</button>
-        <button class="filter-btn" onclick="setFilter('sauna')" id="flt-sauna">🧖‍♀️ サウナ・外気浴</button>
-        <button class="filter-btn" onclick="setFilter('stone')" id="flt-stone">🪨 岩盤浴・水着バーデ</button>
-        <button class="filter-btn" onclick="setFilter('cycle')" id="flt-cycle">🚲 サイクリング</button>
-        <button class="filter-btn" onclick="setFilter('walk')" id="flt-walk">🌲 自然・街歩き散歩</button>
-        <button class="filter-btn" onclick="setFilter('buzz')" id="flt-buzz">✨ 新OPEN・リニューアル・名店</button>
-        <input
-          type="search"
-          id="inline-card-filter"
-          placeholder="🔎 カード内ワード絞り込み..."
-          oninput="renderCandidates()"
-          style="margin-left:auto; padding:5px 10px; border:1.5px solid var(--border); border-radius:99px; font-size:11.5px; min-width:170px;"
-        >
-      </div>
-
-      <!-- 1-A: Main Base / Spa / Famous Shop / Hotel -->
+      <!-- 1-A: Main Base / Spa / Hotel -->
       <div class="selector-section-title" id="sec-hotels">
-        <span id="hotel-sec-heading">🏨 ① メインのスパ・人気スポット・宿泊先を選ぶ（1つ選択）</span>
+        <span id="hotel-sec-heading">🏨 ① 宿・メイン施設（タップで1つ選択）</span>
         <span class="selector-hint" id="hotel-sec-count">1つ選択</span>
       </div>
       <div class="candidate-grid" id="hotel-candidates-grid"></div>
-      <div class="section-propose-bar" id="propose-bar-hotel">
-        <div class="spb-top-row">
-          <div class="spb-keep-info">
-            <span class="spb-keep-badge">🔒 選択中は維持</span>
-            <span class="spb-keep-text" id="spb-kept-hotel">現在の選択を維持したまま、比較用の新しい候補カードを追加できます</span>
+      <details class="section-propose-details" id="propose-bar-hotel">
+        <summary class="section-propose-summary">
+          <span>＋ 他の宿・スパ候補を追加する <small id="spb-kept-hotel" style="font-weight:600; color:#64748b;"></small></span>
+          <button type="button" class="spb-quick-add-btn" id="btn-auto-propose-hotel" onclick="event.preventDefault(); event.stopPropagation(); proposeMoreForSection('hotel', '')">＋4件自動追加</button>
+        </summary>
+        <div style="padding-top:8px; display:flex; flex-direction:column; gap:7px;">
+          <div class="spb-chips-row">
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '露天風呂 温泉旅館 日帰り温泉')">露天風呂・温泉</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '人気サウナ 外気浴 岩盤浴 スパ')">サウナ・岩盤浴</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '五つ星 ラグジュアリーホテル スイート')">名門ホテル・宿</button>
           </div>
-          <button type="button" class="spb-auto-btn" id="btn-auto-propose-hotel" onclick="proposeMoreForSection('hotel', '')">
-            ✨ 他の宿・スパ候補を自動提案（＋4件）
-          </button>
+          <div class="spb-input-row">
+            <input type="search" id="spb-input-hotel" class="spb-input" placeholder="宿名・スパ名で追加（例：ふふ / 黄金湯）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('hotel');}">
+            <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('hotel')">追加</button>
+          </div>
+          <div class="spb-status" id="spb-status-hotel"></div>
         </div>
-        <div class="spb-chips-row">
-          <span class="spb-chips-label">💡 ワンタップ追加：</span>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '露天風呂 温泉旅館 日帰り温泉')">♨️ 露天風呂・温泉</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '人気サウナ 外気浴 岩盤浴 スパ')">🧖‍♀️ 本格サウナ・岩盤浴</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '五つ星 ラグジュアリーホテル スイート')">🏨 高級ホテル・名門宿</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('hotel', '新オープン リニューアル 話題の宿 スパ')">✨ 最新OPEN・話題施設</button>
-        </div>
-        <div class="spb-input-row">
-          <input type="search" id="spb-input-hotel" class="spb-input" placeholder="追加したい宿・スパ・エリア名を入力（例：ふふ / 星野リゾート / 黄金湯 / 露天風呂 など・空欄でもOK）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('hotel');}">
-          <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('hotel')">➕ 選択を維持して候補を追加</button>
-        </div>
-        <div class="spb-status" id="spb-status-hotel"></div>
-      </div>
+      </details>
 
-      <!-- 1-B: Morning / Afternoon Walk, Cycle, Sightseeing -->
+      <!-- 1-B: Spots -->
       <div class="selector-section-title" id="sec-spots">
-        <span id="spot-sec-heading">🌲🚲 ② 組み合わせるお散歩・サイクリング・立ち寄り体験を選ぶ（複数ON/OFF可）</span>
-        <span class="selector-hint" id="spot-sec-count">複数ON/OFF可</span>
+        <span id="spot-sec-heading">🌿 ② 立ち寄りスポット（複数ON/OFF可）</span>
+        <span class="selector-hint" id="spot-sec-count">複数選択可</span>
       </div>
       <div class="candidate-grid" id="spot-candidates-grid"></div>
-      <div class="section-propose-bar" id="propose-bar-spot">
-        <div class="spb-top-row">
-          <div class="spb-keep-info">
-            <span class="spb-keep-badge">🔒 選択中は維持</span>
-            <span class="spb-keep-text" id="spb-kept-spot">選択したスポットを残したまま、組み合わせやすい他の観光地を追加できます</span>
+      <details class="section-propose-details" id="propose-bar-spot">
+        <summary class="section-propose-summary">
+          <span>＋ 他の立ち寄りスポットを追加する <small id="spb-kept-spot" style="font-weight:600; color:#64748b;"></small></span>
+          <button type="button" class="spb-quick-add-btn" id="btn-auto-propose-spot" onclick="event.preventDefault(); event.stopPropagation(); proposeMoreForSection('spot', '')">＋4件自動追加</button>
+        </summary>
+        <div style="padding-top:8px; display:flex; flex-direction:column; gap:7px;">
+          <div class="spb-chips-row">
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '王道観光 名所 神社仏閣 展望台')">定番名所</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '自然 絶景 公園 庭園 散策')">自然・絶景</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '街歩き 食べ歩き 商店街 お土産')">街歩き・食べ歩き</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '美術館 博物館 水族館 屋内スポット')">美術館・屋内</button>
           </div>
-          <button type="button" class="spb-auto-btn" id="btn-auto-propose-spot" onclick="proposeMoreForSection('spot', '')">
-            ✨ 他の観光地プランを自動提案（＋4件）
-          </button>
+          <div class="spb-input-row">
+            <input type="search" id="spb-input-spot" class="spb-input" placeholder="観光地・やりたいことで追加（例：美術館 / 神社）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('spot');}">
+            <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('spot')">追加</button>
+          </div>
+          <div class="spb-status" id="spb-status-spot"></div>
         </div>
-        <div class="spb-chips-row">
-          <span class="spb-chips-label">💡 ジャンルで追加：</span>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '王道観光 名所 神社仏閣 展望台')">⛩️ 定番観光・名所</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '自然 絶景 公園 庭園 散策')">🌲 自然・絶景・公園</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '街歩き 食べ歩き 商店街 お土産')">🛍️ 街歩き・食べ歩き</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '日帰り温泉 足湯 サウナ リラクゼーション')">🧖‍♀️ 立ち寄り湯・足湯</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '美術館 博物館 水族館 屋内スポット')">🏛️ 美術館・屋内</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', 'レンタサイクル e-Bike アクティビティ 体験')">🚲 サイクリング・体験</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('spot', '新オープン 最新話題スポット SNS人気')">✨ 最新OPEN・話題</button>
-        </div>
-        <div class="spb-input-row">
-          <input type="search" id="spb-input-spot" class="spb-input" placeholder="組み合わせたい観光地・場所・やりたいことを自由入力（例：浅草 / 美術館 / 絶景 / 神社 / 夜景 など・空欄でもOK）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('spot');}">
-          <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('spot')">➕ 選択を維持して観光候補を追加</button>
-        </div>
-        <div class="spb-status" id="spb-status-spot"></div>
-      </div>
+      </details>
 
-      <!-- 1-C: Gourmet / Lunch / Dinner -->
+      <!-- 1-C: Gourmet -->
       <div class="selector-section-title" id="sec-foods">
-        <span id="food-sec-heading">🍽️ ③ ランチ・サ飯・ディナーの人気店を選ぶ（1つ選択）</span>
+        <span id="food-sec-heading">🍽️ ③ 食事・カフェの名店（タップで1つ選択）</span>
         <span class="selector-hint" id="food-sec-count">1つ選択</span>
       </div>
       <div class="candidate-grid" id="food-candidates-grid"></div>
-      <div class="section-propose-bar" id="propose-bar-food">
-        <div class="spb-top-row">
-          <div class="spb-keep-info">
-            <span class="spb-keep-badge">🔒 選択中は維持</span>
-            <span class="spb-keep-text" id="spb-kept-food">現在の選択を維持したまま、他の人気ランチ・ディナー・カフェ候補を追加できます</span>
+      <details class="section-propose-details" id="propose-bar-food">
+        <summary class="section-propose-summary">
+          <span>＋ 他のお店・グルメ候補を追加する <small id="spb-kept-food" style="font-weight:600; color:#64748b;"></small></span>
+          <button type="button" class="spb-quick-add-btn" id="btn-auto-propose-food" onclick="event.preventDefault(); event.stopPropagation(); proposeMoreForSection('food', '')">＋4件自動追加</button>
+        </summary>
+        <div style="padding-top:8px; display:flex; flex-direction:column; gap:7px;">
+          <div class="spb-chips-row">
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '食べログ百名店 老舗 名物ランチ')">百名店・老舗</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '焼肉 ステーキ 寿司 海鮮 ご当地グルメ')">焼肉・寿司・名物</button>
+            <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '人気カフェ ベーカリー スイーツ 甘味処')">カフェ・甘味</button>
           </div>
-          <button type="button" class="spb-auto-btn" id="btn-auto-propose-food" onclick="proposeMoreForSection('food', '')">
-            ✨ 他のグルメ・カフェ候補を自動提案（＋4件）
-          </button>
+          <div class="spb-input-row">
+            <input type="search" id="spb-input-food" class="spb-input" placeholder="料理・店名で追加（例：うなぎ / 蕎麦 / 焼肉）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('food');}">
+            <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('food')">追加</button>
+          </div>
+          <div class="spb-status" id="spb-status-food"></div>
         </div>
-        <div class="spb-chips-row">
-          <span class="spb-chips-label">💡 ジャンルで追加：</span>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '食べログ百名店 老舗 名物ランチ')">🏆 食べログ百名店・名店</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '焼肉 ステーキ 寿司 海鮮 ご当地グルメ')">🥩 焼肉・お寿司・ご当地名物</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '人気カフェ ベーカリー スイーツ 甘味処')">☕ カフェ・パン・スイーツ</button>
-          <button type="button" class="spb-chip" onclick="proposeMoreForSection('food', '新オープン 話題のレストラン ビストロ')">✨ 新オープン・話題店</button>
-        </div>
-        <div class="spb-input-row">
-          <input type="search" id="spb-input-food" class="spb-input" placeholder="追加したい料理・店名・カフェを入力（例：うなぎ / 蕎麦 / 焼肉 / パフェ / イタリアン など・空欄でもOK）" onkeydown="if(event.key==='Enter'){proposeMoreFromSectionInput('food');}">
-          <button type="button" class="spb-add-btn" onclick="proposeMoreFromSectionInput('food')">➕ 選択を維持してお店候補を追加</button>
-        </div>
-        <div class="spb-status" id="spb-status-food"></div>
-      </div>
+      </details>
     </section>
 
     <!-- =====================================================================
-         STEP 2: TIME WINDOW / WEATHER PLAN B / TRANSPORT CONTROLS
+         STEP 2: COMPACT 2x2 SCHEDULE CONDITION SWITCHES
          ===================================================================== -->
     <div class="control-bar" id="mode-controls">
       <div class="switch-group">
-        <span class="switch-label" id="time-switch-label">④ 出発時間・ペース設定</span>
+        <span class="switch-label" id="time-switch-label">ペース・出発</span>
         <div class="pill-toggle">
-          <button class="pill-btn active" id="pace-relax" onclick="setPace('relax')">☀️ 朝〜昼発（王道ゆとり）</button>
-          <button class="pill-btn" id="pace-active" onclick="setPace('active')">⚡ 早発・午後切替</button>
+          <button class="pill-btn active" id="pace-relax" onclick="setPace('relax')">ゆとり</button>
+          <button class="pill-btn" id="pace-active" onclick="setPace('active')">早め・充実</button>
         </div>
       </div>
 
       <div class="switch-group">
-        <span class="switch-label">⑤ 移動手段モード</span>
+        <span class="switch-label">移動手段</span>
         <div class="pill-toggle">
-          <button class="pill-btn active" id="trans-car" onclick="setTransport('car')">🚃🚲 電車・レンタカー・自転車</button>
-          <button class="pill-btn" id="trans-taxi" onclick="setTransport('taxi')">🚕 タクシー・送迎直行（お酒OK）</button>
+          <button class="pill-btn active" id="trans-car" onclick="setTransport('car')">電車・車</button>
+          <button class="pill-btn" id="trans-taxi" onclick="setTransport('taxi')">タクシー</button>
         </div>
       </div>
 
       <div class="switch-group">
-        <span class="switch-label">⑥ 天候モード（雨・猛暑・極寒の屋内プランB切替）</span>
+        <span class="switch-label">天気</span>
         <div class="pill-toggle">
-          <button class="pill-btn active" id="weather-sunny" onclick="setWeather('sunny')">☀️ 晴天・通常ルート</button>
-          <button class="pill-btn" id="weather-rainy" onclick="setWeather('rainy')">☔ 雨天・屋内快適ルート</button>
+          <button class="pill-btn active" id="weather-sunny" onclick="setWeather('sunny')">☀️ 晴れ</button>
+          <button class="pill-btn" id="weather-rainy" onclick="setWeather('rainy')">☔ 雨の日</button>
         </div>
       </div>
 
       <div class="switch-group">
-        <span class="switch-label" id="dinner-switch-label">⑦ 夕食＆ホテルチェックイン設定</span>
+        <span class="switch-label" id="dinner-switch-label">夕食スタイル</span>
         <div class="pill-toggle">
-          <button class="pill-btn active" id="dinner-hotel" onclick="setDinnerStyle('hotel_included')">🏨 宿の夕食付き（ご飯前17時頃IN）</button>
-          <button class="pill-btn" id="dinner-outside" onclick="setDinnerStyle('outside_restaurant')">🥂 外のお店で夕食（ご飯前17時半IN）</button>
+          <button class="pill-btn active" id="dinner-hotel" onclick="setDinnerStyle('hotel_included')">宿で夕食</button>
+          <button class="pill-btn" id="dinner-outside" onclick="setDinnerStyle('outside_restaurant')">外で夕食</button>
         </div>
       </div>
     </div>
@@ -2760,23 +3200,23 @@
          ===================================================================== -->
     <div class="god-metrics-bar" id="god-metrics">
       <div class="metric-box">
-        <div class="metric-label">💰 2人合計の概算予算（交通・施設・食費込）</div>
+        <div class="metric-label">💰 2人合計の概算予算</div>
         <div class="metric-val" id="metric-budget">計算中...</div>
         <div class="metric-sub" id="metric-budget-sub">1人あたり目安も自動算出</div>
       </div>
       <div class="metric-box">
-        <div class="metric-label">👣 予想歩数 ＆ 消費カロリー</div>
+        <div class="metric-label">👣 予想歩数</div>
         <div class="metric-val" id="metric-steps">約6,200歩</div>
-        <div class="metric-sub" id="metric-steps-sub">心地よい有酸素運動バランス</div>
+        <div class="metric-sub" id="metric-steps-sub">心地よい散歩バランス</div>
       </div>
       <div class="metric-box">
-        <div class="metric-label">🧖‍♀️ リフレッシュ＆首肩・顎の脱力スコア</div>
+        <div class="metric-label">🌿 リフレッシュ度</div>
         <div class="metric-val" id="metric-totonoi">★★★★★ (99点)</div>
-        <div class="metric-sub" id="metric-totonoi-sub">温冷交代浴＋自然外気浴で深部解放</div>
+        <div class="metric-sub" id="metric-totonoi-sub">温泉・自然で深部解放</div>
       </div>
       <div class="god-actions">
-        <button class="god-btn" onclick="copyLineSummary()">📲 LINE共有用しおり文章をコピー</button>
-        <a id="google-maps-route-btn" href="https://www.google.com/maps" target="_blank" class="god-btn sub">🗺️ 出発地からのGoogleマップ経路を開く</a>
+        <button class="god-btn" onclick="copyLineSummary()">📲 LINE用しおりをコピー</button>
+        <a id="google-maps-route-btn" href="https://www.google.com/maps" target="_blank" class="god-btn sub">🗺️ Googleマップ経路を開く</a>
       </div>
     </div>
 
@@ -2793,39 +3233,26 @@
           </div>
 
           <div class="flow-progress-bar" id="flow-guide-bar">
-            <span>🕒 1日の流れ：</span>
-            <span class="flow-step">🌅 朝・出発</span> ➔
-            <span class="flow-step">☀️ 午前観光</span> ➔
-            <span class="flow-step">🍽️ 昼食</span> ➔
-            <span class="flow-step">🌿 午後観光</span> ➔
-            <span class="flow-step">🏨 ご飯前にチェックイン</span> ➔
-            <span class="flow-step">🍱 夕食（宿or外食）</span> ➔
-            <span class="flow-step">♨️ 食後温泉・サウナ</span>
+            <span>🕒 流れ：</span>
+            <span class="flow-step">朝・出発</span> ➔
+            <span class="flow-step">午前観光</span> ➔
+            <span class="flow-step">昼食</span> ➔
+            <span class="flow-step">午後観光</span> ➔
+            <span class="flow-step">夕食前チェックイン</span> ➔
+            <span class="flow-step">夕食・温泉</span>
           </div>
 
-          <!-- Dinner Style & Pre-Dinner Hotel Check-in Selector -->
+          <!-- Preserved hidden nodes for JS state sync -->
           <div class="dinner-checkin-bar" id="dinner-checkin-bar">
-            <div class="dcb-top">
-              <div class="dcb-title">🏨 夕食スタイル＆ご飯前のチェックイン時間設定</div>
-              <div class="dcb-sub">※朝から夕方まで観光し、ご飯の時間前にホテルへチェックインする合理的な動線で自動計算します</div>
-            </div>
-            <div class="dcb-buttons">
-              <button type="button" class="dcb-btn active" id="dcb-btn-hotel" onclick="setDinnerStyle('hotel_included')">
-                <span>🍱 宿・ホテルで夕食（1泊2食付きプラン）</span>
-                <span class="dcb-btn-sub">16:30〜17:15頃にチェックイン ➔ 18:00から宿で夕食（選択グルメは昼食に配置）</span>
-              </button>
-              <button type="button" class="dcb-btn" id="dcb-btn-outside" onclick="setDinnerStyle('outside_restaurant')">
-                <span>🥂 外のお店で夕食（選択グルメ店でディナー）</span>
-                <span class="dcb-btn-sub">17:00〜17:45頃にチェックイン＆荷解き ➔ 18:15から選択した名店で夕食</span>
-              </button>
-            </div>
+            <button type="button" class="dcb-btn active" id="dcb-btn-hotel" onclick="setDinnerStyle('hotel_included')"></button>
+            <button type="button" class="dcb-btn" id="dcb-btn-outside" onclick="setDinnerStyle('outside_restaurant')"></button>
           </div>
 
           <!-- Schedule Feasibility & Replanning Advisor Panel -->
           <div class="feasibility-panel" id="schedule-feasibility-panel"></div>
 
           <div class="selection-summary">
-            <strong>🎯 現在組み立て中のプラン構成（各枠のボタンで順番入替・1日目⇄2日目移動・候補差替が可能）：</strong>
+            <strong>🎯 選択中のスポット（ボタンで順番入替・日程変更OK）：</strong>
             <div class="sum-pills" id="active-selection-pills"></div>
           </div>
 
@@ -2838,17 +3265,17 @@
       <div id="sec-todo">
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">🕵️‍♂️ プロが先回り計上した「混雑回避・営業時間・見落としガード」</h2>
+            <h2 class="card-title">💡 混雑回避・営業時間の先回りメモ</h2>
           </div>
           <div class="pro-alert-box">
-            <div class="pro-alert-title">⚠️ 選択中のスポットに合わせて発動中のプロ裏技</div>
+            <div class="pro-alert-title">選択中のスポットに合わせた注意点</div>
             <ul class="pro-alert-list" id="pro-traps-list"></ul>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">✅ 選択プラン連動！持ち物・予約・事前チェックリスト</h2>
+            <h2 class="card-title">✅ 持ち物・事前予約チェックリスト</h2>
           </div>
           <div id="todo-container"></div>
         </div>
@@ -2857,23 +3284,15 @@
 
   </main>
 
-  <!-- STICKY BOTTOM BAR FOR SMARTPHONE -->
+  <!-- STICKY BOTTOM BAR FOR SMARTPHONE (Clean 4-Item Nav <= 5 Limit) -->
   <nav class="mobile-bottom-nav">
-    <button class="mb-nav-btn" onclick="scrollToSec('sec-universal-search'); document.getElementById('uni-search-input')?.focus();">
-      <span class="icon">🔍</span>
-      <span>検索</span>
+    <button class="mb-nav-btn" onclick="scrollToSec('sec-universal-search');">
+      <span class="icon">📍</span>
+      <span>行き先切替</span>
     </button>
-    <button class="mb-nav-btn" onclick="setPrimaryMode('outing'); togglePresetSwitcherDrawer(true); scrollToSec('active-result-banner');">
-      <span class="icon">🧖‍♀️</span>
-      <span>お出かけ</span>
-    </button>
-    <button class="mb-nav-btn" onclick="setPrimaryMode('travel'); togglePresetSwitcherDrawer(true); scrollToSec('active-result-banner');">
-      <span class="icon">🗾</span>
-      <span>国内旅行</span>
-    </button>
-    <button class="mb-nav-btn" onclick="setPrimaryMode('overseas'); togglePresetSwitcherDrawer(true); scrollToSec('active-result-banner');">
-      <span class="icon">🌍</span>
-      <span>海外旅行</span>
+    <button class="mb-nav-btn" onclick="scrollToSec('visual-builder-section');">
+      <span class="icon">⊞</span>
+      <span>店舗一覧</span>
     </button>
     <button class="mb-nav-btn" onclick="scrollToSec('sec-schedule')">
       <span class="icon">🕒</span>
@@ -5919,6 +6338,13 @@
     // ============================================================================
     // RENDER SUB-CATEGORY TABS & CANDIDATE CARDS (16:9 FULL UNCROPPED PHOTOS)
     // ============================================================================
+    function setCardViewMode(mode) {
+      const isSingle = mode === "single";
+      document.body.classList.toggle("view-mode-single", isSingle);
+      document.getElementById("btn-view-grid")?.classList.toggle("active", !isSingle);
+      document.getElementById("btn-view-single")?.classList.toggle("active", isSingle);
+    }
+
     function renderModeAndDestTabs() {
       const mode = STATE.primaryMode;
       const isTravel = mode === "travel";
@@ -5935,36 +6361,23 @@
       });
 
       const trip = CATALOG[STATE.currentTrip];
-      const arbModeEl = document.getElementById("arb-mode-label");
-      const arbTitleEl = document.getElementById("arb-plan-title");
-      if (arbModeEl) {
-        const isCustom = (STATE.currentTrip || "").startsWith("custom_");
-        const modeTxt = isOverseas ? "🌍 海外旅行プラン" : isTravel ? "🗾 国内旅行プラン" : "🧖‍♀️ 日帰り・お出かけプラン";
-        arbModeEl.textContent = isCustom ? `🔍 検索作成プラン（${modeTxt}）` : `📌 現在表示中（${modeTxt}）`;
-      }
-      if (arbTitleEl && trip) {
-        arbTitleEl.textContent = `${applyOriginText(trip.title)}（🚉 ${orig}発）`;
-      }
-
       document.getElementById("btn-mode-outing")?.classList.toggle("active", mode === "outing");
       document.getElementById("btn-mode-travel")?.classList.toggle("active", isTravel);
       document.getElementById("btn-mode-overseas")?.classList.toggle("active", isOverseas);
 
-      const badgeOuting = document.getElementById("pm-badge-outing");
-      const badgeOverseas = document.getElementById("pm-badge-overseas");
-      if (badgeOuting) badgeOuting.textContent = `${orig}から気軽にお出かけ｜半日・日帰り`;
-      if (badgeOverseas) badgeOverseas.textContent = `${orig}→羽田・成田・主要国際空港発｜全世界対応`;
+      const tabsList = MODE_TABS[mode] || MODE_TABS.outing;
 
-      const subHeading = document.getElementById("sub-tabs-heading");
-      if (subHeading) {
-        subHeading.textContent = isOverseas
-          ? "🌍 海外旅行の国・都市・リゾートを選択（検索で作成したプランもここに保存されます）："
-          : isTravel
-          ? "🗾 国内旅行先のエリアを選択（検索で作成したプランもここに保存されます）："
-          : "🧖‍♀️🍽️ お出かけの目的・エリアを選択（検索で作成したプランもここに保存されます）：";
+      // Sync compact instant plan dropdown (#quick-trip-select)
+      const qSel = document.getElementById("quick-trip-select");
+      if (qSel) {
+        qSel.innerHTML = tabsList.map(t => {
+          const isCustomTab = (t.key || "").startsWith("custom_");
+          const prefix = isCustomTab ? "🔍 " : "📍 ";
+          const label = applyOriginText(t.title);
+          return `<option value="${t.key}" ${STATE.currentTrip === t.key ? "selected" : ""}>${prefix}${label}</option>`;
+        }).join("");
       }
 
-      const tabsList = MODE_TABS[mode] || MODE_TABS.outing;
       const container = document.getElementById("dest-tabs-container");
       if (container) {
         container.innerHTML = tabsList.map(t => {
@@ -5977,7 +6390,7 @@
                 <h3>${applyOriginText(t.title)}</h3>
                 <p>${applyOriginText(t.desc)}</p>
               </div>
-              ${isCustomTab ? `<span onclick="removeCustomTripTab('${t.key}', event)" title="この検索履歴タブを削除" style="position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,0.08); color:var(--text-muted); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900;">✕</span>` : ''}
+              ${isCustomTab ? `<span onclick="removeCustomTripTab('${t.key}', event)" title="削除" style="position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,0.08); color:var(--text-muted); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900;">✕</span>` : ''}
             </button>
           `;
         }).join("");
@@ -6004,9 +6417,9 @@
           const elVisa = document.getElementById("om-visa");
           const elCur = document.getElementById("om-currency");
           const elTr = document.getElementById("om-transport");
-          if (omHeaderTitle) omHeaderTitle.textContent = `🛂✈️ 海外渡航プロ情報 ＆ ${orig}からの空港スマートアクセス`;
-          if (omAirLabel) omAirLabel.textContent = `✈️ ${orig}→空港ルート＆飛行時間`;
-          if (cBadge) cBadge.textContent = applyOriginText(meta.countryArea) || "🌍 海外渡航ガイド";
+          if (omHeaderTitle) omHeaderTitle.textContent = `🛂✈️ 海外渡航ガイド（${orig}発）`;
+          if (omAirLabel) omAirLabel.textContent = `✈️ 空港アクセス＆飛行時間`;
+          if (cBadge) cBadge.textContent = applyOriginText(meta.countryArea) || "🌍 海外渡航";
           if (elAir) elAir.textContent = applyOriginText(meta.airportRoute) || "-";
           if (elTime) elTime.textContent = meta.timeDiff || "-";
           if (elVisa) elVisa.textContent = meta.visaEntry || "-";
@@ -6017,30 +6430,30 @@
         }
       }
 
-      // Update Step 2 Pace & Transport toggle labels depending on Outing vs Travel vs Overseas
+      // Compact labels for Step 2 switches
       const paceRelaxBtn = document.getElementById("pace-relax");
       const paceActiveBtn = document.getElementById("pace-active");
       const timeLabel = document.getElementById("time-switch-label");
       const transCarBtn = document.getElementById("trans-car");
       const transTaxiBtn = document.getElementById("trans-taxi");
       if (isOverseas) {
-        if (timeLabel) timeLabel.textContent = "④ 現地でのスケジュール密度";
-        if (paceRelaxBtn) paceRelaxBtn.textContent = "🌴 ホテル＆スパゆとり滞在";
-        if (paceActiveBtn) paceActiveBtn.textContent = "🚀 観光＆街歩きフル満喫";
-        if (transCarBtn) transCarBtn.textContent = "🚇🚲 空港特急・MRT・e-Bike";
-        if (transTaxiBtn) transTaxiBtn.textContent = "🚕 Uber/Grab・専用送迎車";
+        if (timeLabel) timeLabel.textContent = "過ごし方";
+        if (paceRelaxBtn) paceRelaxBtn.textContent = "ホテル重視";
+        if (paceActiveBtn) paceActiveBtn.textContent = "観光充実";
+        if (transCarBtn) transCarBtn.textContent = "鉄道・MRT";
+        if (transTaxiBtn) transTaxiBtn.textContent = "配車・送迎";
       } else if (isTravel) {
-        if (timeLabel) timeLabel.textContent = "④ 1日のスケジュール密度（過ごし方）";
-        if (paceRelaxBtn) paceRelaxBtn.textContent = "🌿 朝ゆとり・ホテル満喫";
-        if (paceActiveBtn) paceActiveBtn.textContent = "🚀 朝から晩までアクティブ";
-        if (transCarBtn) transCarBtn.textContent = "🚃🚲 電車・レンタカー・自転車";
-        if (transTaxiBtn) transTaxiBtn.textContent = "🚕 タクシー・送迎直行（お酒OK）";
+        if (timeLabel) timeLabel.textContent = "過ごし方";
+        if (paceRelaxBtn) paceRelaxBtn.textContent = "朝ゆとり";
+        if (paceActiveBtn) paceActiveBtn.textContent = "アクティブ";
+        if (transCarBtn) transCarBtn.textContent = "電車・車";
+        if (transTaxiBtn) transTaxiBtn.textContent = "タクシー";
       } else {
-        if (timeLabel) timeLabel.textContent = "④ お出かけの出発時間帯";
-        if (paceRelaxBtn) paceRelaxBtn.textContent = "☀️ 午前10時頃発（王道満喫）";
-        if (paceActiveBtn) paceActiveBtn.textContent = "🕐 午後13時頃発（サクッと）";
-        if (transCarBtn) transCarBtn.textContent = "🚃🚲 電車・レンタカー・自転車";
-        if (transTaxiBtn) transTaxiBtn.textContent = "🚕 タクシー・送迎直行（お酒OK）";
+        if (timeLabel) timeLabel.textContent = "出発時間";
+        if (paceRelaxBtn) paceRelaxBtn.textContent = "10時頃発";
+        if (paceActiveBtn) paceActiveBtn.textContent = "13時頃発";
+        if (transCarBtn) transCarBtn.textContent = "電車・自転車";
+        if (transTaxiBtn) transTaxiBtn.textContent = "タクシー";
       }
     }
 
@@ -6055,6 +6468,45 @@
       return (item.tags || []).includes(STATE.filter);
     }
 
+    function buildCompactCardHtml(item, isSel, onClickJs, arrKey, priceOrTime, isMulti) {
+      const safeQ = (str) => (str || "").replace(/'/g, "\\'");
+      const topBadge = isSel
+        ? (isMulti ? "✓ 追加済" : "✓ 選択中")
+        : ((item.badges && item.badges[0] && item.badges[0].text) ? item.badges[0].text : (isMulti ? "＋ 追加" : "選択可"));
+      const shortSummary = item.why || item.buzzText || item.wellnessSpec || "";
+      const extraPoints = [item.buzzText, item.wellnessSpec].filter(Boolean).join(" ／ ");
+      return `
+        <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="${onClickJs}">
+          <div class="card-photo-wrap">
+            <img src="${item.img}" alt="${item.name}" class="card-photo" loading="lazy">
+            <span class="card-check-dot ${isSel ? 'on' : ''}" aria-hidden="true">${isSel ? '✓' : '＋'}</span>
+            <button type="button" class="card-zoom-mini" onclick="openLightbox('${safeQ(item.img)}', '${safeQ(item.name)}', '${safeQ(item.area)}', event)" title="写真を拡大">🔍</button>
+          </div>
+          <div class="card-compact-body">
+            <div class="card-mini-top">
+              <span class="card-mini-area">📍 ${item.area || ""}</span>
+              <span class="card-mini-tag">${topBadge}</span>
+            </div>
+            <div class="card-compact-title">${item.name}</div>
+            ${priceOrTime ? `<div class="card-mini-price">${priceOrTime}</div>` : ''}
+            <div class="card-compact-desc">${shortSummary}</div>
+            <details class="card-detail-details" onclick="event.stopPropagation()">
+              <summary class="card-detail-summary"><span>詳細・リンク</span></summary>
+              <div class="card-detail-panel">
+                ${extraPoints ? `<div style="color:#0f766e; font-weight:700;">${extraPoints}</div>` : ''}
+                <div>${item.why || ""}</div>
+                <div class="card-detail-actions">
+                  ${arrKey ? `<button type="button" class="card-mini-btn" onclick="cycleCardPhoto('${arrKey}', '${item.id}', event)">📷 別写真</button>` : ''}
+                  <button type="button" class="card-mini-btn" onclick="openLightbox('${safeQ(item.img)}', '${safeQ(item.name)}', '${safeQ(item.area)}', event)">🔍 写真拡大</button>
+                  ${(item.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="card-mini-btn">🔗 ${l.label}</a>`).join("")}
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      `;
+    }
+
     function renderCandidates() {
       const trip = CATALOG[STATE.currentTrip];
       const sel = STATE.selections[STATE.currentTrip];
@@ -6063,152 +6515,61 @@
       const hHead = document.getElementById("hotel-sec-heading");
       const sHead = document.getElementById("spot-sec-heading");
       const fHead = document.getElementById("food-sec-heading");
-      if (hHead && trip.hotelHeading) hHead.textContent = trip.hotelHeading;
-      if (sHead && trip.spotHeading) sHead.textContent = trip.spotHeading;
-      if (fHead && trip.foodHeading) fHead.textContent = trip.foodHeading;
+      const cleanSecHead = (txt, fallback) =>
+        (txt || fallback).replace(/を選ぶ（.*?）$/, "").replace(/を選ぶ$/, "");
+      if (hHead) hHead.textContent = cleanSecHead(trip.hotelHeading, "🏨 ① 宿・メイン施設");
+      if (sHead) sHead.textContent = cleanSecHead(trip.spotHeading, "🌿 ② 立ち寄りスポット");
+      if (fHead) fHead.textContent = cleanSecHead(trip.foodHeading, "🍽️ ③ 食事・カフェ");
 
-      // Update kept-selection indicators in each section's proposal bar & header badge
       const selHotelObj = (trip.hotels || []).find(h => h.id === sel.hotel) || (trip.hotels || [])[0];
       const selSpotObjs = (trip.spots || []).filter(s => (sel.spots || []).includes(s.id));
       const selFoodObj = (trip.foods || []).find(f => f.id === sel.food) || (trip.foods || [])[0];
 
       const hCntEl = document.getElementById("hotel-sec-count");
-      if (hCntEl) hCntEl.textContent = `全${(trip.hotels || []).length}件（1つ選択）`;
+      if (hCntEl) hCntEl.textContent = `${(trip.hotels || []).length}件中 1つ選択`;
       const sCntEl = document.getElementById("spot-sec-count");
-      if (sCntEl) sCntEl.textContent = `全${(trip.spots || []).length}件（現在 ${selSpotObjs.length}件選択中）`;
+      if (sCntEl) sCntEl.textContent = `${selSpotObjs.length}/${(trip.spots || []).length}件 選択中`;
       const fCntEl = document.getElementById("food-sec-count");
-      if (fCntEl) fCntEl.textContent = `全${(trip.foods || []).length}件（1つ選択）`;
+      if (fCntEl) fCntEl.textContent = `${(trip.foods || []).length}件中 1つ選択`;
 
       const keptHotelEl = document.getElementById("spb-kept-hotel");
       if (keptHotelEl && selHotelObj) {
         const shortH = selHotelObj.name.replace(/【.*?】/g, "").split("（")[0].trim();
-        keptHotelEl.textContent = `選択中：『${shortH}』を維持したまま、比較用の新しい候補を追加できます`;
+        keptHotelEl.textContent = `（現在：${shortH}）`;
       }
       const keptSpotEl = document.getElementById("spb-kept-spot");
       if (keptSpotEl) {
-        if (selSpotObjs.length > 0) {
-          const previewNames = selSpotObjs.slice(0, 2).map(s => s.name.replace(/【.*?】/g, "").split("（")[0].trim()).join("・");
-          const extra = selSpotObjs.length > 2 ? ` ほか${selSpotObjs.length - 2}件` : "";
-          keptSpotEl.textContent = `選択中（${selSpotObjs.length}件：『${previewNames}』${extra}）を維持したまま、他の観光候補を追加できます`;
-        } else {
-          keptSpotEl.textContent = `現在未選択・すぐ下のボタンやジャンルから観光地候補を自由に追加できます`;
-        }
+        keptSpotEl.textContent = selSpotObjs.length > 0 ? `（現在 ${selSpotObjs.length}件選択中）` : "";
       }
       const keptFoodEl = document.getElementById("spb-kept-food");
       if (keptFoodEl && selFoodObj) {
         const shortF = selFoodObj.name.replace(/【.*?】/g, "").split("（")[0].trim();
-        keptFoodEl.textContent = `選択中：『${shortF}』を維持したまま、他の人気グルメ・カフェ候補を追加できます`;
+        keptFoodEl.textContent = `（現在：${shortF}）`;
       }
-
-      const safeQ = (str) => (str || "").replace(/'/g, "\\'");
 
       // 1. Hotels / Main Spas / Famous Shops
       const hotelGrid = document.getElementById("hotel-candidates-grid");
       const filteredHotels = trip.hotels.filter(h => matchesFilter(h, sel.hotel === h.id));
       const hotelsToShow = filteredHotels.length > 0 ? filteredHotels : trip.hotels;
-      hotelGrid.innerHTML = hotelsToShow.map(h => {
-        const isSel = sel.hotel === h.id;
-        return `
-          <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="selectHotel('${h.id}')">
-            <div class="card-photo-wrap">
-              <img src="${h.img}" alt="${h.name}" class="card-photo">
-              <span class="photo-zoom-btn" onclick="openLightbox('${safeQ(h.img)}', '${safeQ(h.name)}', '${safeQ(h.area)}', event)">🔍 写真拡大</span>
-              <button class="photo-cycle-btn" onclick="cycleCardPhoto('hotels', '${h.id}', event)" title="別の実写写真に切り替え">📷 別写真</button>
-              <span class="select-pill ${isSel ? 'on' : ''}">${isSel ? '✔ 選択中' : 'タップで選択'}</span>
-            </div>
-            <div class="photo-meta-bar">
-              <span class="meta-area">📍 ${h.area}</span>
-              <span class="meta-price">${h.price}</span>
-            </div>
-            <div class="card-body">
-              <div class="c-badges">
-                ${(h.badges || []).map(b => `<span class="c-badge ${b.cls}">${b.text}</span>`).join("")}
-              </div>
-              <div class="c-title">${h.name}</div>
-              ${h.buzzText ? `<div class="buzz-highlight">${h.buzzText}</div>` : ''}
-              ${h.wellnessSpec ? `<div class="wellness-spec">${h.wellnessSpec}</div>` : ''}
-              <div class="c-why">${h.why}</div>
-              <div class="c-footer">
-                <div class="c-links" onclick="event.stopPropagation()">
-                  ${(h.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="c-link">🔗 ${l.label}</a>`).join("")}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("");
+      hotelGrid.innerHTML = hotelsToShow.map(h =>
+        buildCompactCardHtml(h, sel.hotel === h.id, `selectHotel('${h.id}')`, "hotels", h.price, false)
+      ).join("");
 
       // 2. Spots
       const spotGrid = document.getElementById("spot-candidates-grid");
       const filteredSpots = trip.spots.filter(s => matchesFilter(s, sel.spots.includes(s.id)));
       const spotsToShow = filteredSpots.length > 0 ? filteredSpots : trip.spots;
-      spotGrid.innerHTML = spotsToShow.map(s => {
-        const isSel = sel.spots.includes(s.id);
-        return `
-          <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="toggleSpot('${s.id}')">
-            <div class="card-photo-wrap">
-              <img src="${s.img}" alt="${s.name}" class="card-photo">
-              <span class="photo-zoom-btn" onclick="openLightbox('${safeQ(s.img)}', '${safeQ(s.name)}', '${safeQ(s.area)}', event)">🔍 写真拡大</span>
-              <button class="photo-cycle-btn" onclick="cycleCardPhoto('spots', '${s.id}', event)" title="別の実写写真に切り替え">📷 別写真</button>
-              <span class="select-pill ${isSel ? 'on' : ''}">${isSel ? '✔ 予定に組込中' : '＋ タップで追加'}</span>
-            </div>
-            <div class="photo-meta-bar">
-              <span class="meta-area">📍 ${s.area}</span>
-              <span class="meta-price">🕒 ${s.time}</span>
-            </div>
-            <div class="card-body">
-              <div class="c-badges">
-                ${(s.badges || []).map(b => `<span class="c-badge ${b.cls}">${b.text}</span>`).join("")}
-              </div>
-              <div class="c-title">${s.name}</div>
-              ${s.buzzText ? `<div class="buzz-highlight">${s.buzzText}</div>` : ''}
-              ${s.wellnessSpec ? `<div class="wellness-spec">${s.wellnessSpec}</div>` : ''}
-              <div class="c-why">${s.why}</div>
-              <div class="c-footer">
-                <div class="c-links" onclick="event.stopPropagation()">
-                  ${(s.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="c-link">🔗 ${l.label}</a>`).join("")}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("");
+      spotGrid.innerHTML = spotsToShow.map(s =>
+        buildCompactCardHtml(s, sel.spots.includes(s.id), `toggleSpot('${s.id}')`, "spots", `🕒 ${s.time}`, true)
+      ).join("");
 
       // 3. Foods
       const foodGrid = document.getElementById("food-candidates-grid");
       const filteredFoods = trip.foods.filter(f => matchesFilter(f, sel.food === f.id));
       const foodsToShow = filteredFoods.length > 0 ? filteredFoods : trip.foods;
-      foodGrid.innerHTML = foodsToShow.map(f => {
-        const isSel = sel.food === f.id;
-        return `
-          <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="selectFood('${f.id}')">
-            <div class="card-photo-wrap">
-              <img src="${f.img}" alt="${f.name}" class="card-photo">
-              <span class="photo-zoom-btn" onclick="openLightbox('${safeQ(f.img)}', '${safeQ(f.name)}', '${safeQ(f.area)}', event)">🔍 写真拡大</span>
-              <button class="photo-cycle-btn" onclick="cycleCardPhoto('foods', '${f.id}', event)" title="別の実写写真に切り替え">📷 別写真</button>
-              <span class="select-pill ${isSel ? 'on' : ''}">${isSel ? '✔ 選択中' : 'タップで選択'}</span>
-            </div>
-            <div class="photo-meta-bar">
-              <span class="meta-area">📍 ${f.area}</span>
-              <span class="meta-price">💰 ${f.budget}</span>
-            </div>
-            <div class="card-body">
-              <div class="c-badges">
-                ${(f.badges || []).map(b => `<span class="c-badge ${b.cls}">${b.text}</span>`).join("")}
-              </div>
-              <div class="c-title">${f.name}</div>
-              ${f.buzzText ? `<div class="buzz-highlight">${f.buzzText}</div>` : ''}
-              ${f.wellnessSpec ? `<div class="wellness-spec">${f.wellnessSpec}</div>` : ''}
-              <div class="c-why">${f.why}</div>
-              <div class="c-footer">
-                <div class="c-links" onclick="event.stopPropagation()">
-                  ${(f.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="c-link">🔗 ${l.label}</a>`).join("")}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("");
+      foodGrid.innerHTML = foodsToShow.map(f =>
+        buildCompactCardHtml(f, sel.food === f.id, `selectFood('${f.id}')`, "foods", `💰 ${f.budget}`, false)
+      ).join("");
     }
 
     // ============================================================================
@@ -8128,33 +8489,19 @@
           <div class="candidate-card">
             <div class="card-photo-wrap">
               <img src="${it.img}" alt="${it.name}" class="card-photo" loading="lazy">
-              <span class="photo-zoom-btn" onclick="openLightbox('${safeQ(it.img)}', '${safeQ(it.name)}', '${safeQ(it.area)}', event)">🔍 写真拡大</span>
+              <button type="button" class="card-zoom-mini" onclick="openLightbox('${safeQ(it.img)}', '${safeQ(it.name)}', '${safeQ(it.area)}', event)">🔍</button>
             </div>
-            <div class="photo-meta-bar">
-              <span class="meta-area">📍 ${it.area || ""}</span>
-              <span class="meta-price">${metaRight}</span>
-            </div>
-            <div class="card-body">
-              <div class="c-badges">
-                ${(it.badges || []).map(b => `<span class="c-badge ${b.cls}">${b.text}</span>`).join("")}
+            <div class="card-compact-body">
+              <div class="card-mini-top">
+                <span class="card-mini-area">📍 ${it.area || ""}</span>
               </div>
-              <div class="c-title">${it.name}</div>
-              ${it.buzzText ? `<div class="buzz-highlight">${it.buzzText}</div>` : ''}
-              ${it.wellnessSpec ? `<div class="wellness-spec">${it.wellnessSpec}</div>` : ''}
-              <div class="c-why">${it.why || ""}</div>
-              <div class="c-links" style="margin-bottom:6px;">
-                ${(it.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="c-link">🔗 ${l.label}</a>`).join("")}
-              </div>
+              <div class="card-compact-title">${it.name}</div>
+              ${metaRight ? `<div class="card-mini-price">${metaRight}</div>` : ''}
+              <div class="card-compact-desc">${it.why || ""}</div>
               <div class="pin-add-btns">
-                <button class="pin-add-btn ${rec === 'hotel' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'hotel')">
-                  🎯 ①メイン枠にセット
-                </button>
-                <button class="pin-add-btn ${rec === 'spot' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'spot')">
-                  ☀️ ②立ち寄り枠に追加
-                </button>
-                <button class="pin-add-btn ${rec === 'food' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'food')">
-                  🍽️ ③食事枠にセット
-                </button>
+                <button class="pin-add-btn ${rec === 'hotel' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'hotel')">宿</button>
+                <button class="pin-add-btn ${rec === 'spot' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'spot')">観光</button>
+                <button class="pin-add-btn ${rec === 'food' ? 'primary-role' : ''}" onclick="addPinpointItemToTrip(${idx}, 'food')">食事</button>
               </div>
             </div>
           </div>
