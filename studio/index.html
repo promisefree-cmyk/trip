@@ -22,16 +22,16 @@
   <p>5Gモバイル回線（Galaxy S26 Ultra）対応の最新トンネルへ自動接続しています…</p>
   <div id="status" class="status">接続先を確認中…</div>
   <div class="links">
-    <a id="btn-tunnel" class="btn" href="https://barrel-occasional-arthur-thick.trycloudflare.com/blog-studio.html?k=rt9k4m7x2v8p">📱 マスタースタジオを開く（5G対応・自動ロック解除）</a>
+    <a id="btn-tunnel" class="btn" href="https://bias-reactions-arctic-originally.trycloudflare.com/blog-studio.html?k=rt9k4m7x2v8p">📱 マスタースタジオを開く（5G対応・自動ロック解除）</a>
   </div>
 </div>
 <script>
 (async function() {
   const statusEl = document.getElementById('status');
   const btnTunnel = document.getElementById('btn-tunnel');
-  let tunnelBase = "https://barrel-occasional-arthur-thick.trycloudflare.com/";
+  let tunnelBase = "https://bias-reactions-arctic-originally.trycloudflare.com/";
   try {
-    const gRes = await fetch('https://api.github.com/gists/9eea03e785382031cabb2892c490b3cd?t=' + Date.now(), { cache: 'no-store' });
+    const gRes = await fetch('https://api.github.com/gists/?t=' + Date.now(), { cache: 'no-store' });
     if (gRes.ok) {
       const gJson = await gRes.json();
       if (gJson.files && gJson.files['endpoint.json']) {
