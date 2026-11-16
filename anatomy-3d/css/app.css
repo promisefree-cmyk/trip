@@ -1,0 +1,2525 @@
+/* ==========================================================================
+   app.css — 筋膜ライン 3D スタイルシート（Rooton Proposal A: Washi-Cream × Watercolor）
+   配色:
+     和紙クリーム背景 (#FCFBF8 → #FAF8F4 → #F2ECE1)
+     すりガラス和紙パネル rgba(253, 251, 247, 0.95) × 砂色ボーダー rgba(180, 154, 112, 0.36)
+     ディープエスプレッソ文字 (#2A231E) × ウォームトープ副文字 (#695C50)
+     水彩テラコッタレッド（縮む筋肉・筋膜: #A84E3B / #CE7E6B）
+     水彩ミネラルブルー（伸びる筋肉・筋膜: #3F7398 / #6A99BA）
+   設計原則: 3D人物・背骨との文字被り 0px・全タップ領域 44×44px 以上・GPU軽量描画
+   ========================================================================== */
+
+:root {
+  /* 和紙クリーム（Washi-Cream）スタジオ空間 & 高不透明すりガラス和紙パネル */
+  --bg-deep: #f2ece1;
+  --bg-mid: #faf8f4;
+  --bg-glow: #fcfbf8;
+  --panel-bg: rgba(253, 251, 247, 0.95);
+  --panel-bg-elevated: rgba(255, 253, 250, 0.98);
+  --surface-1: rgba(255, 253, 250, 0.96);
+  --surface-2: #f4eee3;
+  --surface-3: #ebe2d2;
+
+  /* 水彩ハニーアンバー & ウォームサンド境界線 */
+  --gold: #cfa058;
+  --gold-bright: #8f5b18;
+  --gold-soft: rgba(207, 160, 88, 0.16);
+  --gold-border: rgba(180, 154, 112, 0.36);
+  --gold-glow: rgba(207, 160, 88, 0.24);
+
+  --border-subtle: rgba(180, 154, 112, 0.30);
+  --border-strong: rgba(164, 134, 86, 0.52);
+
+  /* ディープエスプレッソ & ウォームトープ タイポグラフィ */
+  --text-main: #2a231e;
+  --text-sub: #695c50;
+  --text-muted: #857667;
+  --text-dim: #9e8f7f;
+
+  /* 水彩4段階ロールカラー（水彩テラコッタレッド＝縮み × 水彩ミネラルブルー＝伸び） */
+  --col-core-bg: rgba(191, 100, 80, 0.18);
+  --col-core-border: #bf6450;
+  --col-core-text: #6e2d20;
+  --col-core-dot: #a84e3b;
+
+  --col-short: #bf6450;
+  --col-short-bright: #6e2d20;
+  --col-short-soft: rgba(191, 100, 80, 0.18);
+  --col-short-border: #ce7e6b;
+
+  --col-linked-short-bg: rgba(206, 126, 107, 0.13);
+  --col-linked-short-border: rgba(206, 126, 107, 0.54);
+  --col-linked-short-text: #7d3628;
+  --col-linked-short-dot: #e09380;
+
+  --col-antag: #3f7398;
+  --col-antag-bg: rgba(79, 132, 170, 0.16);
+  --col-antag-border: #4f84aa;
+  --col-antag-text: #234763;
+  --col-antag-dot: #3f7398;
+  --col-antag-bright: #234763;
+  --col-antag-soft: rgba(79, 132, 170, 0.16);
+
+  --col-linked-long: #6a99ba;
+  --col-linked-long-bg: rgba(106, 153, 186, 0.12);
+  --col-linked-long-border: rgba(106, 153, 186, 0.48);
+  --col-linked-long-text: #2e5878;
+  --col-linked-long-dot: #9dc1db;
+  --col-linked-long-bright: #2e5878;
+  --col-linked-long-soft: rgba(106, 153, 186, 0.12);
+
+  --col-long: #4f84aa;
+  --col-long-bright: #285170;
+  --col-long-soft: rgba(79, 132, 170, 0.15);
+  --col-long-border: #6a99ba;
+
+  /* Safe Area & 3Dカメラ同期オフセット */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --sheet-vis: 250px;
+
+  /* 上品な和紙サロンシャドウ & イージング */
+  --shadow-lg: 0 -6px 24px rgba(58, 44, 28, 0.10), 0 1px 0 rgba(255, 255, 255, 0.85) inset;
+  --shadow-md: 0 6px 20px rgba(58, 44, 28, 0.10);
+  --shadow-sm: 0 2px 8px rgba(58, 44, 28, 0.07);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   1. リセット & 3D和紙スタジオ全画面ステージ
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden],
+.is-step-hidden,
+.is-page-hidden,
+.is-macro-hidden {
+  display: none !important;
+}
+
+[inert] {
+  pointer-events: none;
+  user-select: none;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: var(--bg-mid);
+  background-image: radial-gradient(ellipse 88% 70% at 50% 34%, var(--bg-glow) 0%, var(--bg-mid) 56%, var(--bg-deep) 100%);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.48;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  z-index: 1;
+  background: radial-gradient(ellipse 88% 70% at 50% 34%, var(--bg-glow) 0%, var(--bg-mid) 56%, var(--bg-deep) 100%);
+}
+
+#stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+  touch-action: none;
+}
+
+#ui-root.ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+button,
+input,
+a {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.ico {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.safe-probe {
+  position: fixed;
+  pointer-events: none;
+  visibility: hidden;
+  width: 0;
+}
+.safe-probe--t {
+  top: 0;
+  height: var(--safe-t);
+}
+.safe-probe--b {
+  bottom: 0;
+  height: var(--safe-b);
+}
+
+/* --------------------------------------------------------------------------
+   2. トップバー（水彩アンバー×テラコッタ色凡例ピル ＋ 見せるモードボタン）
+   -------------------------------------------------------------------------- */
+
+.topbar {
+  position: fixed;
+  top: calc(var(--safe-t) + 6px);
+  left: calc(var(--safe-l) + 8px);
+  right: calc(var(--safe-r) + 8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  min-height: 44px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #cfa058, #8f5b18);
+}
+
+.brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .brand {
+    display: none;
+  }
+}
+
+#ui-help-btn.legend {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 9px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+#ui-help-btn.legend:hover,
+#ui-help-btn.legend.is-active {
+  background: var(--surface-2);
+  border-color: var(--gold);
+}
+
+#ui-help-btn.legend:active {
+  transform: scale(0.98);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4.5px;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.legend-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  flex-shrink: 0;
+}
+
+.legend-item i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.legend-item.is-short,
+.legend-item.is-shrink-group {
+  color: #7d3628;
+}
+.legend-item i.is-core-dot {
+  background: #a84e3b;
+}
+.legend-item i.is-linked-dot {
+  background: #e09380;
+}
+
+.legend-item.is-long,
+.legend-item.is-stretch-group {
+  color: #285170;
+}
+.legend-item i.is-antag-dot {
+  background: #467ba2;
+}
+.legend-item i.is-ext-dot {
+  background: #8bb5d1;
+}
+
+.help-pill-q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  font-size: 10.5px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@media (max-width: 410px) {
+  #ui-help-btn.legend {
+    gap: 7px;
+    padding: 4px 10px;
+  }
+  .legend-item {
+    font-size: 11px;
+    gap: 3.5px;
+  }
+}
+
+.present-btn,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-border);
+  color: var(--text-sub);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.present-btn:hover,
+.icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--gold);
+  color: var(--text-main);
+}
+
+.present-btn[aria-pressed="true"] {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+/* --------------------------------------------------------------------------
+   3. 右端ツールレール（ワンタップ「透視 / 表層 / 深層」＋戻す・全ボタン 44×44px 以上）
+   -------------------------------------------------------------------------- */
+
+.rail {
+  position: fixed;
+  top: calc(var(--safe-t) + 56px);
+  right: calc(var(--safe-r) + 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 15px;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-md);
+  z-index: 25;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.rail.is-tucked {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(16px);
+}
+
+.rail-btn {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 46px;
+  height: 46px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 3px 2px;
+  border-radius: 11px;
+  color: var(--text-sub);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.rail-btn .ico {
+  width: 16px;
+  height: 16px;
+}
+
+.rail-lbl {
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.rail-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-main);
+  border-color: var(--gold-border);
+}
+
+.rail-btn.is-fascia-layer.is-active,
+.rail-btn[data-fascia-layer][aria-pressed="true"] {
+  background: rgba(207, 160, 88, 0.22);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+.rail-btn.is-view-btn.is-rotated {
+  background: rgba(207, 160, 88, 0.16);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+.rail-btn.is-view-btn:active,
+.rail-btn.is-reset-btn:active {
+  transform: scale(0.95);
+}
+
+.rail-sep {
+  width: 26px;
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 1px 0;
+}
+
+.rail-badge {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 8.5px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--gold-bright);
+}
+
+.view-fly {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--panel-bg-elevated);
+  border: 1px solid var(--gold-border);
+}
+
+.view-opt {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.view-opt.is-active {
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+}
+
+.tip {
+  position: fixed;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--panel-bg-elevated);
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. 初回3D操作ヒント & 筋肉タップ時のスリム解説トースト (.toast)
+   -------------------------------------------------------------------------- */
+
+.orbit-hint {
+  position: fixed;
+  top: calc(var(--safe-t) + 58px);
+  left: calc(var(--safe-l) + 10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  z-index: 22;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.orbit-hint.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.orbit-hint.is-hiding {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* 筋肉タップ時のスリム解説トースト（筋肉名 15.5px太字 ＋ 1〜2行解説 14px ＋ [✕] のみ） */
+.toast {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 16px calc(var(--safe-b) + 14px) 16px;
+  border-radius: 20px 20px 0 0;
+  background: rgba(253, 251, 247, 0.97);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--gold-border);
+  border-bottom: none;
+  box-shadow: var(--shadow-lg);
+  z-index: 36;
+  pointer-events: auto;
+  overscroll-behavior: contain;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#ui-root.is-toast-open .sheet {
+  opacity: 0;
+  pointer-events: none !important;
+}
+
+@media (min-width: 740px) {
+  .toast {
+    left: 16px;
+    right: auto;
+    bottom: 16px;
+    width: min(348px, calc(100vw - 96px));
+    max-width: min(348px, calc(100vw - 96px));
+    margin: 0;
+    padding-bottom: 14px;
+    border-radius: 18px;
+    border-bottom: 1px solid var(--gold-border);
+  }
+}
+
+@media (min-width: 900px) {
+  .toast {
+    width: 420px;
+    max-width: 420px;
+  }
+}
+
+.toast.is-leaving {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.toast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.toast-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toast-core-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ce7e6b;
+  border: 1.5px solid #a84e3b;
+  flex-shrink: 0;
+}
+
+.toast-name {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 11px;
+  color: var(--text-sub);
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.toast-close:hover {
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+
+.toast-action {
+  font-size: 13.5px;
+  color: var(--text-main);
+  line-height: 1.55;
+  margin-top: 4px;
+  padding-right: 4px;
+  overflow-wrap: anywhere;
+}
+
+.toast-habit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 9px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(207, 160, 88, 0.16) 0%, rgba(250, 246, 239, 0.98) 100%);
+  border: 1.5px solid var(--gold);
+  color: var(--gold-bright);
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(143, 91, 24, 0.08);
+  transition: transform 0.12s ease, background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.toast-habit-btn:hover {
+  background: linear-gradient(135deg, rgba(207, 160, 88, 0.26) 0%, rgba(248, 241, 229, 1) 100%);
+  border-color: var(--gold-bright);
+  box-shadow: 0 4px 12px rgba(143, 91, 24, 0.14);
+}
+
+.toast-habit-btn:active {
+  transform: scale(0.986);
+}
+
+.toast-habit-ico {
+  width: 17px;
+  height: 17px;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.toast-habit-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  line-height: 1.35;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. 下部ボトムシート（すりガラス和紙パネル・3D視界 65〜72%以上を確保）
+   -------------------------------------------------------------------------- */
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 42dvh;
+  background: linear-gradient(180deg, rgba(254, 252, 249, 0.96) 0%, rgba(250, 246, 239, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--gold-border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-lg);
+  z-index: 24;
+  pointer-events: auto;
+  transition: transform 0.26s var(--ease-out);
+  will-change: transform;
+}
+
+.sheet.has-active-card {
+  max-height: 42dvh;
+}
+
+.sheet-body {
+  padding: 8px calc(var(--safe-r) + 12px) calc(var(--safe-b) + 10px) calc(var(--safe-l) + 12px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  max-height: inherit;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-border) transparent;
+}
+
+.selfcare-modal,
+.help-modal-card,
+.toast,
+.part-tags--line {
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 740px) {
+  .sheet {
+    left: 16px;
+    right: auto;
+    bottom: 16px;
+    width: min(348px, calc(100vw - 96px));
+    max-height: calc(100dvh - 88px);
+    border: 1px solid var(--gold-border);
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .sheet {
+    width: 430px;
+  }
+}
+
+.ui.is-present .sheet,
+.ui.is-present .rail,
+.ui.is-present .legend {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. 【階層 0】迷わない3本柱ホーム (.finder-home) — アイコン＋1行太字タイトルのみ
+   -------------------------------------------------------------------------- */
+
+@keyframes uiLayerEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 5px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.is-layer-enter {
+  animation: uiLayerEnter 180ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-layer-enter {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.finder-home {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.home-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 2px;
+}
+
+.home-top-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-top-title::before {
+  content: "";
+  width: 3.5px;
+  height: 15px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #cfa058, #8f5b18);
+  flex-shrink: 0;
+}
+
+.home-aux-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.home-aux-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  gap: 5px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.home-aux-pill:hover,
+.home-aux-pill.is-active,
+.home-aux-pill[aria-selected="true"] {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+.finder-home.is-filter-open .home-entry-grid {
+  display: none;
+}
+
+.home-entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.home-entry-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  padding: 6px 13px;
+  border-radius: 13px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: transform 0.14s var(--ease-out), border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.home-entry-card:hover,
+.home-entry-card[aria-selected="true"] {
+  border-color: var(--gold);
+  background: var(--surface-2);
+}
+
+.home-entry-card:active {
+  transform: scale(0.988);
+}
+
+.home-entry-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-soft);
+  border: 1px solid rgba(207, 160, 88, 0.30);
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.home-entry-svg {
+  width: 19px;
+  height: 19px;
+  color: var(--gold-bright);
+}
+
+.home-entry-body {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-entry-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-entry-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--gold-bright);
+  opacity: 0.85;
+  flex-shrink: 0;
+  transition: transform 0.16s var(--ease-out);
+}
+
+.home-entry-card:hover .home-entry-chevron {
+  transform: translateX(2px);
+}
+
+/* ページ切替バー（全ボタン 44px 高以上） */
+.pager-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 64px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pager-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--gold);
+  color: var(--text-main);
+}
+
+.pager-info {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 検索窓 */
+.home-search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dict-search-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dict-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dict-search-input,
+.feel-search-input {
+  width: 100%;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 38px 0 12px;
+  border-radius: 11px;
+  background: #ffffff;
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.dict-search-input::placeholder,
+.feel-search-input::placeholder {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.dict-search-input:focus,
+.feel-search-input:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+.dict-search-clear {
+  position: absolute;
+  right: 2px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.dict-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dict-results-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dict-results-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
+.dict-results-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   7. 【階層 1A / 2A / 1B / 2B】部位5分類・動き4分類・職種・動作・ライン一覧
+      すべて「アイコン ＋ 1行太字タイトル（14.5px〜15.5px）」のクリーンボタン
+   -------------------------------------------------------------------------- */
+
+.step-head-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.step-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 72px;
+  padding: 0 12px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.step-back-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--gold);
+}
+
+.step-head-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 階層 1A: 部位 5分類グリッド */
+.feel-region-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.feel-region-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.12s var(--ease-out);
+}
+
+.feel-region-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.feel-region-card.is-active {
+  background: var(--surface-2);
+  border-color: var(--gold);
+}
+
+@media (hover: hover) {
+  .feel-region-card:hover {
+    background: var(--surface-2);
+    border-color: var(--gold);
+  }
+}
+
+.feel-region-card:active {
+  transform: scale(0.988);
+}
+
+.feel-region-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.feel-region-body {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.feel-region-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feel-region-chevron {
+  width: 15px;
+  height: 15px;
+  color: var(--gold-bright);
+  opacity: 0.78;
+  flex-shrink: 0;
+}
+
+/* 階層 1B: 動き・クセ・仕事の4分類グリッド（2×2・アイコン＋1行太字タイトル） */
+.habit-cat4-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.habit-cat4-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 50px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.12s var(--ease-out);
+}
+
+@media (hover: hover) {
+  .habit-cat4-card:hover {
+    background: var(--surface-2);
+    border-color: var(--gold);
+  }
+}
+
+.habit-cat4-card:active {
+  transform: scale(0.988);
+}
+
+.habit-cat4-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.habit-cat4-body {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.habit-cat4-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 連動ストーリー控えめサブリンク */
+.habit-story-sub-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 7px;
+  padding: 0 13px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: left;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.12s var(--ease-out);
+}
+
+.habit-story-sub-link:hover,
+.habit-story-sub-link[aria-selected="true"] {
+  background: var(--surface-3);
+  border-color: var(--gold);
+}
+
+.habit-story-sub-link:active {
+  transform: scale(0.988);
+}
+
+.habit-story-sub-chevron {
+  width: 15px;
+  height: 15px;
+  color: var(--gold-bright);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* 職種・動作・違和感・筋膜シート一覧 */
+.occ-grid,
+.chips--habit-flat,
+.chips--feel,
+.chips--lines {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.occ-card,
+.chip--habit,
+.chip--feel,
+.chip--line,
+.story-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.12s var(--ease-out);
+}
+
+.occ-card:active,
+.chip--habit:active,
+.chip--feel:active,
+.chip--line:active {
+  transform: scale(0.988);
+}
+
+.occ-card.is-active,
+.chip--habit[aria-pressed="true"],
+.chip--feel[aria-pressed="true"],
+.chip--line[aria-pressed="true"] {
+  background: var(--surface-2);
+  border-color: var(--gold);
+}
+
+@media (hover: hover) {
+  .occ-card:hover,
+  .chip--habit:hover,
+  .chip--feel:hover,
+  .chip--line:hover,
+  .story-item:hover {
+    background: var(--surface-2);
+    border-color: var(--gold);
+  }
+}
+
+.occ-card-ico,
+.chip-ico,
+.story-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.occ-card-info,
+.chip-body {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.occ-card-name,
+.chip-label,
+.story-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feel-chip-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feel-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.feel-search-ico {
+  position: absolute;
+  left: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.feel-search-input {
+  padding-left: 34px;
+}
+
+.chip--line {
+  min-height: 48px;
+}
+
+.chip--line .dot {
+  width: 10px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--c, var(--gold));
+  flex-shrink: 0;
+}
+
+.chip--line:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 380px) {
+  .feel-region-title,
+  .habit-cat4-title {
+    font-size: 13.5px;
+  }
+  .occ-card-name,
+  .chip-label,
+  .feel-chip-text {
+    font-size: 13px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. 原因クセカード (.card--habit) — 厳選3要素のみのスリムサロン構成
+      ① ヘッダー ([← 戻る] ＋ 16px太字タイトル ＋ [✕])
+      ② 因果要約 (14px・約2行)
+      ③ セルフケア要点 1行 ＋ 48px高 メインCTAボタン
+   -------------------------------------------------------------------------- */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-titles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-sub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.habit-causal-summary {
+  padding: 7px 11px;
+  border-left: 3.5px solid var(--gold);
+  background: var(--surface-2);
+  border-radius: 0 10px 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3028;
+  line-height: 1.48;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.habit-selfcare-box {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.habit-selfcare-howto {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-sub);
+  line-height: 1.44;
+  padding: 0 2px;
+}
+
+/* メインCTA: ディープエスプレッソ × ハニーアンバーの上質サロンボタン（高さ 48px） */
+.selfcare-cta-btn {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #2a231e;
+  border: 1.5px solid #cfa058;
+  color: #faf8f4;
+  box-shadow: 0 4px 14px rgba(42, 35, 30, 0.18);
+  transition: transform 0.12s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.selfcare-cta-btn:hover {
+  background: #3b312a;
+  border-color: #dfae64;
+}
+
+.selfcare-cta-btn:active {
+  transform: scale(0.986);
+}
+
+.sc-cta-label {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #faf8f4;
+}
+
+/* 筋膜シート図鑑カード (.card--line) & 連動図解カード (.card--story) 用スタイル維持 */
+.help-inline-svg,
+.line-sec-svg {
+  width: 15px;
+  height: 15px;
+  color: var(--gold-bright);
+  vertical-align: -2px;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+.part-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.part-tags--line {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.part-tags--line::-webkit-scrollbar {
+  display: none;
+}
+
+.is-trigger-line-btn,
+.part-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  color: var(--text-main);
+}
+
+.part-tag.is-short,
+.part-tag.is-shorten-core {
+  background: var(--col-core-bg);
+  border-color: var(--col-core-border);
+  color: var(--col-core-text);
+}
+.part-tag.is-short .part-tag-dot,
+.part-tag.is-shorten-core .part-tag-dot {
+  background: var(--col-core-dot);
+}
+
+.part-tag.is-yore,
+.part-tag.is-shorten-linked {
+  background: var(--col-linked-short-bg);
+  border-color: var(--col-linked-short-border);
+  color: var(--col-linked-short-text);
+}
+.part-tag.is-yore .part-tag-dot,
+.part-tag.is-shorten-linked .part-tag-dot {
+  background: var(--col-linked-short-dot);
+}
+
+.part-tag.is-long,
+.part-tag.is-lengthen-antagonist {
+  background: var(--col-antag-bg);
+  border-color: var(--col-antag-border);
+  color: var(--col-antag-text);
+}
+.part-tag.is-long .part-tag-dot,
+.part-tag.is-lengthen-antagonist .part-tag-dot {
+  background: var(--col-antag-dot);
+}
+
+.part-tag.is-lengthen-linked {
+  background: var(--col-linked-long-bg);
+  border-color: var(--col-linked-long-border);
+  color: var(--col-linked-long-text);
+}
+.part-tag.is-lengthen-linked .part-tag-dot {
+  background: var(--col-linked-long-dot);
+}
+
+.part-tag.is-line-part .part-tag-dot {
+  background: var(--c, var(--gold));
+}
+
+.part-tag.is-line-part.is-active,
+.is-trigger-line-btn.is-active {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+.part-deep-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.part-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+
+.card-swatch {
+  width: 12px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--c, var(--gold));
+  flex-shrink: 0;
+}
+
+.line-sheet-summary {
+  padding: 6px 10px;
+  border-left: 3px solid var(--c, var(--gold));
+  background: var(--surface-2);
+  border-radius: 0 9px 9px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-sub);
+  line-height: 1.44;
+}
+
+.line-sheet-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.line-sheet-sec-lbl {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  margin-bottom: 2px;
+}
+
+.story-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.story-text {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.52;
+}
+
+.step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step-nav,
+.step-dot {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.step-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-dot span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.step-dot.is-now span {
+  width: 20px;
+  border-radius: 99px;
+  background: var(--gold);
+}
+
+/* --------------------------------------------------------------------------
+   9. 3Dセルフケア指導モーダル (.selfcare-modal)
+   -------------------------------------------------------------------------- */
+
+.selfcare-modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 46dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px calc(var(--safe-r) + 12px) calc(var(--safe-b) + 10px) calc(var(--safe-l) + 12px);
+  background: linear-gradient(180deg, rgba(254, 252, 249, 0.97) 0%, rgba(250, 246, 239, 0.99) 100%);
+  border-top: 1px solid var(--gold-border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-lg);
+  z-index: 32;
+  pointer-events: auto;
+}
+
+@media (min-width: 740px) {
+  .selfcare-modal {
+    left: 16px;
+    right: auto;
+    bottom: 16px;
+    width: min(348px, calc(100vw - 96px));
+    max-height: calc(100dvh - 88px);
+    border: 1px solid var(--gold-border);
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .selfcare-modal {
+    width: 430px;
+  }
+}
+
+.sc-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sc-modal-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-safety-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  background: rgba(206, 126, 107, 0.14);
+  border: 1px solid rgba(206, 126, 107, 0.48);
+}
+
+.sc-safety-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #8f4232;
+}
+
+.sc-safety-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5c2a1f;
+  line-height: 1.44;
+}
+
+.sc-guide-banner {
+  padding: 8px 11px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold-border);
+}
+
+.sc-guide-text {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.sc-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sc-step-card {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 46px;
+  padding: 5px 8px;
+  border-radius: 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  text-align: left;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sc-step-card.is-active {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+}
+
+.sc-step-num {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.sc-step-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sc-clinic-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 50px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold);
+  text-decoration: none;
+}
+
+.sc-clinic-cta-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sc-clinic-cta-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-bright);
+}
+
+.sc-clinic-cta-sub {
+  font-size: 11.5px;
+  color: var(--text-sub);
+}
+
+.sc-clinic-cta-arrow {
+  font-size: 15px;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.sc-tool-affiliate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  text-decoration: none;
+}
+
+.sc-aff-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
+.sc-aff-badge,
+.rad-badge {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.sc-disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   10. ヘルプモーダル (.help-modal) & リワード広告モーダル (.reward-ad-modal)
+   -------------------------------------------------------------------------- */
+
+.help-modal,
+.reward-ad-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-t) + 16px) 14px calc(var(--safe-b) + 16px);
+  background: rgba(42, 35, 30, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.help-modal-card,
+.rad-card {
+  width: min(440px, 100%);
+  max-height: 84dvh;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--panel-bg-elevated);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-modal-head,
+.rad-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.help-modal-title,
+.rad-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.help-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+}
+
+.help-sec--sweater,
+.help-sec--temp {
+  background: linear-gradient(135deg, rgba(207, 160, 88, 0.14) 0%, rgba(250, 246, 239, 0.96) 100%);
+  border-color: var(--gold-border);
+}
+
+.help-sec-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--gold-bright);
+}
+
+.help-sweater-lead {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.55;
+}
+
+.help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.help-color-dot.is-short,
+.help-color-dot.is-core {
+  background: #a84e3b;
+}
+.help-color-dot.is-yore,
+.help-color-dot.is-linked-short {
+  background: #e09380;
+}
+.help-color-dot.is-long,
+.help-color-dot.is-antagonist,
+.help-color-dot.is-stretch-grad {
+  background: linear-gradient(135deg, #3f7398 0%, #8bb5d1 100%);
+}
+.help-color-dot.is-linked-long {
+  background: #8bb5d1;
+}
+.help-color-dot.is-neutral-gray {
+  background: rgba(235, 226, 210, 0.65);
+  border: 1.5px solid #8a735c;
+}
+
+.help-ico-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+.help-row-text {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.42;
+}
+.help-row-text strong {
+  color: var(--text-main);
+}
+
+.help-sec--safety {
+  border-color: rgba(206, 126, 107, 0.45);
+}
+
+.help-safety-text {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.48;
+}
+
+.help-safety-sub {
+  font-size: 12px;
+  color: #8f4232;
+  line-height: 1.45;
+}
+
+.help-disclosure,
+.rad-disclosure {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.rad-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rad-tool {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--gold-border);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
+.rad-bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.rad-bar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--gold);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+.rad-go-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border-radius: 12px;
+  background: #2a231e;
+  border: 1.5px solid #cfa058;
+  color: #faf8f4;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* --------------------------------------------------------------------------
+   11. 見せるモード下部バー (.present-bar) & ローディング画面 (.loading)
+   -------------------------------------------------------------------------- */
+
+.present-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--safe-b) + 12px);
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: var(--panel-bg-elevated);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-md);
+  z-index: 29;
+  pointer-events: auto;
+}
+
+.pb-story,
+.pb-habit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-nav,
+.play-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-bright);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pb-mid,
+.pb-hmid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pb-hrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
+.pb-track {
+  display: block;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.pb-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #6a99ba, #ce7e6b, #a84e3b);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+/* ローディングオーバーレイ（和紙クリーム） */
+.loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse 84% 68% at 50% 42%, var(--bg-glow) 0%, var(--bg-mid) 56%, var(--bg-deep) 100%);
+  z-index: 100;
+  pointer-events: auto;
+  transition: opacity 0.45s ease;
+}
+
+.loading.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-inner {
+  width: min(280px, 80vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+}
+
+.loading-route {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(180, 154, 112, 0.24);
+  overflow: hidden;
+}
+
+.loading-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ce7e6b, #cfa058);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.loading-stop {
+  display: none;
+}
+
+.loading-text {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 分割画面・短尺ビューポート（390x660等）でも44px以上のタップ領域と0px被りを両立 */
+@media (max-height: 700px) {
+  .rail {
+    gap: 3px;
+    padding: 3px;
+  }
+  .rail-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .sheet {
+    max-height: 41dvh;
+  }
+  .sheet-body {
+    padding-top: 6px;
+    padding-bottom: calc(var(--safe-b) + 6px);
+  }
+  .finder-home {
+    gap: 4px;
+  }
+  .home-entry-grid,
+  .feel-region-grid,
+  .habit-cat4-grid {
+    gap: 5px;
+  }
+  .home-entry-card {
+    min-height: 45px;
+    padding: 5px 11px;
+  }
+  .card {
+    gap: 5px;
+  }
+  .habit-causal-summary {
+    padding: 5px 9px;
+    font-size: 13.5px;
+    -webkit-line-clamp: 2;
+  }
+  .habit-selfcare-howto {
+    font-size: 12.5px;
+  }
+}
+
+.home-search-btn-ico {
+  width: 14px;
+  height: 14px;
+  color: var(--gold-bright);
+}
+
+.habit-story-sub-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.story-sub-svg {
+  width: 17px;
+  height: 17px;
+  color: var(--gold-bright);
+  flex-shrink: 0;
+}
+
+/* 全身の筋膜シート図鑑 (.card--line) の通過ポイントピル整形（番号見切れ・縦伸びゼロ） */
+.card--line {
+  gap: 6px;
+}
+.line-sheet-summary {
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-main);
+  background: #F4EFE6;
+  border-left: 3px solid var(--c, var(--gold));
+  border-radius: 8px;
+}
+.line-sheet-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.line-sheet-sec-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+.line-sec-svg {
+  width: 14px;
+  height: 14px;
+}
+.part-tags--line {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 6px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.part-tags--line::-webkit-scrollbar {
+  display: none;
+}
+.route-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.route-bar {
+  display: none;
+}
+.route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: var(--text-sub);
+  background: #F5F0E6;
+  border: 1px solid #E5DCCB;
+  border-radius: 999px;
+}
+.stop--end {
+  color: var(--text-main);
+  font-weight: 600;
+  border-color: rgba(207, 160, 88, 0.55);
+}
+.stop-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c, var(--gold));
+  flex-shrink: 0;
+}
+
+/* 3Dセルフケアモーダルをスリム化し、上部の3Dリリース表示領域を広く確保 */
+.selfcare-modal {
+  gap: 6px !important;
+  padding: 10px 12px calc(var(--safe-b) + 8px) !important;
+}
+.selfcare-modal .sc-safety-box {
+  padding: 6px 9px;
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+.selfcare-modal .sc-guide-banner {
+  padding: 7px 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.selfcare-modal .sc-step-card {
+  min-height: 44px;
+  padding: 6px 8px;
+}
+.selfcare-modal .sc-clinic-cta {
+  min-height: 44px;
+  padding: 7px 11px;
+}
+.selfcare-modal .sc-disclaimer {
+  font-size: 10.5px;
+  line-height: 1.32;
+  margin: 0;
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#FAF8F4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="筋膜ライン 3D" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="description" content="仕事や日常の姿勢・スポーツの動きから、縮みやすい筋膜と引き伸ばされやすい筋膜、全身の筋膜のつながりを3Dで楽しく探せる無料セルフケア図鑑。" />
+  <meta property="og:title" content="筋膜ライン 3D — 姿勢と筋膜のつながり・セルフケア図鑑" />
+  <meta property="og:description" content="いつもの姿勢や動作で負担がかかりやすい「縮みやすい筋膜」と「引き伸ばされやすい筋膜」、筋膜のつながりとセルフケアを3Dで直感検索。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ja_JP" />
+  <meta name="twitter:card" content="summary" />
+  <title>筋膜ライン 3D — 姿勢と筋膜のつながり・セルフケア図鑑</title>
+  <link rel="stylesheet" href="css/app.css?v=20261115c" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="ui-root"></div>
+  <script type="module" src="js/main.js?v=20261115c"></script>
+  <script>
+    if (
+      'serviceWorker' in navigator &&
+      (location.protocol === 'https:' ||
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1')
+    ) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
