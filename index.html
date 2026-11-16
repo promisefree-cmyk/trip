@@ -2391,7 +2391,7 @@
       padding: 10px 10px 36px;
     }
 
-    /* Top Unified Compact Plan & Search Bar */
+    /* Top 3-Step Scratch Search Wizard (Zero Area Dropdown Bias!) */
     .universal-search-portal {
       background: #fff;
       color: var(--text-main);
@@ -2401,153 +2401,257 @@
       box-shadow: 0 4px 18px rgba(27, 59, 43, 0.07);
       border: 1.5px solid var(--border);
     }
-    .compact-plan-bar {
+    .step-wizard-head {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
       gap: 8px;
-      align-items: center;
       margin-bottom: 10px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid #EEF2EF;
     }
-    .mode-seg {
-      display: inline-flex;
-      background: #F1F4F2;
-      padding: 3px;
-      border-radius: 10px;
-      gap: 2px;
-      flex: 0 0 auto;
-    }
-    .mode-seg-btn {
-      border: none;
-      background: transparent;
-      color: #475569;
-      font-size: 12.5px;
-      font-weight: 800;
-      padding: 8px 12px;
-      min-height: 38px;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.16s ease, color 0.16s ease;
-    }
-    .mode-seg-btn.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(27, 59, 43, 0.18);
-    }
-    .quick-trip-select-wrap {
-      flex: 1 1 220px;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      min-width: 0;
-    }
-    .quick-trip-select {
-      flex: 1 1 auto;
-      width: 100%;
-      min-height: 40px;
-      padding: 8px 30px 8px 12px;
-      border-radius: 10px;
-      border: 1.5px solid #CBD5CE;
-      background-color: #F8FAF9;
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--primary);
-      cursor: pointer;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .quick-search-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .quick-search-row .usp-input-wrap {
-      flex: 1 1 auto;
-    }
-    .quick-search-row .usp-input {
-      padding: 9px 32px 9px 12px;
+    .step-wizard-title {
       font-size: 13.5px;
-      min-height: 40px;
-      border-width: 1.5px;
+      font-weight: 900;
+      color: var(--primary);
     }
-    .quick-search-btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 0 15px;
-      min-height: 40px;
-      font-size: 13px;
+    .history-mini-btn {
+      background: #F4F7F5;
+      color: var(--primary);
+      border: 1px solid #CBD5CE;
+      border-radius: 99px;
+      padding: 4px 10px;
+      font-size: 11px;
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .quick-search-btn:active {
-      transform: scale(0.98);
+    .wizard-step-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 10px;
+      background: #F9FBF9;
+      border: 1px solid #E5EBE7;
+      border-radius: 11px;
+      margin-bottom: 8px;
     }
-
-    /* Progressive Disclosure Details Panel for Advanced Search & Chips */
-    .usp-more-details {
-      margin-top: 8px;
-      border-top: 1px solid #EEF2EF;
-      padding-top: 8px;
-    }
-    .usp-more-summary {
-      list-style: none;
+    .wizard-step-label {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
       font-size: 12px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .ws-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-right: 5px;
+      flex-shrink: 0;
+    }
+    .ws-sub {
+      font-size: 10.5px;
       font-weight: 700;
-      color: #475569;
-      cursor: pointer;
-      padding: 4px 2px;
-      user-select: none;
+      color: #64748B;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .usp-more-summary::-webkit-details-marker { display: none; }
-    .usp-more-caret {
-      font-size: 11px;
-      color: var(--primary);
-      font-weight: 800;
+    .wizard-dest-input-wrap {
+      position: relative;
+      width: 100%;
     }
-    .usp-more-details[open] .usp-more-caret::after { content: "閉じる ▲"; }
-    .usp-more-details:not([open]) .usp-more-caret::after { content: "開く ▾"; }
-    .usp-more-body {
-      padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .wizard-dest-input-wrap .usp-input {
+      padding: 9px 32px 9px 11px;
+      font-size: 13.5px;
+      min-height: 40px;
+      border: 1.5px solid #CBD5CE;
+      background: #fff;
     }
-    .usp-more-body .usp-q-label {
-      color: var(--primary);
+    .region-tabs-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
     }
-    .usp-more-body .usp-chip {
-      background: #F4F7F5;
-      color: #1E293B;
+    .region-tab-btn {
       border: 1px solid #CBD5CE;
+      background: #fff;
+      color: #475569;
+      border-radius: 7px;
+      padding: 5px 4px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .usp-more-body .usp-chip:hover {
-      background: #E2ECE6;
+    .region-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
     }
-    @media (max-width: 640px) {
-      .mode-seg {
-        width: 100%;
+    .region-chips-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .dest-quick-chip {
+      border: 1px solid #D5DFD9;
+      background: #fff;
+      color: #1E293B;
+      border-radius: 99px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .dest-quick-chip.active, .dest-quick-chip:active {
+      background: #CCFBF1;
+      border-color: #0D9488;
+      color: #0F766E;
+    }
+
+    /* Step 2 Origin Pills + Free Input */
+    .origin-pills-strip {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+      padding-right: 12px;
+      -webkit-mask-image: linear-gradient(to right, #000 90%, transparent 100%);
+      mask-image: linear-gradient(to right, #000 90%, transparent 100%);
+    }
+    .origin-pills-strip::-webkit-scrollbar { display: none; }
+    .origin-pill-btn {
+      border: 1px solid #CBD5CE;
+      background: #fff;
+      color: #334155;
+      border-radius: 99px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .origin-pill-btn.active {
+      background: #0D9488;
+      color: #fff;
+      border-color: #0F766E;
+    }
+    .origin-custom-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .origin-custom-wrap .usp-origin-input {
+      width: 100%;
+      padding: 7px 28px 7px 10px;
+      font-size: 12.5px;
+      border: 1px solid #CBD5CE;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    /* Step 3 Pure Condition Row (Duration + Focus Genre) */
+    .step3-cond-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+      gap: 8px;
+      align-items: center;
+    }
+    @media (max-width: 600px) {
+      .step3-cond-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
-      .mode-seg-btn {
-        flex: 1 1 0;
-        text-align: center;
-        padding: 8px 6px;
-      }
-      .usp-selects {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-      }
-      .usp-select {
-        font-size: 12px;
-        padding: 8px 6px;
-      }
+    }
+    .mode-seg {
+      display: flex;
+      background: #E9EFEB;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 2px;
+      width: 100%;
+    }
+    .mode-seg-btn {
+      flex: 1 1 0;
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 6px;
+      min-height: 34px;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .mode-seg-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .pure-genre-select {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      border: 1.5px solid #CBD5CE;
+      background: #fff;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .wizard-submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #1B3B2B 0%, #0F6256 100%);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      padding: 11px 14px;
+      min-height: 44px;
+      font-size: 13.5px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(15, 98, 86, 0.22);
+      transition: transform 0.12s ease;
+    }
+    .wizard-submit-btn:active {
+      transform: scale(0.99);
+    }
+    .current-plan-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #EEF4F0;
+      border: 1px solid #C6D8CD;
+      border-radius: 10px;
+      padding: 8px 11px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .cps-title {
+      flex: 1 1 0%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* Compact Filter & Grid Toggle Strip */
@@ -2888,37 +2992,95 @@
   <main class="container">
 
     <!-- =====================================================================
-         COMPACT UNIFIED PLAN SWITCHER & SEARCH BAR (Zero Visual Clutter)
+         SCRATCH-BUILT 3-STEP SEARCH WIZARD (Any Destination × Any Origin!)
          ===================================================================== -->
     <section class="universal-search-portal" id="sec-universal-search">
-      <!-- Row 1: 3-Way Mode Segment + Instant Plan Dropdown -->
-      <div class="compact-plan-bar" id="active-result-banner">
-        <div class="mode-seg" role="tablist" aria-label="旅行モード切替">
-          <button type="button" class="mode-seg-btn active" id="btn-mode-outing" onclick="setPrimaryMode('outing')">日帰り</button>
-          <button type="button" class="mode-seg-btn" id="btn-mode-travel" onclick="setPrimaryMode('travel')">国内泊</button>
-          <button type="button" class="mode-seg-btn" id="btn-mode-overseas" onclick="setPrimaryMode('overseas')">海外</button>
-        </div>
-        <div class="quick-trip-select-wrap">
-          <select id="quick-trip-select" class="quick-trip-select" aria-label="プランを選択" onchange="selectTrip(this.value)"></select>
-        </div>
-        <span id="arb-mode-label" style="display:none;"></span>
-        <span id="arb-plan-title" style="display:none;"></span>
+      <div class="step-wizard-head">
+        <span class="step-wizard-title">🧭 3ステップでプラン作成</span>
+        <button type="button" class="history-mini-btn" id="btn-toggle-presets" onclick="togglePresetSwitcherDrawer()">📂 履歴・定番</button>
       </div>
 
-      <!-- Row 2: Simple 1-Line Search Input + Create Button -->
-      <div class="quick-search-row">
-        <div class="usp-input-wrap">
+      <!-- STEP 1: WHERE TO GO (Destination) -->
+      <div class="wizard-step-row">
+        <div class="wizard-step-label">
+          <span><span class="ws-num">1</span>どこへ行く？（行き先エリア）</span>
+          <span class="ws-sub">入力 または タップ選択</span>
+        </div>
+        <div class="wizard-dest-input-wrap">
           <input
             type="search"
             id="uni-search-input"
             class="usp-input"
-            placeholder="行き先・温泉・店名で新規プラン作成（例：箱根 / 神楽坂 / ソウル）"
+            placeholder="街・駅・温泉地・国名（例：鎌倉 / 熱海 / 金沢 / 恵比寿 / ソウル）"
             onkeydown="if(event.key==='Enter'){runUniversalPlanSearch();}"
           >
           <button class="usp-clear-btn" onclick="clearUniversalSearch()" title="クリア">✕</button>
         </div>
-        <button class="quick-search-btn" id="btn-main-search" onclick="runUniversalPlanSearch()">🔍 検索</button>
+        <div class="region-tabs-strip" role="tablist" aria-label="エリア地方切替">
+          <button type="button" class="region-tab-btn active" data-reg="kanto_near" onclick="switchDestRegionTab('kanto_near')">都内・近郊</button>
+          <button type="button" class="region-tab-btn" data-reg="onsen_east" onclick="switchDestRegionTab('onsen_east')">関東・温泉</button>
+          <button type="button" class="region-tab-btn" data-reg="japan_wide" onclick="switchDestRegionTab('japan_wide')">全国・人気</button>
+          <button type="button" class="region-tab-btn" data-reg="world" onclick="switchDestRegionTab('world')">海外</button>
+        </div>
+        <div class="region-chips-box" id="region-chips-box"></div>
       </div>
+
+      <!-- STEP 2: WHERE FROM (Origin — Not Tied to Home!) -->
+      <div class="wizard-step-row">
+        <div class="wizard-step-label">
+          <span><span class="ws-num">2</span>どこから出発？（出先・現地集合もOK）</span>
+        </div>
+        <div class="origin-pills-strip">
+          <button type="button" class="origin-pill-btn active" data-orig="" onclick="setOriginStation('')">現地スタート</button>
+          <button type="button" class="origin-pill-btn" id="btn-gps-origin" onclick="detectCurrentLocationOrigin()">📍 現在地</button>
+          <button type="button" class="origin-pill-btn" data-orig="東京駅" onclick="setOriginStation('東京駅')">東京駅</button>
+          <button type="button" class="origin-pill-btn" data-orig="品川駅" onclick="setOriginStation('品川駅')">品川駅</button>
+          <button type="button" class="origin-pill-btn" data-orig="新宿駅" onclick="setOriginStation('新宿駅')">新宿駅</button>
+          <button type="button" class="origin-pill-btn" data-orig="渋谷駅" onclick="setOriginStation('渋谷駅')">渋谷駅</button>
+          <button type="button" class="origin-pill-btn" data-orig="中目黒駅" onclick="setOriginStation('中目黒駅')">中目黒駅</button>
+          <button type="button" class="origin-pill-btn" data-orig="羽田空港" onclick="setOriginStation('羽田空港')">羽田空港</button>
+        </div>
+        <div class="origin-custom-wrap">
+          <input
+            type="text"
+            id="origin-station-input"
+            class="usp-origin-input"
+            value=""
+            placeholder="その他の出発駅・空港・ホテル名を入力（未入力なら現地スタート）"
+            onchange="setOriginStation(this.value)"
+            onkeydown="if(event.key==='Enter'){setOriginStation(this.value); this.blur();}"
+          >
+          <button type="button" class="usp-clear-btn" onclick="clearOriginStation()" title="出発地をクリア">✕</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: DURATION & FOCUS (Pure Conditions — Zero Area Names in Dropdown!) -->
+      <div class="wizard-step-row" style="margin-bottom:10px;">
+        <div class="wizard-step-label">
+          <span><span class="ws-num">3</span>日程 ＆ 重視したいポイント</span>
+        </div>
+        <div class="step3-cond-grid">
+          <div class="mode-seg" role="tablist" aria-label="日程切替">
+            <button type="button" class="mode-seg-btn active" id="btn-mode-outing" onclick="setSearchDurationMode('outing')">日帰り</button>
+            <button type="button" class="mode-seg-btn" id="btn-mode-travel" onclick="setSearchDurationMode('travel')">国内泊</button>
+            <button type="button" class="mode-seg-btn" id="btn-mode-overseas" onclick="setSearchDurationMode('overseas')">海外</button>
+          </div>
+          <input type="hidden" id="uni-search-mode" value="outing">
+          <select id="uni-search-genre" class="pure-genre-select" aria-label="重視ジャンル">
+            <option value="all">重視：バランスよく（宿・観光・食事）</option>
+            <option value="サウナ・温泉・岩盤浴・スパ・タラソテラピー">重視：温泉・サウナ・スパ</option>
+            <option value="名店グルメ・ミシュラン・食べログ百名店・新オープン">重視：名店グルメ・食べ歩き</option>
+            <option value="五つ星ホテル・露天風呂付き客室・プールヴィラ">重視：宿・ホテルでの滞在</option>
+            <option value="自然満喫・世界遺産・街歩き散歩・サイクリング">重視：自然・街歩き・観光</option>
+            <option value="カフェ・スイーツ・ベーカリー・アフタヌーンティー">重視：カフェ・甘味・パン</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="wizard-submit-btn" id="btn-main-search" onclick="runUniversalPlanSearch()">
+        🔍 この条件でお店・宿の候補を表示する
+      </button>
+      <button type="button" id="btn-pin-search" onclick="proposeMoreFromTopSearch()" style="display:none;"></button>
 
       <!-- Live Animated Search Progress Indicator -->
       <div class="search-status-box" id="search-status-box">
@@ -2941,91 +3103,12 @@
         </div>
       </div>
 
-      <!-- Row 3: Optional Expandable Details (Origin, Genre, Popular Quick Chips) -->
-      <details class="usp-more-details" id="usp-more-details">
-        <summary class="usp-more-summary">
-          <span>⚙️ 出発駅・ジャンル絞り込み・人気エリアから選ぶ</span>
-          <span class="usp-more-caret"></span>
-        </summary>
-        <div class="usp-more-body">
-          <div class="usp-origin-bar" style="margin-bottom:0;">
-            <span class="usp-origin-label">🚉 出発駅：</span>
-            <div class="usp-origin-input-wrap">
-              <input
-                type="text"
-                id="origin-station-input"
-                class="usp-origin-input"
-                value=""
-                placeholder="最寄駅を入力（未入力でもOK）"
-                onchange="setOriginStation(this.value)"
-                onkeydown="if(event.key==='Enter'){setOriginStation(this.value); this.blur();}"
-              >
-              <button type="button" class="usp-clear-btn" onclick="clearOriginStation()" title="出発地をクリア">✕</button>
-            </div>
-            <button type="button" class="usp-gps-btn" id="btn-gps-origin" onclick="detectCurrentLocationOrigin()">📍 現在地</button>
-            <div class="usp-origin-presets">
-              <button type="button" class="usp-origin-chip" onclick="setOriginStation('新宿駅')">新宿駅</button>
-              <button type="button" class="usp-origin-chip" onclick="setOriginStation('渋谷駅')">渋谷駅</button>
-              <button type="button" class="usp-origin-chip" onclick="setOriginStation('東京駅')">東京駅</button>
-              <button type="button" class="usp-origin-chip" onclick="setOriginStation('品川駅')">品川駅</button>
-              <button type="button" class="usp-origin-chip" onclick="setOriginStation('横浜駅')">横浜駅</button>
-            </div>
-          </div>
-
-          <div class="usp-selects">
-            <select id="uni-search-mode" class="usp-select" onchange="onSearchDropdownChange('mode')">
-              <option value="auto">日数：自動判定</option>
-              <option value="outing">日帰り・半日</option>
-              <option value="travel">国内宿泊</option>
-              <option value="overseas">海外旅行</option>
-            </select>
-            <select id="uni-search-genre" class="usp-select" onchange="onSearchDropdownChange('genre')">
-              <option value="all">重視：バランスよく</option>
-              <option value="サウナ・温泉・岩盤浴・スパ・タラソテラピー">温泉・サウナ重視</option>
-              <option value="名店グルメ・ミシュラン・食べログ百名店・新オープン">名店グルメ重視</option>
-              <option value="五つ星ホテル・露天風呂付き客室・プールヴィラ">宿・ホテル重視</option>
-              <option value="自然リトリート・世界遺産・街歩き散歩・サイクリング">自然・街歩き重視</option>
-              <option value="カフェ・スイーツ・ベーカリー・アフタヌーンティー">カフェ・甘味重視</option>
-            </select>
-          </div>
-
-          <button class="usp-pin-btn" id="btn-pin-search" onclick="proposeMoreFromTopSearch()" style="padding:9px 12px; font-size:12px;">
-            ➕ 今のプランを残したまま候補だけ追加検索
-          </button>
-
-          <div class="usp-quick-groups" style="margin-top:2px;">
-            <div class="usp-q-row">
-              <span class="usp-q-label">🗾 国内人気：</span>
-              <button class="usp-chip" onclick="quickUniversalSearch('草津温泉', 'travel')">草津温泉</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('日光・鬼怒川温泉', 'travel')">日光・鬼怒川</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('河口湖・富士五湖', 'travel')">河口湖</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('那須高原 リトリート', 'travel')">那須高原</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('京都 嵐山・祇園', 'travel')">京都</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('金沢 兼六園・近江町市場', 'travel')">金沢</button>
-            </div>
-            <div class="usp-q-row">
-              <span class="usp-q-label">🚶 日帰り：</span>
-              <button class="usp-chip" onclick="quickUniversalSearch('神楽坂 路地裏グルメ＆散歩', 'outing')">神楽坂</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('清澄白河・蔵前 カフェ＆散歩', 'outing')">清澄白河</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('横浜みなとみらい・中華街・万葉倶楽部', 'outing')">みなとみらい</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('川越 小江戸食べ歩き＆温泉', 'outing')">川越</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('秩父・長瀞 自然＆祭の湯', 'outing')">秩父・長瀞</button>
-            </div>
-            <div class="usp-q-row">
-              <span class="usp-q-label">🌍 海外人気：</span>
-              <button class="usp-chip" onclick="quickUniversalSearch('韓国 ソウル 明洞・聖水・韓屋村・スパ', 'overseas')">ソウル</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('台湾 台北・北投温泉・九份', 'overseas')">台北＆九份</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('ハワイ ホノルル・ワイキキ・カイルア', 'overseas')">ハワイ</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('タイ バンコク ルーフトップ・スパ・寺院', 'overseas')">バンコク</button>
-              <button class="usp-chip" onclick="quickUniversalSearch('バリ島 ウブド 森林プールヴィラ＆スパ', 'overseas')">バリ島</button>
-            </div>
-          </div>
+      <!-- Optional Saved History / Preset Drawer (Opened only when user taps 📂 履歴・定番) -->
+      <section class="preset-switcher-drawer" id="sec-top-mode" style="margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span class="sub-tabs-label" id="sub-tabs-heading" style="font-size:12px; margin:0;">📂 検索履歴・定番サンプル：</span>
+          <button type="button" onclick="togglePresetSwitcherDrawer(false)" style="border:none; background:#e2e8f0; color:#334155; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:800; cursor:pointer;">閉じる ✕</button>
         </div>
-      </details>
-
-      <!-- Hidden Legacy Preset Drawer Container (Preserved for JS compatibility) -->
-      <section class="preset-switcher-drawer" id="sec-top-mode" style="margin-top:8px;">
-        <div class="sub-tabs-label" id="sub-tabs-heading" style="font-size:12px; margin-bottom:6px;">📍 プランを選択：</div>
         <div class="dest-tabs" id="dest-tabs-container" style="margin-bottom:4px;"></div>
       </section>
 
@@ -3045,6 +3128,12 @@
       </div>
     </section>
 
+    <!-- Compact Active Plan Strip right above the 2-column shop list -->
+    <div class="current-plan-strip" id="active-result-banner">
+      <span class="cps-title" id="arb-plan-title">📍 表示中のエリア候補（下のカードを2列で見比べてタップ選択）</span>
+      <span id="arb-mode-label" style="font-size:10.5px; background:#fff; padding:2px 8px; border-radius:99px; border:1px solid #C6D8CD; white-space:nowrap;">現地スタート</span>
+    </div>
+
     <!-- =====================================================================
          OVERSEAS PRO FLIGHT / TIME-DIFF / VISA / CURRENCY BAR
          ===================================================================== -->
@@ -3053,7 +3142,7 @@
         <div class="om-title">
           <span id="om-header-title">🛂✈️ 海外渡航ガイド ＆ 空港アクセス</span>
         </div>
-        <span id="om-country-badge" style="font-size:11px; font-weight:800; background:rgba(255,255,255,0.2); padding:3px 10px; border-radius:99px;">海外リトリート</span>
+        <span id="om-country-badge" style="font-size:11px; font-weight:800; background:rgba(255,255,255,0.2); padding:3px 10px; border-radius:99px;">海外リゾート旅</span>
       </div>
       <div class="om-grid">
         <div class="om-card">
@@ -3362,8 +3451,8 @@
       outing: [
         {
           key: "tokyo_spa",
-          tag: "🧖‍♀️ 出発地から12〜35分・半日OK",
-          title: "ご近所スパ（ラクーア・庭の湯・おおたか）",
+          tag: "🧖‍♀️ 都心から15〜35分・半日OK",
+          title: "都内・近郊スパ（ラクーア・庭の湯・おおたか）",
           desc: "2026新装サウナ・水着バーデ・岩盤浴＋前後の散歩＆サ飯",
           img: "assets/travel/laqua_dome.jpg"
         },
@@ -3429,7 +3518,7 @@
         },
         {
           key: "hawaii",
-          tag: "🌺 王道アイランドリトリート（4泊6日〜）",
+          tag: "🌺 王道アイランド癒やし旅（4泊6日〜）",
           title: "ハワイ・オアフ島（ハレクラニ＆カハラ・ダイヤモンドヘッド・カイルアe-Bike）",
           desc: "海辺タラソスパ・早朝ハイク・ラニカイビーチ電動自転車・熟成ステーキ",
           img: "assets/travel/hawaii_halekulani.jpg"
@@ -3449,11 +3538,11 @@
     // ============================================================================
     const CATALOG = {
       // =========================================================================
-      // OUTING 1: ご近所・都内スパ（ラクーア・庭の湯・スパメッツァ・花景の湯・レスタ）
+      // OUTING 1: 都内・近郊スパ（ラクーア・庭の湯・スパメッツァ・花景の湯・レスタ）
       // =========================================================================
       tokyo_spa: {
         primaryMode: "outing",
-        title: "ご近所スパ（ラクーア・庭の湯・おおたか）お出かけプラン",
+        title: "都内・近郊スパ（ラクーア・庭の湯・おおたか）お出かけプラン",
         hotelHeading: "🧖‍♀️ ① メインで行くスパ・温泉施設を選ぶ（1つ選択）",
         spotHeading: "🌲🚲 ② スパの前後に組み合わせるお散歩・寄り道を選ぶ（ON/OFF自由）",
         foodHeading: "🍽️ ③ スパ前後の人気ランチ・サ飯を選ぶ（1つ選択）",
@@ -3466,19 +3555,19 @@
           {
             id: "spa_laqua",
             name: "東京ドーム天然温泉 Spa LaQua（スパ ラクーア）",
-            area: "後楽園・水道橋（出発地から千代田線＋徒歩で約12分・タクシー約8分）",
+            area: "後楽園・水道橋（後楽園駅から徒歩1分・東京駅から丸ノ内線で約9分）",
             price: "入館 約3,500円〜＋岩盤浴ヒーリングバーデ 1,100円",
             budget2p: 11500,
             img: "assets/travel/laqua_dome.jpg",
             badges: [
-              { text: "出発地から12分！", cls: "cb-sauna" },
+              { text: "後楽園駅徒歩1分！", cls: "cb-sauna" },
               { text: "2026.10『ととのいいすバイキング』新設", cls: "cb-buzz" },
               { text: "南国岩盤浴ヒーリングバーデ", cls: "cb-stone" }
             ],
             tags: ["sauna", "stone", "buzz"],
             buzzText: "🔥【2026年10月リニューアル】浴室に名作チェアを集めた『ととのいいすバイキング』が新設！Far Yeastコラボ限定クラフトビールも登場し、湯上がり体験が大幅進化。",
             wellnessSpec: "🧖‍♀️サウナ：中高温サウナ4種（アウフグース有） ／ 🪨岩盤浴：18歳以上限定・南国リゾート風『ヒーリング バーデ』（低温サウナ4種＋クールルーム＋展望ラウンジ）",
-            why: "出発地から一番近く、手ぶらでリゾート気分に浸れる都内最高峰スパ。地下1,700mから湧く琥珀色の天然温泉と、2人並んで寝転べる岩盤浴『ヒーリング バーデ』で首肩のこわばりが一気に溶けます。",
+            why: "都心からアクセス抜群で、手ぶらでリゾート気分に浸れる都内最高峰スパ。地下1,700mから湧く琥珀色の天然温泉と、2人並んで寝転べる岩盤浴『ヒーリング バーデ』で首肩のこわばりが一気に溶けます。",
             links: [
               { label: "公式サイト", url: "https://www.laqua.jp/spa/" },
               { label: "Googleマップ", url: "https://www.google.com/maps/search/?api=1&query=スパラクーア" }
@@ -3517,19 +3606,19 @@
           {
             id: "spa_metsa",
             name: "スパメッツァおおたか 竜泉寺の湯（ドラゴンロウリュ＆BEAMS岩盤ラウンジ）",
-            area: "流山おおたかの森（出発地→西日暮里→北千住→TX快速で約35分）",
+            area: "流山おおたかの森（秋葉原・北千住からTX快速で約25〜30分・駅徒歩2分）",
             price: "入館 1,100円〜＋岩盤浴メッツァネリオ 800円〜",
             budget2p: 6800,
             img: "assets/travel/sauna_retreat.jpg",
             badges: [
               { text: "サウナシュラン全国1位殿堂", cls: "cb-sauna" },
               { text: "6種岩盤浴＆漫画1.5万冊", cls: "cb-stone" },
-              { text: "出発地から約35分・神コスパ", cls: "cb-buzz" }
+              { text: "駅徒歩2分・高コスパ", cls: "cb-buzz" }
             ],
             tags: ["sauna", "stone", "buzz"],
             buzzText: "🔥【SNSバズ聖地】5基のストーブが順番に噴き上がる『ドラゴンロウリュ』、セルフロウリュ『medi sauna』、深さ157cm水風呂！BEAMS監修の岩盤浴ラウンジ『メッツァネリオ』も快適。",
             wellnessSpec: "🧖‍♀️サウナ：ドラゴンサウナ・潤いソルト・medi sauna（水風呂3種・ととのいベッド大量） ／ 🪨岩盤浴：6種の岩盤浴＋おこもり穴＋漫画15,000冊",
-            why: "出発地から北千住経由で約35分で行ける日本最高峰のサウナ＆岩盤浴テーマパーク。2人で1日ゴロゴロしても合計6,000円台という圧倒的コスパも魅力です。",
+            why: "秋葉原・北千住からTX快速で約25〜30分で行ける日本最高峰のサウナ＆岩盤浴テーマパーク。2人で1日ゴロゴロしても合計6,000円台という圧倒的コスパも魅力です。",
             links: [
               { label: "公式サイト", url: "https://www.ryusenjinoyu.com/spametsaotaka/" },
               { label: "Googleマップ", url: "https://www.google.com/maps/search/?api=1&query=スパメッツァおおたか" }
@@ -3685,7 +3774,7 @@
               { text: "坪庭を望む極上釜揚げうどん", cls: "cb-google" }
             ],
             tags: ["walk", "buzz"],
-            why: "建築家・隈研吾氏が内装を手がけた明治時代の石蔵で、美しい坪庭を眺めながらモチモチの釜揚げうどんを味わえる名店。根津散歩のあと、千代田線で後楽園（ラクーア）や北千住（おおたか）へ向かう前に最高のランチです。",
+            why: "建築家・隈研吾氏が内装を手がけた明治時代の石蔵で、美しい坪庭を眺めながらモチモチの釜揚げうどんを味わえる名店。根津神社のお散歩と組み合わせる休日のランチにぴったりです。",
             links: [
               { label: "釜竹 公式サイト", url: "https://kamachiku.com/" },
               { label: "食べログで詳細を見る", url: "https://tabelog.com/tokyo/A1311/A131106/13018518/" }
@@ -3758,7 +3847,7 @@
           {
             id: "shop_lobelie",
             name: "【2025新OPEN】料理店 Lobélie（ロベリ｜千駄木・谷中「へび道」沿いに誕生した下町フレンチビストロ食堂）",
-            area: "谷中・へび道沿い（出発地から徒歩約5分・自宅から歩いてすぐ！）",
+            area: "谷中・へび道沿い（千駄木駅・谷中銀座から徒歩約5分）",
             price: "1人 約3,500〜6,500円（13:00〜通し営業）",
             budget2p: 10000,
             img: "assets/travel/lobelie_bistro.jpg",
@@ -3955,8 +4044,8 @@
             periodLabel: "🍰 午後・千駄木新店カフェ",
             timeRange: "15:00 - 16:00",
             title: "🍰 【2025.8 谷根千・千駄木NEW OPEN】『armadillo bakes & coffee』で限定クッキーケイク＆珈琲",
-            desc: "谷根千・千駄木エリアに新しくオープンした緑の窓枠が目印のベイクカフェへ！店内限定の『クッキーケイク』や『アルマジロケーキ』とスペシャルティコーヒーでほっこり一休みしてから自宅へ帰ります。",
-            trap: "人気のアルマジロケーキや焼き菓子はテイクアウトして自宅で楽しむこともできます！"
+            desc: "谷根千・千駄木エリアに新しくオープンした緑の窓枠が目印のベイクカフェへ！店内限定の『クッキーケイク』や『アルマジロケーキ』とスペシャルティコーヒーでほっこり一休みしてから帰路につきます。",
+            trap: "人気のアルマジロケーキや焼き菓子はお土産としてテイクアウトもできます！"
           },
           {
             id: "cafe_mihashi",
@@ -4066,7 +4155,7 @@
             tags: ["cycle", "walk", "sauna", "buzz"],
             buzzText: "🔥 江ノ電の混雑を横目に、電動アシスト自転車で鎌倉〜由比ヶ浜〜七里ヶ浜〜稲村ヶ崎の海沿いをスイスイ快走！午後は13歳未満不可の海絶景『稲村ヶ崎温泉』のサウナ＆黄金黒湯露天へ！",
             wellnessSpec: "🚲サイクリング：潮風を感じる電動e-Bike ／ 🧖‍♀️温泉＆サウナ：正面に江ノ島と富士山を望む美肌の黒湯＆サウナ",
-            why: "海風サイクリングと海絶景ランチ、そして相模湾を一望する天然温泉が1日で味わえる最高の湘南リトリートです。",
+            why: "海風サイクリングと海絶景ランチ、そして相模湾を一望する天然温泉が1日で味わえる最高の湘南癒やし旅です。",
             links: [
               { label: "稲村ヶ崎温泉 公式", url: "https://inamuragasaki-onsen.com/" },
               { label: "Googleマップ", url: "https://www.google.com/maps/search/?api=1&query=稲村ヶ崎温泉" }
@@ -4082,7 +4171,7 @@
             area: "埼玉・飯能 宮沢湖（出発地→池袋→西武池袋線特急ラビューで約65分）",
             price: "メッツァ入場無料＋喜楽里別邸（入館＋温熱房岩盤浴）1,600円〜",
             budget2p: 12500,
-            img: "assets/travel/metsa_hanno.jpg",
+            img: "assets/travel/metsa_lake.jpg",
             badges: [
               { text: "入場無料の北欧レイクサイド散歩", cls: "cb-walk" },
               { text: "小学生以下不可の大人の絶景温泉", cls: "cb-sauna" },
@@ -4276,7 +4365,7 @@
               { text: "白砂の道をe-Bikeサイクリング", cls: "cb-cycle" }
             ],
             tags: ["cycle", "walk", "buzz"],
-            buzzText: "🔥 珊瑚の白砂が敷き詰められた竹富島の小径をサイクリングし、夜は集落の温水プールに浮かびながら満天の星空を眺める究極の離島リトリート。",
+            buzzText: "🔥 珊瑚の白砂が敷き詰められた竹富島の小径をサイクリングし、夜は集落の温水プールに浮かびながら満天の星空を眺める究極の離島ステイ。",
             wellnessSpec: "🚲サイクリング：竹富島の白砂集落〜コンドイビーチを自転車で一周 ／ 🌲散歩：夜明けのアイヤル浜散歩",
             why: "沖縄本島（ブセナ）と石垣・竹富島を組み合わせる旅にも、離島単独の旅にも対応できます。",
             links: [
@@ -4693,7 +4782,7 @@
             tags: ["sauna", "walk", "buzz"],
             buzzText: "🔥 谷の集落に佇む水辺の客室と、光と闇を行き来する瞑想温泉『メディテイションバス』。毎朝『トンボの湯』を宿泊者専用時間でゆったり楽しめます！",
             wellnessSpec: "🧖‍♀️サウナ：トンボの湯（オートロウリュ・天然湧水水風呂・森林外気浴） ／ 🌲散歩：隣接する『軽井沢野鳥の森』を早朝散策",
-            why: "水音と鳥の声しかしない谷の集落で心身を深く休める、日本を代表するリトリート宿です。",
+            why: "水音と鳥の声しかしない谷の集落で心身を深く休める、日本を代表する隠れ家宿です。",
             links: [
               { label: "星のや軽井沢 公式", url: "https://hoshinoresorts.com/ja/hotels/hoshinoyakaruizawa/" }
             ],
@@ -4902,7 +4991,7 @@
           },
           {
             id: "hako_soki",
-            name: "SOKI ATAMI（全室温泉付・和漢薬草スチームサウナ＆里山茶寮のリトリート宿）",
+            name: "SOKI ATAMI（全室温泉付・和漢薬草スチームサウナ＆里山茶寮の隠れ家宿）",
             area: "熱海・奥熱海（海と里山の静寂に包まれる隠れ家宿）",
             price: "1泊2食付 約75,000〜120,000円",
             budget2p: 110000,
@@ -5042,7 +5131,7 @@
       // =========================================================================
       asia_short: {
         primaryMode: "overseas",
-        title: "近場アジア週末リトリート（韓国ソウル美容スパ＆韓屋村 ／ 台湾・北投温泉＆九份）",
+        title: "近場アジア週末癒やし旅（韓国ソウル美容スパ＆韓屋村 ／ 台湾・北投温泉＆九份）",
         depMoveTitle: "✈️ 出発地 → 羽田空港 または 成田空港 → 直行便約2.5〜3.5時間",
         depMoveDesc: "出発地から羽田空港・成田空港へスマートにアクセス！金〜日の週末2泊3日でも現地を丸3日間たっぷり満喫できます。",
         overseasMeta: {
@@ -5077,7 +5166,7 @@
             tags: ["sauna", "walk", "buzz"],
             buzzText: "🔥 韓国随一の格式を誇る五つ星ラグジュアリー。南山の緑に抱かれた屋外温水プール『Urban Island』と本格サウナ、仏ゲランの極上スパで心身ともにリセット！",
             wellnessSpec: "🧖‍♀️スパ＆サウナ：宿泊者専用の高温ドライ＆スチームサウナ・温水ジャグジー・Guerlain Spa ／ 🌲散歩：ホテル裏手の『南山ソウル城郭彫刻公園』遊歩道",
-            why: "日本語対応も完璧で初めての海外リトリートにも安心。都会の喧騒から離れた緑の丘の上にあり、朝の城郭散歩から夜のプールサイド・カバナまで極上の休日が叶います。",
+            why: "日本語対応も完璧で初めての海外癒やし旅にも安心。都会の喧騒から離れた緑の丘の上にあり、朝の城郭散歩から夜のプールサイド・カバナまで極上の休日が叶います。",
             links: [
               { label: "新羅ホテル公式", url: "https://www.shilla.net/seoul/index.do?lang=ja" },
               { label: "Googleマップ", url: "https://www.google.com/maps/search/?api=1&query=The+Shilla+Seoul" }
@@ -5154,7 +5243,7 @@
             ],
             tags: ["walk", "buzz"],
             buzzText: "🔥 夕暮れ時に赤提灯が一斉に灯るノスタルジックな石段街！海を見下ろす老舗茶藝館『阿妹茶樓（アーメイチャーロウ）』で香り高い東方美人茶と茶菓子を堪能。",
-            wellnessSpec: "🍵リトリート：海風が吹き抜けるテラス席で、淹れたての台湾高山茶を何煎も味わいながら夕景を眺める癒やし時間",
+            wellnessSpec: "🍵癒やし時間：海風が吹き抜けるテラス席で、淹れたての台湾高山茶を何煎も味わいながら夕景を眺めるひととき",
             why: "昼の明るいうちに到着して路地裏を散策し、17時過ぎの提灯点灯マジックアワーを茶藝館のテラス席から眺めるのが最高に贅沢な回り方です。",
             links: [
               { label: "Googleマップ（阿妹茶樓）", url: "https://www.google.com/maps/search/?api=1&query=阿妹茶樓+九份" }
@@ -5230,7 +5319,7 @@
       // =========================================================================
       asia_resort: {
         primaryMode: "overseas",
-        title: "東南アジア極上スパ＆プールヴィラ（バリ島ウブド森林リトリート ／ バンコク王宮リバーサイド）",
+        title: "東南アジア極上スパ＆プールヴィラ（バリ島ウブド森林ステイ ／ バンコク王宮リバーサイド）",
         depMoveTitle: "✈️ 出発地 → 成田空港 または 羽田空港→ 直行便（約6.5〜7時間）",
         depMoveDesc: "出発地から成田・羽田へスムーズにアクセスし、直行便で常夏の楽園へ！五つ星プールヴィラと世界最高峰のオリエンタルスパが日本の半額以下のコスパで体験できます。",
         overseasMeta: {
@@ -5263,7 +5352,7 @@
               { text: "聖なるアユン川とジャングル森林浴", cls: "cb-walk" }
             ],
             tags: ["sauna", "walk", "buzz"],
-            buzzText: "🔥 宙に浮かぶ蓮の池から入る劇的な建築と、熱帯雨林の渓谷を見下ろすインフィニティプール！鳥の声と川のせせらぎに包まれる究極のネイチャーリトリート。",
+            buzzText: "🔥 宙に浮かぶ蓮の池から入る劇的な建築と、熱帯雨林の渓谷を見下ろすインフィニティプール！鳥の声と川のせせらぎに包まれる究極の森林リゾート。",
             wellnessSpec: "🧖‍♀️スパ：渓谷の風を感じるオープンエア・スパヴィラでのバリニーズ・フラワーバス＆ホットストーンマッサージ ／ 🏊プール：2段インフィニティ温水プール",
             why: "日常のデジタル疲れや首肩の緊張が、ウブドの深い緑とフラワーバスで根本から溶けていく世界最高峰の癒やしリゾートです。",
             links: [
@@ -5313,7 +5402,7 @@
               { text: "朝の涼しい尾根道ウォーキング", cls: "cb-cycle" }
             ],
             tags: ["walk", "cycle", "buzz"],
-            buzzText: "✨ 朝霧が晴れてエメラルドグリーンに輝く『テガラランの棚田』と、ヤシの木が続く尾根道『チャンプアン・リッジ・ウォーク』を歩く最高の朝活リトリート！",
+            buzzText: "✨ 朝霧が晴れてエメラルドグリーンに輝く『テガラランの棚田』と、ヤシの木が続く尾根道『チャンプアン・リッジ・ウォーク』を歩く最高の朝活お散歩！",
             wellnessSpec: "🌲ネイチャーウォーク：日差しが強くなる前の午前8時〜10時に、マイナスイオンたっぷりの渓谷と棚田を散策（e-Bikeツアーも選択可）",
             why: "朝の涼しい時間帯なら観光客も少なく、棚田を見渡すオープンカフェでバリコーヒーやフレッシュココナッツを飲みながら絶景を独占できます。",
             links: [
@@ -5326,7 +5415,7 @@
             title: "🌴 世界遺産『テガラランの棚田』＆ 渓谷の尾根道『チャンプアン・リッジ』早朝お散歩",
             desc: "朝の爽やかな風が吹くウブドの尾根道とエメラルドグリーンの棚田をお散歩。散策後は棚田を一望するテラスカフェでトロピカルフルーツとバリコーヒーを味わいます。",
             rainAltTitle: "☔ ウブド王宮・ネカ美術館鑑賞 ＆ 老舗スパで180分ロイヤル・フラワーバス体験",
-            rainAltDesc: "スコール時はバリ絵画の名作が揃う美術館と、花びらを浮かべた温水フラワーバス＆アロマトリートメントで屋内リトリートを満喫します。",
+            rainAltDesc: "スコール時はバリ絵画の名作が揃う美術館と、花びらを浮かべた温水フラワーバス＆アロマトリートメントで屋内癒やし時間を満喫します。",
             trap: "11時以降は日差しが強く混雑するため、朝8時〜9時台に到着するスケジュールが圧倒的に快適です。",
             todo: "【服装】棚田の階段を歩きやすいスニーカー＆サングラス持参"
           },
@@ -5395,7 +5484,7 @@
       // =========================================================================
       hawaii: {
         primaryMode: "overseas",
-        title: "ハワイ オアフ島 王道アイランドリトリート（ハレクラニ＆カハラ・ダイヤモンドヘッド・カイルアe-Bike）",
+        title: "ハワイ オアフ島 王道アイランド癒やし旅（ハレクラニ＆カハラ・ダイヤモンドヘッド・カイルアe-Bike）",
         depMoveTitle: "✈️ 出発地 → 羽田空港 または 成田空港 → 夜発ホノルル直行便（約7時間半）",
         depMoveDesc: "夜に羽田または成田を出発し、機内でぐっすり眠ると、日付変更線を越えて『同日の朝』にホノルルへ到着！到着初日からハワイの青い海と太陽を丸1日楽しめます。",
         overseasMeta: {
@@ -5726,9 +5815,11 @@
     // ============================================================================
     const STATE = {
       primaryMode: "outing", // 'outing' | 'travel' | 'overseas'
-      currentTrip: "tokyo_spa",
+      currentTrip: "kanto_day",
       currentDay: "day1",
-      origin: "",            // Default empty so user doesn't have to delete "東京駅"
+      activeDestRegion: "kanto_near",
+      activeDestChip: "",
+      origin: "",            // Default empty = 現地スタート (never tied to home!)
       originCoords: null,    // { lat, lon } when acquired via GPS
       pace: "relax",         // 'relax' (朝〜昼発王道) | 'active' (早発・午後切替)
       transport: "car",
@@ -5813,11 +5904,73 @@
     };
 
     const IS_STATIC_HOST = /\.github\.io$/i.test(window.location.hostname || "");
+    let PUBLIC_SEARCH_CACHE = null;
+
+    // Quick destination chips grouped by region for STEP 1 of the Search Wizard
+    const DEST_REGION_CHIPS = {
+      kanto_near: [
+        { label: "鎌倉・江の島", query: "鎌倉・江の島", mode: "outing" },
+        { label: "横浜・みなとみらい", query: "横浜みなとみらい・中華街・万葉倶楽部", mode: "outing" },
+        { label: "銀座・日本橋", query: "銀座・丸の内・日本橋 名店ランチ＆散歩", mode: "outing" },
+        { label: "恵比寿・代官山", query: "恵比寿・代官山", mode: "outing" },
+        { label: "中目黒・目黒川", query: "中目黒・目黒川", mode: "outing" },
+        { label: "神楽坂", query: "神楽坂 路地裏グルメ＆散歩", mode: "outing" },
+        { label: "清澄白河・蔵前", query: "清澄白河・蔵前 カフェ＆散歩", mode: "outing" },
+        { label: "吉祥寺・井の頭", query: "吉祥寺・井の頭公園", mode: "outing" },
+        { label: "川越", query: "川越 小江戸食べ歩き＆温泉", mode: "outing" },
+        { label: "秩父・長瀞", query: "秩父・長瀞 自然＆祭の湯", mode: "outing" },
+        { label: "都内スパ巡り", query: "都内スパ", mode: "outing", tripKey: "tokyo_spa" }
+      ],
+      onsen_east: [
+        { label: "箱根・強羅", query: "箱根", mode: "travel", tripKey: "hakone" },
+        { label: "熱海", query: "熱海", mode: "travel" },
+        { label: "草津温泉", query: "草津温泉", mode: "travel" },
+        { label: "軽井沢", query: "軽井沢", mode: "travel", tripKey: "karuizawa" },
+        { label: "日光・鬼怒川", query: "日光・鬼怒川温泉", mode: "travel" },
+        { label: "那須高原", query: "那須高原", mode: "travel" },
+        { label: "河口湖・富士五湖", query: "河口湖・富士五湖", mode: "travel" },
+        { label: "西伊豆", query: "西伊豆", mode: "travel" }
+      ],
+      japan_wide: [
+        { label: "京都（嵐山・祇園）", query: "京都 嵐山・祇園", mode: "travel" },
+        { label: "金沢（兼六園・近江町）", query: "金沢 兼六園・近江町市場", mode: "travel" },
+        { label: "伊勢・VISON", query: "三重・伊勢・VISON", mode: "travel", tripKey: "mie" },
+        { label: "沖縄・竹富島", query: "沖縄", mode: "travel", tripKey: "okinawa" },
+        { label: "福岡・糸島", query: "福岡 博多グルメ・糸島", mode: "travel" },
+        { label: "札幌・小樽・定山渓", query: "北海道 札幌・小樽・定山渓", mode: "travel" },
+        { label: "別府・湯布院", query: "別府・湯布院", mode: "travel" },
+        { label: "道後温泉・松山", query: "道後温泉・松山", mode: "travel" },
+        { label: "大阪（梅田・なんば）", query: "大阪・梅田・なんば", mode: "travel" },
+        { label: "仙台・松島・秋保", query: "仙台・松島・秋保温泉", mode: "travel" },
+        { label: "広島・宮島", query: "広島・宮島", mode: "travel" }
+      ],
+      world: [
+        { label: "ソウル", query: "韓国 ソウル 明洞・聖水・韓屋村・スパ", mode: "overseas" },
+        { label: "台北・九份", query: "台湾 台北・北投温泉・九份", mode: "overseas" },
+        { label: "ハワイ", query: "ハワイ", mode: "overseas", tripKey: "hawaii" },
+        { label: "バンコク", query: "タイ バンコク ルーフトップ・スパ・寺院", mode: "overseas" },
+        { label: "バリ島ウブド", query: "バリ島 ウブド 森林プールヴィラ＆スパ", mode: "overseas" },
+        { label: "シンガポール", query: "シンガポール マリーナベイ・セントーサ", mode: "overseas" },
+        { label: "パリ", query: "フランス パリ 美術館・ビストロ・街歩き", mode: "overseas" },
+        { label: "イタリア", query: "イタリア ローマ・フィレンツェ・ヴェネツィア", mode: "overseas" },
+        { label: "フィンランド", query: "フィンランド ヘルシンキ 本場サウナ＆北欧デザイン", mode: "overseas" }
+      ]
+    };
+
+    function fetchWithTimeout(url, options, timeoutMs) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs || 2800);
+      return fetch(url, { ...(options || {}), signal: ctrl.signal }).finally(() => clearTimeout(timer));
+    }
 
     async function resolveLiveBackendEndpoint() {
+      if (NET_INFO._endpointChecked && !NET_INFO.tunnelUrl && IS_STATIC_HOST) {
+        return "";
+      }
+      NET_INFO._endpointChecked = true;
       // 1. Check real-time Gist (no CDN cache delay when tunnel restarts)
       try {
-        const gRes = await fetch(`https://api.github.com/gists/${SYNC_GIST_ID}`, { cache: "no-store" });
+        const gRes = await fetchWithTimeout(`https://api.github.com/gists/${SYNC_GIST_ID}`, { cache: "no-store" }, 2200);
         if (gRes.ok) {
           const gData = await gRes.json();
           const epFile = gData.files && gData.files["endpoint.json"];
@@ -5826,16 +5979,12 @@
             if (ep.tunnelUrl) NET_INFO.tunnelUrl = ep.tunnelUrl.replace(/\/$/, "");
             if (ep.lanUrl) NET_INFO.lanUrl = ep.lanUrl;
           }
-          const stFile = gData.files && gData.files["travel_state.json"];
-          if (stFile && stFile.content) {
-            NET_INFO._latestGistState = JSON.parse(stFile.content);
-          }
           if (NET_INFO.tunnelUrl) return NET_INFO.tunnelUrl;
         }
       } catch (e) {}
       // 2. Fallback to endpoint.json in same folder
       try {
-        const eRes = await fetch("./endpoint.json?t=" + Date.now(), { cache: "no-store" });
+        const eRes = await fetchWithTimeout("./endpoint.json?t=" + Date.now(), { cache: "no-store" }, 1800);
         if (eRes.ok) {
           const ep = await eRes.json();
           if (ep.tunnelUrl) NET_INFO.tunnelUrl = ep.tunnelUrl.replace(/\/$/, "");
@@ -5848,24 +5997,19 @@
     async function apiFetch(path, options) {
       if (!IS_STATIC_HOST) {
         try {
-          const localRes = await fetch(path, options);
-          if (localRes.ok || localRes.status < 500) return localRes;
+          const localRes = await fetchWithTimeout(path, options, 8000);
+          if (localRes.ok) return localRes;
         } catch (e) {}
       }
-      if (!NET_INFO.tunnelUrl) {
+      if (!NET_INFO.tunnelUrl && !NET_INFO._endpointChecked) {
         await resolveLiveBackendEndpoint();
       }
       if (NET_INFO.tunnelUrl) {
         const base = NET_INFO.tunnelUrl.replace(/\/$/, "");
         try {
-          return await fetch(base + path, options);
+          return await fetchWithTimeout(base + path, options, 8000);
         } catch (e) {
-          // Refresh endpoint once in case tunnel rotated
-          await resolveLiveBackendEndpoint();
-          const base2 = (NET_INFO.tunnelUrl || "").replace(/\/$/, "");
-          if (base2 && base2 !== base) {
-            return await fetch(base2 + path, options);
-          }
+          NET_INFO.tunnelUrl = "";
           throw e;
         }
       }
@@ -5883,33 +6027,55 @@
       }, 3200);
     }
 
+    function hasExplicitOrigin() {
+      return Boolean((STATE.origin || "").trim());
+    }
+
     function getOriginLabel() {
       const clean = (STATE.origin || "").trim();
-      return clean || "現在地・出発地";
+      return clean || "現地スタート";
     }
 
     function applyOriginText(str) {
       if (!str || typeof str !== "string") return str || "";
-      const orig = getOriginLabel();
-      return str
-        .replace(/現在地（[^）]*千駄木[^）]*）/g, orig)
+      let s = str
+        .replace(/現在地（[^）]*丁目[^）]*）/g, "出発地")
+        .replace(/現在地（[^）]*千駄木[^）]*）/g, "出発地")
         .replace(/千駄木発・/g, "")
-        .replace(/千駄木駅/g, orig)
-        .replace(/文京区・千駄木/g, orig)
-        .replace(/出発地/g, orig);
+        .replace(/千駄木駅(?=[を→➔発])/g, "出発地")
+        .replace(/文京区・千駄木/g, "出発地");
+
+      if (hasExplicitOrigin()) {
+        const orig = (STATE.origin || "").trim();
+        return s
+          .replace(/現在地・出発地/g, orig)
+          .replace(/出発地/g, orig);
+      }
+      return s
+        .replace(/現在地・出発地発・?/g, "")
+        .replace(/出発地発・?/g, "")
+        .replace(/出発地を出発（羽田空港経由）\s*[→➔]\s*/g, "羽田空港 → ")
+        .replace(/出発地を出発（東京駅経由）\s*[→➔]\s*/g, "東京駅 → ")
+        .replace(/出発地を出発\s*[→➔]\s*/g, "現地・最寄駅からスタート → ")
+        .replace(/出発地\s*[→➔]\s*/g, "")
+        .replace(/出発地から一番近く、?/g, "アクセスが良く、")
+        .replace(/出発地から歩いてすぐ/g, "駅から歩いてすぐ")
+        .replace(/出発地から徒歩/g, "最寄駅から徒歩")
+        .replace(/出発地から/g, "最寄駅から")
+        .replace(/出発地へ快適帰着/g, "現地解散・帰路へ")
+        .replace(/出発地へ帰着/g, "現地解散・帰路へ")
+        .replace(/現在地・出発地/g, "現地")
+        .replace(/出発地/g, "現地");
     }
 
     function clearOriginStation() {
       STATE.origin = "";
       STATE.originCoords = null;
       const inp = document.getElementById("origin-station-input");
-      if (inp) {
-        inp.value = "";
-        inp.focus();
-      }
+      if (inp) inp.value = "";
       saveAndSync();
       renderAll();
-      showToast("🚉 出発地をクリアしました（空欄のままでも検索できます）");
+      showToast("📍 出発地を「現地スタート」に設定しました");
     }
 
     function setOriginStation(val) {
@@ -5921,9 +6087,9 @@
         if (inp) inp.value = "";
         saveAndSync();
         renderAll();
+        showToast("📍 出発地を「現地スタート」に設定しました");
         return;
       }
-      // Toggle off if user clicks the same preset chip again
       if (STATE.origin === clean && document.activeElement?.id !== "origin-station-input") {
         clearOriginStation();
         return;
@@ -5939,31 +6105,30 @@
 
     function detectCurrentLocationOrigin() {
       if (!navigator.geolocation) {
-        showToast("⚠️ お使いのブラウザは現在地（GPS）取得に対応していません。最寄駅名を入力してください。");
+        showToast("⚠️ お使いのブラウザは現在地（GPS）に対応していません。駅名を入力してください。");
         return;
       }
       const btn = document.getElementById("btn-gps-origin");
       if (btn) btn.textContent = "📍 取得中...";
-      showToast("📍 現在地（GPS）を取得しています...");
+      showToast("📍 現在地を取得しています...");
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
-          STATE.originCoords = { lat, lon };
+          // Privacy-strict: never store raw pinpoint GPS coordinates in STATE
+          STATE.originCoords = null;
           let label = "現在地";
           try {
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&accept-language=ja`;
-            const res = await fetch(url);
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=ja`;
+            const res = await fetchWithTimeout(url, {}, 3500);
             if (res.ok) {
               const data = await res.json();
               const addr = data.address || {};
-              const area = addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || addr.city || addr.town || addr.ward || "";
-              const city = addr.city || addr.ward || addr.county || "";
-              if (city && area && city !== area) {
-                label = `現在地（${city}${area}付近）`;
-              } else if (area || city) {
-                label = `現在地（${area || city}付近）`;
+              // Privacy-strict: ONLY city/ward/county, NEVER street or chome
+              const city = addr.city || addr.ward || addr.town || addr.village || addr.county || "";
+              if (city) {
+                label = `現在地（${city}）`;
               }
             }
           } catch (e) {}
@@ -5975,12 +6140,68 @@
           renderAll();
           showToast(`📍 出発地を「${label}」に設定しました！`);
         },
-        (err) => {
-          if (btn) btn.textContent = "📍 現在地から取得";
-          showToast("⚠️ 現在地の取得が許可されなかったか失敗しました。最寄駅名を入力してください。");
+        () => {
+          if (btn) btn.textContent = "📍 現在地";
+          showToast("⚠️ 現在地を取得できませんでした。出発駅名を入力するか「現地スタート」のままご利用ください。");
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 }
       );
+    }
+
+    function switchDestRegionTab(regKey) {
+      if (!DEST_REGION_CHIPS[regKey]) return;
+      STATE.activeDestRegion = regKey;
+      renderDestRegionChips();
+    }
+
+    function renderDestRegionChips() {
+      const activeReg = STATE.activeDestRegion || "kanto_near";
+      document.querySelectorAll(".region-tab-btn[data-reg]").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-reg") === activeReg);
+      });
+      const box = document.getElementById("region-chips-box");
+      if (!box) return;
+      const list = DEST_REGION_CHIPS[activeReg] || [];
+      box.innerHTML = list.map((c, idx) => {
+        const isAct = STATE.activeDestChip === c.label;
+        return `<button type="button" class="dest-quick-chip ${isAct ? 'active' : ''}" onclick="pickDestQuickChip('${activeReg}', ${idx})">${escHtmlAttr(c.label)}</button>`;
+      }).join("");
+    }
+
+    function pickDestQuickChip(regKey, idx) {
+      const list = DEST_REGION_CHIPS[regKey] || [];
+      const chip = list[idx];
+      if (!chip) return;
+      STATE.activeDestRegion = regKey;
+      STATE.activeDestChip = chip.label;
+      const inp = document.getElementById("uni-search-input");
+      if (inp) inp.value = chip.label;
+      if (chip.mode) {
+        setSearchDurationMode(chip.mode, true);
+      }
+      renderDestRegionChips();
+      const genreVal = document.getElementById("uni-search-genre")?.value || "all";
+      if (chip.tripKey && CATALOG[chip.tripKey] && genreVal === "all") {
+        selectTrip(chip.tripKey);
+        scrollToSec("active-result-banner");
+      } else {
+        runUniversalPlanSearch(chip.query, chip.mode || "auto", genreVal);
+      }
+    }
+
+    function setSearchDurationMode(mode, skipImmediateSwitch) {
+      const cleanMode = (mode === "overseas" || mode === "travel") ? mode : "outing";
+      const modeInput = document.getElementById("uni-search-mode");
+      if (modeInput) modeInput.value = cleanMode;
+      document.getElementById("btn-mode-outing")?.classList.toggle("active", cleanMode === "outing");
+      document.getElementById("btn-mode-travel")?.classList.toggle("active", cleanMode === "travel");
+      document.getElementById("btn-mode-overseas")?.classList.toggle("active", cleanMode === "overseas");
+      if (!skipImmediateSwitch) {
+        const kw = (document.getElementById("uni-search-input")?.value || "").trim();
+        if (!kw) {
+          setPrimaryMode(cleanMode);
+        }
+      }
     }
 
     function normalizePlaceBaseName(rawName, tripTitle) {
@@ -6099,9 +6320,7 @@
       drawer.classList.toggle("open", shouldOpen);
       if (btn) {
         btn.classList.toggle("open", shouldOpen);
-        btn.innerHTML = shouldOpen
-          ? "✕ 定番・履歴リストを閉じる"
-          : "🗂️ 他の定番プラン・検索履歴に切替 <span id=\"arb-caret\">▼</span>";
+        btn.textContent = shouldOpen ? "✕ 閉じる" : "📂 履歴・定番";
       }
     }
 
@@ -6121,7 +6340,7 @@
       });
       if (STATE.currentTrip === tripKey) {
         const fallbackList = MODE_TABS[STATE.primaryMode] || MODE_TABS.outing;
-        STATE.currentTrip = (fallbackList[0] || {}).key || "tokyo_spa";
+        STATE.currentTrip = (fallbackList[0] || {}).key || "kanto_day";
       }
       saveAndSync();
       renderAll();
@@ -6370,31 +6589,43 @@
       const rawOrigin = (STATE.origin || "").trim();
       const orig = getOriginLabel();
 
+      // Render STEP 1 destination region tabs & chips
+      renderDestRegionChips();
+
+      // Sync STEP 2 origin pills & input
       const origInp = document.getElementById("origin-station-input");
       if (origInp && document.activeElement !== origInp) {
         origInp.value = rawOrigin;
       }
-      document.querySelectorAll(".usp-origin-chip").forEach(btn => {
-        btn.classList.toggle("active", rawOrigin !== "" && btn.textContent.trim() === rawOrigin);
+      document.querySelectorAll(".origin-pill-btn[data-orig]").forEach(btn => {
+        const target = btn.getAttribute("data-orig") || "";
+        btn.classList.toggle("active", rawOrigin === target);
       });
+      const gpsBtn = document.getElementById("btn-gps-origin");
+      if (gpsBtn) {
+        gpsBtn.classList.toggle("active", rawOrigin.startsWith("現在地"));
+      }
 
+      // Sync STEP 3 duration mode controls
       const trip = CATALOG[STATE.currentTrip];
+      const modeInp = document.getElementById("uni-search-mode");
+      if (modeInp) modeInp.value = mode;
       document.getElementById("btn-mode-outing")?.classList.toggle("active", mode === "outing");
       document.getElementById("btn-mode-travel")?.classList.toggle("active", isTravel);
       document.getElementById("btn-mode-overseas")?.classList.toggle("active", isOverseas);
 
-      const tabsList = MODE_TABS[mode] || MODE_TABS.outing;
-
-      // Sync compact instant plan dropdown (#quick-trip-select)
-      const qSel = document.getElementById("quick-trip-select");
-      if (qSel) {
-        qSel.innerHTML = tabsList.map(t => {
-          const isCustomTab = (t.key || "").startsWith("custom_");
-          const prefix = isCustomTab ? "🔍 " : "📍 ";
-          const label = applyOriginText(t.title);
-          return `<option value="${t.key}" ${STATE.currentTrip === t.key ? "selected" : ""}>${prefix}${label}</option>`;
-        }).join("");
+      // Update Active Result Strip right above the 2-column shop list
+      const arbTitle = document.getElementById("arb-plan-title");
+      const arbMode = document.getElementById("arb-mode-label");
+      if (arbTitle && trip) {
+        arbTitle.textContent = `📍 ${applyOriginText(trip.title)}`;
       }
+      if (arbMode) {
+        const mShort = isOverseas ? "海外" : isTravel ? "国内泊" : "日帰り";
+        arbMode.textContent = `${mShort} ｜ ${hasExplicitOrigin() ? orig + "発" : "現地スタート"}`;
+      }
+
+      const tabsList = MODE_TABS[mode] || MODE_TABS.outing;
 
       const container = document.getElementById("dest-tabs-container");
       if (container) {
@@ -6418,9 +6649,10 @@
       const omBar = document.getElementById("overseas-meta-bar");
       if (omBar) {
         if (trip && (trip.primaryMode === "overseas" || trip.overseasMeta)) {
+          const origRoutePrefix = hasExplicitOrigin() ? `${orig}→` : "";
           const meta = trip.overseasMeta || {
-            countryArea: applyOriginText(trip.title) || "海外リトリート",
-            airportRoute: `${orig}→羽田空港第3ターミナル または 成田空港 → 国際線直行便`,
+            countryArea: applyOriginText(trip.title) || "海外癒やし旅",
+            airportRoute: `${origRoutePrefix}羽田空港第3ターミナル または 成田空港 → 国際線直行便`,
             timeDiff: "現地時刻に合わせて調整",
             visaEntry: "パスポート残存6ヶ月以上・電子渡航認証/入国カード・帰国時Visit Japan Web",
             currencyTip: "現地通貨＋タッチ決済クレジットカード（Visa/Master）主流",
@@ -6435,7 +6667,7 @@
           const elVisa = document.getElementById("om-visa");
           const elCur = document.getElementById("om-currency");
           const elTr = document.getElementById("om-transport");
-          if (omHeaderTitle) omHeaderTitle.textContent = `🛂✈️ 海外渡航ガイド（${orig}発）`;
+          if (omHeaderTitle) omHeaderTitle.textContent = hasExplicitOrigin() ? `🛂✈️ 海外渡航ガイド（${orig}発）` : `🛂✈️ 海外渡航ガイド`;
           if (omAirLabel) omAirLabel.textContent = `✈️ 空港アクセス＆飛行時間`;
           if (cBadge) cBadge.textContent = applyOriginText(meta.countryArea) || "🌍 海外渡航";
           if (elAir) elAir.textContent = applyOriginText(meta.airportRoute) || "-";
@@ -6507,22 +6739,29 @@
 
     function buildCompactCardHtml(item, isSel, onClickJs, arrKey, priceOrTime, isMulti) {
       const topBadge = isSel ? (isMulti ? "✓ 追加済" : "✓ 選択中") : "";
-      const shortSummary = item.why || item.buzzText || item.wellnessSpec || "";
-      const badgeTexts = (item.badges || []).map(b => b.text).filter(Boolean).join("・");
-      const extraPoints = [badgeTexts, item.buzzText, item.wellnessSpec].filter(Boolean).join(" ／ ");
+      const areaDisp = applyOriginText(item.area || "");
+      const shortSummary = applyOriginText(item.why || item.buzzText || item.wellnessSpec || "");
+      const badgeTexts = (item.badges || []).map(b => applyOriginText(b.text)).filter(Boolean).join("・");
+      const extraPoints = applyOriginText([badgeTexts, item.buzzText, item.wellnessSpec].filter(Boolean).join(" ／ "));
+      const whyDisp = applyOriginText(item.why || "");
       const sImg = escJsInAttr(item.img);
       const sName = escJsInAttr(item.name);
-      const sArea = escJsInAttr(item.area);
+      const sArea = escJsInAttr(areaDisp);
+      const fallbackByRole = arrKey === "hotels"
+        ? "assets/travel/fufu_karuizawa.jpg"
+        : arrKey === "foods"
+        ? "assets/travel/kawakamian_soba.jpg"
+        : "assets/travel/kamakura_sea.jpg";
       return `
         <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="${onClickJs}">
           <div class="card-photo-wrap">
-            <img src="${escHtmlAttr(item.img)}" alt="${escHtmlAttr(item.name)}" class="card-photo" loading="lazy">
+            <img src="${escHtmlAttr(item.img || fallbackByRole)}" alt="${escHtmlAttr(item.name)}" class="card-photo" loading="lazy" onerror="this.onerror=null;this.src='${fallbackByRole}';">
             <span class="card-check-dot ${isSel ? 'on' : ''}" aria-hidden="true">${isSel ? '✓' : '＋'}</span>
             <button type="button" class="card-zoom-mini" onclick="openLightbox('${sImg}', '${sName}', '${sArea}', event)" title="写真を拡大">🔍</button>
           </div>
           <div class="card-compact-body">
             <div class="card-mini-top">
-              <span class="card-mini-area">📍 ${item.area || ""}</span>
+              <span class="card-mini-area">📍 ${areaDisp}</span>
               ${topBadge ? `<span class="card-mini-tag">${topBadge}</span>` : ''}
             </div>
             <div class="card-compact-title">${item.name}</div>
@@ -6532,7 +6771,7 @@
               <summary class="card-detail-summary"><span>詳細・リンク</span></summary>
               <div class="card-detail-panel">
                 ${extraPoints ? `<div style="color:#0f766e; font-weight:700;">${extraPoints}</div>` : ''}
-                <div>${item.why || ""}</div>
+                <div>${whyDisp}</div>
                 <div class="card-detail-actions">
                   ${arrKey ? `<button type="button" class="card-mini-btn" onclick="cycleCardPhoto('${arrKey}', '${escJsInAttr(item.id)}', event)">📷 別写真</button>` : ''}
                   <button type="button" class="card-mini-btn" onclick="openLightbox('${sImg}', '${sName}', '${sArea}', event)">🔍 写真拡大</button>
@@ -7104,7 +7343,7 @@
           title: isOverseas
             ? `🥂 2日目サンセット＆『${foodShort}』ディナー（最終日はDAY 3タブへ）`
             : `🚄 駅前・温泉街でお土産を選んで出発地へ帰着（2泊の場合は2泊目の夜スパ＆ディナーへ）`,
-          desc: "旅の疲れを残さないゆとりある時間配分で、夕方〜夜に自宅・出発地へ心地よく帰着します。",
+          desc: "旅の疲れを残さないゆとりある時間配分で、夕方〜夜に出発地へ心地よく帰着します。",
           img: hotel.img
         });
 
@@ -7127,9 +7366,9 @@
           type: "move",
           badge: isOverseas ? "Visit Japan Webで快適帰国" : "お土産＆帰路",
           title: isOverseas
-            ? "✈️ 現地国際空港から帰国便フライト ➔ 羽田または成田空港経由で自宅・出発地へ帰着"
+            ? "✈️ 現地国際空港から帰国便フライト ➔ 羽田または成田空港経由で出発地へ帰着"
             : `🛍️ お土産選び・カフェでひと休み → 夕方に出発地へ快適帰着`,
-          desc: "自宅に着いてからも疲れが残らないよう、早めの便で夕方に自宅・出発地へ帰着するプロ設計です。",
+          desc: "翌日以降に疲れが残らないよう、早めの便で夕方に出発地へ帰着するゆとり設計です。",
           img: hotel.img
         });
 
@@ -7417,7 +7656,7 @@
           title: isHotelDinner
             ? `🍻 『${hotelShort}』館内ラウンジ・レストランで湯上がりサ飯＆乾杯 ➔ 出発地へ快適帰着`
             : `🥂 帰りに『${foodShort}』でディナー・一杯を楽しんで出発地へ快適帰着`,
-          desc: "体が温まった状態で美味しい食事を楽しみ、夜には自宅へゆったり帰着できるベストコースです。",
+          desc: "体が温まった状態で美味しい食事を楽しみ、夜にはゆったり帰着できるベストコースです。",
           img: isHotelDinner ? hotel.img : food.img,
           dinnerToggleTarget: isHotelDinner ? "outside_restaurant" : "hotel_included",
           dinnerToggleText: isHotelDinner ? `🥂 外のお店（${foodShort}）で夕食に切替` : `🧖‍♀️ 施設内で食事・サ飯に切替`
@@ -7429,7 +7668,7 @@
           time: "13:00 - 13:45",
           type: "move",
           badge: "午後から気軽に出発",
-          title: `🏠 午前中は自宅でゆっくり過ごし、13:00に出発地から『${hotelShort}』へ直行`,
+          title: `☀️ 午前中はゆっくり過ごし、13:00に出発地から『${hotelShort}』へ直行`,
           desc: "朝寝坊したい休日や、午後からサクッとリフレッシュしたい日のコースです。",
           img: hotel.img
         });
@@ -7553,17 +7792,27 @@
 
       const mapBtn = document.getElementById("google-maps-route-btn");
       if (mapBtn) {
-        const destQuery = encodeURIComponent(hotel.name.split("（")[0]);
+        const hotelClean = getShortPlaceName(hotel);
+        const destQuery = encodeURIComponent(hotelClean);
         const origLabel = getOriginLabel();
         if (trip.primaryMode === "overseas") {
           mapBtn.href = `https://www.google.com/maps/search/?api=1&query=${destQuery}`;
-          mapBtn.textContent = `🗺️ 現地ホテル（${hotel.name.split("（")[0]}）のGoogleマップを開く`;
-        } else {
-          const originParam = (STATE.originCoords && STATE.originCoords.lat && STATE.originCoords.lon)
-            ? `${STATE.originCoords.lat},${STATE.originCoords.lon}`
-            : encodeURIComponent(origLabel);
+          mapBtn.textContent = `🗺️ 現地ホテル（${hotelClean}）のGoogleマップを開く`;
+        } else if (STATE.originCoords && STATE.originCoords.lat && STATE.originCoords.lon) {
+          const originParam = `${STATE.originCoords.lat},${STATE.originCoords.lon}`;
           mapBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destQuery}`;
           mapBtn.textContent = `🗺️ ${origLabel}からのGoogleマップ経路を開く`;
+        } else if (hasExplicitOrigin()) {
+          const originParam = encodeURIComponent(origLabel);
+          mapBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destQuery}`;
+          mapBtn.textContent = `🗺️ ${origLabel}からのGoogleマップ経路を開く`;
+        } else if (chosenSpots.length > 0) {
+          const firstSpotClean = getShortPlaceName(chosenSpots[0]);
+          mapBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(firstSpotClean)}&destination=${destQuery}`;
+          mapBtn.textContent = `🗺️ 現地ルート（${firstSpotClean} → ${hotelClean}）を開く`;
+        } else {
+          mapBtn.href = `https://www.google.com/maps/search/?api=1&query=${destQuery}`;
+          mapBtn.textContent = `🗺️ ${hotelClean} のGoogleマップを開く`;
         }
       }
     }
@@ -7595,7 +7844,8 @@
           ? "🗾国内旅行モード"
           : "🧖‍♀️お出かけモード";
         const dinnerBadge = isHotelDinner ? "🍱宿夕食付き" : "🥂外食ディナー";
-        modeBadge.textContent = `${modeLabel} ／ 🚉${getOriginLabel()}発 ／ ${dinnerBadge}`;
+        const origBadge = hasExplicitOrigin() ? `🚉${getOriginLabel()}発` : `📍現地スタート`;
+        modeBadge.textContent = `${modeLabel} ／ ${origBadge} ／ ${dinnerBadge}`;
       }
 
       // Update Dinner Style & Pre-Dinner Check-in Bar inside #sec-schedule
@@ -7737,7 +7987,7 @@
         return `
           <div class="timeline-item ${it.dynamic ? 'dynamic-choice' : ''} ${it.isOverrun ? 'is-overrun-item' : ''}">
             <div class="timeline-dot"></div>
-            ${it.img ? `<img src="${it.img}" alt="${pTitle}" class="tl-thumb" onclick="openLightbox('${safeImg}', '${safeTitle}', '', event)">` : ''}
+            ${it.img ? `<img src="${escHtmlAttr(it.img)}" alt="${escHtmlAttr(pTitle)}" class="tl-thumb" onerror="this.onerror=null;this.src='assets/travel/kamakura_sea.jpg';" onclick="openLightbox('${safeImg}', '${safeTitle}', '', event)">` : ''}
             <div class="tl-content">
               <div class="time-row">
                 <div class="time-row-left">
@@ -7823,9 +8073,10 @@
       const shareUrl = PERMANENT_UNIFIED_URL;
       const modeTitle = STATE.primaryMode === "overseas" ? "海外旅行しおり" : STATE.primaryMode === "travel" ? "国内旅行しおり" : "お出かけしおり";
       const orig = getOriginLabel();
+      const origLineTag = hasExplicitOrigin() ? `🚉 ${orig}発` : `📍 現地スタート`;
 
       const lines = [
-        `🌿【${modeTitle}】${applyOriginText(trip.title)}（🚉 ${orig}発）`,
+        `🌿【${modeTitle}】${applyOriginText(trip.title)}（${origLineTag}）`,
         `━━━━━━━━━━━━━━`,
         `🎯 メイン：${hotel.name}`,
         `🌲 体験・散歩：${chosenSpots.map(s => s.name.replace(/【.*?】/, "").split("（")[0]).join(" ／ ") || "なし（直行）"}`,
@@ -7902,7 +8153,7 @@
 
       if (btnUni) {
         btnUni.disabled = true;
-        btnUni.innerHTML = isPinpoint ? "🔍 検索" : "⏳ 検索中";
+        btnUni.innerHTML = isPinpoint ? "🔍 この条件でお店・宿の候補を表示する" : "⏳ 候補のお店・宿を検索中...";
       }
       if (btnPin) {
         btnPin.disabled = true;
@@ -7961,7 +8212,7 @@
 
       if (btnUni) {
         btnUni.disabled = false;
-        btnUni.innerHTML = "🔍 検索";
+        btnUni.innerHTML = "🔍 この条件でお店・宿の候補を表示する";
       }
       if (btnPin) {
         btnPin.disabled = false;
@@ -8189,6 +8440,558 @@
       return pool.slice(0, 4);
     }
 
+    async function loadPublicSearchCache() {
+      if (PUBLIC_SEARCH_CACHE) return PUBLIC_SEARCH_CACHE;
+      try {
+        const res = await fetchWithTimeout("./public_search_cache.json", {}, 4500);
+        if (res.ok) {
+          PUBLIC_SEARCH_CACHE = await res.json();
+          return PUBLIC_SEARCH_CACHE;
+        }
+      } catch (e) {}
+      PUBLIC_SEARCH_CACHE = { universal: {} };
+      return PUBLIC_SEARCH_CACHE;
+    }
+
+    function normalizeSearchCore(str) {
+      return String(str || "")
+        .toLowerCase()
+        .replace(/[\s　・/／,、()（）「」『』【】]+/g, "")
+        .replace(/(厳選|お出かけ|宿泊|日帰り|旅行|観光|プラン|人気|おすすめ|グルメ|ランチ|散歩|リトリート)/g, "");
+    }
+
+    function adaptPlanDataToChoice(planObj, requestedMode) {
+      const cloned = JSON.parse(JSON.stringify(planObj));
+      const cat = cloned.catalog || {};
+      const cleanStr = (s) => {
+        if (!s || typeof s !== "string") return s;
+        return s
+          .replace(/getActiveSheet\s*/gi, "")
+          .replace(/タイムライン見出し[：:]\s*/g, "")
+          .replace(/現在地（[^）]*）/g, "出発地")
+          .replace(/現在地・出発地/g, "出発地")
+          .replace(/リトリート宿/g, "隠れ家宿")
+          .replace(/リトリート/g, "癒やし旅");
+      };
+      ["title", "tag", "depMoveTitle", "depMoveDesc"].forEach(k => {
+        if (cat[k]) cat[k] = cleanStr(cat[k]);
+      });
+      ["hotels", "spots", "foods"].forEach(arrK => {
+        (cat[arrK] || []).forEach(it => {
+          ["name", "area", "why", "buzzText", "wellnessSpec", "title", "desc"].forEach(fk => {
+            if (it[fk]) it[fk] = cleanStr(it[fk]);
+          });
+        });
+      });
+      if (cloned.tab) {
+        ["title", "tag", "desc"].forEach(k => {
+          if (cloned.tab[k]) cloned.tab[k] = cleanStr(cloned.tab[k]);
+        });
+      }
+      if (cat.overseasMeta && cat.overseasMeta.airportRoute) {
+        cat.overseasMeta.airportRoute = cleanStr(cat.overseasMeta.airportRoute);
+      }
+      if (requestedMode === "outing" || requestedMode === "travel" || requestedMode === "overseas") {
+        if (requestedMode === "overseas" || cat.primaryMode !== "overseas") {
+          cat.primaryMode = requestedMode;
+        }
+      }
+      return cloned;
+    }
+
+    async function findCachedOrBuiltInPlan(query, mode, genre) {
+      const qRaw = (query || "").trim();
+      const qNorm = normalizeSearchCore(qRaw);
+      if (!qNorm) return null;
+
+      // 1. Check built-in CATALOG exact theme aliases when genre is 'all'
+      if (!genre || genre === "all") {
+        const builtInAliases = [
+          { re: /^(箱根|箱根強羅|強羅)$/, key: "hakone" },
+          { re: /^(軽井沢|旧軽井沢|中軽井沢)$/, key: "karuizawa" },
+          { re: /^(三重|伊勢|伊勢神宮|伊勢志摩|vison|ヴィソン)$/, key: "mie" },
+          { re: /^(沖縄|沖縄本島|那覇|恩納村|石垣島|竹富島)$/, key: "okinawa" },
+          { re: /^(ハワイ|オアフ|ワイキキ|ホノルル)$/, key: "hawaii" },
+          { re: /^(都内スパ|ラクーア|スパラクーア|庭の湯|スパメッツァ)$/, key: "tokyo_spa" },
+          { re: /^(谷根千|谷中|根津|上野浅草)$/, key: "local_gourmet" },
+          { re: /^(高尾山)$/, key: "kanto_day" }
+        ];
+        for (const al of builtInAliases) {
+          if (al.re.test(qNorm) && CATALOG[al.key]) {
+            const baseCat = JSON.parse(JSON.stringify(CATALOG[al.key]));
+            if (mode === "outing" || mode === "travel" || mode === "overseas") {
+              if (mode === "overseas" || baseCat.primaryMode !== "overseas") {
+                baseCat.primaryMode = mode;
+              }
+            }
+            const customKey = `custom_bi_${al.key}_${baseCat.primaryMode}`;
+            return {
+              ok: true,
+              key: customKey,
+              query: qRaw,
+              tab: {
+                key: customKey,
+                tag: `📍 ${qRaw}`,
+                title: baseCat.title,
+                desc: "候補カードから自由に選択・入れ替え",
+                img: (baseCat.hotels[0] || {}).img || "assets/travel/kamakura_sea.jpg",
+                isCustom: true
+              },
+              catalog: baseCat
+            };
+          }
+        }
+      }
+
+      // 2. Check static public_search_cache.json (40 rich destinations!)
+      const cache = await loadPublicSearchCache();
+      const uni = (cache && cache.universal) || {};
+      let bestEntry = null;
+      let bestScore = 0;
+
+      Object.entries(uni).forEach(([ck, val]) => {
+        if (!val || !val.catalog) return;
+        const parts = ck.split("__");
+        const keyAreaRaw = parts[0] || "";
+        const keyMode = parts[1] || "auto";
+        const keyGenre = parts[2] || "all";
+        const kNorm = normalizeSearchCore(keyAreaRaw);
+        if (!kNorm) return;
+
+        let score = 0;
+        if (kNorm === qNorm) {
+          score = 100;
+        } else if (qNorm.length >= 2 && kNorm.includes(qNorm)) {
+          score = 82;
+        } else if (kNorm.length >= 2 && qNorm.includes(kNorm)) {
+          score = 78;
+        } else {
+          // Token match (e.g. "鎌倉" in "鎌倉・江の島")
+          const tokens = keyAreaRaw.split(/[\s　・/／]+/).map(normalizeSearchCore).filter(t => t.length >= 2);
+          if (tokens.some(t => t === qNorm || qNorm.includes(t) || t.includes(qNorm))) {
+            score = 75;
+          }
+        }
+        if (score === 0) return;
+
+        if (mode && mode !== "auto" && keyMode === mode) score += 8;
+        if (genre && genre !== "all" && keyGenre === genre) score += 12;
+        if ((!genre || genre === "all") && keyGenre === "all") score += 4;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestEntry = val;
+        }
+      });
+
+      if (bestEntry && bestScore >= 72) {
+        return adaptPlanDataToChoice(bestEntry, mode);
+      }
+      return null;
+    }
+
+    async function buildServerlessLivePlan(query, mode, genre) {
+      const cleanQ = (query || "").trim();
+      let lat = null, lon = null, areaName = cleanQ, heroImg = "", countryCode = "JP";
+
+      // 1. Exact-title Wikipedia Geocoder (市 / 区 / 町 / 駅 / 温泉 / exact name — 100% accurate for Japanese cities, stations & overseas!)
+      try {
+        const baseWord = cleanQ.split(/[\s　・/／]+/)[0] || cleanQ;
+        const cands = Array.from(new Set([
+          baseWord,
+          `${baseWord}市`,
+          `${baseWord}駅`,
+          `${baseWord}温泉`,
+          `${baseWord}区`,
+          `${baseWord}町`
+        ]));
+        const tu = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(cands.join("|"))}&redirects=1&prop=coordinates|pageimages&pithumbsize=500&format=json&origin=*`;
+        const tr = await fetchWithTimeout(tu, {}, 3800);
+        if (tr.ok) {
+          const tj = await tr.json();
+          const tPages = Object.values((tj.query && tj.query.pages) || {}).filter(p => p && p.coordinates && p.coordinates[0]);
+          if (tPages.length > 0) {
+            // Prefer exact or 市 / 温泉 / 駅 match
+            const ranked = tPages.sort((a, b) => {
+              const scoreT = (t) => t === baseWord ? 5 : t === `${baseWord}温泉` ? 4 : t === `${baseWord}市` ? 3 : t === `${baseWord}駅` ? 2 : 1;
+              return scoreT(b.title) - scoreT(a.title);
+            });
+            lat = ranked[0].coordinates[0].lat;
+            lon = ranked[0].coordinates[0].lon;
+            const withImg = ranked.find(p => p.thumbnail && p.thumbnail.source);
+            if (withImg) heroImg = withImg.thumbnail.source;
+            if (lat < 20 || lat > 46 || lon < 122 || lon > 154) {
+              countryCode = "INTL";
+            }
+          }
+        }
+      } catch (e) {}
+
+      // Fallback to Open-Meteo Geocoding if exact title didn't have coordinates
+      if (lat === null) {
+        try {
+          const mu = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQ)}&count=6&language=ja&format=json`;
+          const mr = await fetchWithTimeout(mu, {}, 3500);
+          if (mr.ok) {
+            const mj = await mr.json();
+            const list = Array.isArray(mj.results) ? mj.results : [];
+            if (list.length > 0) {
+              list.sort((a, b) => (b.population || 0) - (a.population || 0));
+              const best = list[0];
+              lat = best.latitude;
+              lon = best.longitude;
+              if (best.country_code) countryCode = best.country_code;
+            }
+          }
+        } catch (e) {}
+      }
+
+      const isOverseas = mode === "overseas" || (mode === "auto" && countryCode && countryCode !== "JP");
+      const pMode = isOverseas ? "overseas" : (mode === "travel" ? "travel" : "outing");
+
+      // 2. Fetch nearby real places with photos via Wikipedia Geosearch
+      let geoPages = [];
+      if (lat !== null && lon !== null) {
+        try {
+          const gu = `https://ja.wikipedia.org/w/api.php?action=query&generator=geosearch&ggscoord=${lat}|${lon}&ggsradius=6500&ggslimit=42&prop=pageimages|extracts|coordinates&pithumbsize=500&exintro=1&explaintext=1&exchars=130&format=json&origin=*`;
+          const gr = await fetchWithTimeout(gu, {}, 4500);
+          if (gr.ok) {
+            const gj = await gr.json();
+            geoPages = Object.values((gj.query && gj.query.pages) || {});
+          }
+        } catch (e) {}
+      }
+
+      // Filter out administrative / civic / non-sightseeing pages
+      const noiseRe = /(駅$|バスターミナル|車両センター|検車区|車庫|運転所|サービスエリア|パーキングエリア|学校|高校|中学|小学|大学|警察|病院|区役所|市役所|町役場|役場|会館|ホール|競技場|体育館|運動場|野球場|インターチェンジ|ジャンクション|交差点|事件|事故|選挙|郵便局|放送|テレビ|新聞|銀行|信用金庫|県道|国道|自動車道|営業所|工場|変電所|浄水場|刑務所|裁判所|駐屯地|分屯地|自衛隊|基地|団地|音市場|卸売市場|地区$|[市区町村]$|\([^)]*[市区町村郡県]\)$)/;
+      const cleanPages = geoPages.filter(p => {
+        if (!p || !p.title || p.title === cleanQ) return false;
+        // Keep famous old schools that are National Treasures / museums (e.g. 旧開智学校)
+        if (/^旧.*学校$/.test(p.title)) return true;
+        return !noiseRe.test(p.title);
+      });
+
+      // Gather extra real photos from Wikimedia Commons if needed
+      const photoPool = [];
+      if (heroImg) photoPool.push(heroImg);
+      cleanPages.forEach(p => {
+        if (p.thumbnail && p.thumbnail.source && !photoPool.includes(p.thumbnail.source)) {
+          photoPool.push(p.thumbnail.source);
+        }
+      });
+      if (photoPool.length < 6) {
+        try {
+          const cu = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQ)}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&iiurlwidth=500&format=json&origin=*`;
+          const cr = await fetchWithTimeout(cu, {}, 3500);
+          if (cr.ok) {
+            const cj = await cr.json();
+            Object.values((cj.query && cj.query.pages) || {}).forEach(cp => {
+              const u = cp.imageinfo && cp.imageinfo[0] && (cp.imageinfo[0].thumburl || cp.imageinfo[0].url);
+              if (u && /\.(jpg|jpeg|png|webp)/i.test(u) && !photoPool.includes(u)) photoPool.push(u);
+            });
+          }
+        } catch (e) {}
+      }
+      const fallbackImgs = [
+        "assets/travel/kamakura_sea.jpg",
+        "assets/travel/ashinoko.jpg",
+        "assets/travel/kumoba_pond.jpg",
+        "assets/travel/armadillo_bakes.jpg"
+      ];
+      while (photoPool.length < 9) {
+        photoPool.push(fallbackImgs[photoPool.length % fallbackImgs.length]);
+      }
+
+      const stayRe = /(ホテル|旅館|温泉|スパ|リゾート|乃湯|の湯|湯$|ヴィラ|ロッジ|プリンス|マリオット|ヒルトン|星野|ふふ)/;
+      const foodTitleRe = /(朝市|市場|横丁|商店街|通り|菓|酒造|ブルワリー|ワイナリー|茶屋|ビール|ベーカリー|カフェ|そば|うどん)/;
+
+      const rawStays = [];
+      const rawFoods = [];
+      const rawSpots = [];
+
+      // Prioritize pages with thumbnails
+      const sortedPages = [...cleanPages].sort((a, b) => (b.thumbnail ? 1 : 0) - (a.thumbnail ? 1 : 0));
+      sortedPages.forEach(p => {
+        if (stayRe.test(p.title) && !/美術館|博物館|記念館|資料館|水族館|科学館|図書館/.test(p.title) && rawStays.length < 3) {
+          rawStays.push(p);
+        } else if (foodTitleRe.test(p.title) && rawFoods.length < 3) {
+          rawFoods.push(p);
+        } else if (rawSpots.length < 5) {
+          rawSpots.push(p);
+        }
+      });
+
+      const slug = "custom_live_" + Math.abs(Array.from(cleanQ + "_" + pMode).reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)).toString(16);
+      const mapUrl = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+      const tabelogUrl = (q) => isOverseas
+        ? `https://www.google.com/search?q=${encodeURIComponent(q + " 人気 レストラン 口コミ")}`
+        : `https://tabelog.com/rstLst/?vs=1&sk=${encodeURIComponent(q)}`;
+      const staySearchUrl = (q) => isOverseas
+        ? `https://www.google.com/travel/hotels/${encodeURIComponent(q)}`
+        : `https://search.travel.rakuten.co.jp/ds/vacant/searchVacant?f_query=${encodeURIComponent(q)}`;
+
+      const hotels = rawStays.slice(0, 3).map((p, i) => ({
+        id: `${slug}_hotel_${i + 1}`,
+        name: p.title,
+        area: `${cleanQ}エリア`,
+        price: pMode === "outing" ? "日帰り利用・入館目安 1,500〜3,800円" : "1泊目安 18,000〜42,000円",
+        budget2p: pMode === "outing" ? 7000 : 38000,
+        img: (p.thumbnail && p.thumbnail.source) || photoPool[i % photoPool.length],
+        badges: [{ text: "実在スポット", cls: "cb-sauna" }, { text: cleanQ, cls: "cb-buzz" }],
+        tags: ["sauna", "stone", "buzz"],
+        buzzText: (p.extract || `${cleanQ}エリアで人気の滞在・温浴拠点です。`).slice(0, 95),
+        wellnessSpec: `${cleanQ}の散策や食事と組み合わせてゆったり過ごせる拠点`,
+        why: (p.extract || `${cleanQ}の中心エリアからアクセスしやすく、旅の主役になる人気施設です。`).slice(0, 110),
+        links: [
+          { label: "Googleマップ", url: mapUrl(`${cleanQ} ${p.title}`) },
+          { label: "宿泊・詳細検索", url: staySearchUrl(`${cleanQ} ${p.title}`) }
+        ],
+        traps: ["週末や連休は混雑しやすいため、営業時間と事前予約の有無を確認しておくと安心です。"],
+        todo: `【事前チェック】${p.title} の営業時間・予約状況を確認`
+      }));
+
+      const staySupplements = pMode === "outing"
+        ? [
+            { name: `${cleanQ}エリアの日帰り温泉・人気サウナ施設`, price: "入館目安 1,200〜3,200円", img: "assets/travel/fufu_karuizawa.jpg", why: `${cleanQ}周辺で立ち寄れる天然温泉・サウナ・スパ施設。街歩き後のリフレッシュに最適です。`, q: `${cleanQ} 日帰り温泉 サウナ スパ` },
+            { name: `${cleanQ}駅周辺のホテルラウンジ・スパ体験`, price: "利用目安 2,500〜5,000円", img: "assets/travel/tonbo_onsen.jpg", why: `${cleanQ}で落ち着いた時間を過ごせるホテルラウンジ＆デイユース・スパ拠点。`, q: `${cleanQ} ホテル スパ ラウンジ` },
+            { name: `${cleanQ}の人気リラクゼーション・温浴スポット`, price: "利用目安 2,000〜4,500円", img: "assets/travel/hakone_onsen.jpg", why: `歩き疲れた体を癒やせる${cleanQ}エリアの温浴・休憩スポットです。`, q: `${cleanQ} 温浴 スーパー銭湯` }
+          ]
+        : [
+            { name: `${cleanQ} 露天風呂・大浴場付き人気宿・ホテル`, price: "1泊2食目安 22,000〜45,000円", img: "assets/travel/fufu_karuizawa.jpg", why: `${cleanQ}観光の拠点に便利な高評価ホテル・温泉宿。夕食前のチェックインでゆったり寛げます。`, q: `${cleanQ} 温泉旅館 ホテル 露天風呂` },
+            { name: `${cleanQ} 駅近・好アクセス上質ホテル`, price: "1泊1室目安 18,000〜38,000円", img: "assets/travel/tonbo_onsen.jpg", why: `荷物を預けて身軽に${cleanQ}の街歩きや食べ歩きを楽しめる好立地ホテルです。`, q: `${cleanQ} 人気ホテル ハイクラス` },
+            { name: `${cleanQ} 隠れ家宿・デザイナーズホテル`, price: "1泊目安 26,000〜55,000円", img: "assets/travel/hakone_onsen.jpg", why: `静かな環境で特別な休日を過ごせる${cleanQ}エリアの厳選宿です。`, q: `${cleanQ} 隠れ家 旅館 ブティックホテル` }
+          ];
+      while (hotels.length < 3) {
+        const idx = hotels.length;
+        const sup = staySupplements[idx];
+        hotels.push({
+          id: `${slug}_hotel_${idx + 1}`,
+          name: sup.name,
+          area: `${cleanQ}エリア`,
+          price: sup.price,
+          budget2p: pMode === "outing" ? 7000 : 38000,
+          img: sup.img,
+          badges: [{ text: "エリア厳選", cls: "cb-sauna" }],
+          tags: ["sauna", "buzz"],
+          buzzText: sup.why,
+          wellnessSpec: `${cleanQ}エリアの滞在・温浴候補`,
+          why: sup.why,
+          links: [
+            { label: "楽天トラベルで探す", url: staySearchUrl(sup.q) },
+            { label: "Googleマップで探す", url: mapUrl(sup.q) }
+          ],
+          traps: ["人気の客室や時間帯は早めに埋まるため事前確認がおすすめです。"],
+          todo: `【候補比較】${cleanQ}の宿・スパ空き状況をチェック`
+        });
+      }
+
+      const spots = rawSpots.slice(0, 4).map((p, i) => ({
+        id: `${slug}_spot_${i + 1}`,
+        name: p.title,
+        area: `${cleanQ}エリア（中心部から好アクセス）`,
+        time: i === 0 ? "10:20 - 11:30（約70分）" : "14:00 - 15:15（約75分）",
+        slotOrder: i === 0 ? 22 : 52,
+        day: i < 2 ? "day1" : "day2",
+        periodLabel: i === 0 ? "☀️ 午前お散歩・観光" : "🌿 午後立ち寄り・散策",
+        timeRange: i === 0 ? "10:20 - 11:30" : "14:00 - 15:15",
+        img: (p.thumbnail && p.thumbnail.source) || photoPool[(i + 2) % photoPool.length],
+        badges: [{ text: "定番名所", cls: "cb-walk" }],
+        tags: ["walk", "buzz"],
+        buzzText: (p.extract || `${cleanQ}を代表する人気散策スポットです。`).slice(0, 95),
+        wellnessSpec: "心地よい街歩き・リフレッシュ散策",
+        why: (p.extract || `${cleanQ}を訪れたら外せない定番の立ち寄りスポットです。`).slice(0, 105),
+        title: `✨ 『${p.title}』をお散歩・見学`,
+        desc: (p.extract || `${cleanQ}の人気スポット『${p.title}』をゆったり巡ります。`).slice(0, 120),
+        rainAltTitle: `☔ 雨天プランB：${cleanQ}の屋内ミュージアム・アーケード散策`,
+        rainAltDesc: "雨の日でも快適に回れる屋内展示やカフェ中心のルートに切り替えられます。",
+        links: [{ label: "Googleマップ", url: mapUrl(`${cleanQ} ${p.title}`) }],
+        trap: "午前中または15時前後の時間帯が比較的ゆったり見学できます。",
+        todo: `【営業時間確認】${p.title} の開館時間・定休日を確認`
+      }));
+
+      const spotSupplements = [
+        { name: `${cleanQ} 中心街・歴史通りお散歩コース`, img: "assets/travel/kamakura_sea.jpg", why: `${cleanQ}ならではの街並みと雑貨店・老舗を巡る王道お散歩コースです。`, q: `${cleanQ} 観光 街歩き` },
+        { name: `${cleanQ} 絶景展望・自然公園リフレッシュ散策`, img: "assets/travel/kumoba_pond.jpg", why: `季節の景色と開放感を味わえる${cleanQ}の癒やしスポットです。`, q: `${cleanQ} 公園 展望 絶景` },
+        { name: `${cleanQ} 美術館・ミュージアム＆文化体験`, img: "assets/travel/koishikawa_garden.jpg", why: `天候を問わず楽しめる${cleanQ}のアート・歴史スポットです。`, q: `${cleanQ} 美術館 博物館` }
+      ];
+      while (spots.length < 3) {
+        const idx = spots.length;
+        const sup = spotSupplements[idx];
+        spots.push({
+          id: `${slug}_spot_${idx + 1}`,
+          name: sup.name,
+          area: `${cleanQ}エリア`,
+          time: "10:30 - 11:40（約70分）",
+          slotOrder: 25 + idx * 20,
+          day: idx < 2 ? "day1" : "day2",
+          periodLabel: "☀️ 街歩き・散策",
+          timeRange: "10:30 - 11:40",
+          img: sup.img,
+          badges: [{ text: "お散歩", cls: "cb-walk" }],
+          tags: ["walk"],
+          buzzText: sup.why,
+          wellnessSpec: "街歩き＆リフレッシュ",
+          why: sup.why,
+          title: `🌿 ${sup.name}`,
+          desc: sup.why,
+          links: [{ label: "Googleマップで探す", url: mapUrl(sup.q) }],
+          trap: "歩きやすい靴で回ると快適です。",
+          todo: `【ルート確認】${cleanQ}の散策マップをチェック`
+        });
+      }
+
+      const foods = rawFoods.slice(0, 3).map((p, i) => ({
+        id: `${slug}_food_${i + 1}`,
+        name: p.title,
+        area: `${cleanQ}エリア`,
+        budget: "1人 1,800〜4,500円",
+        budget2p: 6500,
+        timeRange: "12:00 - 13:15",
+        img: (p.thumbnail && p.thumbnail.source) || photoPool[(i + 5) % photoPool.length],
+        badges: [{ text: "名物・食べ歩き", cls: "cb-tabelog" }],
+        tags: ["buzz"],
+        buzzText: (p.extract || `${cleanQ}ならではの地元グルメ・食べ歩きスポットです。`).slice(0, 95),
+        why: (p.extract || `${cleanQ}の名物料理や甘味を味わえる人気エリアです。`).slice(0, 105),
+        title: `🍽️ 食事：『${p.title}』で現地名物グルメ`,
+        desc: (p.extract || `${cleanQ}の地元グルメを堪能します。`).slice(0, 115),
+        lunchTitle: `🍽️ 昼食：『${p.title}』で名物ランチ＆食べ歩き`,
+        lunchDesc: `${cleanQ}ならではの旬の味覚と名物料理をお昼に楽しみます。`,
+        dinnerTitle: `🥂 ディナー：『${p.title}』周辺の名店で夜ごはん`,
+        dinnerDesc: `現地の人気店で名物料理と地酒・ドリンクをゆっくり味わいます。`,
+        links: [
+          { label: isOverseas ? "口コミ検索" : "食べログで探す", url: tabelogUrl(`${cleanQ} ${p.title}`) },
+          { label: "Googleマップ", url: mapUrl(`${cleanQ} ${p.title}`) }
+        ],
+        trap: "ランチのピーク（12:15〜13:00）を少し外すとスムーズに入店できます。"
+      }));
+
+      const foodSupplements = [
+        { name: `${cleanQ} 食べログ高評価・地元名物ランチの名店`, budget: "1人 2,000〜4,500円", img: "assets/travel/kawakamian_soba.jpg", why: `${cleanQ}で口コミ評価の高い名物ランチ・郷土料理の人気店。詳細リンクから食べログ上位店をすぐ開けます。`, q: `${cleanQ} ランチ 名物 百名店` },
+        { name: `${cleanQ} 人気自家焙煎カフェ＆季節スイーツ・ベーカリー`, budget: "1人 1,200〜2,500円", img: "assets/travel/armadillo_bakes.jpg", why: `散策の合間に立ち寄りたい${cleanQ}の人気カフェ・甘味処・ベーカリーです。`, q: `${cleanQ} カフェ スイーツ パン` },
+        { name: `${cleanQ} 隠れ家ビストロ・居酒屋・ご褒美ディナー名店`, budget: "1人 4,500〜9,000円", img: "assets/travel/lobelie_bistro.jpg", why: `夜にゆっくり乾杯できる${cleanQ}の実力派レストラン・旬魚＆地酒の名店です。`, q: `${cleanQ} ディナー 人気店` }
+      ];
+      while (foods.length < 3) {
+        const idx = foods.length;
+        const sup = foodSupplements[idx];
+        foods.push({
+          id: `${slug}_food_${idx + 1}`,
+          name: sup.name,
+          area: `${cleanQ}エリア`,
+          budget: sup.budget,
+          budget2p: 7000,
+          timeRange: "12:00 - 13:15",
+          img: sup.img,
+          badges: [{ text: "人気グルメ", cls: "cb-tabelog" }],
+          tags: ["buzz"],
+          buzzText: sup.why,
+          why: sup.why,
+          title: `🍽️ ${sup.name}`,
+          desc: sup.why,
+          lunchTitle: `🍽️ 昼食：${sup.name}`,
+          lunchDesc: sup.why,
+          dinnerTitle: `🥂 夕食：${sup.name}`,
+          dinnerDesc: sup.why,
+          links: [
+            { label: isOverseas ? "人気店を検索" : "食べログ人気順を開く", url: tabelogUrl(sup.q) },
+            { label: "Googleマップで探す", url: mapUrl(sup.q) }
+          ],
+          trap: "人気店は事前予約または開店直後の訪問がおすすめです。"
+        });
+      }
+
+      const catalog = {
+        key: slug,
+        isCustomSearch: true,
+        searchQuery: cleanQ,
+        primaryMode: pMode,
+        tag: `🧭 ${cleanQ} プラン`,
+        title: `${cleanQ} お出かけ＆旅行プラン`,
+        depMoveTitle: isOverseas
+          ? `✈️ 出発地を出発 → 国際空港から『${cleanQ}』へフライト`
+          : pMode === "travel"
+          ? `🚄 出発地を出発 → 新幹線・特急または車で『${cleanQ}』エリアへ移動`
+          : `🚃 出発地を出発 → 『${cleanQ}』エリアへ移動してスタート`,
+        depMoveDesc: `出発地からスムーズに『${cleanQ}』へアクセスし、選んだスポットとお店を効率よく巡ります。`,
+        overseasMeta: isOverseas ? {
+          countryArea: `${cleanQ}（海外渡航）`,
+          airportRoute: `出発地→羽田空港・成田空港 等 → ${cleanQ}最寄り国際空港`,
+          timeDiff: "現地時刻に合わせて調整",
+          visaEntry: "パスポート残存期間・電子渡航認証・帰国時Visit Japan Webを確認",
+          currencyTip: "現地通貨＋タッチ決済対応クレジットカード（Visa/Master）",
+          localTransport: "鉄道・Uber/Grab等の配車アプリ＋海外eSIM事前設定が便利"
+        } : null,
+        dayLabels: pMode === "outing"
+          ? {
+              day1: "☀️ 王道コース（午前散策 → 人気ランチ → 午後メイン）",
+              day2: "🕐 午後ゆったりコース（昼過ぎスタート → ディナー）",
+              day3: "☔ 雨の日・屋内中心コース"
+            }
+          : {
+              day1: "☀️ 1日目：到着＆観光・夕食前チェックイン",
+              day2: "🌿 2日目：朝風呂＆周辺散策・名店ランチ",
+              day3: "🛍️ 最終日：お土産＆帰路コース"
+            },
+        hotels,
+        spots,
+        foods
+      };
+
+      return {
+        ok: true,
+        key: slug,
+        query: cleanQ,
+        tab: {
+          key: slug,
+          tag: `🔍 検索：${cleanQ}`,
+          title: `${cleanQ} プラン`,
+          desc: `${cleanQ}の宿・観光・食事候補`,
+          img: hotels[0].img,
+          isCustom: true
+        },
+        catalog
+      };
+    }
+
+    async function searchServerlessAdditionalItems(baseArea, themeKw, targetRole, excludeNames) {
+      const excl = new Set((excludeNames || []).map(n => normalizePlaceBaseName(n, "")));
+      const results = [];
+      const arrKey = targetRole === "hotel" ? "hotels" : targetRole === "food" ? "foods" : "spots";
+
+      // 1. Check PUBLIC_SEARCH_CACHE for matching area items first
+      const cache = await loadPublicSearchCache();
+      const areaCore = normalizeSearchCore(baseArea.split(/[・\s]/)[0] || baseArea);
+      Object.entries((cache && cache.universal) || {}).forEach(([ck, val]) => {
+        if (!val || !val.catalog) return;
+        if (areaCore && normalizeSearchCore(ck).includes(areaCore)) {
+          (val.catalog[arrKey] || []).forEach(it => {
+            const nk = normalizePlaceBaseName(it.name, "");
+            if (nk && !excl.has(nk)) {
+              excl.add(nk);
+              results.push({ ...it, recommendedRole: targetRole });
+            }
+          });
+        }
+      });
+      if (results.length >= 4) return results.slice(0, 4);
+
+      // 2. Live Wikipedia search around baseArea + themeKw
+      try {
+        const livePlan = await buildServerlessLivePlan(themeKw && !themeKw.includes("組み合わせ") ? `${baseArea.split(" ")[0]} ${themeKw}` : baseArea.split(" ")[0], STATE.primaryMode, "all");
+        if (livePlan && livePlan.catalog) {
+          (livePlan.catalog[arrKey] || []).forEach(it => {
+            const nk = normalizePlaceBaseName(it.name, "");
+            if (nk && !excl.has(nk)) {
+              excl.add(nk);
+              results.push({ ...it, recommendedRole: targetRole });
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (results.length > 0) return results.slice(0, 4);
+      return getFallbackProposalCandidates(targetRole, excludeNames);
+    }
+
     async function proposeMoreForSection(role, customThemeKw, silentScroll) {
       const targetRole = (role === "hotel" || role === "food") ? role : "spot";
       const statusEl = document.getElementById(`spb-status-${targetRole}`);
@@ -8211,32 +9014,32 @@
         statusEl.className = "spb-status open";
         statusEl.innerHTML = `
           <span class="ai-spinner" style="display:inline-block; width:18px; height:18px; border-width:2.5px;"></span>
-          <span>🔄 選択中の予定を維持したまま、「${baseArea}」で組み合わせやすい新しい候補を提案中...（約3〜5秒）</span>
+          <span>🔄 選択中の予定を維持したまま、「${baseArea}」で組み合わせやすい新しい候補を提案中...</span>
         `;
       }
 
       let itemsToAdd = [];
-      try {
-        const res = await apiFetch("/api/pinpoint_search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: fullQuery,
-            category: targetRole,
-            excludeNames,
-            selectedContext
-          })
-        });
-        const data = await res.json();
-        if (res.ok && data.ok && Array.isArray(data.items) && data.items.length > 0) {
-          itemsToAdd = data.items;
-        }
-      } catch (err) {
-        // Fallback to local pool below
+      if (!IS_STATIC_HOST || NET_INFO.tunnelUrl) {
+        try {
+          const res = await apiFetch("/api/pinpoint_search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: fullQuery,
+              category: targetRole,
+              excludeNames,
+              selectedContext
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok && Array.isArray(data.items) && data.items.length > 0) {
+            itemsToAdd = data.items;
+          }
+        } catch (err) {}
       }
 
       if (!itemsToAdd || itemsToAdd.length === 0) {
-        itemsToAdd = getFallbackProposalCandidates(targetRole, excludeNames);
+        itemsToAdd = await searchServerlessAdditionalItems(baseArea, (customThemeKw || "").trim(), targetRole, excludeNames);
       }
 
       if (!silentScroll) {
@@ -8258,13 +9061,13 @@
       if (statusEl) {
         statusEl.className = "spb-status open done";
         statusEl.innerHTML = addedCount > 0
-          ? `✅ 選択中の予定を維持したまま、『${firstAddedName}』など新しい候補を <strong>${addedCount}件</strong> 追加しました！（上のカードをタップしていつでも組み込めます）`
+          ? `✅ 選択中の予定を維持したまま、『${firstAddedName}』など新しい候補を <strong>${addedCount}件</strong> 追加しました！（上のカードをタップして組み込めます）`
           : `✅ 現在のエリアの主要候補はすべて一覧に表示されています！カードを自由にタップして組み合わせられます。`;
       }
       if (autoBtn) {
         autoBtn.disabled = false;
       }
-      showToast(addedCount > 0 ? `🎉 新しい候補を${addedCount}件追加しました！タップで追加・入替できます` : `✨ 候補一覧を表示中です`);
+      showToast(addedCount > 0 ? `🎉 新しい候補を${addedCount}件追加しました！タップで選択できます` : `✨ 候補一覧を表示中です`);
     }
 
     function proposeMoreFromSectionInput(role) {
@@ -8407,18 +9210,40 @@
 
       togglePresetSwitcherDrawer(false);
 
-      const displayQuery = wasEmpty ? `おまかせ検索（${query}）` : query;
-      startSearchLoadingUI(`🔍 「${displayQuery}」の候補カード・写真・${origin}からの時間別スケジュールを作成中...`, false);
+      const displayQuery = wasEmpty ? `おすすめ候補（${query}）` : query;
+      const origDisplay = hasExplicitOrigin() ? `${origin}発` : `現地スタート`;
+      startSearchLoadingUI(`🔍 「${displayQuery}」のお店・宿・観光候補を作成中（${origDisplay}）...`, false);
 
       try {
-        const res = await apiFetch("/api/universal_search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode, genre, origin })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok || !data.catalog) {
-          throw new Error(data.error || "検索に失敗しました");
+        let data = null;
+
+        // Tier 1: Live local/tunnel backend if running
+        if (!IS_STATIC_HOST || NET_INFO.tunnelUrl) {
+          try {
+            const res = await apiFetch("/api/universal_search", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query, mode, genre, origin })
+            });
+            const rJson = await res.json();
+            if (res.ok && rJson.ok && rJson.catalog) {
+              data = adaptPlanDataToChoice(rJson, mode);
+            }
+          } catch (e) {}
+        }
+
+        // Tier 2: Instant match from public_search_cache.json (40 destinations) or built-in CATALOG
+        if (!data) {
+          data = await findCachedOrBuiltInPlan(query, mode, genre);
+        }
+
+        // Tier 3: 100% Serverless Live Search (Wikipedia Geosearch + Open-Meteo + Commons) for ANY area
+        if (!data) {
+          data = await buildServerlessLivePlan(query, mode, genre);
+        }
+
+        if (!data || !data.catalog) {
+          throw new Error("候補を作成できませんでした");
         }
 
         const key = data.key;
@@ -8456,15 +9281,15 @@
         saveAndSync();
         renderAll();
         finishSearchLoadingUI(
-          `✅ 「${displayQuery}」の専用プラン（${origin}発）を作成しました！`,
-          `すぐ下の「現在表示中のプラン」と「STEP 1：候補カード」が切り替わりました。タップして自由に組み替えられます。`
+          `✅ 「${displayQuery}」の候補一覧（${origDisplay}）を表示しました！`,
+          `すぐ下の2列ギャラリーで見比べて、気になる宿・観光・お店をタップして選べます。`
         );
-        showToast(`🎉 「${displayQuery}」の検索結果を反映しました！`);
+        showToast(`🎉 「${displayQuery}」の候補を表示しました！`);
         setTimeout(() => {
           scrollToSec("active-result-banner");
-        }, 200);
+        }, 160);
       } catch (err) {
-        finishSearchLoadingUI(`⚠️ 検索エラー：${err.message || err}`, "キーワードを変えて再度お試しください。");
+        finishSearchLoadingUI(`⚠️ 検索エラー：${err.message || err}`, "別のエリア名・駅名でお試しください。");
       }
     }
 
@@ -8523,7 +9348,7 @@
         return `
           <div class="candidate-card">
             <div class="card-photo-wrap">
-              <img src="${escHtmlAttr(it.img)}" alt="${escHtmlAttr(it.name)}" class="card-photo" loading="lazy">
+              <img src="${escHtmlAttr(it.img)}" alt="${escHtmlAttr(it.name)}" class="card-photo" loading="lazy" onerror="this.onerror=null;this.src='assets/travel/kamakura_sea.jpg';">
               <button type="button" class="card-zoom-mini" onclick="openLightbox('${escJsInAttr(it.img)}', '${escJsInAttr(it.name)}', '${escJsInAttr(it.area)}', event)">🔍</button>
             </div>
             <div class="card-compact-body">
@@ -8557,42 +9382,46 @@
         query = resolveDefaultQueryWhenEmpty(mode, genre);
       }
 
-      const { selectedContext, excludeNames } = getTripContextAndExclusions();
+      const { baseArea, selectedContext, excludeNames } = getTripContextAndExclusions();
       const category = optCategory || "all";
       const localMatches = searchLocalCatalogMatches(query);
       renderPinpointDrawer(query, localMatches, true);
-      startSearchLoadingUI(`🔎 「${query}」に合致する人気店舗・施設・スポットをリアルタイム検索中...`, true);
+      startSearchLoadingUI(`🔎 「${query}」に合致する人気店舗・施設・スポットを検索中...`, true);
 
-      try {
-        const res = await apiFetch("/api/pinpoint_search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, category, excludeNames, selectedContext })
-        });
-        const data = await res.json();
-        if (res.ok && data.ok && Array.isArray(data.items)) {
-          const combined = [...data.items];
-          localMatches.forEach(lm => {
-            if (!combined.some(c => c.name === lm.name)) combined.push(lm);
+      let foundItems = [];
+      if (!IS_STATIC_HOST || NET_INFO.tunnelUrl) {
+        try {
+          const res = await apiFetch("/api/pinpoint_search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, category, excludeNames, selectedContext })
           });
-          appendItemsDirectlyToTrip(combined, category === "all" ? "" : category, false);
-          saveAndSync();
-          renderAll();
-
-          renderPinpointDrawer(query, combined, false);
-          finishSearchLoadingUI(
-            `✅ 「${query}」の追加候補が${combined.length}件見つかり、STEP 1の候補一覧にも追加しました！`,
-            `現在選択中の予定はそのまま維持されています。すぐ下の候補カードからワンタップで組み込めます。`
-          );
-          showToast(`🔎 「${query}」の候補を${combined.length}件追加しました`);
-        } else {
-          renderPinpointDrawer(query, localMatches, false);
-          finishSearchLoadingUI(`✅ 「${query}」の候補を表示しました`);
-        }
-      } catch (err) {
-        renderPinpointDrawer(query, localMatches, false);
-        finishSearchLoadingUI(`⚠️ 通信エラー：${err.message || err}`);
+          const data = await res.json();
+          if (res.ok && data.ok && Array.isArray(data.items)) {
+            foundItems = data.items;
+          }
+        } catch (err) {}
       }
+
+      if (foundItems.length === 0) {
+        foundItems = await searchServerlessAdditionalItems(query || baseArea, "", category === "all" ? "spot" : category, excludeNames);
+      }
+
+      const combined = [...foundItems];
+      localMatches.forEach(lm => {
+        if (!combined.some(c => c.name === lm.name)) combined.push(lm);
+      });
+      if (combined.length > 0) {
+        appendItemsDirectlyToTrip(combined, category === "all" ? "" : category, false);
+        saveAndSync();
+        renderAll();
+      }
+      renderPinpointDrawer(query, combined, false);
+      finishSearchLoadingUI(
+        `✅ 「${query}」の追加候補を${combined.length}件表示しました！`,
+        `現在選択中の予定はそのまま維持されています。すぐ下の候補カードからワンタップで組み込めます。`
+      );
+      showToast(`🔎 「${query}」の候補を${combined.length}件追加しました`);
     }
 
     function addPinpointItemToTrip(idx, targetRole) {
@@ -8720,18 +9549,26 @@
       if (lanTxt) lanTxt.textContent = NET_INFO.lanUrl;
     }
 
+    function sanitizeOriginPrivacy(rawOrig) {
+      const s = String(rawOrig || "").trim();
+      if (!s || /丁目|番地|付近|[0-9０-９]+-[0-9０-９]+/.test(s)) return "";
+      return s;
+    }
+
     async function saveAndSync() {
       STATE.updatedAt = Date.now();
       try {
-        localStorage.setItem("outing_travel_master_v9", JSON.stringify(STATE));
+        localStorage.setItem("outing_travel_master_v10", JSON.stringify(STATE));
       } catch (e) {}
-      try {
-        await apiFetch("/api/state", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(STATE)
-        });
-      } catch (e) {}
+      if (!IS_STATIC_HOST || NET_INFO.tunnelUrl) {
+        try {
+          await apiFetch("/api/state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...STATE, origin: "", originCoords: null })
+          });
+        } catch (e) {}
+      }
     }
 
     function applyRemoteStateIfNewer(remote) {
@@ -8745,36 +9582,25 @@
         restoreCustomState();
         if (remote.primaryMode) STATE.primaryMode = remote.primaryMode;
         if (remote.currentTrip && CATALOG[remote.currentTrip]) STATE.currentTrip = remote.currentTrip;
-        if ("origin" in remote) STATE.origin = remote.origin || "";
-        if ("originCoords" in remote) STATE.originCoords = remote.originCoords;
+        if ("origin" in remote) STATE.origin = sanitizeOriginPrivacy(remote.origin);
+        if ("originCoords" in remote) STATE.originCoords = STATE.origin ? remote.originCoords : null;
         if (remote.pace) STATE.pace = remote.pace;
         if (remote.transport) STATE.transport = remote.transport;
         if (remote.weather) STATE.weather = remote.weather;
         STATE.updatedAt = remote.updatedAt;
         try {
-          localStorage.setItem("outing_travel_master_v9", JSON.stringify(STATE));
+          localStorage.setItem("outing_travel_master_v10", JSON.stringify(STATE));
         } catch (e) {}
         renderAll();
       }
     }
 
     async function pollServerState() {
-      try {
-        const res = await apiFetch("/api/state");
-        if (res.ok) {
-          const remote = await res.json();
-          applyRemoteStateIfNewer(remote);
-          return;
-        }
-      } catch (e) {}
-      // Offline / static fallback: check Gist or ./travel_state.json
-      if (NET_INFO._latestGistState) {
-        applyRemoteStateIfNewer(NET_INFO._latestGistState);
-      } else if (IS_STATIC_HOST) {
+      if (!IS_STATIC_HOST || NET_INFO.tunnelUrl) {
         try {
-          const stRes = await fetch("./travel_state.json?t=" + Date.now(), { cache: "no-store" });
-          if (stRes.ok) {
-            const remote = await stRes.json();
+          const res = await apiFetch("/api/state");
+          if (res.ok) {
+            const remote = await res.json();
             applyRemoteStateIfNewer(remote);
           }
         } catch (e) {}
@@ -8783,7 +9609,8 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       try {
-        const saved = localStorage.getItem("outing_travel_master_v9");
+        localStorage.removeItem("outing_travel_master_v9");
+        const saved = localStorage.getItem("outing_travel_master_v10");
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.customCatalogs) STATE.customCatalogs = parsed.customCatalogs;
@@ -8795,8 +9622,8 @@
           restoreCustomState();
           if (parsed.primaryMode) STATE.primaryMode = parsed.primaryMode;
           if (parsed.currentTrip && CATALOG[parsed.currentTrip]) STATE.currentTrip = parsed.currentTrip;
-          if ("origin" in parsed) STATE.origin = parsed.origin || "";
-          if ("originCoords" in parsed) STATE.originCoords = parsed.originCoords;
+          if ("origin" in parsed) STATE.origin = sanitizeOriginPrivacy(parsed.origin);
+          if ("originCoords" in parsed) STATE.originCoords = STATE.origin ? parsed.originCoords : null;
           if (parsed.pace) STATE.pace = parsed.pace;
           if (parsed.transport) STATE.transport = parsed.transport;
           if (parsed.weather) STATE.weather = parsed.weather;
@@ -8804,9 +9631,8 @@
       } catch (e) {}
 
       renderAll();
-      initNetworkAndQr();
-      pollServerState();
-      setInterval(pollServerState, 4000);
+      initNetworkAndQr().then(() => pollServerState());
+      loadPublicSearchCache();
     });
   </script>
 </body>
