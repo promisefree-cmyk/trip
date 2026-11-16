@@ -62,7 +62,7 @@
     }
 
     /* Prevent any flex/grid child from overflowing mobile viewport */
-    div, section, main, header, nav, article, aside, ul, li, p, span, a, button, input, select, table {
+    div, section, main, header, nav, article, aside, details, summary, ul, li, p, span, a, button, input, select, table {
       min-width: 0;
       max-width: 100%;
     }
@@ -2363,17 +2363,32 @@
       --border: #E3E7E4;
     }
     .hero-header {
-      padding: 12px 14px;
+      padding: 9px 12px;
+    }
+    .hero-inner {
+      flex-wrap: nowrap;
+      gap: 8px;
     }
     .hero-title {
-      font-size: clamp(16px, 4vw, 21px);
+      font-size: clamp(14.5px, 3.8vw, 20px);
       letter-spacing: 0.01em;
+      white-space: nowrap;
     }
     .hero-sub {
       display: none;
     }
+    .header-actions {
+      flex-wrap: nowrap;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .line-top-btn, .qr-open-btn {
+      padding: 6px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
     .container {
-      padding: 12px 10px 36px;
+      padding: 10px 10px 36px;
     }
 
     /* Top Unified Compact Plan & Search Bar */
@@ -2550,8 +2565,12 @@
       overflow-x: auto;
       white-space: nowrap;
       padding-bottom: 2px;
+      padding-right: 16px;
       scrollbar-width: none;
-      flex: 1 1 auto;
+      flex: 1 1 0%;
+      width: 0;
+      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
     }
     .filter-scroll-strip::-webkit-scrollbar { display: none; }
     .filter-btn {
@@ -2677,14 +2696,13 @@
       font-weight: 800;
       padding: 1px 6px;
       border-radius: 99px;
-      background: #EEF4F0;
-      color: var(--primary);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .candidate-card.selected .card-mini-tag {
       background: #CCFBF1;
       color: #0F766E;
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 68px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .card-compact-title {
       font-size: 13px;
@@ -2861,7 +2879,7 @@
         <p class="hero-sub">候補をタップして比較・選択するだけで朝から晩までの日程を自動作成</p>
       </div>
       <div class="header-actions">
-        <button class="line-top-btn" onclick="copyLineSummary()">LINEしおりコピー</button>
+        <button class="line-top-btn" onclick="copyLineSummary()">しおりコピー</button>
         <button class="qr-open-btn" onclick="openQrModal()">QR共有</button>
       </div>
     </div>
@@ -5952,7 +5970,7 @@
           STATE.origin = label;
           const inp = document.getElementById("origin-station-input");
           if (inp) inp.value = label;
-          if (btn) btn.textContent = "📍 現在地から取得";
+          if (btn) btn.textContent = "📍 現在地";
           saveAndSync();
           renderAll();
           showToast(`📍 出発地を「${label}」に設定しました！`);
@@ -6468,24 +6486,44 @@
       return (item.tags || []).includes(STATE.filter);
     }
 
+    function escHtmlAttr(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function escJsInAttr(str) {
+      return String(str || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/[\r\n]+/g, " ")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
     function buildCompactCardHtml(item, isSel, onClickJs, arrKey, priceOrTime, isMulti) {
-      const safeQ = (str) => (str || "").replace(/'/g, "\\'");
-      const topBadge = isSel
-        ? (isMulti ? "✓ 追加済" : "✓ 選択中")
-        : ((item.badges && item.badges[0] && item.badges[0].text) ? item.badges[0].text : (isMulti ? "＋ 追加" : "選択可"));
+      const topBadge = isSel ? (isMulti ? "✓ 追加済" : "✓ 選択中") : "";
       const shortSummary = item.why || item.buzzText || item.wellnessSpec || "";
-      const extraPoints = [item.buzzText, item.wellnessSpec].filter(Boolean).join(" ／ ");
+      const badgeTexts = (item.badges || []).map(b => b.text).filter(Boolean).join("・");
+      const extraPoints = [badgeTexts, item.buzzText, item.wellnessSpec].filter(Boolean).join(" ／ ");
+      const sImg = escJsInAttr(item.img);
+      const sName = escJsInAttr(item.name);
+      const sArea = escJsInAttr(item.area);
       return `
         <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="${onClickJs}">
           <div class="card-photo-wrap">
-            <img src="${item.img}" alt="${item.name}" class="card-photo" loading="lazy">
+            <img src="${escHtmlAttr(item.img)}" alt="${escHtmlAttr(item.name)}" class="card-photo" loading="lazy">
             <span class="card-check-dot ${isSel ? 'on' : ''}" aria-hidden="true">${isSel ? '✓' : '＋'}</span>
-            <button type="button" class="card-zoom-mini" onclick="openLightbox('${safeQ(item.img)}', '${safeQ(item.name)}', '${safeQ(item.area)}', event)" title="写真を拡大">🔍</button>
+            <button type="button" class="card-zoom-mini" onclick="openLightbox('${sImg}', '${sName}', '${sArea}', event)" title="写真を拡大">🔍</button>
           </div>
           <div class="card-compact-body">
             <div class="card-mini-top">
               <span class="card-mini-area">📍 ${item.area || ""}</span>
-              <span class="card-mini-tag">${topBadge}</span>
+              ${topBadge ? `<span class="card-mini-tag">${topBadge}</span>` : ''}
             </div>
             <div class="card-compact-title">${item.name}</div>
             ${priceOrTime ? `<div class="card-mini-price">${priceOrTime}</div>` : ''}
@@ -6496,9 +6534,9 @@
                 ${extraPoints ? `<div style="color:#0f766e; font-weight:700;">${extraPoints}</div>` : ''}
                 <div>${item.why || ""}</div>
                 <div class="card-detail-actions">
-                  ${arrKey ? `<button type="button" class="card-mini-btn" onclick="cycleCardPhoto('${arrKey}', '${item.id}', event)">📷 別写真</button>` : ''}
-                  <button type="button" class="card-mini-btn" onclick="openLightbox('${safeQ(item.img)}', '${safeQ(item.name)}', '${safeQ(item.area)}', event)">🔍 写真拡大</button>
-                  ${(item.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="card-mini-btn">🔗 ${l.label}</a>`).join("")}
+                  ${arrKey ? `<button type="button" class="card-mini-btn" onclick="cycleCardPhoto('${arrKey}', '${escJsInAttr(item.id)}', event)">📷 別写真</button>` : ''}
+                  <button type="button" class="card-mini-btn" onclick="openLightbox('${sImg}', '${sName}', '${sArea}', event)">🔍 写真拡大</button>
+                  ${(item.links || []).map(l => `<a href="${escHtmlAttr(l.url)}" target="_blank" rel="noopener" class="card-mini-btn">🔗 ${l.label}</a>`).join("")}
                 </div>
               </div>
             </details>
@@ -6515,11 +6553,10 @@
       const hHead = document.getElementById("hotel-sec-heading");
       const sHead = document.getElementById("spot-sec-heading");
       const fHead = document.getElementById("food-sec-heading");
-      const cleanSecHead = (txt, fallback) =>
-        (txt || fallback).replace(/を選ぶ（.*?）$/, "").replace(/を選ぶ$/, "");
-      if (hHead) hHead.textContent = cleanSecHead(trip.hotelHeading, "🏨 ① 宿・メイン施設");
-      if (sHead) sHead.textContent = cleanSecHead(trip.spotHeading, "🌿 ② 立ち寄りスポット");
-      if (fHead) fHead.textContent = cleanSecHead(trip.foodHeading, "🍽️ ③ 食事・カフェ");
+      const isOutingMode = (trip.primaryMode || STATE.primaryMode) === "outing";
+      if (hHead) hHead.textContent = isOutingMode ? "🧖‍♀️ ① メイン施設・スパ" : "🏨 ① 宿・ホテル";
+      if (sHead) sHead.textContent = "🌿 ② 立ち寄りスポット";
+      if (fHead) fHead.textContent = "🍽️ ③ 食事・カフェ";
 
       const selHotelObj = (trip.hotels || []).find(h => h.id === sel.hotel) || (trip.hotels || [])[0];
       const selSpotObjs = (trip.spots || []).filter(s => (sel.spots || []).includes(s.id));
@@ -6899,7 +6936,7 @@
           dynamic: true,
           isOverrun: overrunMin > 0,
           overrunNote: overrunMin > 0
-            ? `⚠️ 1日目の観光スポットが多いため、ホテル到着が【${fmtClock(projectedCheckinMin)}】にずれ込んでいます（夕食前の理想チェックイン ${fmtClock(targetCheckinLimitMin)} を約${overrunMin}分超過）。上の「🧭 AIリプランニング提案」からワンクリックで解決できます！`
+            ? `⚠️ 1日目の観光スポットが多いため、ホテル到着が【${fmtClock(projectedCheckinMin)}】にずれ込んでいます（夕食前の理想チェックイン ${fmtClock(targetCheckinLimitMin)} を約${overrunMin}分超過）。上の「🧭 スケジュール調整案」からワンクリックで解決できます！`
             : "",
           changeSec: "sec-hotels"
         });
@@ -7610,7 +7647,7 @@
           diagnostics.status === "tight" ? " is-tight" : ""
         );
         const statusBadgeText = diagnostics.status === "overrun"
-          ? "🚨 要リプランニング（夕食前チェックイン超過）"
+          ? "🚨 時間調整のおすすめ（夕食前チェックイン超過）"
           : diagnostics.status === "tight"
           ? "🟡 ややタイト（ゆとり調整提案あり）"
           : "✅ 移動・チェックイン整合性OK";
@@ -7865,15 +7902,13 @@
 
       if (btnUni) {
         btnUni.disabled = true;
-        btnUni.innerHTML = isPinpoint
-          ? "🗓️ 行き先・条件で「全体プラン」を新規作成（空欄でもOK）"
-          : "⏳ AIが検索・全体プラン作成中...";
+        btnUni.innerHTML = isPinpoint ? "🔍 検索" : "⏳ 検索中";
       }
       if (btnPin) {
         btnPin.disabled = true;
         btnPin.innerHTML = isPinpoint
-          ? "⏳ 今の選択を維持して追加候補を検索・提案中..."
-          : "➕ 今の選択を維持したまま、条件に合う「他の観光地・宿・店」を追加提案";
+          ? "⏳ 追加候補を検索中..."
+          : "➕ 今のプランを残したまま候補だけ追加検索";
       }
 
       if (txt) txt.textContent = msg;
@@ -7926,11 +7961,11 @@
 
       if (btnUni) {
         btnUni.disabled = false;
-        btnUni.innerHTML = "🗓️ 行き先・条件で「全体プラン」を新規作成（空欄でもOK）";
+        btnUni.innerHTML = "🔍 検索";
       }
       if (btnPin) {
         btnPin.disabled = false;
-        btnPin.innerHTML = "➕ 今の選択を維持したまま、条件に合う「他の観光地・宿・店」を追加提案";
+        btnPin.innerHTML = "➕ 今のプランを残したまま候補だけ追加検索";
       }
 
       if (fill) fill.style.width = "100%";
@@ -8488,8 +8523,8 @@
         return `
           <div class="candidate-card">
             <div class="card-photo-wrap">
-              <img src="${it.img}" alt="${it.name}" class="card-photo" loading="lazy">
-              <button type="button" class="card-zoom-mini" onclick="openLightbox('${safeQ(it.img)}', '${safeQ(it.name)}', '${safeQ(it.area)}', event)">🔍</button>
+              <img src="${escHtmlAttr(it.img)}" alt="${escHtmlAttr(it.name)}" class="card-photo" loading="lazy">
+              <button type="button" class="card-zoom-mini" onclick="openLightbox('${escJsInAttr(it.img)}', '${escJsInAttr(it.name)}', '${escJsInAttr(it.area)}', event)">🔍</button>
             </div>
             <div class="card-compact-body">
               <div class="card-mini-top">
