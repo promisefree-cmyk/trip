@@ -172,10 +172,10 @@
     </div>
 
     <!-- 🎙️ ジャービスへの一言・音声オーダー窓口 -->
-    <section class="order-panel" aria-labelledby="order-heading">
+    <section class="order-panel" id="order-panel" aria-labelledby="order-heading">
       <div class="panel-head">
         <h2 class="panel-title" id="order-heading">🎙️ ジャービスへの一言・音声オーダー</h2>
-        <span class="panel-note">思いついた指示やメモをすぐ記録</span>
+        <span class="panel-note">一言メモ送信、または「🔥 壁打ち」で3問深掘り</span>
       </div>
       <form class="order-form" id="order-form">
         <input
@@ -189,10 +189,33 @@
         <button type="button" class="cmd-btn voice-btn" id="voice-btn" aria-label="音声で入力する">
           <span>🎙️ 音声</span>
         </button>
+        <button type="button" class="cmd-btn grill-trigger-btn" id="grill-start-btn" aria-label="3問の壁打ちで方針を固める">
+          <span>🔥 壁打ち</span>
+        </button>
         <button type="submit" class="cmd-btn gold send-order-btn" id="send-order-btn">
           <span>送信</span>
         </button>
       </form>
+
+      <!-- 空欄で「🔥 壁打ち」を押した時に出るワンタップ例題チップ -->
+      <div class="grill-examples-bar" id="grill-examples-bar" hidden>
+        <span class="grill-examples-label">すぐ試せる例題（タップで壁打ち開始）：</span>
+        <div class="grill-examples-chips">
+          <button type="button" class="grill-example-chip" data-topic="Mrボディハックで肩甲骨はがしのショート動画を作りたい">
+            Mrボディハックの肩甲骨ショート動画
+          </button>
+          <button type="button" class="grill-example-chip" data-topic="公式HPに初めての方向けの安心ガイドを追加したい">
+            公式HPに初めての方の安心ガイド追加
+          </button>
+          <button type="button" class="grill-example-chip" data-topic="次の休みに1泊2日で温泉と美味しい夕食を楽しむ旅行計画">
+            1泊2日の温泉・グルメ旅行計画
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔥 壁打ち（Grill-Me）3問インタビュー＆確定カード -->
+      <div class="grill-session-box" id="grill-session-box" aria-live="polite" hidden></div>
+
       <div class="orders-history" id="orders-history"></div>
     </section>
   </main>

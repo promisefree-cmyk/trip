@@ -327,6 +327,7 @@ input:focus-visible {
   margin: 0;
   font-size: 13.5px;
   color: var(--text-muted);
+  white-space: pre-line;
 }
 
 .approval-actions {
@@ -720,7 +721,7 @@ input:focus-visible {
   border: 1px solid var(--border-strong);
   background: var(--bg-void);
   color: var(--text-main);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .order-input::placeholder {
@@ -740,10 +741,302 @@ input:focus-visible {
   color: #FCA5A5;
 }
 
+.grill-trigger-btn {
+  min-width: 96px;
+  min-height: 48px;
+  padding: 0 14px;
+  flex: 0 0 auto;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.42);
+  color: #BAE6FD;
+}
+
+.grill-trigger-btn:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.65);
+}
+
 .send-order-btn {
   min-width: 84px;
   min-height: 48px;
   flex: 0 0 auto;
+}
+
+/* Grill-Me Quick Examples Bar */
+.grill-examples-bar {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grill-examples-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.grill-examples-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.grill-example-chip {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.grill-example-chip:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-gold);
+}
+
+/* Grill-Me Interactive 3-Question Interview Box */
+.grill-session-box {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.06) 0%, var(--bg-elevated) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.grill-session-box[data-mode="done"] {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.09) 0%, var(--bg-elevated) 100%);
+  border-color: var(--border-gold);
+}
+
+.grill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grill-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.grill-step-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.grill-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  color: #BAE6FD;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.grill-cat-badge.gold {
+  background: var(--accent-gold-soft);
+  border-color: var(--border-gold);
+  color: #F5DF8B;
+}
+
+.grill-close-btn {
+  min-height: 44px;
+  padding: 0 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.grill-close-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-strong);
+}
+
+.grill-progress-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.grill-progress-seg {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.grill-progress-seg.done {
+  background: var(--accent-gold);
+}
+
+.grill-progress-seg.current {
+  background: var(--status-wave);
+}
+
+.grill-topic-caption {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.grill-question-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.55;
+}
+
+.grill-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.grill-option-btn {
+  width: 100%;
+  min-height: 50px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+.grill-option-btn:hover {
+  background: var(--bg-hover);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.grill-option-btn:active {
+  transform: scale(0.995);
+}
+
+.grill-option-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.grill-option-btn.recommended {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.13) 0%, var(--bg-surface) 100%);
+  border-color: var(--border-gold);
+}
+
+.grill-option-btn.recommended:hover {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.22) 0%, var(--bg-hover) 100%);
+}
+
+.grill-option-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.grill-option-arrow {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.grill-custom-form {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.grill-custom-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-void);
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.grill-custom-input::placeholder {
+  color: var(--text-dim);
+}
+
+.grill-custom-submit-btn {
+  flex: 0 0 auto;
+  min-width: 92px;
+  min-height: 46px;
+}
+
+.grill-foot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grill-summary-box {
+  padding: 13px 15px;
+  border-radius: var(--radius-md);
+  background: var(--bg-void);
+  border: 1px solid var(--border-gold);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-main);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.grill-done-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.grill-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
 }
 
 .orders-history {
@@ -777,6 +1070,10 @@ input:focus-visible {
   font-size: 11.5px;
   color: var(--text-muted);
   font-family: var(--font-num);
+}
+
+.order-item-meta.grill-done {
+  color: #F5DF8B;
 }
 
 /* ==========================================================================
@@ -833,7 +1130,7 @@ input:focus-visible {
   background: var(--bg-void);
   color: var(--text-main);
   font-family: var(--font-num);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .pairing-error {
@@ -1070,7 +1367,22 @@ body.watch-mode .command-shell {
   }
 
   .voice-btn,
+  .grill-trigger-btn,
   .send-order-btn {
-    flex: 1 1 calc(50% - 4px);
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: 88px;
+    padding: 0 10px;
+  }
+
+  .grill-custom-form {
+    flex-wrap: wrap;
+  }
+
+  .grill-custom-input {
+    flex: 1 1 100%;
+  }
+
+  .grill-custom-submit-btn {
+    flex: 1 1 100%;
   }
 }

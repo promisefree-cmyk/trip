@@ -21,6 +21,19 @@
     waveRafId: null,
     wavePhase: 0,
     busyAction: false,
+    grill: {
+      active: false,
+      completed: false,
+      busy: false,
+      topic: "",
+      category: "",
+      categoryLabel: "",
+      questions: [],
+      stepIndex: 0,
+      answers: [],
+      specSummary: "",
+      promptText: "",
+    },
   };
 
   // -------------------------------------------------------------------------
@@ -395,13 +408,15 @@
     }
     container.innerHTML = orders
       .slice(0, 5)
-      .map(
-        (ord) => `
+      .map((ord) => {
+        const isGrill = ord.status === "壁打ち確定" || ord.mode === "grill-me";
+        const metaCls = isGrill ? "order-item-meta grill-done" : "order-item-meta";
+        return `
         <div class="order-item">
           <span class="order-item-text">${escapeHtml(ord.text)}</span>
-          <span class="order-item-meta">${escapeHtml(ord.status)} ${escapeHtml(formatShortTime(ord.created_at))}</span>
-        </div>`
-      )
+          <span class="${metaCls}">${escapeHtml(ord.status)} ${escapeHtml(formatShortTime(ord.created_at))}</span>
+        </div>`;
+      })
       .join("");
   }
 
@@ -667,6 +682,254 @@
   }
 
   // -------------------------------------------------------------------------
+  // 8.5 Grill-Me (3-Step Tap Interview) Mode
+  // -------------------------------------------------------------------------
+  async function copyTextSafely(text) {
+    if (!text) return false;
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_err) {
+        // Fall through to legacy textarea copy
+      }
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      ta.style.pointerEvents = "none";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return Boolean(ok);
+    } catch (_err2) {
+      return false;
+    }
+  }
+
+  function closeGrillSession() {
+    state.grill.active = false;
+    state.grill.completed = false;
+    state.grill.busy = false;
+    const box = document.getElementById("grill-session-box");
+    if (box) {
+      box.hidden = true;
+      box.innerHTML = "";
+      box.removeAttribute("data-mode");
+    }
+  }
+
+  function renderGrillSessionBox() {
+    const box = document.getElementById("grill-session-box");
+    if (!box) return;
+
+    if (!state.grill.active) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+
+    box.hidden = false;
+
+    if (state.grill.completed) {
+      box.dataset.mode = "done";
+      box.innerHTML = `
+        <div class="grill-head">
+          <div class="grill-head-left">
+            <span class="grill-step-title">✓ 壁打ち方針が確定しました</span>
+            <span class="grill-cat-badge gold">承認センター＆実行キュー登録済</span>
+          </div>
+          <button type="button" class="grill-close-btn js-grill-close">閉じる</button>
+        </div>
+        <div class="grill-summary-box">${escapeHtml(state.grill.specSummary)}</div>
+        <p class="grill-done-note">
+          上の「承認センター」に確認カードを追加しました。AIへそのまま貼って作業させる場合は下のボタンで指示文をコピーできます。
+        </p>
+        <div class="grill-done-actions">
+          <button type="button" class="cmd-btn gold" id="grill-copy-prompt-btn">
+            <span>📋 AI指示文をコピー</span>
+          </button>
+          <button type="button" class="cmd-btn js-grill-close">
+            <span>閉じる</span>
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    box.dataset.mode = "asking";
+    const total = state.grill.questions.length || 3;
+    const idx = Math.min(state.grill.stepIndex, total - 1);
+    const stepNum = idx + 1;
+    const currentQ = state.grill.questions[idx] || { question: "", options: [] };
+    const isLast = stepNum >= total;
+    const disabledAttr = state.grill.busy ? "disabled" : "";
+
+    const segsHtml = Array.from({ length: total }, (_v, i) => {
+      const cls = i < idx ? "done" : i === idx ? "current" : "";
+      return `<span class="grill-progress-seg ${cls}"></span>`;
+    }).join("");
+
+    const optionsHtml = (currentQ.options || [])
+      .map((opt, optIdx) => {
+        const isRec = optIdx === 0 || String(opt).startsWith("（おすすめ）");
+        const btnCls = isRec ? "grill-option-btn recommended js-grill-option" : "grill-option-btn js-grill-option";
+        return `
+          <button type="button" class="${btnCls}" data-option="${escapeHtml(opt)}" ${disabledAttr}>
+            <span class="grill-option-label">${escapeHtml(opt)}</span>
+            <span class="grill-option-arrow" aria-hidden="true">${isLast ? "確定 ➔" : "次へ ➔"}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    const backBtnHtml =
+      idx > 0
+        ? `<button type="button" class="subtle-action-btn js-grill-back" ${disabledAttr}>← 前の質問へ戻る</button>`
+        : "";
+
+    box.innerHTML = `
+      <div class="grill-head">
+        <div class="grill-head-left">
+          <span class="grill-step-title">🔥 壁打ち深掘り中（質問 ${stepNum} / ${total}）</span>
+          <span class="grill-cat-badge">${escapeHtml(state.grill.categoryLabel || "企画整理")}</span>
+        </div>
+        <button type="button" class="grill-close-btn js-grill-close" ${disabledAttr}>閉じる</button>
+      </div>
+      <div class="grill-progress-track" aria-hidden="true">${segsHtml}</div>
+      <p class="grill-topic-caption">テーマ：${escapeHtml(state.grill.topic)}</p>
+      <h3 class="grill-question-text">${escapeHtml(currentQ.question)}</h3>
+      <div class="grill-options-list">${optionsHtml}</div>
+      <form class="grill-custom-form js-grill-custom-form">
+        <input
+          type="text"
+          class="grill-custom-input js-grill-custom-input"
+          placeholder="自分の言葉で答える場合はこちらに入力..."
+          maxlength="300"
+          aria-label="自分の言葉で回答を入力"
+          ${disabledAttr}
+        />
+        <button type="submit" class="cmd-btn grill-custom-submit-btn" ${disabledAttr}>
+          <span>${state.grill.busy ? "まとめ中..." : isLast ? "確定する" : "次へ"}</span>
+        </button>
+      </form>
+      ${backBtnHtml ? `<div class="grill-foot-row">${backBtnHtml}</div>` : ""}
+    `;
+  }
+
+  async function startGrillSession(overrideTopic = "") {
+    if (state.grill.busy) return;
+    const inputEl = document.getElementById("order-input");
+    const examplesBar = document.getElementById("grill-examples-bar");
+    const startBtn = document.getElementById("grill-start-btn");
+
+    if (overrideTopic && inputEl) {
+      inputEl.value = overrideTopic;
+    }
+
+    const topic = ((inputEl && inputEl.value) || "").trim();
+    if (!topic) {
+      if (examplesBar) examplesBar.hidden = false;
+      if (inputEl) inputEl.focus();
+      showToast("壁打ちしたいテーマを入力するか、下の例題をタップしてください。");
+      return;
+    }
+
+    if (examplesBar) examplesBar.hidden = true;
+    state.grill.busy = true;
+    if (startBtn) startBtn.disabled = true;
+
+    try {
+      const res = await apiRequest("/api/grill/start", {
+        method: "POST",
+        body: JSON.stringify({ topic }),
+      });
+
+      state.grill.active = true;
+      state.grill.completed = false;
+      state.grill.topic = res.topic || topic;
+      state.grill.category = res.category || "general";
+      state.grill.categoryLabel = res.category_label || "企画・アイデア整理";
+      state.grill.questions = Array.isArray(res.questions) ? res.questions : [];
+      state.grill.stepIndex = 0;
+      state.grill.answers = [];
+      state.grill.specSummary = "";
+      state.grill.promptText = "";
+
+      renderGrillSessionBox();
+    } catch (err) {
+      showToast(`壁打ちを開始できませんでした：${err.message}`);
+    } finally {
+      state.grill.busy = false;
+      if (startBtn) startBtn.disabled = false;
+    }
+  }
+
+  async function completeGrillSession() {
+    state.grill.busy = true;
+    renderGrillSessionBox();
+
+    try {
+      const res = await apiRequest("/api/grill/complete", {
+        method: "POST",
+        body: JSON.stringify({
+          topic: state.grill.topic,
+          category: state.grill.category,
+          category_label: state.grill.categoryLabel,
+          answers: state.grill.answers,
+          register_approval: true,
+        }),
+      });
+
+      state.grill.completed = true;
+      state.grill.specSummary = res.spec_summary || "";
+      state.grill.promptText = res.prompt_text || "";
+      state.grill.busy = false;
+
+      const inputEl = document.getElementById("order-input");
+      if (inputEl) inputEl.value = "";
+
+      renderGrillSessionBox();
+      showToast(res.message || "壁打ち方針を確定しました。");
+      await refreshOverview(true);
+    } catch (err) {
+      state.grill.busy = false;
+      renderGrillSessionBox();
+      showToast(`確定処理でエラーが発生しました：${err.message}`);
+    }
+  }
+
+  async function selectGrillAnswer(answerText) {
+    if (state.grill.busy || !state.grill.active || state.grill.completed) return;
+    const cleaned = String(answerText || "").trim();
+    if (!cleaned) {
+      showToast("回答を選択するか、言葉を入力してください。");
+      return;
+    }
+
+    const idx = state.grill.stepIndex;
+    const currentQ = state.grill.questions[idx];
+    if (!currentQ) return;
+
+    state.grill.answers[idx] = {
+      question: currentQ.question,
+      answer: cleaned,
+    };
+
+    if (idx + 1 < state.grill.questions.length) {
+      state.grill.stepIndex = idx + 1;
+      renderGrillSessionBox();
+    } else {
+      state.grill.answers = state.grill.answers.slice(0, state.grill.questions.length);
+      await completeGrillSession();
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // 9. Event Bindings & Bootstrap
   // -------------------------------------------------------------------------
   function bindEvents() {
@@ -760,6 +1023,8 @@
           }),
         });
         input.value = "";
+        const examplesBar = document.getElementById("grill-examples-bar");
+        if (examplesBar) examplesBar.hidden = true;
         showToast(res.message || "オーダーを記録しました。");
         await refreshOverview(true);
       } catch (err) {
@@ -767,6 +1032,73 @@
       } finally {
         sendBtn.disabled = false;
       }
+    });
+
+    // Grill-Me Controls & Event Delegation
+    document.getElementById("grill-start-btn").addEventListener("click", () => {
+      startGrillSession();
+    });
+
+    document.getElementById("grill-examples-bar").addEventListener("click", (ev) => {
+      const chip = ev.target.closest(".grill-example-chip");
+      if (!chip) return;
+      const sampleTopic = chip.dataset.topic || "";
+      if (sampleTopic) {
+        startGrillSession(sampleTopic);
+      }
+    });
+
+    const grillBox = document.getElementById("grill-session-box");
+    grillBox.addEventListener("click", async (ev) => {
+      const optBtn = ev.target.closest(".js-grill-option");
+      if (optBtn) {
+        await selectGrillAnswer(optBtn.dataset.option || "");
+        return;
+      }
+
+      const closeBtn = ev.target.closest(".js-grill-close");
+      if (closeBtn) {
+        closeGrillSession();
+        return;
+      }
+
+      const backBtn = ev.target.closest(".js-grill-back");
+      if (backBtn) {
+        if (!state.grill.busy && state.grill.stepIndex > 0) {
+          state.grill.stepIndex -= 1;
+          renderGrillSessionBox();
+        }
+        return;
+      }
+
+      const copyBtn = ev.target.closest("#grill-copy-prompt-btn");
+      if (copyBtn) {
+        const ok = await copyTextSafely(state.grill.promptText);
+        if (ok) {
+          showToast("📋 AI指示文をコピーしました！そのまま貼り付けられます。");
+          const prev = copyBtn.innerHTML;
+          copyBtn.innerHTML = "<span>✓ コピーしました</span>";
+          window.setTimeout(() => {
+            if (copyBtn.isConnected) copyBtn.innerHTML = prev;
+          }, 2200);
+        } else {
+          showToast("コピーできませんでした。もう一度お試しください。");
+        }
+      }
+    });
+
+    grillBox.addEventListener("submit", async (ev) => {
+      const customForm = ev.target.closest(".js-grill-custom-form");
+      if (!customForm) return;
+      ev.preventDefault();
+      const inputEl = customForm.querySelector(".js-grill-custom-input");
+      const val = ((inputEl && inputEl.value) || "").trim();
+      if (!val) {
+        if (inputEl) inputEl.focus();
+        showToast("自分の言葉で答える内容を入力するか、上の選択肢をタップしてください。");
+        return;
+      }
+      await selectGrillAnswer(val);
     });
 
     // Pairing Modal (Owner Device Link Helper)
