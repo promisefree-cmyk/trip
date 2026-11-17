@@ -3,300 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none';" />
-  <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="theme-color" id="meta-theme-color" content="#EEF2F7" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <meta name="description" content="骨格と全11本の半透明3D筋膜シートで、原因（赤：縮む筋膜）・ピン留め部・症状（青：張る筋膜）とゆるめる順番を4ステップで確認できるアナトミートレイン3Dビューア。" />
-  <title>筋膜シート単体 3D — アナトミートレイン張力ガイド</title>
-  <link rel="stylesheet" href="css/fascia_only.css?v=20261117b" />
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'self';" />
+  <title>アナトミー筋膜・筋肉 3D へ移動しています…</title>
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search || '');
+        if (!params.has('layer')) {
+          params.set('layer', 'fascia');
+        }
+        var qs = params.toString();
+        var hash = window.location.hash || '';
+        var dest = './index.html' + (qs ? '?' + qs : '') + hash;
+        window.location.replace(dest);
+      } catch (e) {
+        window.location.replace('./index.html?layer=fascia');
       }
-    }
+    })();
   </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=./index.html?layer=fascia" />
+  </noscript>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #FAF8F5;
+      color: #1E2420;
+      font: 15px/1.6 'Hiragino Sans', 'BIZ UDPGothic', system-ui, sans-serif;
+      text-align: center;
+    }
+    a {
+      color: #1B3B2B;
+      font-weight: 700;
+    }
+  </style>
 </head>
-<body data-view-page="step-1">
-  <!-- トップヘッダー（右上は「通常／ダークモード」1ボタンのみ） -->
-  <header class="top-bar">
-    <div class="brand-block">
-      <h1 class="app-title">筋膜シート単体 3D <span class="title-sub">張力・ケア順ガイド</span></h1>
-    </div>
-    <div class="header-actions">
-      <button
-        type="button"
-        id="btnTheme"
-        class="theme-pill-btn"
-        aria-pressed="false"
-        aria-label="画面モードを通常とダークモードで切り替える"
-      >
-        <span class="theme-pill-item is-active" data-theme-pill="light">通常</span>
-        <span class="theme-pill-item" data-theme-pill="dark">ダークモード</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- メインワークスペース（PC: 左47% 3D ＋ 右53% ステップ画面 / スマホ: 上38% 3D ＋ 下62% ステップ画面） -->
-  <main class="workspace">
-    <!-- 3D領域（キャンバス上に文字・ボタンの重なり 0px） -->
-    <section id="stage-col" class="stage-column" aria-label="3D骨格・筋膜ビューポート">
-      <div id="stage-viewport" class="stage-viewport">
-        <div id="stage" class="stage-canvas-wrap"></div>
-        <div id="loader-overlay" class="loader-overlay" role="status" aria-live="polite">
-          <div class="loader-box">
-            <p class="loader-title">骨格と全11本の3D筋膜シートを準備中</p>
-            <div class="loader-bar-track">
-              <div id="loader-bar-fill" class="loader-bar-fill"></div>
-            </div>
-            <p id="loader-status" class="loader-status">読み込みを開始しています…</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3D領域の下端コンパクト操作バー -->
-      <div id="stage-bar" class="stage-bar" aria-label="3D表示の簡易操作">
-        <button type="button" id="btn-play-toggle" class="stage-bar-btn stage-bar-btn-play">一時停止</button>
-        <button type="button" id="btn-cam-whole" class="stage-bar-btn">全身を映す</button>
-        <button type="button" id="btn-stage-expand" class="stage-bar-btn stage-expand-btn" aria-expanded="false">3Dを広げる</button>
-      </div>
-    </section>
-
-    <!-- 番号付き4ステップ・ページ送りガイド領域 -->
-    <section id="guide-col" class="guide-column" aria-label="番号付きステップ解説ガイド">
-      <!-- 常設：番号付き4ステップ進捗バー -->
-      <nav id="step-nav" class="step-nav" aria-label="ステップ進捗バー">
-        <button type="button" class="step-tab is-current" data-goto-step="1" aria-current="step">
-          <span class="step-num">①</span>
-          <span class="step-label">場所</span>
-        </button>
-        <span class="step-sep" aria-hidden="true">➔</span>
-        <button type="button" class="step-tab" data-goto-step="2">
-          <span class="step-num">②</span>
-          <span class="step-label">症状</span>
-        </button>
-        <span class="step-sep" aria-hidden="true">➔</span>
-        <button type="button" class="step-tab" data-goto-step="3">
-          <span class="step-num">③</span>
-          <span class="step-label">原因</span>
-        </button>
-        <span class="step-sep" aria-hidden="true">➔</span>
-        <button type="button" class="step-tab" data-goto-step="4">
-          <span class="step-num">④</span>
-          <span class="step-label">ケア順</span>
-        </button>
-      </nav>
-
-      <!-- ページ送り本文エリア -->
-      <div id="guide-scroll" class="guide-scroll">
-        <div class="guide-inner">
-          <!-- ===============================================================
-               【① 場所ページ】タイトル1行 ＋ 5部位ボタン ＋ サブボタン2つ
-               =============================================================== -->
-          <section id="page-step-1" class="wizard-page" aria-labelledby="heading-step-1">
-            <h2 id="heading-step-1" class="page-title">気になる場所を選んでください</h2>
-
-            <div id="region-btn-list" class="choice-stack" role="group" aria-label="気になる体の場所（5項目）"></div>
-
-            <div class="sub-route-box" aria-label="別の見かた">
-              <div class="sub-route-row">
-                <button type="button" id="btn-open-motions" class="sub-route-btn">16の日常動作から見る</button>
-                <button type="button" id="btn-open-lines" class="sub-route-btn">11本の筋膜ライン切替</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- ===============================================================
-               【② 症状ページ】選択部位がわかる1行タイトル ＋ 症状ボタンリストのみ
-               =============================================================== -->
-          <section id="page-step-2" class="wizard-page" aria-labelledby="heading-step-2">
-            <div class="back-row">
-              <button type="button" id="btn-back-to-1" class="back-nav-btn">← ① 場所を選び直す</button>
-            </div>
-
-            <h2 id="heading-step-2" class="page-title">腰・骨盤・お尻の症状</h2>
-
-            <div id="symptom-card-list" class="choice-stack" role="group" aria-label="当てはまる症状の選択"></div>
-          </section>
-
-          <!-- ===============================================================
-               【③ 原因ページ】症状タイトル1行 ＋ 2文以内の理由 ＋ 1・2・3カード
-               =============================================================== -->
-          <section id="page-step-3" class="wizard-page" aria-labelledby="explain-title">
-            <div class="back-row">
-              <button type="button" id="btn-back-from-3" class="back-nav-btn">← ② 症状を選び直す</button>
-            </div>
-
-            <h2 id="explain-title" class="page-title">首うしろの詰まり・頭重・目の疲れ</h2>
-
-            <div class="reading-card pitfall-card">
-              <h3 class="card-heading pitfall-heading">なぜそこだけケアしても戻るのか</h3>
-              <p id="explain-body" class="card-body-text"></p>
-            </div>
-
-            <div class="chain-section" aria-label="筋膜のつながり3ポイント">
-              <div class="chain-card chain-culprit">
-                <div class="chain-card-head">
-                  <span class="chain-num num-culprit">1</span>
-                  <span class="chain-role role-culprit">原因（赤：縮む筋膜）</span>
-                </div>
-                <p id="chain-culprit-text" class="chain-text"></p>
-              </div>
-
-              <div class="chain-card chain-station">
-                <div class="chain-card-head">
-                  <span class="chain-num num-station">2</span>
-                  <span class="chain-role role-station">ピン留め部（筋膜の癒着部）</span>
-                </div>
-                <p id="chain-station-text" class="chain-text"></p>
-              </div>
-
-              <div class="chain-card chain-victim">
-                <div class="chain-card-head">
-                  <span class="chain-num num-victim">3</span>
-                  <span class="chain-role role-victim">症状（青：張る筋膜）</span>
-                </div>
-                <p id="chain-victim-text" class="chain-text"></p>
-              </div>
-            </div>
-
-            <!-- 折りたたみ式 3D詳細コントロール -->
-            <details class="pose-adjust-details">
-              <summary class="pose-adjust-summary">3Dの姿勢の深さ・見る向きを調整する</summary>
-              <div class="pose-adjust-body">
-                <div class="slider-box">
-                  <div class="slider-head">
-                    <label for="weight-shift-slider" id="scrub-slider-label" class="slider-label">姿勢・動作の深さ</label>
-                    <span id="weight-shift-value" class="slider-readout">右足荷重 75%</span>
-                  </div>
-                  <input
-                    type="range"
-                    id="weight-shift-slider"
-                    class="weight-slider"
-                    min="-100"
-                    max="100"
-                    step="1"
-                    value="75"
-                    aria-label="姿勢と動きの手動調整スライダー"
-                  />
-                  <div class="slider-scale" aria-hidden="true">
-                    <span id="scale-min-label">左100%</span>
-                    <span id="scale-mid-label">中央0%</span>
-                    <span id="scale-max-label">右100%</span>
-                  </div>
-                  <div class="transport-row">
-                    <button type="button" id="btn-reset-pose" class="ctrl-btn">まっすぐ立つ（0%に戻す）</button>
-                  </div>
-                </div>
-
-                <div class="camera-box">
-                  <p class="sub-heading">見る向きを切り替える</p>
-                  <div class="cam-grid" role="group" aria-label="カメラの向き切り替え">
-                    <button type="button" class="cam-btn" data-cam-view="front">正面（全身）</button>
-                    <button type="button" class="cam-btn" data-cam-view="back">背面（全身）</button>
-                    <button type="button" class="cam-btn" data-cam-view="right-tfl">右横から見る</button>
-                    <button type="button" class="cam-btn" data-cam-view="left">左横から見る</button>
-                    <button type="button" class="cam-btn" data-cam-view="neck-shoulder">首・肩・腕まわり</button>
-                    <button type="button" class="cam-btn" data-cam-view="arm-hand">肩・腕・手首</button>
-                    <button type="button" class="cam-btn" data-cam-view="pelvis-zoom">腰・骨盤・太もも</button>
-                    <button type="button" class="cam-btn" data-cam-view="leg-foot-zoom">骨盤〜膝・足裏</button>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <div class="next-cta-wrap">
-              <button type="button" id="btn-go-step-4" class="next-step-btn">次へ：④ ゆるめる順番を見る ➔</button>
-            </div>
-          </section>
-
-          <!-- ===============================================================
-               【④ ケア順ページ】タイトル1行 ＋ 手順カード ＋ 色の見かた
-               =============================================================== -->
-          <section id="page-step-4" class="wizard-page" aria-labelledby="heading-step-4">
-            <div class="back-row back-row-split">
-              <button type="button" id="btn-back-to-3" class="back-nav-btn">← ③ 原因へ戻る</button>
-              <button type="button" id="btn-restart-step-1" class="back-nav-btn back-nav-secondary">① 別の場所を探す</button>
-            </div>
-
-            <h2 id="heading-step-4" class="page-title">ゆるめる順番</h2>
-
-            <div class="zoom-reset-row" id="zoom-reset-wrap" hidden>
-              <button type="button" id="btn-zoom-reset" class="zoom-reset-btn">全体の向きに戻す</button>
-            </div>
-
-            <div id="care-steps-list" class="care-steps-list"></div>
-
-            <div class="reading-card legend-card">
-              <h3 class="card-heading">色の見かた</h3>
-              <div class="legend-strip">
-                <div class="legend-chip">
-                  <span class="swatch-line swatch-short" aria-hidden="true"></span>
-                  <span><strong>赤（横じわ）</strong>：縮んで固まる筋膜（原因）</span>
-                </div>
-                <div class="legend-chip">
-                  <span class="swatch-line swatch-stretch" aria-hidden="true"></span>
-                  <span><strong>青（縦スジ）</strong>：引っぱられて張る筋膜（症状）</span>
-                </div>
-                <div class="legend-chip">
-                  <span class="swatch-pin" aria-hidden="true"></span>
-                  <span><strong>金のピン</strong>：ピン留め部（筋膜の癒着部）</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- ===============================================================
-               【サブページ A】16の日常動作（4カテゴリ別）
-               =============================================================== -->
-          <section id="page-motions" class="wizard-page" aria-labelledby="heading-motions">
-            <div class="back-row">
-              <button type="button" id="btn-motion-back" class="back-nav-btn">← ① 場所選びに戻る</button>
-            </div>
-
-            <h2 id="heading-motions" class="page-title">16の日常動作</h2>
-
-            <div id="motion-cat-bar" class="motion-cat-grid" role="group" aria-label="16動作のカテゴリ切り替え"></div>
-
-            <div id="preset-list" class="choice-stack" role="group" aria-label="カテゴリ内の動作一覧"></div>
-
-            <div class="next-cta-wrap">
-              <button type="button" id="btn-motion-to-step3" class="next-step-btn">この動作の原因とケア順を見る ➔</button>
-            </div>
-          </section>
-
-          <!-- ===============================================================
-               【サブページ B】11本の筋膜ライン切替
-               =============================================================== -->
-          <section id="page-lines" class="wizard-page" aria-labelledby="heading-lines">
-            <div class="back-row">
-              <button type="button" id="btn-lines-back" class="back-nav-btn">← ① 場所選びに戻る</button>
-            </div>
-
-            <h2 id="heading-lines" class="page-title">11本の筋膜ライン切替</h2>
-
-            <div class="line-quick-row">
-              <button type="button" id="btn-lines-recommended" class="mini-action-btn">推奨ラインに戻す</button>
-              <button type="button" id="btn-lines-all" class="mini-action-btn">全11本を表示</button>
-              <button type="button" id="btn-lines-none" class="mini-action-btn">すべて消す</button>
-            </div>
-
-            <label class="station-toggle">
-              <input type="checkbox" id="chk-stations" checked />
-              <span>ピン留め部（金のピン）を表示する</span>
-            </label>
-
-            <div id="fascia-line-list" class="line-list"></div>
-          </section>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script type="module" src="js/fascia_only_app.js?v=20261117b"></script>
+<body>
+  <p>一体型アプリへ移動しています。<a href="./index.html?layer=fascia">自動的に切り替わらない場合はこちらをタップしてください</a>。</p>
 </body>
 </html>

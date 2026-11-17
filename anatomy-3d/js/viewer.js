@@ -22,7 +22,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 // 姿勢変形（posture.js）: 名前付き import だと export 欠落時にモジュール全体が落ちるので名前空間で受ける
-import * as posture from './posture.js?v=20261117b';
+import * as posture from './posture.js?v=20261118a';
 
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
@@ -35,7 +35,7 @@ const getRigRole =
 // 定数
 // ---------------------------------------------------------------------------
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261117b';
+const ASSET_QUERY = '?v=20261118a';
 const IDLE_TIMEOUT_MS = 45000; // 無操作45秒以上で省電力 4fps 待機モードへ移行（観察中の15fps低下カクつきを完全防止）
 const IDLE_FRAME_INTERVAL_MS = 250; // 約 4fps（250ms間隔）の静かな待機（画面に触れた瞬間0msで60fpsへ即復帰）
 
@@ -309,12 +309,10 @@ const styleUniforms = {
   // 筋肉選択時のハイライト演出（選択中の筋肉をくっきり浮き立たせ、非選択筋を少し落ち着かせる）
   uHasSelection: { value: 0 },
   uPulseTime: { value: 0 },
+  uDarkMode: { value: 0 },
 };
 
-// Proposal A: Rooton 公式HP連動『和紙クリーム（#FAF8F4）× 水彩セピア線画骨格 × 無縞ウォーム水彩筋』シェーダー
-// - 骨格: 温かみのある象牙アイボリー（#F7F3EA ⇄ #D8C7AE）＋ 繊細なセピアペン輪郭（#685543）で和紙背景でも白飛びゼロ
-// - 通常筋: 人工的な縦縞・ゼブラ模様 0%、滑らかな水彩ウォームブラッシュ（#E6CBB9〜#DFBFA9）＋ 象牙腱（#F4EFE6）＋ セピア輪郭
-// - 無関係筋: 黒・ダークグレー退避を全廃し、生成りリネンヴェール透過（内部透過 92% ＋ セピア輪郭線）で中の骨格と着色筋膜を鮮明に透視
+// Proposal A: Rooton 公式HP連動『ウォームサロンリネン（#F6F2EA）⇄ ディープスレートネイビー（#0B132B）』シェーダー
 const ILLUST_FRAG = /* glsl */ `
   if ( diffuseColor.a < 0.99 ) {
     vec3 nG = normalize( normal );
@@ -322,20 +320,31 @@ const ILLUST_FRAG = /* glsl */ `
     float facingG = clamp( abs( dot( nG, vG ) ), 0.0, 1.0 );
     float fresG = pow( 1.0 - facingG, mix( 2.10, 1.75, uXRay ) );
 
-    // 生成り和紙リネン透過ヴェール（中心は透き通り、輪郭だけ柔らかいセピア線画で浮かぶ）
-    vec3 linenFill = mix( vec3( 0.78, 0.71, 0.62 ), vec3( 0.90, 0.85, 0.78 ), 0.45 + 0.55 * facingG );
-    vec3 sepiaRim  = vec3( 0.205, 0.145, 0.098 );
-    vec3 stdGhost  = mix( linenFill, sepiaRim, clamp( fresG * 0.80, 0.0, 0.84 ) );
-    float stdA     = uUninvolved > 0.5 ? ( 0.065 + 0.265 * fresG ) : ( 0.085 + 0.275 * fresG );
+    vec3 linenFillLight = mix( vec3( 0.78, 0.71, 0.62 ), vec3( 0.90, 0.85, 0.78 ), 0.45 + 0.55 * facingG );
+    vec3 sepiaRimLight  = vec3( 0.205, 0.145, 0.098 );
+    vec3 slateFillDark  = mix( vec3( 0.20, 0.28, 0.42 ), vec3( 0.36, 0.46, 0.62 ), 0.45 + 0.55 * facingG );
+    vec3 slateRimDark   = vec3( 0.68, 0.78, 0.92 );
 
-    if ( uVeilMode > 1.5 ) {
-      // 'deep' モード: 表層筋を極薄のセピア線画シルエットへ退避し、深層筋と骨格をクリアに見せる
-      stdGhost = mix( vec3( 0.86, 0.81, 0.74 ), sepiaRim, clamp( fresG * 0.78, 0.0, 0.82 ) );
+    vec3 linenFill = mix( linenFillLight, slateFillDark, uDarkMode );
+    vec3 sepiaRim  = mix( sepiaRimLight, slateRimDark, uDarkMode );
+
+    vec3 stdGhost  = mix( linenFill, sepiaRim, clamp( fresG * 0.80, 0.0, 0.84 ) );
+    float stdA     = uUninvolved > 0.5 ? ( 0.065 + 0.245 * fresG ) : ( 0.085 + 0.265 * fresG );
+
+    if ( uVeilMode > 2.5 ) {
+      // 'fascia' モード専用: ごく薄い上品な身体サロン輪郭ヴェール（平均約 8〜12% 不透明度）
+      vec3 veilFill = mix( vec3( 0.88, 0.84, 0.78 ), vec3( 0.26, 0.36, 0.52 ), uDarkMode );
+      vec3 veilRim  = mix( vec3( 0.32, 0.25, 0.19 ), vec3( 0.66, 0.78, 0.92 ), uDarkMode );
+      stdGhost = mix( veilFill, veilRim, clamp( fresG * 0.74, 0.0, 0.80 ) );
+      stdA = 0.048 + 0.125 * pow( fresG, 1.25 );
+    } else if ( uVeilMode > 1.5 ) {
+      // 'deep' モード: 表層筋を極薄の輪郭シルエットへ退避
+      stdGhost = mix( mix( vec3( 0.86, 0.81, 0.74 ), slateFillDark, uDarkMode ), sepiaRim, clamp( fresG * 0.78, 0.0, 0.82 ) );
       stdA = 0.022 + 0.155 * pow( fresG, 1.35 );
     } else if ( uVeilMode > 0.5 ) {
-      // 'see-through' モード: 役割を持つ表層筋は温かいアンバーブラッシュ膜、無関係筋は生成りリネン透過
+      // 'see-through' モード
       if ( uRoleInvolved > 0.5 ) {
-        stdGhost = mix( vec3( 0.78, 0.58, 0.40 ), vec3( 0.36, 0.22, 0.12 ), fresG * 0.68 );
+        stdGhost = mix( vec3( 0.78, 0.58, 0.40 ), mix( vec3( 0.36, 0.22, 0.12 ), slateRimDark, uDarkMode * 0.5 ), fresG * 0.68 );
         stdA = 0.13 + 0.24 * fresG;
       } else {
         stdGhost = mix( linenFill, sepiaRim, clamp( fresG * 0.78, 0.0, 0.82 ) );
@@ -343,14 +352,14 @@ const ILLUST_FRAG = /* glsl */ `
       }
     }
 
-    vec3 xrFill  = vec3( 0.88, 0.83, 0.75 );
-    vec3 xrEdge  = vec3( 0.30, 0.21, 0.13 );
+    vec3 xrFill  = mix( vec3( 0.88, 0.83, 0.75 ), slateFillDark, uDarkMode );
+    vec3 xrEdge  = mix( vec3( 0.30, 0.21, 0.13 ), slateRimDark, uDarkMode );
     vec3 xrGhost = mix( xrFill, xrEdge, clamp( fresG * 0.82, 0.0, 0.86 ) );
     outgoingLight = mix( stdGhost, xrGhost, uXRay );
     float xrA = clamp( uXRaySkinAlpha * ( 0.28 + 1.55 * fresG ), 0.028, 0.38 );
     diffuseColor.a = mix( stdA, xrA, uXRay );
   } else if ( uAtlasMeta.x > 0.5 ) {
-    // ---- 水彩セピア線画 × 象牙アイボリー解剖骨格シェーダー（和紙クリーム背景上で凛と際立つ） ----
+    // ---- 水彩セピア線画 × 象牙アイボリー解剖骨格シェーダー（ライト＆ダーク両対応） ----
     vec3 nB = normalize( normal );
     vec3 vB = normalize( vViewPosition );
     vec3 lKey = normalize( uIllustLight );
@@ -360,8 +369,8 @@ const ILLUST_FRAG = /* glsl */ `
     float facingB = clamp( abs( dot( nB, vB ) ), 0.0, 1.0 );
 
     float cavAO = 0.84 + 0.16 * pow( facingB, 0.42 );
-    vec3 boneWarm   = vec3( 0.935, 0.895, 0.820 ); // #F7F3EA 象牙ハイライト
-    vec3 boneShadow = vec3( 0.655, 0.545, 0.405 ); // #D5C2A7 水彩ウォームシャドウ
+    vec3 boneWarm   = mix( vec3( 0.945, 0.910, 0.845 ), vec3( 0.92, 0.90, 0.86 ), uDarkMode );
+    vec3 boneShadow = mix( vec3( 0.665, 0.560, 0.425 ), vec3( 0.52, 0.50, 0.48 ), uDarkMode );
     float litB = clamp( pow( hlB, 1.18 ) * 0.84 + fillB * 0.20, 0.0, 1.0 );
     if ( uIllust > 0.5 ) {
       float bandB = 0.25 + smoothstep( 0.22, 0.38, litB ) * 0.42 + smoothstep( 0.58, 0.74, litB ) * 0.33;
@@ -369,10 +378,9 @@ const ILLUST_FRAG = /* glsl */ `
     }
     vec3 colB = mix( boneShadow, boneWarm, litB ) * cavAO;
 
-    // 輪郭と骨稜に繊細なセピアペンインク線画（#685543）を重ね、和紙背景との境界を100%明瞭にする
     float nEdgeB = smoothstep( 0.16, 0.54, length( fwidth( nB ) ) );
-    float contourB = clamp( pow( 1.0 - facingB, 2.25 ) * 0.76 + nEdgeB * 0.34, 0.0, 0.88 );
-    vec3 sepiaInkB = vec3( 0.140, 0.094, 0.058 );
+    float contourB = clamp( pow( 1.0 - facingB, 2.25 ) * mix( 0.72, 0.46, uDarkMode ) + nEdgeB * 0.30, 0.0, 0.86 );
+    vec3 sepiaInkB = mix( vec3( 0.155, 0.105, 0.068 ), vec3( 0.24, 0.26, 0.32 ), uDarkMode );
     vec3 baseBoneOut = mix( colB, sepiaInkB, contourB ) + totalEmissiveRadiance * 0.25;
 
     if ( uSelected > 0.5 ) {
@@ -644,8 +652,9 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   } catch (e) {
     throw jaError('この端末では 3D 表示を開始できませんでした。', e);
   }
+  let isDarkTheme = false;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.65 : 2));
-  renderer.setClearColor(0x000000, 0); // 背景色は CSS に任せる
+  renderer.setClearColor(0xf6f2ea, 1); // ライトモード初期背景 #F6F2EA（ダーク切替時は #0B132B に連動）
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.02;
@@ -828,6 +837,7 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
     uIllust: styleUniforms.uIllust,
     uIllustLight: styleUniforms.uIllustLight,
     uXRay: styleUniforms.uXRay,
+    uDarkMode: styleUniforms.uDarkMode,
     uSkullThrough: { value: 0 },
   };
   let headSculptLoaded = false;
@@ -963,6 +973,7 @@ varying vec3 vCoreWorldPos;`,
           injectPose(shader, headRigRole);
           shader.uniforms.uIllustLight = headSculptUniforms.uIllustLight;
           shader.uniforms.uXRay = headSculptUniforms.uXRay;
+          shader.uniforms.uDarkMode = headSculptUniforms.uDarkMode;
           shader.uniforms.uSkullThrough = headSculptUniforms.uSkullThrough;
           shader.vertexShader = shader.vertexShader
             .replace(
@@ -993,6 +1004,7 @@ varying vec3 vVeilWorldPos;`,
               `#include <common>
 uniform vec3 uIllustLight;
 uniform float uXRay;
+uniform float uDarkMode;
 uniform float uSkullThrough;
 varying vec3 vVeilWorldPos;`,
             )
@@ -1089,10 +1101,15 @@ varying vec3 vVeilWorldPos;`,
                 salonVeilCol = mix( salonVeilCol, sepiaContour, clamp( fresV * 0.42 * fresGate, 0.0, 0.55 ) );
                 float normalA = clamp( rawA + fresV * 0.11 * fresGate, 0.0, 0.93 ) * neckGateNorm;
 
-                // 透視退避時(st=1.0): 顔パーツ・線画を完全に 0 へフェードし、体幹ゴースト筋と同じ純粋な生成り和紙リネン輪郭のみにする！
-                vec3 linenFill = mix( vec3( 0.78, 0.71, 0.62 ), vec3( 0.90, 0.85, 0.78 ), 0.45 + 0.55 * facingV );
-                vec3 linenGhostCol = mix( linenFill, sepiaContour, clamp( fresV * 0.78, 0.0, 0.82 ) );
-                float throughA = ( 0.042 + 0.245 * fresV ) * neckGateSt;
+                // 透視退避時(st=1.0): 顔パーツ・線画をフェードし、薄いサロン輪郭ヴェール（約8〜12%不透明度）にする！
+                vec3 linenFill = mix(
+                  mix( vec3( 0.84, 0.79, 0.72 ), vec3( 0.92, 0.88, 0.82 ), 0.45 + 0.55 * facingV ),
+                  mix( vec3( 0.24, 0.34, 0.50 ), vec3( 0.38, 0.50, 0.68 ), 0.45 + 0.55 * facingV ),
+                  uDarkMode
+                );
+                vec3 rimVeilCol = mix( sepiaContour, vec3( 0.66, 0.78, 0.92 ), uDarkMode );
+                vec3 linenGhostCol = mix( linenFill, rimVeilCol, clamp( fresV * 0.76, 0.0, 0.82 ) );
+                float throughA = ( 0.048 + 0.155 * fresV ) * neckGateSt;
 
                 outgoingLight = mix( salonVeilCol, linenGhostCol, st );
                 diffuseColor.a = mix( normalA, throughA, st );
@@ -1100,7 +1117,7 @@ varying vec3 vVeilWorldPos;`,
               #include <opaque_fragment>`,
             );
         };
-        veilMat.customProgramCacheKey = () => 'av-head-sculpt-veil-salon-v15';
+        veilMat.customProgramCacheKey = () => 'av-head-sculpt-veil-salon-v16';
         obj.material = veilMat;
         obj.userData.isHeadVeil = true;
         obj.renderOrder = 5;
@@ -1923,6 +1940,7 @@ varying vec3 vVeilWorldPos;`,
         uHasActiveRoles: styleUniforms.uHasActiveRoles,
         uHasSelection: styleUniforms.uHasSelection,
         uPulseTime: styleUniforms.uPulseTime,
+        uDarkMode: styleUniforms.uDarkMode,
         uVeilMode: { value: 0 },
         uUninvolved: { value: 0 },
         uIsFacialMuscle: { value: kind === 'muscle' && HEAD_FACIAL_MUSCLE_IDS.has(id) ? 1 : 0 },
@@ -1952,11 +1970,11 @@ varying vec3 vVeilWorldPos;`,
         shader.fragmentShader = shader.fragmentShader
           .replace(
             '#include <common>',
-            '#include <common>\nvarying vec3 vAtlasPos;\nvarying vec3 vAtlasAxisView;\nuniform float uIllust;\nuniform vec3 uIllustLight;\nuniform float uXRay;\nuniform float uXRaySkinAlpha;\nuniform float uBoneMuted;\nuniform float uHasActiveRoles;\nuniform float uHasSelection;\nuniform float uPulseTime;\nuniform float uVeilMode;\nuniform float uUninvolved;\nuniform float uIsFacialMuscle;\nuniform float uRoleInvolved;\nuniform float uSelected;\nuniform float uSelectSide;\nuniform float uSelectCustom;\nuniform vec3 uSelectColor;\nuniform vec3 uAtlasCenter;\nuniform vec3 uAtlasAxis;\nuniform vec2 uAtlasSpan;\nuniform vec2 uAtlasMeta;',
+            '#include <common>\nvarying vec3 vAtlasPos;\nvarying vec3 vAtlasAxisView;\nuniform float uIllust;\nuniform vec3 uIllustLight;\nuniform float uXRay;\nuniform float uXRaySkinAlpha;\nuniform float uBoneMuted;\nuniform float uHasActiveRoles;\nuniform float uHasSelection;\nuniform float uPulseTime;\nuniform float uDarkMode;\nuniform float uVeilMode;\nuniform float uUninvolved;\nuniform float uIsFacialMuscle;\nuniform float uRoleInvolved;\nuniform float uSelected;\nuniform float uSelectSide;\nuniform float uSelectCustom;\nuniform vec3 uSelectColor;\nuniform vec3 uAtlasCenter;\nuniform vec3 uAtlasAxis;\nuniform vec2 uAtlasSpan;\nuniform vec2 uAtlasMeta;',
           )
           .replace('#include <opaque_fragment>', `${ILLUST_FRAG}\n#include <opaque_fragment>`);
       };
-      mat.customProgramCacheKey = () => 'av-base-atlas-v18';
+      mat.customProgramCacheKey = () => 'av-base-atlas-v19';
       obj.material = mat;
       obj.userData.matUniforms = matUniforms;
       if (!obj.geometry.attributes.normal) obj.geometry.computeVertexNormals();
@@ -2001,6 +2019,7 @@ varying vec3 vVeilWorldPos;`,
   const extremityVeilUniforms = {
     uIllustLight: headSculptUniforms.uIllustLight,
     uXRay: headSculptUniforms.uXRay,
+    uDarkMode: headSculptUniforms.uDarkMode,
     uSkullThrough: headSculptUniforms.uSkullThrough,
     uDeepLayer: { value: 0 },
   };
@@ -2458,6 +2477,7 @@ varying vec3 vVeilWorldPos;`,
         injectPose(shader, rigRole);
         shader.uniforms.uIllustLight = extremityVeilUniforms.uIllustLight;
         shader.uniforms.uXRay = extremityVeilUniforms.uXRay;
+        shader.uniforms.uDarkMode = extremityVeilUniforms.uDarkMode;
         shader.uniforms.uSkullThrough = extremityVeilUniforms.uSkullThrough;
         shader.uniforms.uDeepLayer = extremityVeilUniforms.uDeepLayer;
         shader.uniforms.uIsFootVeil = isFootUniform;
@@ -2485,6 +2505,7 @@ varying vec3 vExtWorldPos;`,
             `#include <common>
 uniform vec3 uIllustLight;
 uniform float uXRay;
+uniform float uDarkMode;
 uniform float uSkullThrough;
 uniform float uDeepLayer;
 uniform float uIsFootVeil;
@@ -2520,10 +2541,15 @@ varying vec3 vExtWorldPos;`,
               float baseVeilA = mix( 0.91, 0.95, smoothstep( 0.0, 1.0, 1.0 - facingE ) );
               float normalA = clamp( baseVeilA + fresE * 0.04 * fresGate, 0.0, 0.96 ) * collarGate;
 
-              // 透視退避時(st=1): 純粋な生成り和紙リネン輪郭へ自動退避し、中の骨・筋肉・筋膜ラインを100%鮮明に透視
-              vec3 linenFill = mix( vec3( 0.78, 0.71, 0.62 ), vec3( 0.90, 0.85, 0.78 ), 0.45 + 0.55 * facingE );
-              vec3 linenGhostCol = mix( linenFill, sepiaContour, clamp( fresE * 0.78, 0.0, 0.82 ) );
-              float throughA = ( 0.04 + 0.22 * fresE ) * collarGate;
+              // 透視退避時(st=1): ごく薄いサロン輪郭ヴェール（約8〜12%不透明度・ライト＆ダーク両対応）
+              vec3 linenFill = mix(
+                mix( vec3( 0.82, 0.77, 0.69 ), vec3( 0.91, 0.87, 0.80 ), 0.45 + 0.55 * facingE ),
+                mix( vec3( 0.24, 0.34, 0.50 ), vec3( 0.38, 0.50, 0.68 ), 0.45 + 0.55 * facingE ),
+                uDarkMode
+              );
+              vec3 rimVeilCol = mix( sepiaContour, vec3( 0.66, 0.78, 0.92 ), uDarkMode );
+              vec3 linenGhostCol = mix( linenFill, rimVeilCol, clamp( fresE * 0.76, 0.0, 0.82 ) );
+              float throughA = ( 0.048 + 0.155 * fresE ) * collarGate;
 
               outgoingLight = mix( salonVeilCol, linenGhostCol, st );
               diffuseColor.a = mix( normalA, throughA, st );
@@ -2531,7 +2557,7 @@ varying vec3 vExtWorldPos;`,
             #include <opaque_fragment>`,
           );
       };
-      extMat.customProgramCacheKey = () => `av-extremity-veil-${label}-v1`;
+      extMat.customProgramCacheKey = () => `av-extremity-veil-${label}-v2`;
 
       const veilMesh = new THREE.Mesh(geo, extMat);
       veilMesh.name = `extremity-veil-${label}`;
@@ -2565,7 +2591,7 @@ varying vec3 vExtWorldPos;`,
     buildSingleExtremityVeil(false, false, footRigR);
   }
 
-  // ----- 表示状態 ＆ アナトミートレイン2層（surface / deep）シースルー制御 -----
+  // ----- 表示状態 ＆ アナトミートレイン2層（surface / deep）＋ 一体型（fascia / muscle）制御 -----
   const layer = { muscle: 'on', bone: 'on' };
   const hidden = new Set();
   /** ghostOthers で「残す」ID 集合（null = ゴーストなし） */
@@ -2579,6 +2605,8 @@ varying vec3 vExtWorldPos;`,
   let xrayMode = false;
   let xrayTarget = 0;
   let xraySkinOpacity = 0.16;
+  /** 一体型アプリの表示レイヤー（'muscle' = 3D立体筋肉 / 'fascia' = 白い骨格＋極薄サロン輪郭ヴェール＋11本3D筋膜シート） */
+  let unifiedLayerMode = 'muscle';
 
   /** data.js の MUSCLE_LAYERS ({ [id]: 'surface' | 'deep' }) を保持 */
   const customMuscleLayers = new Map();
@@ -2591,19 +2619,21 @@ varying vec3 vExtWorldPos;`,
 
   const applyState = () => {
     const illust = style === 'illust';
+    const isUnifiedFascia = unifiedLayerMode === 'fascia';
     const hasSel = highlights.size > 0 ? 1 : 0;
     const hasActiveRoles = activeRoleIds.size > 0;
-    styleUniforms.uHasSelection.value = hasSel;
-    styleUniforms.uHasActiveRoles.value = hasActiveRoles ? 1 : 0;
+    styleUniforms.uHasSelection.value = isUnifiedFascia ? 0 : hasSel;
+    styleUniforms.uHasActiveRoles.value = !isUnifiedFascia && hasActiveRoles ? 1 : 0;
     styleUniforms.uBoneMuted.value = 0;
     const selSideVal = highlightSide === 'L' ? 1 : highlightSide === 'R' ? -1 : 0;
     const hasActiveDeep = activeDeepSet.size > 0;
 
     // 3層ハイブリッド頭部状態遷移:
     // - 通常待機時(!shouldSeeSkullThrough): head-sculpt-core(全頭筋水彩造形) + head-sculpt-veil(穏やかなサロン顔)を表示
-    // - 動作・ライン・筋肉選択時 / 深層モード / X線時(shouldSeeSkullThrough):
+    // - 筋膜モード / 動作・ライン・筋肉選択時 / 深層モード / X線時(shouldSeeSkullThrough):
     //   head-sculpt-core を退避(visible=false)し、半透明サロン輪郭ヴェール越しに skeleton.glb の実物頭蓋骨・下顎骨をくっきり透過表示！
     const shouldSeeSkullThrough =
+      isUnifiedFascia ||
       hasActiveRoles ||
       keep !== null ||
       hasSel > 0 ||
@@ -2612,7 +2642,7 @@ varying vec3 vExtWorldPos;`,
       layer.muscle === 'ghost';
 
     headSculptUniforms.uSkullThrough.value = shouldSeeSkullThrough ? 1 : 0;
-    extremityVeilUniforms.uDeepLayer.value = fasciaLayerMode === 'deep' ? 1 : 0;
+    extremityVeilUniforms.uDeepLayer.value = isUnifiedFascia || fasciaLayerMode === 'deep' ? 1 : 0;
     if (headSculptLoaded) {
       for (const hm of headSculptMeshes) {
         if (hm.userData.isHeadVeil) {
@@ -2626,23 +2656,70 @@ varying vec3 vExtWorldPos;`,
       em.visible = layer.muscle !== 'off';
     }
 
-    let hasArmInKeep = true;
-    const focusSet = keep !== null ? keep : hasActiveRoles ? activeRoleIds : null;
-    if (focusSet !== null) {
-      hasArmInKeep = false;
-      for (const kid of focusSet) {
-        const r = meshesById.get(kid)?.[0]?.userData?.rigRole;
-        if (r && r.z > 0.5) {
-          hasArmInKeep = true;
-          break;
-        }
-      }
-    }
     for (const mesh of allMeshes) {
       const { structureId: id, kind, matUniforms } = mesh.userData;
       const baseColor = illust ? mesh.userData.illustColor : mesh.userData.atlasColor;
       const mode = layer[kind];
       const mLayer = kind === 'muscle' ? (mesh.userData.fasciaLayer || resolveMuscleLayer(id)) : 'bone';
+
+      if (isUnifiedFascia) {
+        if (kind === 'bone') {
+          mesh.visible = true;
+          mesh.userData.ghost = false;
+          mesh.userData.veilMode = 0;
+          if (matUniforms) {
+            matUniforms.uVeilMode.value = 0;
+            matUniforms.uUninvolved.value = 0;
+            matUniforms.uRoleInvolved.value = 0;
+            matUniforms.uSelected.value = 0;
+            matUniforms.uSelectSide.value = 0;
+            matUniforms.uSelectCustom.value = 0;
+          }
+          if (mesh.userData.hull) mesh.userData.hull.visible = false;
+          const mat = mesh.material;
+          if (mat.transparent) {
+            mat.transparent = false;
+            mat.needsUpdate = true;
+          }
+          mat.opacity = 1;
+          mat.depthWrite = true;
+          mesh.renderOrder = 0;
+          mat.color.copy(baseColor);
+          mat.emissive.setRGB(0, 0, 0);
+          mat.emissiveIntensity = 0;
+        } else {
+          // 筋膜モード時: 深層筋・顔面筋を退避し、表層筋のみ約8〜12%不透明度の極薄サロン輪郭ヴェール(veilMode=3)として表示
+          const showBodySilhouette =
+            mode !== 'off' &&
+            !hidden.has(id) &&
+            mLayer === 'surface' &&
+            !HEAD_FACIAL_MUSCLE_IDS.has(id);
+          mesh.visible = showBodySilhouette;
+          mesh.userData.ghost = true;
+          mesh.userData.veilMode = 3;
+          if (matUniforms) {
+            matUniforms.uVeilMode.value = 3;
+            matUniforms.uUninvolved.value = 1;
+            matUniforms.uRoleInvolved.value = 0;
+            matUniforms.uSelected.value = 0;
+            matUniforms.uSelectSide.value = 0;
+            matUniforms.uSelectCustom.value = 0;
+          }
+          if (mesh.userData.hull) mesh.userData.hull.visible = false;
+          const mat = mesh.material;
+          if (!mat.transparent) {
+            mat.transparent = true;
+            mat.needsUpdate = true;
+          }
+          mat.opacity = 0.10;
+          mat.depthWrite = false;
+          mesh.renderOrder = 1;
+          mat.color.copy(baseColor).lerp(GHOST_TONE, 0.55);
+          mat.emissive.setRGB(0, 0, 0);
+          mat.emissiveIntensity = 0;
+        }
+        continue;
+      }
 
       // 'surface' モード時は深層筋を非表示（頭蓋骨・下顎骨を含む全242骨は全モード100%常時表示！）
       // 首・顎下の実メッシュ(platysma, digastric, stylohyoid, mylohyoid, geniohyoid等)も常時100%表示！
@@ -2674,7 +2751,6 @@ varying vec3 vExtWorldPos;`,
         kind === 'muscle' &&
         !isHighlighted &&
         (hasActiveRoles ? !activeRoleIds.has(id) : (keep !== null ? !keep.has(id) : false));
-      const isUnkeptArmBone = false;
       const xrayMuscleGhost = xrayMode && kind === 'muscle' && !isHighlighted;
 
       let ghost = false;
@@ -2949,73 +3025,26 @@ varying vec3 vExtWorldPos;`,
     }
   };
 
-  const readTopUiClearPx = () => {
-    if (cachedWinW >= 740) return 0;
-    ensureUiBoxObserved();
-    if (!cachedUiEl || cachedUiEl.classList.contains('is-present')) return 0;
-    if (cachedLegendEl && !cachedLegendEl.hidden && cachedLegendBottom > 0) {
-      return Math.max(TOP_UI_CLEAR_PX, Math.min(172, cachedLegendBottom + 28));
-    }
-    return Math.max(TOP_UI_CLEAR_PX, 84);
-  };
+  // 一体型物理分離レイアウト対応: 3Dステージ(#stage)上にシートや右レールを一切重ねず、
+  // containerの実寸(clientWidth × clientHeight)100%中央に全身・対象部位を美しくフレーミングする
+  const readTopUiClearPx = () => 0;
+  const readRightRailClearPx = () => 0;
+  const readSheetVis = () => 0;
 
-  const readRightRailClearPx = () => {
-    if (cachedWinW >= 740) return 0;
-    ensureUiBoxObserved();
-    if (!cachedUiEl || cachedUiEl.classList.contains('is-present')) return 0;
-    if (cachedRailEl && cachedRailEl.classList.contains('is-tucked')) return 0;
-    return 74;
-  };
-
-  const readSheetVis = () => {
-    if (cachedWinW >= 740) return 0;
-    ensureUiBoxObserved();
-    if (!cachedUiEl || cachedUiEl.classList.contains('is-present')) return 0;
-    const inlineVal = parseFloat(cachedUiEl.style.getPropertyValue('--sheet-vis'));
-    const liveScH = cachedScModalEl && !cachedScModalEl.hidden
-      ? Math.max(cachedScModalH, cachedScModalEl.offsetHeight || 0)
-      : 0;
-    const liveToastH = cachedToastEl && !cachedToastEl.hidden
-      ? Math.max(cachedToastH, cachedToastEl.offsetHeight || 0)
-      : 0;
-    const sheetH = Number.isFinite(inlineVal) && inlineVal > 0 ? inlineVal + 20 : 0;
-    const scH = liveScH > 0 ? liveScH + 28 : 0;
-    const toastH = liveToastH > 0 ? liveToastH + 28 : 0;
-    return Math.max(sheetH, scH, toastH);
-  };
-
-  let smoothSheetVis = readSheetVis();
-  let lastOffsetX = null;
-  let lastOffsetY = null;
+  let smoothSheetVis = 0;
+  let lastOffsetX = 0;
+  let lastOffsetY = 0;
   let lastViewW = 0;
   let lastViewH = 0;
   let isHomeFullBodyFraming = true;
   let homeZoomSettling = false;
   const homeZoomDirTmp = new THREE.Vector3();
 
-  // スマホ・iPad縦画面(<740px)ではボトムシートが下部を覆い、トップバー(.legend)が上部を占めるため、
-  // 上下クリアランスを除いた空き領域の高さに全身や部位が100%余裕をもって収まるよう距離を確保する
-  // （視野中心の上方向シフト自体は camera.setViewOffset が担うため、回転中心 target.y は自然な高さに保つ）
-  const clearViewportFrac = (fallbackVis = 220, exactVis = false) => {
-    if (cachedWinW >= 740) return 0.88;
-    const { h: stageH } = size();
-    const safeStageH = Math.max(stageH || 800, 480);
-    const visH = exactVis ? Math.max(fallbackVis, 0) : Math.max(readSheetVis(), fallbackVis);
-    const topClear = readTopUiClearPx();
-    const availH = Math.max(140, safeStageH - visH - topClear);
-    return THREE.MathUtils.clamp(availH / safeStageH, 0.20, 0.90);
-  };
+  const clearViewportFrac = (_fallbackVis = 0, _exactVis = false) => 0.87;
 
-  const clearHorizFrac = () => {
-    if (cachedWinW >= 740) return 0.92;
-    const { w: stageW } = size();
-    const safeStageW = Math.max(stageW || 390, 320);
-    const railW = readRightRailClearPx();
-    const availW = Math.max(200, safeStageW - railW - 18);
-    return THREE.MathUtils.clamp(availW / safeStageW, 0.66, 0.94);
-  };
+  const clearHorizFrac = () => 0.90;
 
-  const fitClearDistance = (halfH, halfW, fallbackVis = 200, exactVis = false) => {
+  const fitClearDistance = (halfH, halfW, fallbackVis = 0, exactVis = false) => {
     const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
     const tanV = Math.tan(vHalf);
     const tanH = tanV * camera.aspect;
@@ -3027,52 +3056,7 @@ varying vec3 vExtWorldPos;`,
   const syncCameraViewOffset = (force = false) => {
     const { w, h } = size();
     if (!w || !h) return;
-    const topClear = readTopUiClearPx();
-    ensureUiBoxObserved();
-    const isPresent = Boolean(cachedUiEl && cachedUiEl.classList.contains('is-present'));
-    if (cachedWinW < 740 && (smoothSheetVis > 4 || topClear > 0)) {
-      // 上部バー(topClear)と下部シート(smoothSheetVis)、および右レール(railClear)を除いた空き領域のど真ん中に3D注視点を一致させる
-      const railClear = readRightRailClearPx();
-      const offsetX = Math.round(railClear * 0.44);
-      const offsetY = Math.round((smoothSheetVis - topClear) * 0.5);
-      if (
-        force ||
-        offsetX !== lastOffsetX ||
-        offsetY !== lastOffsetY ||
-        w !== lastViewW ||
-        h !== lastViewH ||
-        !camera.view?.enabled
-      ) {
-        camera.setViewOffset(w, h, offsetX, offsetY, w, h);
-        lastOffsetX = offsetX;
-        lastOffsetY = offsetY;
-        lastViewW = w;
-        lastViewH = h;
-      }
-    } else if (cachedWinW >= 740 && !isPresent) {
-      // タブレット(768px〜)・PCでは左下フローティングカードと右レールの間のオープンステージ中央へ3D人体を配置し被り0pxを保証
-      const leftCardRight = cachedWinW >= 900 ? 446 : 364;
-      const rightRailLeft = w - (readRightRailClearPx() || 74);
-      const corridorCenter = (leftCardRight + rightRailLeft) * 0.5;
-      const blend = THREE.MathUtils.clamp(1.0 - (w - 1024) / 760, 0.35, 1.0);
-      const desiredCenterX = THREE.MathUtils.lerp(w * 0.5, corridorCenter, blend);
-      const offsetX = Math.round(w * 0.5 - desiredCenterX);
-      const offsetY = 0;
-      if (
-        force ||
-        offsetX !== lastOffsetX ||
-        offsetY !== lastOffsetY ||
-        w !== lastViewW ||
-        h !== lastViewH ||
-        !camera.view?.enabled
-      ) {
-        camera.setViewOffset(w, h, offsetX, offsetY, w, h);
-        lastOffsetX = offsetX;
-        lastOffsetY = offsetY;
-        lastViewW = w;
-        lastViewH = h;
-      }
-    } else if (force || lastOffsetX !== 0 || lastOffsetY !== 0 || camera.view?.enabled) {
+    if (force || lastOffsetX !== 0 || lastOffsetY !== 0 || camera.view?.enabled) {
       camera.clearViewOffset();
       lastOffsetX = 0;
       lastOffsetY = 0;
@@ -3081,23 +3065,14 @@ varying vec3 vExtWorldPos;`,
     }
   };
 
-  const stepSheetViewOffset = (delta) => {
-    const targetVis = readSheetVis();
-    const alpha = delta > 0 ? 1 - Math.exp(-delta * 14) : 1;
-    smoothSheetVis += (targetVis - smoothSheetVis) * alpha;
-    if (Math.abs(targetVis - smoothSheetVis) < 0.5) smoothSheetVis = targetVis;
-    syncCameraViewOffset(false);
+  const homeTarget = () => new THREE.Vector3(BODY_CENTER.x, BODY_CENTER.y, BODY_CENTER.z);
+  const homeDistance = () =>
+    fitClearDistance(BODY_HALF_HEIGHT * 1.09, BODY_HALF_WIDTH * 1.14, 0, true) + 0.32;
 
-    // 全身ホーム表示中かつ <740px の場合、ボトムシートの高さ変化に合わせてカメラ距離も滑らかに自動ズームし、
-    // 頭頂部が上部 .legend に被ったり足先がシート下に隠れたりするのを 0px で防止する
-    if (cachedWinW < 740 && isHomeFullBodyFraming && !tween && !xrayMode) {
-      const neededDist =
-        fitClearDistance(
-          BODY_HALF_HEIGHT * 1.18,
-          BODY_HALF_WIDTH * 1.20,
-          Math.max(smoothSheetVis, 160),
-          true,
-        ) + 0.58;
+  const stepSheetViewOffset = (delta) => {
+    syncCameraViewOffset(false);
+    if (isHomeFullBodyFraming && !tween && !xrayMode) {
+      const neededDist = homeDistance();
       homeZoomDirTmp.copy(camera.position).sub(controls.target);
       const curDist = homeZoomDirTmp.length();
       if (curDist > 1e-4) {
@@ -3115,10 +3090,6 @@ varying vec3 vExtWorldPos;`,
       homeZoomSettling = false;
     }
   };
-
-  const homeTarget = () => new THREE.Vector3(BODY_CENTER.x, BODY_CENTER.y, BODY_CENTER.z);
-  const homeDistance = () =>
-    fitClearDistance(BODY_HALF_HEIGHT * 1.18, BODY_HALF_WIDTH * 1.20, Math.max(smoothSheetVis, 230)) + 0.58;
 
   let currentView = 'front';
   let lastNotifiedView = 'front';
@@ -3273,6 +3244,17 @@ varying vec3 vExtWorldPos;`,
     ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const ray = raycaster.ray;
+
+    if (unifiedLayerMode === 'fascia') {
+      const fasciaPickCandidates = allMeshes.filter(
+        (m) => m.userData.kind === 'muscle' && !hidden.has(m.userData.structureId),
+      );
+      const hit = raycastDeformedCandidates(ray, fasciaPickCandidates);
+      if (hit) return { id: hit.id, side: hit.side, point: hit.point };
+      const boneCandidates = allMeshes.filter((m) => m.visible && m.userData.kind === 'bone');
+      const boneHit = raycastDeformedCandidates(ray, boneCandidates);
+      return boneHit ? { id: boneHit.id, side: boneHit.side, point: boneHit.point } : null;
+    }
 
     if (fasciaLayerMode === 'deep') {
       const deepCandidates = allMeshes.filter(
@@ -3870,6 +3852,31 @@ varying vec3 vExtWorldPos;`,
       return [...found];
     },
 
+    /** 一体型アプリの表示レイヤー（'fascia' | 'muscle'）を瞬時に切り替え（カメラ・ポーズ不変） */
+    setUnifiedLayerMode(mode) {
+      if (mode !== 'fascia' && mode !== 'muscle') return unifiedLayerMode;
+      if (unifiedLayerMode === mode) return unifiedLayerMode;
+      wakeRenderLoop();
+      unifiedLayerMode = mode;
+      applyState();
+      return unifiedLayerMode;
+    },
+    getUnifiedLayerMode: () => unifiedLayerMode,
+
+    /** ライト（#F6F2EA）⇄ ダーク（#0B132B）3D背景＆シェーダー連動 */
+    setDarkTheme(dark) {
+      const next = Boolean(dark);
+      isDarkTheme = next;
+      styleUniforms.uDarkMode.value = next ? 1 : 0;
+      renderer.setClearColor(next ? 0x0b132b : 0xf6f2ea, 1);
+      wakeRenderLoop();
+      return isDarkTheme;
+    },
+    getDarkTheme: () => isDarkTheme,
+
+    /** 統合3D筋膜シート生成用に解析済みGLBルートを返す（追加通信 0 byte） */
+    getRoots: () => ({ muscleRoot, skeletonRoot }),
+
     /**
      * 指定構造が画面に収まるようスムーズに寄る。
      * @param {string[]} ids 空なら全身
@@ -3877,9 +3884,6 @@ varying vec3 vExtWorldPos;`,
      */
     focus(ids, opts = {}) {
       wakeRenderLoop();
-      if (opts.selfCareModal) {
-        api.syncUiClearanceNow();
-      }
       const dir = opts.view && VIEW_DIRS[opts.view]
         ? VIEW_DIRS[opts.view]
         : camera.position.clone().sub(controls.target).normalize();
@@ -3916,20 +3920,19 @@ varying vec3 vExtWorldPos;`,
       const hDirLen = Math.hypot(dir.x, dir.z) || 1;
       const horiz = (sz.x * Math.abs(dir.z) + sz.z * Math.abs(dir.x)) / hDirLen;
       const depthSpan = (sz.x * Math.abs(dir.x) + sz.z * Math.abs(dir.z)) / hDirLen;
-      const minFloorH = opts.closeSelfCare ? 0.38 : opts.inspectorOpen ? 0.56 : 0.60;
-      const minFloorW = opts.closeSelfCare ? 0.34 : opts.inspectorOpen ? 0.44 : 0.50;
+      const minFloorH = opts.closeSelfCare ? 0.36 : opts.inspectorOpen ? 0.50 : 0.56;
+      const minFloorW = opts.closeSelfCare ? 0.32 : opts.inspectorOpen ? 0.42 : 0.48;
       const halfH = Math.max(sz.y * 0.5, minFloorH);
       const halfW = Math.max(horiz * 0.5, minFloorW);
-      const padMul = opts.selfCareModal ? 1.34 : opts.inspectorOpen ? 1.36 : 1.36;
-      const fallbackVis = opts.selfCareModal ? 390 : opts.inspectorOpen ? 160 : 190;
+      const padMul = opts.selfCareModal ? 1.24 : opts.inspectorOpen ? 1.28 : 1.28;
       const rawDist =
-        fitClearDistance(halfH * padMul, halfW * (padMul + 0.06), fallbackVis) +
+        fitClearDistance(halfH * padMul, halfW * (padMul + 0.06), 0, true) +
         depthSpan * 0.45;
       const minDist = opts.closeSelfCare
-        ? 3.15
+        ? 2.65
         : opts.selfCareModal
-          ? Math.max(6.2, homeDistance() * 0.56)
-          : 2.85;
+          ? Math.max(3.8, homeDistance() * 0.44)
+          : 2.65;
       const dist = THREE.MathUtils.clamp(rawDist, minDist, homeDistance() * 1.12);
       flyTo(center, dir, dist);
     },

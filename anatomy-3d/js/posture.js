@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 
-export const POSTURE_VERSION = '20261117b';
+export const POSTURE_VERSION = '20261118a';
 
 // -----------------------------------------------------------------------------
 // 32の姿勢・動作キネマティクスパラメータ名と初期状態
@@ -2941,6 +2941,9 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
   out.floorSit    = clamp(out.floorSit,     0.0,  1.10);
 }
 
+let playbackPaused = false;
+let pausedFreezeActive = false;
+
 /**
  * 曲げ伸ばし（伸縮）反復アニメーションの有効・無効を切り替える。
  * @param {boolean} enabled
@@ -2950,6 +2953,27 @@ export function setCyclicMotion(enabled = true) {
   if (cyclicEnabled) {
     lockedContractCycle = null;
   }
+}
+
+/**
+ * アニメーション再生の一時停止・再開を切り替える（位相を1ミリもリセットせずその場で完全停止・再開）。
+ * @param {boolean} paused
+ */
+export function setPaused(paused = false) {
+  playbackPaused = Boolean(paused);
+  if (playbackPaused) {
+    pausedFreezeActive = true;
+    for (const key of POSE_KEYS) {
+      targetPose[key] = currentPose[key];
+      velocityPose[key] = 0;
+    }
+  } else {
+    pausedFreezeActive = false;
+  }
+}
+
+export function isPaused() {
+  return playbackPaused;
 }
 
 // -----------------------------------------------------------------------------
@@ -3340,6 +3364,7 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
 }
 
 export function setSelfCarePose(config, opts = {}) {
+  pausedFreezeActive = false;
   activeSelfCareConfig = config && typeof config === 'object' ? config : null;
   if (activeSelfCareConfig) {
     lockedContractCycle = null;
@@ -3367,6 +3392,7 @@ export function clearSelfCarePose() {
  * @returns {boolean}
  */
 export function isPoseAnimating() {
+  if (playbackPaused) return false;
   return Boolean((hasActiveTargetPose && cyclicEnabled) || activeSelfCareConfig);
 }
 
@@ -3414,6 +3440,7 @@ export function setHabitPhasePose(habitId, rawPose, phase01 = 1.0) {
  * @param {{ immediate?: boolean, cyclic?: boolean, habitId?: string, selfCare?: object }} [opts] immediate:true で補間せず即時反映
  */
 export function setPose(pose, amount = 1, opts = {}) {
+  pausedFreezeActive = false;
   if (opts?.selfCare) {
     setSelfCarePose(opts.selfCare, opts);
     return;
@@ -3472,12 +3499,17 @@ export function update(time, delta) {
   if (!Number.isFinite(delta) || delta <= 0) {
     return;
   }
+  if (playbackPaused && pausedFreezeActive) {
+    return;
+  }
 
   const dt = Math.min(delta, 0.05);
   const ACTION_TEMPO = 0.58;
 
   if (hasActiveTargetPose && cyclicEnabled) {
-    cyclicPhase += dt * ACTION_TEMPO;
+    if (!playbackPaused) {
+      cyclicPhase += dt * ACTION_TEMPO;
+    }
     const rawWave = 0.5 - 0.5 * Math.cos(cyclicPhase * 2.2);
     const cycle01 = rawWave * rawWave * (3.0 - 2.0 * rawWave);
     poseUniforms.uContractCycle.value = cycle01;
@@ -3488,7 +3520,7 @@ export function update(time, delta) {
       computeHabitActionPose(cyclicPhase, rawInputPose, targetPose, activeHabitId, activeAmount);
     }
   } else if (activeSelfCareConfig) {
-    computeSelfCarePose(null, rawInputPose, targetPose, activeSelfCareConfig, activeAmount);
+    computeSelfCarePose(playbackPaused ? cyclicPhase : null, rawInputPose, targetPose, activeSelfCareConfig, activeAmount);
     poseUniforms.uContractCycle.value = 1.0;
   } else {
     for (const key of POSE_KEYS) {

@@ -1,12 +1,12 @@
 {
-  "name": "筋膜ライン 3D — 姿勢と筋膜のつながり・セルフケア図鑑",
-  "short_name": "筋膜ライン 3D",
-  "description": "仕事や日常の姿勢・スポーツの動きから、縮みやすい筋膜と引き伸ばされやすい筋膜、筋膜のつながりを3Dで探せるセルフケア図鑑アプリ。",
+  "name": "アナトミー筋膜・筋肉 3D — 姿勢と筋膜・筋肉のつながり＆セルフケア図鑑",
+  "short_name": "アナトミー筋膜・筋肉 3D",
+  "description": "仕事や日常の姿勢・スポーツの動きから、縮む原因と引っぱられて張る場所、ゆるめる順番を筋膜と筋肉の3Dで見比べられるセルフケア図鑑アプリ。",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#FAF8F4",
-  "theme_color": "#FAF8F4",
+  "background_color": "#FAF8F5",
+  "theme_color": "#FAF8F5",
   "lang": "ja",
   "icons": [
     {

@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none';" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="theme-color" content="#FAF8F4" />
+  <meta name="theme-color" id="meta-theme-color" content="#FAF8F5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="筋膜ライン 3D" />
+  <meta name="apple-mobile-web-app-title" content="アナトミー筋膜・筋肉 3D" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="description" content="仕事や日常の姿勢・スポーツの動きから、縮みやすい筋膜と引き伸ばされやすい筋膜、全身の筋膜のつながりを3Dで楽しく探せる無料セルフケア図鑑。" />
-  <meta property="og:title" content="筋膜ライン 3D — 姿勢と筋膜のつながり・セルフケア図鑑" />
-  <meta property="og:description" content="いつもの姿勢や動作で負担がかかりやすい「縮みやすい筋膜」と「引き伸ばされやすい筋膜」、筋膜のつながりとセルフケアを3Dで直感検索。" />
+  <link rel="manifest" href="manifest.json?v=20261118a" />
+  <meta name="description" content="仕事や日常の姿勢・スポーツの動きから、縮む原因と引っぱられて張る場所、全身の筋膜と筋肉のつながり、ゆるめる順番を3Dで直感的に学べる無料セルフケア図鑑。" />
+  <meta property="og:title" content="アナトミー筋膜・筋肉 3D — 姿勢と筋膜・筋肉のつながり＆セルフケア図鑑" />
+  <meta property="og:description" content="いつもの姿勢や動作で縮む側（原因）と張る側（症状）、ゆるめる順番を「筋膜」と「筋肉」の3Dアニメーションで見比べられます。" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ja_JP" />
   <meta name="twitter:card" content="summary" />
-  <title>筋膜ライン 3D — 姿勢と筋膜のつながり・セルフケア図鑑</title>
-  <link rel="stylesheet" href="css/app.css?v=20261117b" />
+  <title>アナトミー筋膜・筋肉 3D — 姿勢と筋膜・筋肉のつながり＆セルフケア図鑑</title>
+  <link rel="stylesheet" href="css/app.css?v=20261118a" />
   <script type="importmap">
     {
       "imports": {
@@ -30,9 +30,72 @@
   </script>
 </head>
 <body>
-  <div id="stage"></div>
-  <div id="ui-root"></div>
-  <script type="module" src="js/main.js?v=20261117b"></script>
+  <div id="app-shell" class="app-shell">
+    <header id="app-header" class="app-header">
+      <div class="app-brand">
+        <span class="app-brand-dot" aria-hidden="true"></span>
+        <h1 class="app-title">アナトミー筋膜・筋肉 3D</h1>
+      </div>
+      <div class="theme-pill-group" role="group" aria-label="画面の明るさ切り替え">
+        <button type="button" id="btn-theme-light" class="theme-pill-btn is-active" data-theme-choice="light" aria-pressed="true">
+          <span class="theme-pill-chip">通常</span>
+        </button>
+        <span class="theme-pill-sep" aria-hidden="true">｜</span>
+        <button type="button" id="btn-theme-dark" class="theme-pill-btn" data-theme-choice="dark" aria-pressed="false">
+          <span class="theme-pill-chip">ダーク</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="workspace" class="unified-workspace">
+      <section id="stage-col" class="unified-stage-col" aria-label="3Dアニメーション表示">
+        <div id="stage-wrap" class="stage-wrap">
+          <div id="stage" class="stage-canvas-host"></div>
+
+          <div class="stage-legend-pill" aria-label="色の見かた">
+            <span class="legend-chip is-short">
+              <i class="legend-dot" aria-hidden="true"></i>
+              <span>縮む側（原因）</span>
+            </span>
+            <span class="legend-chip is-long">
+              <i class="legend-dot" aria-hidden="true"></i>
+              <span>張る側（症状）</span>
+            </span>
+          </div>
+
+          <div id="stage-loader" class="stage-loader" role="status" aria-live="polite">
+            <div class="stage-loader-card">
+              <p id="stage-loader-text" class="stage-loader-text">3Dモデルを準備しています…</p>
+              <div class="stage-loader-track" aria-hidden="true">
+                <span id="stage-loader-fill" class="stage-loader-fill"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="stage-bar" class="unified-stage-bar" role="toolbar" aria-label="3D表示切り替え">
+          <div class="layer-switch" role="group" aria-label="筋膜と筋肉の切り替え">
+            <button type="button" id="btn-layer-fascia" class="layer-switch-btn is-active" data-layer-mode="fascia" aria-pressed="true">
+              <span class="layer-switch-label">筋膜</span>
+            </button>
+            <button type="button" id="btn-layer-muscle" class="layer-switch-btn" data-layer-mode="muscle" aria-pressed="false">
+              <span class="layer-switch-label">筋肉</span>
+            </button>
+          </div>
+
+          <button type="button" id="btn-play-toggle" class="stage-play-btn" aria-pressed="false">
+            <span id="btn-play-label">一時停止</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="panel-col" class="unified-panel-col" aria-label="3ステップ操作と解説">
+        <div id="ui-root" class="panel-root"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="js/main.js?v=20261118a"></script>
   <script>
     if (
       'serviceWorker' in navigator &&
@@ -41,7 +104,7 @@
         location.hostname === '127.0.0.1')
     ) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=20261118a').catch(() => {});
       });
     }
   </script>

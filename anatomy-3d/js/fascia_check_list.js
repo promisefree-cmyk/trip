@@ -17,7 +17,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import {
   CHECKLIST_ITEMS,
   ALL_MOTION_PRESETS,
-} from './fascia_only_clinical_data.js?v=20261117b';
+} from './fascia_only_clinical_data.js?v=20261118a';
 
 import {
   SKELETON_SCALE,
@@ -28,15 +28,15 @@ import {
   createBoneMatrixArray,
   computeMotionParams,
   solveRigMatrices,
-} from './fascia_only_biomechanics.js?v=20261117b';
+} from './fascia_only_biomechanics.js?v=20261118a';
 
 import {
   buildBodyEnvelope,
   createFasciaSheetsSystem,
-} from './fascia_only_sheets.js?v=20261117b';
+} from './fascia_only_sheets.js?v=20261118a';
 
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261117b';
+const ASSET_QUERY = '?v=20261118a';
 const FALLBACK_BYTES = {
   'muscles.glb': 1543520,
   'skeleton.glb': 1497840,

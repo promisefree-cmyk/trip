@@ -32,12 +32,12 @@
 //   - 黄色・アンバー発光ゼロ。全シェーダーで厳密な Premultiplied Alpha（clamp(col,0,1)*alpha）を出力し骨の白飛びを防止。
 // =============================================================================
 
-import * as posture from './posture.js?v=20261117b';
+import * as posture from './posture.js?v=20261118a';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261117b';
+} from './selfcare_guide3d.js?v=20261118a';
 
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
@@ -715,6 +715,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     targetNodes: [], // { rawPos, color, d, rigRole }
     nodeCount: 0,
     spotMuscleId: null,
+    muscleOverlayVisible: true,
+    paused: false,
   };
   const activeGeos = new Set();
 
@@ -1437,8 +1439,9 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     aD.needsUpdate = true;
     nodeGeo.instanceCount = count;
     updateNodes();
-    nodeCore.visible = !releaseState.active;
-    nodeHalo.visible = !releaseState.active;
+    const showNodes = !releaseState.active && state.muscleOverlayVisible;
+    nodeCore.visible = showNodes;
+    nodeHalo.visible = showNodes;
   }
 
   // ---------------------------------------------------------------------------
@@ -1602,8 +1605,9 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
 
   /** 静止モード（isBusy=false）でも即座に表示・ワールド行列が一致するよう同期 */
   function syncMeshVisibility() {
+    const showOv = state.muscleOverlayVisible;
     for (const e of state.muscles.values()) {
-      const layerVis = e.u.uLayerAlpha.value > 0.001;
+      const layerVis = showOv && e.u.uLayerAlpha.value > 0.001;
       for (const m of e.overlays) {
         const src = m.userData.src;
         if (!src) continue;
@@ -1612,7 +1616,12 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
     }
     for (const sh of state.sheets) {
-      sh.mesh.visible = sh.u.uLayerAlpha.value > 0.001;
+      sh.mesh.visible = showOv && sh.u.uLayerAlpha.value > 0.001;
+    }
+    if (nodeCore && nodeHalo) {
+      const showNodes = showOv && state.nodeCount > 0 && !releaseState.active;
+      nodeCore.visible = showNodes;
+      nodeHalo.visible = showNodes;
     }
   }
 
@@ -2779,7 +2788,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     releaseState.strokeTarget = null;
     releaseState.elapsed = 0;
     selfCareGuide?.clear();
-    if (state.nodeCount > 0) {
+    if (state.nodeCount > 0 && state.muscleOverlayVisible) {
       if (nodeCore) nodeCore.visible = true;
       if (nodeHalo) nodeHalo.visible = true;
     }
@@ -3069,19 +3078,31 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
 
   /** 毎フレーム（main.js → viewer.onFrame から） */
   function update(time, delta) {
-    const dt = Math.min(0.1, Math.max(0, Number.isFinite(delta) ? delta : 1 / 60));
-    shared.uTime.value = Number.isFinite(time) ? time : shared.uTime.value + dt;
+    const rawDt = Math.min(0.1, Math.max(0, Number.isFinite(delta) ? delta : 1 / 60));
+    const dt = state.paused ? 0 : rawDt;
+    if (!state.paused) {
+      shared.uTime.value = Number.isFinite(time) ? time : shared.uTime.value + rawDt;
+    }
     const t = shared.uTime.value;
     updateXRayScan(dt);
     updateReleaseTool(t, dt);
     if (!state.mode) return;
 
-    shared.uFade.value = Math.min(1, shared.uFade.value + dt / 0.65);
+    shared.uFade.value = Math.min(1, shared.uFade.value + rawDt / 0.65);
 
     syncMeshVisibility();
 
     // 急所ターゲットマーカーを現在の姿勢変形（deformPoint）に追従させて更新
     updateNodes();
+  }
+
+  function setMuscleOverlayVisible(visible) {
+    state.muscleOverlayVisible = Boolean(visible);
+    syncMeshVisibility();
+  }
+
+  function setPaused(paused) {
+    state.paused = Boolean(paused);
   }
 
   /** 完全破棄（任意） */
@@ -3123,6 +3144,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     showMuscleChain,
     setLayerFilter,
     getLayerFilter: () => state.layerMode,
+    setMuscleOverlayVisible,
+    setPaused,
     addFasciaSheetBridge,
     showTriggerPoint,
     clearTriggerPoint,

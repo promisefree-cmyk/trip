@@ -12,7 +12,7 @@
 // =============================================================================
 
 import * as THREE from 'three';
-import { MOTION_PRESETS, ALL_MOTION_PRESETS } from './fascia_only_clinical_data.js?v=20261117b';
+import { MOTION_PRESETS, ALL_MOTION_PRESETS } from './fascia_only_clinical_data.js?v=20261118a';
 
 export { MOTION_PRESETS, ALL_MOTION_PRESETS };
 
