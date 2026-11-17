@@ -18,7 +18,7 @@
 //   'selfcare'(id) 'selfcare-step'(payload) 'selfcare-close'(id) 'xray'(bool)
 // =============================================================================
 
-import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261115c';
+import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261117a';
 
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
@@ -2724,7 +2724,7 @@ export function createUI({
     partGroup: 'leg',
     partBadge: '前もも・ひざ',
     tag: '前もも・ひざの張り',
-    label: '階段や立ちっぱなしで、前ももやひざまわりが張る',
+    label: '階段や立ち仕事で、前ももやひざまわりが張る',
     habits: ['soccer-kick', 'sway-back', 'running-strike', 'cycling-aero'],
   };
 
@@ -3954,7 +3954,7 @@ export function createUI({
   const feelStepList = h(
     'div',
     { class: 'feel-step-list is-step-hidden' },
-    makeStepHeadBar('← 部位を選び直す', feelListTitleEl, () => backToFeelRegions()),
+    makeStepHeadBar('← 戻る', feelListTitleEl, () => backToFeelRegions()),
     feelChips,
     feelPager.bar,
     feelSearchWrap,

@@ -3562,22 +3562,22 @@ export const HABITS = [
 // FEELINGS — 問診型ホームの主役：「いま一番つらい違和感」16個からワンタップ逆引き
 // -------------------------------------------------------------
 export const FEELINGS = [
-  { id: 'heavy-shoulder', partBadge: '肩・背中', tag: '肩がズーンと重い', label: '肩の奥がズーンと重だるく、揉んでもすぐ戻る', triggerLineId: 'TL-01', goldenLineId: 'GL-01', habits: ['hair-cut-arm', 'desk-round', 'therapist-press', 'arms-fold', 'bag-shoulder-r', 'gym-bench-push'] },
-  { id: 'locked-lowback', partBadge: '腰・お尻', tag: '立つと腰が伸びない', label: 'イスから立つ時に、腰が引っ張られてスッと伸びない', triggerLineId: 'TL-05', goldenLineId: 'GL-05', habits: ['hair-shampoo-bend', 'care-lift-bend', 'drive-long', 'sofa-slouch', 'cycling-aero', 'gym-squat-lift'] },
-  { id: 'stiff-neck', partBadge: '首・あご', tag: '首のうしろが詰まる', label: '首のうしろや付け根が詰まって、上を向きづらい', triggerLineId: 'TL-02', goldenLineId: 'GL-02', habits: ['phone-neck', 'desk-round', 'overhead-tool', 'sleep-side-curl'] },
-  { id: 'arm-jam', partBadge: '肩・背中', tag: '腕が上がりづらい', label: '洗濯干しや着替えで、腕を上げると肩が引っかかる', triggerLineId: 'TL-03', goldenLineId: 'GL-03', habits: ['laundry-reach', 'overhead-tool', 'hair-cut-arm', 'volleyball-smash', 'swim-crawl-yoga'] },
-  { id: 'one-side-hip', partBadge: '腰・お尻', tag: '片側だけ張る', label: 'いつも同じ側の腰やお尻の横ばかり張ってくる', triggerLineId: 'TL-07', goldenLineId: 'GL-07', habits: ['childcare-hip-l', 'leg-cross-r', 'stand-hip-r', 'stand-hip-l', 'bag-shoulder-r', 'golf-swing-rot'] },
-  { id: 'shallow-breath', partBadge: '胸・背中', tag: '息が浅い・猫背', label: '胸やみぞおちが縮こまって、深い呼吸がしづらい', triggerLineId: 'TL-04', goldenLineId: 'GL-04', habits: ['sofa-slouch', 'arms-fold', 'desk-round', 'sleep-side-curl'] },
-  { id: 'back-lead', partBadge: '腰・お尻', tag: '背面が鉛のよう', label: '前かがみになると、背中から腰・もも裏まで鉛のように重い', triggerLineId: 'TL-06', goldenLineId: 'GL-06', habits: ['vacuum-dish-bend', 'heavy-lift-dig', 'hair-shampoo-bend', 'running-strike'] },
-  { id: 'jaw-clench', partBadge: '首・あご', tag: '食いしばり・あご', label: '気づくと奥歯を噛みしめていて、あごやこめかみがだるい', triggerLineId: 'TL-02', goldenLineId: 'GL-02', habits: ['phone-neck', 'therapist-press', 'desk-round', 'sleep-side-curl', 'teeth-clench-night'] },
-  { id: 'arm-numb', partBadge: '腕・手', tag: '腕〜指先がだるい', label: '肘から手首・親指の付け根まで、じわっとだるさが抜けない', triggerLineId: 'TL-01', goldenLineId: 'GL-01', habits: ['cook-pan-hold', 'hair-cut-arm', 'therapist-press', 'tennis-baseball-arm'] },
-  { id: 'arch-back', partBadge: '腰・お尻', tag: '反り腰・前もも張り', label: '仰向けで寝たり長く立つと、腰が反ってつらくなる', triggerLineId: 'TL-08', goldenLineId: 'GL-08', habits: ['sway-back', 'laundry-reach', 'stand-hip-r', 'soccer-kick'] },
-  { id: 'eye-head-heavy', partBadge: '首・あご', tag: '目の奥・頭の重さ', label: '画面を見続けると、目の奥や頭のうしろがズーンと重くなる', triggerLineId: 'TL-10', goldenLineId: 'GL-10', habits: ['phone-neck', 'laptop-low-screen', 'nail-eye-fine', 'phone-bed-side'] },
-  { id: 'foot-calf-swell', partBadge: '脚・足裏', tag: '足裏・夕方むくみ', label: '夕方になると足裏がジンジンし、ふくらはぎがパンパンになる', triggerLineId: 'TL-09', goldenLineId: 'GL-09', habits: ['register-stand-long', 'heels-commute-walk', 'nurse-ward-walk', 'hiking-mountain-walk', 'running-strike'] },
-  { id: 'elbow-wrist-pain', partBadge: '腕・手', tag: '手首・肘の外側', label: 'マウスや家事で、肘の外側や手首まわりがズキズキする', triggerLineId: 'TL-11', goldenLineId: 'GL-11', habits: ['mouse-wrist-strain', 'cook-pan-hold', 'kitchen-knife-chop', 'delivery-carry-box', 'tennis-baseball-arm'] },
-  { id: 'hip-groin-jam', partBadge: '股関節・脚', tag: '股関節の詰まり', label: 'あぐらや開脚をすると、脚の付け根や内ももが引っかかる', triggerLineId: 'TL-12', goldenLineId: 'GL-12', habits: ['floor-sit-cross', 'leg-cross-r', 'yoga-pilates-open', 'court-step-jump'] },
-  { id: 'scapula-board', partBadge: '肩・背中', tag: '肩甲骨がガチガチ', label: '肩甲骨のあいだが板のように固まって、背中が苦しい', triggerLineId: 'TL-10', goldenLineId: 'GL-10', habits: ['desk-round', 'laptop-low-screen', 'arms-fold', 'nail-eye-fine'] },
-  { id: 'buttock-sciatic', partBadge: '腰・お尻', tag: 'お尻の奥の重さ', label: '長く座ると、お尻のえくぼの奥から太もも裏が重だるくなる', triggerLineId: 'TL-12', goldenLineId: 'GL-12', habits: ['leg-cross-r', 'drive-long', 'floor-sit-cross', 'sofa-slouch'] },
+  { id: 'heavy-shoulder', partBadge: '肩・背中', tag: '肩がズーンと重い', label: '肩の奥がズーンと重く、揉んでもすぐ戻る', triggerLineId: 'TL-01', goldenLineId: 'GL-01', habits: ['hair-cut-arm', 'desk-round', 'therapist-press', 'arms-fold', 'bag-shoulder-r', 'gym-bench-push'] },
+  { id: 'locked-lowback', partBadge: '腰・お尻', tag: '立つと腰が伸びない', label: 'イスから立つ時、腰が引っ張られて伸びない', triggerLineId: 'TL-05', goldenLineId: 'GL-05', habits: ['hair-shampoo-bend', 'care-lift-bend', 'drive-long', 'sofa-slouch', 'cycling-aero', 'gym-squat-lift'] },
+  { id: 'stiff-neck', partBadge: '首・あご', tag: '首のうしろが詰まる', label: '首のうしろや付け根が詰まり、上を向きづらい', triggerLineId: 'TL-02', goldenLineId: 'GL-02', habits: ['phone-neck', 'desk-round', 'overhead-tool', 'sleep-side-curl'] },
+  { id: 'arm-jam', partBadge: '肩・背中', tag: '腕が上がりづらい', label: '洗濯や着替えで、腕を上げると肩が引っかかる', triggerLineId: 'TL-03', goldenLineId: 'GL-03', habits: ['laundry-reach', 'overhead-tool', 'hair-cut-arm', 'volleyball-smash', 'swim-crawl-yoga'] },
+  { id: 'one-side-hip', partBadge: '腰・お尻', tag: '片側だけ張る', label: 'いつも同じ側の腰やお尻の横ばかり張る', triggerLineId: 'TL-07', goldenLineId: 'GL-07', habits: ['childcare-hip-l', 'leg-cross-r', 'stand-hip-r', 'stand-hip-l', 'bag-shoulder-r', 'golf-swing-rot'] },
+  { id: 'shallow-breath', partBadge: '胸・背中', tag: '息が浅い・猫背', label: '胸やみぞおちが縮こまり、深い呼吸がしづらい', triggerLineId: 'TL-04', goldenLineId: 'GL-04', habits: ['sofa-slouch', 'arms-fold', 'desk-round', 'sleep-side-curl'] },
+  { id: 'back-lead', partBadge: '腰・お尻', tag: '背面が鉛のよう', label: '前かがみで背中〜腰・もも裏が鉛のように重い', triggerLineId: 'TL-06', goldenLineId: 'GL-06', habits: ['vacuum-dish-bend', 'heavy-lift-dig', 'hair-shampoo-bend', 'running-strike'] },
+  { id: 'jaw-clench', partBadge: '首・あご', tag: '食いしばり・あご', label: '奥歯の食いしばりで、あごやこめかみがだるい', triggerLineId: 'TL-02', goldenLineId: 'GL-02', habits: ['phone-neck', 'therapist-press', 'desk-round', 'sleep-side-curl', 'teeth-clench-night'] },
+  { id: 'arm-numb', partBadge: '腕・手', tag: '腕〜指先がだるい', label: '肘〜手首・親指の付け根のだるさが抜けない', triggerLineId: 'TL-01', goldenLineId: 'GL-01', habits: ['cook-pan-hold', 'hair-cut-arm', 'therapist-press', 'tennis-baseball-arm'] },
+  { id: 'arch-back', partBadge: '腰・お尻', tag: '反り腰・前もも張り', label: '仰向けや立ちっぱなしで、腰が反ってつらい', triggerLineId: 'TL-08', goldenLineId: 'GL-08', habits: ['sway-back', 'laundry-reach', 'stand-hip-r', 'soccer-kick'] },
+  { id: 'eye-head-heavy', partBadge: '首・あご', tag: '目の奥・頭の重さ', label: '画面を見続けると、目の奥や後頭部が重くなる', triggerLineId: 'TL-10', goldenLineId: 'GL-10', habits: ['phone-neck', 'laptop-low-screen', 'nail-eye-fine', 'phone-bed-side'] },
+  { id: 'foot-calf-swell', partBadge: '脚・足裏', tag: '足裏・夕方むくみ', label: '夕方に足裏がジンジンし、ふくらはぎが張る', triggerLineId: 'TL-09', goldenLineId: 'GL-09', habits: ['register-stand-long', 'heels-commute-walk', 'nurse-ward-walk', 'hiking-mountain-walk', 'running-strike'] },
+  { id: 'elbow-wrist-pain', partBadge: '腕・手', tag: '手首・肘の外側', label: 'マウスや家事で、肘の外側や手首がつらい', triggerLineId: 'TL-11', goldenLineId: 'GL-11', habits: ['mouse-wrist-strain', 'cook-pan-hold', 'kitchen-knife-chop', 'delivery-carry-box', 'tennis-baseball-arm'] },
+  { id: 'hip-groin-jam', partBadge: '股関節・脚', tag: '股関節の詰まり', label: 'あぐらや開脚で、脚の付け根や内ももが詰まる', triggerLineId: 'TL-12', goldenLineId: 'GL-12', habits: ['floor-sit-cross', 'leg-cross-r', 'yoga-pilates-open', 'court-step-jump'] },
+  { id: 'scapula-board', partBadge: '肩・背中', tag: '肩甲骨がガチガチ', label: '肩甲骨のあいだが板のように固まって苦しい', triggerLineId: 'TL-10', goldenLineId: 'GL-10', habits: ['desk-round', 'laptop-low-screen', 'arms-fold', 'nail-eye-fine'] },
+  { id: 'buttock-sciatic', partBadge: '腰・お尻', tag: 'お尻の奥の重さ', label: '長く座ると、お尻の奥からもも裏が重だるい', triggerLineId: 'TL-12', goldenLineId: 'GL-12', habits: ['leg-cross-r', 'drive-long', 'floor-sit-cross', 'sofa-slouch'] },
 ];
 
 // -------------------------------------------------------------

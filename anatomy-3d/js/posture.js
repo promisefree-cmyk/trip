@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 
-export const POSTURE_VERSION = '20261115c';
+export const POSTURE_VERSION = '20261117a';
 
 // -----------------------------------------------------------------------------
 // 32の姿勢・動作キネマティクスパラメータ名と初期状態

@@ -2,7 +2,7 @@
 // sw.js — Service Worker（大量同時アクセス負荷軽減 ＆ 2回目以降通信ゼロ化）
 // =============================================================================
 
-const CACHE_NAME = 'fascia-3d-v20261115c';
+const CACHE_NAME = 'fascia-3d-v20261117a';
 
 const EXCLUDED_PATHS = ['/studio.html', '/VideoMasterStudio.html'];
 

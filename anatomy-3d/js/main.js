@@ -3,12 +3,12 @@
 // index.html は <script type="module" src="js/main.js"> のみを読み込む。
 // =============================================================================
 
-import * as dataModule from './data.js?v=20261115c';
-import * as anatomyDetails from './anatomy_details.js?v=20261115c';
-import { createFascia } from './fascia.js?v=20261115c';
-import * as posture from './posture.js?v=20261115c';
-import { createUI } from './ui.js?v=20261115c';
-import { createViewer } from './viewer.js?v=20261115c';
+import * as dataModule from './data.js?v=20261117a';
+import * as anatomyDetails from './anatomy_details.js?v=20261117a';
+import { createFascia } from './fascia.js?v=20261117a';
+import * as posture from './posture.js?v=20261117a';
+import { createUI } from './ui.js?v=20261117a';
+import { createViewer } from './viewer.js?v=20261117a';
 
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
@@ -72,7 +72,7 @@ const jaMessage = (err) =>
 
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261115c');
+    const res = await fetch('models/atlas_metadata.json?v=20261117a');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
