@@ -6,8 +6,8 @@ echo   Instant Shortcut and Config Finisher (0.2 Seconds)
 echo ============================================================================
 echo.
 
-set "SERVER_URL=https://final-latina-duo-zoo.trycloudflare.com"
-set "STUDIO_KEY=rt9k4m7x2v8p"
+set "SERVER_URL="
+set "STUDIO_KEY="
 set "DL_DIR=%USERPROFILE%\Downloads\Rooton_PC_Migration_Pack"
 if not exist "%DL_DIR%" mkdir "%DL_DIR%"
 
