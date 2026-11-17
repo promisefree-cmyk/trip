@@ -18,7 +18,8 @@
 //   'selfcare'(id) 'selfcare-step'(payload) 'selfcare-close'(id) 'xray'(bool)
 // =============================================================================
 
-import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261117a';
+import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261117b';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261117b';
 
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
@@ -283,25 +284,26 @@ const POSTURE_HABIT_PRIORITY_IDS = [
   'heels-commute-walk',
 ];
 
-// 3Dリリース器具ラベル定義（2択＋手で行うデリケート部位用キー）
+// 3Dリリース器具ラベル定義（指・ボール・ローラーの安全ルール対応3択）
 const TOOL_LABEL = {
+  hand: '🤲 指でやる',
   ball: '🎾 ボール',
   roller: '🛞 ローラー',
   pole: '🛞 ローラー',
-  hand: '✋ 手でやさしく',
 };
 
-// 3Dリリース器具定義（手動切替互換はボール・ローラーの2択、前頸部等は hand に対応）
+// 3Dリリース器具定義（部位ごとの安全ルールに基づき許可されたボタンのみ表示）
 const RELEASE_TOOLS = [
+  { id: 'hand', label: TOOL_LABEL.hand, badge: TOOL_LABEL.hand, motion: 'stroke' },
   { id: 'ball', label: TOOL_LABEL.ball, badge: TOOL_LABEL.ball, motion: 'circle' },
   { id: 'roller', label: TOOL_LABEL.roller, badge: TOOL_LABEL.roller, motion: 'roll' },
 ];
-const HAND_TOOL_DEF = { id: 'hand', label: TOOL_LABEL.hand, badge: TOOL_LABEL.hand, motion: 'stroke' };
+const HAND_TOOL_DEF = RELEASE_TOOLS[0];
 const RELEASE_TOOL_MAP = {
-  ball: RELEASE_TOOLS[0],
-  roller: RELEASE_TOOLS[1],
-  pole: RELEASE_TOOLS[1],
-  hand: HAND_TOOL_DEF,
+  hand: RELEASE_TOOLS[0],
+  ball: RELEASE_TOOLS[1],
+  roller: RELEASE_TOOLS[2],
+  pole: RELEASE_TOOLS[2],
 };
 
 // 筋肉IDごとのデフォルト推奨リリース器具マップ（data.js 側で未指定時のフォールバック）
@@ -4240,13 +4242,13 @@ export function createUI({
   }
 
   function scToolEmoji(normTool) {
-    if (normTool === 'hand') return '［手指］';
-    return normTool === 'roller' ? '［ローラー］' : '［ボール］';
+    if (normTool === 'hand') return '🤲［指でケア］';
+    return normTool === 'roller' ? '🛞［ローラー］' : '🎾［ボール］';
   }
 
-  function scDefaultMotion(normTool) {
-    if (normTool === 'hand') return 'stroke';
-    return normTool === 'roller' ? 'roll' : 'circle';
+  function scDefaultMotion(normTool, muscleId = '') {
+    const profile = resolveCareProfile(muscleId, normTool);
+    return profile.motion || (normTool === 'hand' ? 'stroke' : normTool === 'roller' ? 'roll' : 'circle');
   }
 
   function parseTotalSeconds(durStr, stepCount = 3) {
@@ -4266,29 +4268,26 @@ export function createUI({
     return `${m}:${String(r).padStart(2, '0')}`;
   }
 
-  /** トリガーポイントの推奨器具 ('ball' | 'roller') とモーション ('circle' | 'roll') を解決 */
+  /** トリガーポイントの推奨器具 ('hand' | 'ball' | 'roller') とモーションを安全ルール込みで解決 */
   function resolveTpToolAndMotion(rawTp, muscleId, stepText = '', idx = 0) {
     const explicitTool = typeof rawTp === 'object' && rawTp ? rawTp.tool : '';
     const explicitMotion = typeof rawTp === 'object' && rawTp ? rawTp.motion : '';
-    let tool = explicitTool;
-    if (!tool || !RELEASE_TOOL_MAP[tool]) {
+    let requested = explicitTool;
+    if (!requested || !RELEASE_TOOL_MAP[requested]) {
       const txt = String(stepText || (typeof rawTp === 'object' ? rawTp?.step || '' : '')).toLowerCase();
-      if (txt.includes('ポール') || txt.includes('pole') || txt.includes('ローラー') || txt.includes('roller')) tool = 'roller';
-      else if (txt.includes('ボール') || txt.includes('ball') || txt.includes('くるくる')) tool = 'ball';
-      else tool = DEFAULT_MUSCLE_TOOL[muscleId] || (idx % 2 === 1 ? 'roller' : 'ball');
+      if (txt.includes('指') || txt.includes('手')) requested = 'hand';
+      else if (txt.includes('ポール') || txt.includes('pole') || txt.includes('ローラー') || txt.includes('roller')) requested = 'roller';
+      else if (txt.includes('ボール') || txt.includes('ball') || txt.includes('くるくる')) requested = 'ball';
+      else requested = DEFAULT_MUSCLE_TOOL[muscleId] || '';
     }
-    const normalizedTool = normalizeScTool(tool);
-    const toolDef = RELEASE_TOOL_MAP[normalizedTool] || RELEASE_TOOLS[0];
+    const profile = resolveCareProfile(muscleId, requested || null);
+    const toolDef = RELEASE_TOOL_MAP[profile.tool] || RELEASE_TOOLS[0];
     const motion =
-      normalizedTool === 'hand'
-        ? 'stroke'
-        : normalizedTool === 'roller'
-          ? 'roll'
-          : explicitMotion === 'roll'
-            ? 'roll'
-            : toolDef.motion;
+      explicitMotion && profile.tool === normalizeScTool(requested)
+        ? explicitMotion
+        : profile.motion || toolDef.motion;
     const label = TOOL_LABEL[toolDef.id] || toolDef.label;
-    return { tool: toolDef.id, motion, toolBadge: label, toolLabel: label };
+    return { tool: toolDef.id, motion, toolBadge: label, toolLabel: label, isDelicate: profile.isDelicate };
   }
 
   /** 動作 hb からトリガーポイント（点：①・②・③）を重複なく最大3点抽出 */
@@ -4386,19 +4385,19 @@ export function createUI({
         '';
       const muscleName = tp?.shortLabel || shortMuscleNameOf(muscleId) || nameOf(muscleId) || '';
       const resolvedTool = resolveTpToolAndMotion(tp || st, muscleId, cleanStep, idx);
-      const normTool = normalizeScTool(tp?.tool || resolvedTool.tool);
+      const normTool = resolvedTool.tool;
+      const profile = resolveCareProfile(muscleId, normTool, muscleName);
       const toolEmoji = scToolEmoji(normTool);
       const num = ['①', '②', '③', '④'][idx] || `${idx + 1}`;
       const durSec =
         tp?.durationSec ||
         (typeof st === 'object' && Number(st?.durationSec) > 0 ? Number(st.durationSec) : 30);
-      const fallbackAction =
-        normTool === 'hand'
-          ? `${muscleName}に手を添えてやさしくゆるめる`
-          : normTool === 'roller'
-            ? `${muscleName}にローラーを当ててコロコロ転がす`
-            : `${muscleName}にボールを当ててくるくる緩める`;
-      const bodyStep = cleanStep || fallbackAction;
+      // 元のテキストが禁止器具（デリケート部位なのにボール・ローラー等）を含む場合は安全なガイド文言に差し替える
+      const hasMismatchedToolWord =
+        (normTool === 'hand' && /(ボール|ローラー|ポール)/u.test(cleanStep)) ||
+        (normTool === 'ball' && /(ローラー|ポール)/u.test(cleanStep)) ||
+        (normTool === 'roller' && /ボール/u.test(cleanStep));
+      const bodyStep = !cleanStep || hasMismatchedToolWord ? profile.guideText : cleanStep;
       const stepWithNum = `${num} ${bodyStep}`;
       const hasDuration = /\d+\s*秒/.test(bodyStep);
       const guideWithEmoji = `${toolEmoji} ${stepWithNum}${hasDuration ? '' : `（${durSec}秒）`}`;
@@ -4414,10 +4413,12 @@ export function createUI({
         durationSec: durSec,
         muscleId,
         muscleName,
+        initialTool: normTool,
+        userSwitchedTool: false,
         tool: normTool,
-        motion: tp?.motion || resolvedTool.motion,
-        toolBadge: tp?.toolBadge || resolvedTool.toolBadge,
-        toolLabel: tp?.toolLabel || resolvedTool.toolLabel,
+        motion: resolvedTool.motion,
+        toolBadge: resolvedTool.toolBadge,
+        toolLabel: resolvedTool.toolLabel,
         strokeTarget: tp?.strokeTarget || nextTpId || null,
       };
     });
@@ -4712,14 +4713,27 @@ export function createUI({
       guideBanner.classList.remove('is-cta-hint');
       const norm = normalizeScTool(st.tool);
       const toolEmoji = scToolEmoji(norm);
-      const baseStep = st.stepText || st.step || `${st.num} ${st.text || ''}`;
+      let baseStep = st.stepText || st.step || `${st.num} ${st.text || ''}`;
+      if (st.userSwitchedTool && norm !== st.initialTool) {
+        const profile = resolveCareProfile(st.muscleId, norm, st.muscleName);
+        baseStep = `${st.num} ${profile.guideText}`;
+      }
       const durSuffix = st.durationSec && !/\d+\s*秒/.test(baseStep) ? `（${st.durationSec}秒）` : '';
       guideBannerTextEl.textContent = `${toolEmoji} ${baseStep}${durSuffix}`;
     }
 
-    // シークバー・秒数タイマー・一時停止ボタン・器具切替ボタンはすべて非表示（DOM互換のみ維持）
+    // 部位別安全ルール付きの3Dやり方切替バー（🤲 指でやる ／ 🎾 ボール ／ 🛞 ローラー）
     const toolBtns = new Map();
     const stepCards = [];
+    const delicateBadgeEl = h(
+      'div',
+      {
+        class: 'sc-delicate-badge',
+        hidden: true,
+        role: 'status',
+      },
+      '🤲 指でやさしくケア（強い器具は使いません）',
+    );
 
     // 4段目: 公開モード別に「来院・相談ボタン（clinic）」または「器具PRリンク（public）」を出し分け
     const mCfg = getMonetizeConfig();
@@ -4740,7 +4754,13 @@ export function createUI({
 
     function syncAffiliateUI(activeToolId) {
       if (!affiliateBtn) return;
-      const isRoller = normalizeScTool(activeToolId) === 'roller';
+      const norm = normalizeScTool(activeToolId);
+      if (norm === 'hand') {
+        affiliateBtn.hidden = true;
+        return;
+      }
+      affiliateBtn.hidden = false;
+      const isRoller = norm === 'roller';
       affiliateBtn.classList.toggle('is-roller', isRoller);
       affiliateBtn.classList.toggle('is-ball', !isRoller);
       affiliateBtn.href = isRoller ? mCfg.rollerUrl : mCfg.ballUrl;
@@ -4748,21 +4768,33 @@ export function createUI({
       affiliateBtn.setAttribute('aria-label', `${affiliateLabelEl.textContent}（広告・外部サイト）`);
     }
 
-    function syncToolBtnsUI(activeToolId) {
-      const norm = normalizeScTool(activeToolId);
+    function syncToolBtnsUI(activeToolId, muscleId = '') {
+      const rule = getAllowedToolsAndDefault(muscleId);
+      const allowedList = rule.allowedTools || rule.allowed || ['hand', 'ball', 'roller'];
+      const allowedSet = new Set(allowedList);
+      const norm = allowedSet.has(normalizeScTool(activeToolId))
+        ? normalizeScTool(activeToolId)
+        : rule.defaultTool;
+      const onlyHand = rule.isDelicate || allowedList.length <= 1;
+      delicateBadgeEl.hidden = !onlyHand;
       toolBtns.forEach((btn, tid) => {
-        const on = tid === norm;
+        const canUse = !onlyHand && allowedSet.has(tid);
+        btn.hidden = !canUse;
+        const on = canUse && tid === norm;
         btn.classList.toggle('is-active', on);
         btn.setAttribute('aria-pressed', String(on));
       });
       syncAffiliateUI(norm);
     }
 
-    function emitSelfCareStep(st, idx = scStepIndex) {
-      scActiveTool = normalizeScTool(st?.tool || scActiveTool);
-      const activeMotion = scDefaultMotion(scActiveTool);
+    function emitSelfCareStep(st, idx = scStepIndex, extra = {}) {
       const currentStepMuscleId = st?.muscleId || sc.targetMuscles[0] || '';
       if (!currentStepMuscleId) return;
+      const profile = resolveCareProfile(currentStepMuscleId, st?.tool || scActiveTool, st?.muscleName);
+      scActiveTool = profile.tool;
+      const activeMotion = extra.toolSwitchOnly
+        ? profile.motion
+        : st?.motion || profile.motion;
       activeTriggerPointId = currentStepMuscleId;
       inspectedPartId = currentStepMuscleId;
       syncPartTags();
@@ -4773,6 +4805,8 @@ export function createUI({
         index: idx,
         tool: scActiveTool,
         motion: activeMotion,
+        handPose: profile.handPose,
+        supportSurface: profile.supportSurface,
         strokeTarget: st?.strokeTarget || null,
         fromSelfCareModal: true,
       });
@@ -4784,6 +4818,9 @@ export function createUI({
         stepIndex: idx,
         tool: scActiveTool,
         motion: activeMotion,
+        handPose: profile.handPose,
+        supportSurface: profile.supportSurface,
+        toolSwitchOnly: Boolean(extra.toolSwitchOnly),
         strokeTarget: st?.strokeTarget || null,
       });
     }
@@ -4798,19 +4835,23 @@ export function createUI({
           'data-sc-tool': rt.id,
           'aria-pressed': 'false',
           onclick: () => {
-            scActiveTool = normalizeScTool(rt.id);
             const st = sc.steps[scStepIndex] || sc.steps[0];
+            const profile = resolveCareProfile(st?.muscleId || '', rt.id, st?.muscleName || '');
+            scActiveTool = profile.tool;
             if (st) {
               st.tool = scActiveTool;
-              st.motion = scActiveTool === 'roller' ? 'roll' : 'circle';
+              st.motion = profile.motion;
+              st.userSwitchedTool = scActiveTool !== st.initialTool;
               st.toolBadge = TOOL_LABEL[scActiveTool];
               const badgeEl = stepCards[scStepIndex]?.querySelector('.sc-step-muscle-tag');
               if (badgeEl) badgeEl.textContent = TOOL_LABEL[scActiveTool];
               if (stepCards[scStepIndex]) stepCards[scStepIndex].dataset.tool = scActiveTool;
               syncGuideBannerUI(st);
             }
-            syncToolBtnsUI(scActiveTool);
-            emitSelfCareStep(st, scStepIndex);
+            syncToolBtnsUI(scActiveTool, st?.muscleId || '');
+            measure();
+            setVis(snaps.closed);
+            emitSelfCareStep(st, scStepIndex, { toolSwitchOnly: true });
           },
         },
         h('span', { text: TOOL_LABEL[rt.id] || rt.label }),
@@ -4848,7 +4889,7 @@ export function createUI({
 
     const toolAndControlRow = h(
       'div',
-      { class: 'sc-video-stage', hidden: true },
+      { class: 'sc-video-stage' },
       h(
         'div',
         { class: 'sc-controls', hidden: true },
@@ -4858,8 +4899,9 @@ export function createUI({
       ),
       h(
         'div',
-        { class: 'sc-tool-bar', hidden: true, role: 'group', 'aria-label': 'リリース器具の切り替え' },
+        { class: 'sc-tool-bar', role: 'group', 'aria-label': 'セルフケアのやり方切り替え' },
         ...toolBarBtns,
+        delicateBadgeEl,
       ),
     );
 
@@ -4870,15 +4912,16 @@ export function createUI({
         scProgressSec = clampedIdx * SC_STEP_DURATION;
       }
       const st = sc.steps[clampedIdx] || sc.steps[0];
-      scActiveTool = normalizeScTool(st?.tool);
+      const profile = resolveCareProfile(st?.muscleId || '', st?.tool, st?.muscleName || '');
+      scActiveTool = profile.tool;
       if (st) {
         st.tool = scActiveTool;
-        st.motion = scDefaultMotion(scActiveTool);
+        st.motion = st.userSwitchedTool ? profile.motion : st.motion || profile.motion;
         st.toolBadge = TOOL_LABEL[scActiveTool];
         syncGuideBannerUI(st);
       }
 
-      syncToolBtnsUI(scActiveTool);
+      syncToolBtnsUI(scActiveTool, st?.muscleId || '');
 
       stepCards.forEach((card, i) => {
         const active = i === clampedIdx;
@@ -4886,6 +4929,9 @@ export function createUI({
         card.classList.toggle('is-done', i < clampedIdx);
         card.setAttribute('aria-pressed', String(active));
       });
+
+      measure();
+      setVis(snaps.closed);
 
       if (emitEvent && st?.muscleId) {
         emitSelfCareStep(st, clampedIdx);

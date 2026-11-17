@@ -279,17 +279,19 @@ input:focus-visible,
   display: inline-flex;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 9px;
+  gap: 8px;
   min-height: 44px;
   min-width: 44px;
-  padding: 4px 12px;
+  max-width: calc(100vw - 82px);
+  padding: 4px 11px;
   border-radius: 999px;
   background: var(--panel-bg);
   border: 1px solid var(--gold-border);
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
-  max-width: 100%;
+  font-size: clamp(11px, 3.1vw, 13px);
   white-space: nowrap;
+  overflow: hidden;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
 }
 
 #ui-help-btn.legend:hover,
@@ -307,7 +309,7 @@ input:focus-visible,
   align-items: center;
   gap: 4.5px;
   white-space: nowrap;
-  font-size: 11.5px;
+  font-size: clamp(11px, 3.1vw, 13px);
   font-weight: 700;
   line-height: 1.1;
   flex-shrink: 0;
@@ -367,12 +369,31 @@ input:focus-visible,
 
 @media (max-width: 410px) {
   #ui-help-btn.legend {
-    gap: 7px;
-    padding: 4px 10px;
+    gap: 6px;
+    padding: 4px 9px;
   }
   .legend-item {
-    font-size: 11px;
     gap: 3.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  #ui-help-btn.legend {
+    gap: 4.5px;
+    padding: 4px 7px;
+  }
+  .legend-item {
+    font-size: 10.5px;
+    gap: 2.5px;
+  }
+  .legend-item i {
+    width: 7px;
+    height: 7px;
+  }
+  .help-pill-q {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
   }
 }
 
@@ -749,7 +770,8 @@ input:focus-visible,
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 42dvh;
+  max-height: 50vh;
+  max-height: min(50dvh, 430px);
   background: linear-gradient(180deg, rgba(254, 252, 249, 0.96) 0%, rgba(250, 246, 239, 0.98) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -763,7 +785,8 @@ input:focus-visible,
 }
 
 .sheet.has-active-card {
-  max-height: 42dvh;
+  max-height: 50vh;
+  max-height: min(50dvh, 430px);
 }
 
 .sheet-body {
@@ -1415,6 +1438,8 @@ input:focus-visible,
 .occ-card-name,
 .chip-label,
 .story-title {
+  margin: 0;
+  padding: 0;
   font-size: clamp(12.5px, 3.45vw, 14px);
   font-weight: 800;
   color: var(--text-main);
@@ -1529,6 +1554,8 @@ input:focus-visible,
 }
 
 .card-title {
+  margin: 0;
+  padding: 0;
   font-size: 16px;
   font-weight: 800;
   color: var(--text-main);
@@ -1547,6 +1574,7 @@ input:focus-visible,
 }
 
 .habit-causal-summary {
+  margin: 0;
   padding: 7px 11px;
   border-left: 3.5px solid var(--gold);
   background: var(--surface-2);
@@ -1555,10 +1583,6 @@ input:focus-visible,
   font-weight: 600;
   color: #3a3028;
   line-height: 1.48;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .habit-selfcare-box {
@@ -1822,8 +1846,10 @@ input:focus-visible,
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 46dvh;
+  max-height: 50vh;
+  max-height: min(50dvh, 430px);
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -1939,7 +1965,9 @@ input:focus-visible,
 }
 
 .sc-step-text {
-  font-size: 12px;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(11px, 3.1vw, 12px);
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.25;
@@ -2380,7 +2408,7 @@ input:focus-visible,
   color: var(--text-sub);
 }
 
-/* 分割画面・短尺ビューポート（390x660等）でも44px以上のタップ領域と0px被りを両立 */
+/* 分割画面・短尺ビューポート（iOS Safari アドレスバー表示時 660〜695px 等）でも44px以上のタップ領域と0px被りを両立 */
 @media (max-height: 700px) {
   .rail {
     gap: 3px;
@@ -2390,8 +2418,14 @@ input:focus-visible,
     width: 44px;
     height: 44px;
   }
-  .sheet {
-    max-height: 41dvh;
+  .sheet,
+  .sheet.has-active-card {
+    max-height: 48vh;
+    max-height: 48dvh;
+  }
+  .selfcare-modal {
+    max-height: 50vh;
+    max-height: 50dvh;
   }
   .sheet-body {
     padding-top: 6px;
@@ -2415,7 +2449,7 @@ input:focus-visible,
   .habit-causal-summary {
     padding: 5px 9px;
     font-size: 13.5px;
-    -webkit-line-clamp: 2;
+    line-height: 1.44;
   }
   .habit-selfcare-howto {
     font-size: 12.5px;
@@ -2538,6 +2572,68 @@ input:focus-visible,
   padding: 7px 10px;
   font-size: 12.5px;
   line-height: 1.4;
+}
+.selfcare-modal .sc-video-stage {
+  display: block;
+}
+.selfcare-modal .sc-tool-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+}
+.selfcare-modal .sc-tool-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 6px;
+  border-radius: 11px;
+  background: var(--surface-1);
+  border: 1.5px solid var(--gold-border);
+  color: var(--text-sub);
+  font-size: clamp(11px, 3.2vw, 12.5px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.selfcare-modal .sc-tool-btn[hidden] {
+  display: none !important;
+}
+.selfcare-modal .sc-tool-btn:hover {
+  border-color: var(--gold);
+  color: var(--text-main);
+}
+.selfcare-modal .sc-tool-btn.is-active {
+  background: #2a231e;
+  border-color: #cfa058;
+  color: #faf8f4;
+  box-shadow: 0 2px 8px rgba(42, 35, 30, 0.16);
+}
+.selfcare-modal .sc-delicate-badge {
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 11px;
+  border-radius: 11px;
+  background: rgba(206, 126, 107, 0.12);
+  border: 1px solid rgba(206, 126, 107, 0.42);
+  color: #6d3225;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.selfcare-modal .sc-delicate-badge[hidden] {
+  display: none !important;
+}
+.selfcare-modal .sc-tool-affiliate-btn[hidden] {
+  display: none !important;
 }
 .selfcare-modal .sc-step-card {
   min-height: 44px;

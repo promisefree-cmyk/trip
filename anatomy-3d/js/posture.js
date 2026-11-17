@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 
-export const POSTURE_VERSION = '20261117a';
+export const POSTURE_VERSION = '20261117b';
 
 // -----------------------------------------------------------------------------
 // 32の姿勢・動作キネマティクスパラメータ名と初期状態
@@ -2962,65 +2962,76 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
   if (!config) return;
 
   const mId = String(config.muscleId || config.id || '').toLowerCase();
+  const scTool = String(config.tool || '').toLowerCase();
+  const scMotion = String(config.motion || '').toLowerCase();
   const scSide = String(config.side || 'R');
   // fascia.js 側の effSide フォールバック ('both' -> 'R') と完全同期し、必ずケア対象側の腕を退避させる
   const isL = scSide === 'L';
   const t = typeof phase === 'number' ? phase : 0;
   const rollWave = Math.sin(t * 1.8);
+  const glideWave = Math.sin(t * 2.1);
 
   // 1. 脇腹・広背筋・前鋸筋・腰方形筋・肋間筋（対象側の腕を頭上へ大きくバンザイ退避し、脇腹〜肋骨を100%オープン露出！）
   if (/external-oblique|internal-oblique|latissimus-dorsi|serratus-anterior|quadratus-lumborum|intercostals/.test(mId)) {
     out.sit = 0;
     out.trunkFlex = -0.04 * k;
-    out.sideBend = (isL ? -0.15 : 0.15) * k;
+    out.sideBend = (isL ? -0.18 : 0.18) * k;
     if (isL) {
-      out.armRaiseL = (1.72 + 0.04 * rollWave) * k;
-      out.armSpreadL = 0.24 * k;
-      out.elFlexL = 0.62 * k;
-      out.foreYawL = 0.38 * k;
+      out.armRaiseL = (1.76 + 0.05 * rollWave) * k;
+      out.armSpreadL = 0.26 * k;
+      out.elFlexL = 0.58 * k;
+      out.foreYawL = 0.36 * k;
       out.pronateL = 0.35 * k;
-      out.armRaiseR = 0.35 * k;
-      out.elFlexR = 0.70 * k;
+      out.armRaiseR = 0.34 * k;
+      out.elFlexR = 0.72 * k;
       out.foreYawR = 0.28 * k;
       out.pronateR = 0.85 * k;
     } else {
-      out.armRaiseR = (1.72 + 0.04 * rollWave) * k;
-      out.armSpreadR = 0.24 * k;
-      out.elFlexR = 0.62 * k;
-      out.foreYawR = 0.38 * k;
+      out.armRaiseR = (1.76 + 0.05 * rollWave) * k;
+      out.armSpreadR = 0.26 * k;
+      out.elFlexR = 0.58 * k;
+      out.foreYawR = 0.36 * k;
       out.pronateR = 0.35 * k;
-      out.armRaiseL = 0.35 * k;
-      out.elFlexL = 0.70 * k;
+      out.armRaiseL = 0.34 * k;
+      out.elFlexL = 0.72 * k;
       out.foreYawL = 0.28 * k;
       out.pronateL = 0.85 * k;
     }
     return;
   }
 
-  // 2. 手・母指球・前腕・手首（伸筋・腕橈骨筋は手のひら下向き、母指球・屈筋は手のひらやや上〜内向きでリアルに提示）
-  if (/abductor-pollicis|flexor-carpi|extensor-carpi|brachioradialis|extensor-digitorum|flexor-digitorum|pronator|supinator|palmaris|opponens-pollicis|thenar/.test(mId)) {
+  // 2. 手・母指球・前腕・手首（親指で押さえたまま手首をゆっくり背屈⇄掌屈して筋膜を滑らせる glide モーション完全連動！）
+  if (
+    /abductor-pollicis|flexor-pollicis|opponens-pollicis|adductor-pollicis|flexor-carpi|extensor-carpi|brachioradialis|extensor-digitorum$|extensor-indicis|extensor-digiti-minimi|flexor-digitorum-(superficialis|profundus)|pronator|supinator|palmaris|thenar|-hand$/.test(
+      mId,
+    )
+  ) {
     const isDorsalForearm = /extensor|brachioradialis|supinator/.test(mId);
-    const targetPron = isDorsalForearm ? 0.95 : 0.15;
-    out.sit = 0.94 * k;
-    out.trunkFlex = 0.12 * k;
+    const targetPron = isDorsalForearm ? 0.86 : 0.12;
+    const isGlide = scMotion === 'glide' || scTool === 'hand';
+    const wristSwing = isGlide ? (0.10 + 0.62 * glideWave) : (0.14 * rollWave);
+    out.sit = 0.92 * k;
+    out.trunkFlex = 0.10 * k;
     if (isL) {
-      out.armRaiseL = (0.42 + 0.04 * rollWave) * k;
-      out.elFlexL = (1.08 - 0.06 * rollWave) * k;
-      out.armSpreadL = 0.14 * k;
-      out.foreYawL = 0.24 * k;
+      out.armRaiseL = (0.48 + 0.03 * rollWave) * k;
+      out.elFlexL = (0.96 - 0.04 * rollWave) * k;
+      out.armSpreadL = 0.18 * k;
+      out.foreYawL = 0.20 * k;
       out.pronateL = targetPron * k;
-      out.armRaiseR = 0.28 * k;
-      out.elFlexR = 0.82 * k;
+      out.wristExtL = wristSwing * k;
+      out.armRaiseR = 0.24 * k;
+      out.elFlexR = 0.80 * k;
       out.foreYawR = 0.28 * k;
       out.pronateR = 0.85 * k;
     } else {
-      out.armRaiseR = (0.42 + 0.04 * rollWave) * k;
-      out.elFlexR = (1.08 - 0.06 * rollWave) * k;
-      out.armSpreadR = 0.14 * k;
-      out.foreYawR = 0.24 * k;
+      out.armRaiseR = (0.48 + 0.03 * rollWave) * k;
+      out.elFlexR = (0.96 - 0.04 * rollWave) * k;
+      out.armSpreadR = 0.18 * k;
+      out.foreYawR = 0.20 * k;
       out.pronateR = targetPron * k;
-      out.armRaiseL = 0.28 * k;
-      out.elFlexL = 0.82 * k;
+      out.wristExtR = wristSwing * k;
+      out.armRaiseL = 0.24 * k;
+      out.elFlexL = 0.80 * k;
       out.foreYawL = 0.28 * k;
       out.pronateL = 0.85 * k;
     }
@@ -3151,8 +3162,42 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
 
-  // 9. ふくらはぎ・足裏・アキレス腱（イスまたは床に座って足を伸ばし、両手は膝上に自然な下向き）
-  if (/gastrocnemius|soleus|calcaneal|flexor-digitorum-brevis|tibialis-posterior|plantar|hallucis/.test(mId)) {
+  // 9a. 足裏・土踏まず（床マットの上のボールを片足裏で踏み、反対脚は視線を遮らないよう少し後ろへ引くリアル立ち踏み姿勢）
+  if (/flexor-digitorum-brevis|abductor-hallucis|abductor-digiti-minimi-foot|quadratus-plantae|plantar|flexor-hallucis/.test(mId)) {
+    if (scTool === 'hand') {
+      out.sit = 0.94 * k;
+      out.trunkFlex = 0.14 * k;
+      if (isL) out.legSwingL = (0.34 + 0.08 * glideWave) * k;
+      else out.legSwingR = (0.34 + 0.08 * glideWave) * k;
+      out.armRaiseL = 0.36 * k;
+      out.armRaiseR = 0.36 * k;
+      out.elFlexL = 0.68 * k;
+      out.elFlexR = 0.68 * k;
+      return;
+    }
+    out.sit = 0;
+    out.trunkFlex = 0.04 * k;
+    out.kneeBend = (0.08 + 0.04 * (0.5 + 0.5 * rollWave)) * k;
+    if (isL) {
+      out.legSwingL = (0.14 + 0.04 * rollWave) * k;
+      out.legSwingR = -0.18 * k;
+    } else {
+      out.legSwingR = (0.14 + 0.04 * rollWave) * k;
+      out.legSwingL = -0.18 * k;
+    }
+    out.armRaiseL = 0.18 * k;
+    out.armRaiseR = 0.18 * k;
+    out.armSpreadL = 0.12 * k;
+    out.armSpreadR = 0.12 * k;
+    out.elFlexL = 0.48 * k;
+    out.elFlexR = 0.48 * k;
+    out.pronateL = 0.75 * k;
+    out.pronateR = 0.75 * k;
+    return;
+  }
+
+  // 9b. ふくらはぎ・アキレス腱（イスまたは床に座って足を伸ばし、ローラー・ボールで転がす）
+  if (/gastrocnemius|soleus|calcaneal|tibialis-posterior/.test(mId)) {
     out.sit = 0.95 * k;
     out.trunkFlex = 0.06 * k;
     const calfRoll = 0.08 * Math.sin(t * 1.7);
@@ -3236,8 +3281,25 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
 
-  // 13. 肩甲骨周り・僧帽筋・菱形筋・肩甲挙筋・棘下筋・棘上筋・大円筋・小円筋・三角筋
-  if (/teres|rhomboid|trapezius|levator-scapulae|infraspinatus|supraspinatus|subscapularis|deltoid/.test(mId)) {
+  // 13a. 肩甲骨のあいだ（菱形筋：両腕を軽く胸前へ抱えて肩甲骨の間を広げ、壁挟みボール時はひざを使って心地よく上下にゆれる！）
+  if (/rhomboid/.test(mId)) {
+    out.sit = 0;
+    out.trunkFlex = 0.08 * k;
+    out.shoulderIn = 0.28 * k;
+    out.kneeBend = (0.10 + 0.08 * (0.5 + 0.5 * rollWave)) * k;
+    out.armRaiseL = 0.54 * k;
+    out.armRaiseR = 0.54 * k;
+    out.elFlexL = 0.96 * k;
+    out.elFlexR = 0.96 * k;
+    out.foreYawL = 0.48 * k;
+    out.foreYawR = 0.48 * k;
+    out.pronateL = 0.72 * k;
+    out.pronateR = 0.72 * k;
+    return;
+  }
+
+  // 13b. 肩甲骨周り・僧帽筋・肩甲挙筋・棘下筋・棘上筋・大円筋・小円筋・三角筋
+  if (/teres|trapezius|levator-scapulae|infraspinatus|supraspinatus|subscapularis|deltoid/.test(mId)) {
     out.sit = 0.90 * k;
     out.trunkFlex = 0.06 * k;
     if (isL) {

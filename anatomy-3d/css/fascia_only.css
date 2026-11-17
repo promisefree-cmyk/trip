@@ -1,0 +1,1457 @@
+/* =============================================================================
+   fascia_only.css — 筋膜シート単体 3D ビューア（番号付き4ステップ・高視認デザイン）
+   - 通常モード: 純白カード #FFFFFF × 濃い墨色 #111827 × クール3D背景 #DDE3EC
+   - ダークモード: 濃紺カード #162032 × 高明度文字 #F8FAFC × 深紺3D背景 #0B1428
+   - 鉄則: 3Dモデルと文字・ボタンの重なり 0px、最小タップ領域 44px 以上、3D領域は画面半分以下
+   ============================================================================= */
+
+:root {
+  --bg-app: #eef2f7;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-stage-inner: #d3dfee;
+  --bg-stage-outer: #b4c4db;
+
+  --border-subtle: #cbd5e1;
+  --border-strong: #94a3b8;
+
+  --text-main: #111827;
+  --text-sub: #334155;
+
+  --accent-primary: #0f3d2e;
+  --accent-primary-hover: #14533e;
+  --accent-primary-fg: #ffffff;
+
+  --accent-blue: #0369a1;
+  --accent-blue-soft: #e0f2fe;
+
+  --accent-gold: #926617;
+  --accent-gold-bg: #fef9ec;
+  --accent-gold-border: #d9a441;
+
+  --stretch-col: #0284c7;
+  --stretch-bg: #eff8ff;
+  --stretch-border: #7dd3fc;
+
+  --short-col: #be123c;
+  --short-bg: #fff1f3;
+  --short-border: #fda4af;
+
+  --header-h: 52px;
+  --font-sans: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, -apple-system, sans-serif;
+}
+
+body.theme-dark {
+  --bg-app: #0b1220;
+  --bg-surface: #162032;
+  --bg-subtle: #1d2a42;
+  --bg-stage-inner: #162444;
+  --bg-stage-outer: #080e1d;
+
+  --border-subtle: #2b3c5a;
+  --border-strong: #4a6088;
+
+  --text-main: #f8fafc;
+  --text-sub: #cbd5e1;
+
+  --accent-primary: #0284c7;
+  --accent-primary-hover: #0ea5e9;
+  --accent-primary-fg: #ffffff;
+
+  --accent-blue: #38bdf8;
+  --accent-blue-soft: rgba(56, 189, 248, 0.16);
+
+  --accent-gold: #f6c453;
+  --accent-gold-bg: rgba(246, 196, 83, 0.12);
+  --accent-gold-border: #d4a13a;
+
+  --stretch-col: #38bdf8;
+  --stretch-bg: rgba(56, 189, 248, 0.12);
+  --stretch-border: rgba(56, 189, 248, 0.45);
+
+  --short-col: #fb7185;
+  --short-bg: rgba(251, 113, 133, 0.13);
+  --short-border: rgba(251, 113, 133, 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* -----------------------------------------------------------------------------
+   トップヘッダー（右上は「通常 / ダークモード」1ボタンのみ）
+   ----------------------------------------------------------------------------- */
+.top-bar {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: 30;
+}
+
+.brand-block {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-left: 8px;
+}
+
+.header-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.theme-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.theme-pill-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.theme-pill-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-sub);
+  white-space: nowrap;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.theme-pill-item.is-active {
+  background-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+}
+
+/* -----------------------------------------------------------------------------
+   PC 2カラムレイアウト（左 47% 3D領域 [画面半分以下] | 右 53% ステップリーダー）
+   ----------------------------------------------------------------------------- */
+.workspace {
+  display: grid;
+  grid-template-columns: 47% 53%;
+  width: 100%;
+  height: calc(100dvh - var(--header-h));
+  overflow: hidden;
+}
+
+/* 3Dステージ列（上部: 3Dキャンバス / 下部: 操作バー — 文字重なり 0px） */
+.stage-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--border-subtle);
+  background-color: var(--bg-stage-outer);
+}
+
+.stage-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  background: radial-gradient(circle at 50% 42%, var(--bg-stage-inner) 0%, var(--bg-stage-outer) 100%);
+  overflow: hidden;
+}
+
+.stage-canvas-wrap {
+  width: 100%;
+  height: 100%;
+}
+
+.stage-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  min-height: 52px;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stage-bar-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stage-bar-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.stage-bar-btn-play.is-paused {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+}
+
+.stage-expand-btn {
+  display: none;
+}
+
+/* 読み込み中オーバーレイ */
+.loader-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-stage-inner);
+  z-index: 10;
+  transition: opacity 0.35s ease;
+}
+
+.loader-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader-box {
+  width: min(320px, 86%);
+  padding: 18px 20px;
+  border-radius: 14px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.loader-title {
+  margin: 0 0 10px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+.loader-bar-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 99px;
+  background-color: var(--bg-subtle);
+  overflow: hidden;
+}
+
+.loader-bar-fill {
+  width: 4%;
+  height: 100%;
+  background-color: var(--stretch-col);
+  transition: width 0.2s ease;
+}
+
+.loader-status {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--text-sub);
+}
+
+/* -----------------------------------------------------------------------------
+   右 / 下：番号付き4ステップ・ページ送りリーダー領域
+   ----------------------------------------------------------------------------- */
+.guide-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--bg-app);
+}
+
+/* 常設：番号付きステップバー（① 場所 ➔ ② 症状 ➔ ③ 原因 ➔ ④ ケア順） */
+.step-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.step-tab {
+  flex: 1 1 0;
+  max-width: 148px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-subtle);
+  color: var(--text-sub);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.step-tab:hover {
+  border-color: var(--accent-primary);
+}
+
+.step-tab.is-done {
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+
+.step-tab.is-current {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+}
+
+.step-num {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.step-sep {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  flex-shrink: 0;
+}
+
+/* スクロールコンテナ＆最大幅680pxリーダー */
+.guide-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 20px 36px;
+}
+
+.guide-inner {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* ページ送り制御（アクティブな1ページのみ表示） */
+.wizard-page {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body[data-view-page="step-1"] #page-step-1,
+body[data-view-page="step-2"] #page-step-2,
+body[data-view-page="step-3"] #page-step-3,
+body[data-view-page="step-4"] #page-step-4,
+body[data-view-page="motions"] #page-motions,
+body[data-view-page="lines"] #page-lines {
+  display: flex;
+}
+
+/* 戻るナビゲーションボタン */
+.back-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-row-split {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.back-nav-btn {
+  min-height: 46px;
+  min-width: 44px;
+  padding: 0 15px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-nav-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.back-nav-secondary {
+  background-color: var(--bg-subtle);
+}
+
+/* ページ見出し（すっきり1行タイトル） */
+.page-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.38;
+  color: var(--text-main);
+}
+
+/* -----------------------------------------------------------------------------
+   STEP 1 & STEP 2：大きな番号付き選択ボタン（高さ56〜66px・間隔11px・誤タップ防止）
+   ----------------------------------------------------------------------------- */
+.choice-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.choice-btn {
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.15s ease, transform 0.1s ease, background-color 0.15s ease;
+}
+
+.choice-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.choice-btn.is-active {
+  border-color: var(--accent-primary);
+  border-width: 2px;
+  background-color: var(--accent-blue-soft);
+}
+
+.choice-num-badge {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  font-size: 16.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.choice-text-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.choice-main-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.42;
+  color: var(--text-main);
+}
+
+.choice-sub-desc {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--text-sub);
+}
+
+.choice-arrow {
+  flex: 0 0 auto;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+body.theme-dark .choice-arrow {
+  color: var(--accent-blue);
+}
+
+/* STEP 1 下部サブ導線 */
+.sub-route-box {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sub-route-label {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.sub-route-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sub-route-btn {
+  min-height: 48px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.sub-route-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   STEP 3：理由カード ＆ 1・2・3 整理カード（gap: 8px）
+   ----------------------------------------------------------------------------- */
+.reading-card {
+  padding: 15px 17px;
+  border-radius: 14px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.pitfall-card {
+  border-left: 5px solid var(--accent-gold-border);
+}
+
+.card-heading {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.pitfall-heading {
+  color: var(--accent-gold);
+}
+
+.card-body-text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.68;
+  color: var(--text-main);
+}
+
+.chain-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chain-card {
+  padding: 12px 15px;
+  border-radius: 13px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chain-culprit {
+  background-color: var(--short-bg);
+  border-color: var(--short-border);
+}
+
+.chain-station {
+  background-color: var(--accent-gold-bg);
+  border-color: var(--accent-gold-border);
+}
+
+.chain-victim {
+  background-color: var(--stretch-bg);
+  border-color: var(--stretch-border);
+}
+
+.chain-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.chain-num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-culprit {
+  background-color: #be123c;
+}
+
+.num-station {
+  background-color: #9a6b16;
+}
+
+.num-victim {
+  background-color: #0369a1;
+}
+
+.chain-role {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.role-culprit {
+  color: var(--short-col);
+}
+
+.role-station {
+  color: var(--accent-gold);
+}
+
+.role-victim {
+  color: var(--stretch-col);
+}
+
+.chain-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.52;
+  color: var(--text-main);
+}
+
+/* 折りたたみ式 3D詳細調整ボックス */
+.pose-adjust-details {
+  border-radius: 14px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.pose-adjust-summary {
+  min-height: 50px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+
+.pose-adjust-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pose-adjust-summary::after {
+  content: "開く ＋";
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+.pose-adjust-details[open] .pose-adjust-summary {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pose-adjust-details[open] .pose-adjust-summary::after {
+  content: "閉じる −";
+}
+
+.pose-adjust-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.slider-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slider-label {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.slider-readout {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--stretch-col);
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-slider {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--stretch-col);
+  cursor: pointer;
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-top: -4px;
+}
+
+.transport-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ctrl-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.camera-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sub-heading {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.cam-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cam-btn {
+  min-height: 46px;
+  min-width: 44px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cam-btn.is-active {
+  border-color: var(--accent-primary);
+  background-color: var(--accent-blue-soft);
+}
+
+/* 次へ進む大型CTAボタン（高さ54px） */
+.next-cta-wrap {
+  padding-top: 4px;
+}
+
+.next-step-btn {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: none;
+  background-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  font-family: inherit;
+  font-size: 16.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(15, 61, 46, 0.22);
+  transition: background-color 0.15s ease;
+}
+
+.next-step-btn:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+/* -----------------------------------------------------------------------------
+   STEP 4：手順1・手順2カード ＆ 3D拡大ボタン ＆ 伸び縮み率メーター
+   ----------------------------------------------------------------------------- */
+.zoom-reset-row {
+  display: flex;
+}
+
+.zoom-reset-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--accent-gold-border);
+  background-color: var(--accent-gold-bg);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.care-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.care-step-card {
+  padding: 18px;
+  border-radius: 14px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.care-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.care-step-badge {
+  flex: 0 0 auto;
+  padding: 4px 11px;
+  border-radius: 8px;
+  background-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.care-step-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.42;
+  color: var(--text-main);
+}
+
+.care-step-detail {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--text-main);
+}
+
+.care-zoom-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 2px;
+  padding: 8px 14px;
+  border-radius: 11px;
+  border: 1.5px solid var(--stretch-col);
+  background-color: var(--stretch-bg);
+  color: var(--stretch-col);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.care-zoom-btn:hover,
+.care-zoom-btn.is-active {
+  background-color: var(--stretch-col);
+  color: #ffffff;
+}
+
+body.theme-dark .care-zoom-btn:hover,
+body.theme-dark .care-zoom-btn.is-active {
+  background-color: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.care-step-card.is-care-active {
+  border-color: var(--stretch-col);
+  box-shadow: 0 4px 14px rgba(3, 105, 161, 0.12);
+}
+
+.fo-care-panel {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fo-care-panel[hidden] {
+  display: none !important;
+}
+
+.fo-care-tool-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.fo-care-tool-btn {
+  flex: 1 1 0;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.fo-care-tool-btn:hover {
+  border-color: var(--accent-primary);
+}
+
+.fo-care-tool-btn.is-active {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+}
+
+body.theme-dark .fo-care-tool-btn.is-active {
+  background-color: #0f766e;
+  border-color: #2dd4bf;
+  color: #ffffff;
+}
+
+.fo-care-delicate-badge {
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: var(--accent-gold-bg);
+  border: 1px solid var(--accent-gold-border);
+  color: var(--accent-gold);
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.fo-care-guide-text {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.58;
+  color: var(--text-main);
+}
+
+/* 色の見かたカード */
+.legend-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+.swatch-line {
+  width: 28px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.swatch-stretch {
+  background: repeating-linear-gradient(90deg, #0284c7 0px, #0284c7 3px, #38bdf8 3px, #38bdf8 6px);
+}
+
+.swatch-short {
+  background: repeating-linear-gradient(0deg, #be123c 0px, #be123c 2px, #fda4af 2px, #fda4af 4px);
+}
+
+.swatch-pin {
+  width: 14px;
+  height: 14px;
+  margin: 0 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: radial-gradient(circle at 35% 35%, #f7d983, #c49a45 65%, #8a641b);
+  box-shadow: 0 0 0 3px rgba(196, 154, 69, 0.34);
+}
+
+/* -----------------------------------------------------------------------------
+   サブページ：16動作カテゴリ（2×2）＆ 全11筋膜ライン
+   ----------------------------------------------------------------------------- */
+.motion-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.motion-cat-btn {
+  min-height: 50px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.32;
+  cursor: pointer;
+  text-align: left;
+}
+
+.motion-cat-btn.is-active {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+}
+
+.line-quick-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mini-action-btn {
+  min-height: 46px;
+  min-width: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.station-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.station-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.line-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line-group-label {
+  margin: 6px 0 2px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+.line-toggle-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+}
+
+.line-toggle-item.is-checked {
+  border-color: var(--stretch-col);
+}
+
+.line-toggle-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  accent-color: var(--stretch-col);
+  flex-shrink: 0;
+}
+
+.line-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.line-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.line-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  line-height: 1.38;
+  color: var(--text-main);
+}
+
+.line-sub {
+  font-size: 14px;
+  line-height: 1.48;
+  color: var(--text-sub);
+}
+
+/* -----------------------------------------------------------------------------
+   スマホ・タブレット専用レイアウト（<= 960px）
+   - ヘッダー 48px
+   - 3Dイラスト領域は必ず画面の半分以下（38dvh / 最大42dvh）
+   - 下側 56〜60% を大きな文字＆番号付きステップページ送りに開放
+   ----------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  :root {
+    --header-h: 48px;
+  }
+
+  .top-bar {
+    padding: 0 10px;
+  }
+
+  .app-title {
+    font-size: 15px;
+  }
+
+  .title-sub {
+    display: none;
+  }
+
+  .theme-pill-item {
+    padding: 0 9px;
+    font-size: 12.5px;
+  }
+
+  .workspace {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--header-h));
+  }
+
+  .stage-column {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 35dvh;
+    min-height: 200px;
+    max-height: 38dvh;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: height 0.22s ease, max-height 0.22s ease;
+  }
+
+  .stage-column.is-expanded {
+    height: 58dvh;
+    max-height: 58dvh;
+  }
+
+  .stage-bar {
+    min-height: 48px;
+    padding: 2px 8px;
+    gap: 6px;
+  }
+
+  .stage-bar-btn {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .stage-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .guide-column {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .step-nav {
+    padding: 5px 8px;
+    gap: 3px;
+  }
+
+  .step-tab {
+    padding: 2px 4px;
+    font-size: 13px;
+  }
+
+  .step-num {
+    font-size: 14px;
+  }
+
+  .step-sep {
+    font-size: 11px;
+  }
+
+  .guide-scroll {
+    padding: 9px 12px 26px;
+  }
+
+  .wizard-page {
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 18px;
+    line-height: 1.32;
+  }
+
+  .reading-card {
+    padding: 10px 13px;
+  }
+
+  .card-heading {
+    margin: 0 0 3px;
+    font-size: 15.5px;
+  }
+
+  .card-body-text {
+    font-size: 15px;
+    line-height: 1.54;
+  }
+
+  .chain-section {
+    gap: 7px;
+  }
+
+  .chain-card {
+    padding: 7px 12px;
+    gap: 2px;
+  }
+
+  .chain-role {
+    font-size: 14.5px;
+  }
+
+  .chain-text {
+    font-size: 15.5px;
+    line-height: 1.38;
+  }
+
+  .choice-btn {
+    min-height: 56px;
+    padding: 10px 13px;
+    gap: 11px;
+  }
+
+  .choice-main-title {
+    font-size: 16px;
+  }
+
+  .sub-route-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .sub-route-btn {
+    padding: 6px 8px;
+    font-size: 13.5px;
+  }
+
+  .fo-care-tool-bar {
+    gap: 6px;
+  }
+
+  .fo-care-tool-btn {
+    min-width: 0;
+    padding: 6px 5px;
+    font-size: clamp(11.5px, 3.3vw, 13.5px);
+    white-space: nowrap;
+  }
+}
+
+/* 320px〜360px 狭幅スマホ ＆ 高さ680px以下の短尺ビューポート安全対策（文字被り・横はみ出し 0px） */
+@media (max-width: 380px) {
+  .top-bar {
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .app-title {
+    font-size: clamp(13px, 4.1vw, 15px);
+  }
+  .theme-pill-item {
+    padding: 0 7px;
+    font-size: 11.5px;
+  }
+  .stage-bar {
+    gap: 4px;
+    padding: 2px 6px;
+  }
+  .stage-bar-btn {
+    padding: 0 7px;
+    font-size: clamp(11px, 3.4vw, 12.5px);
+    white-space: nowrap;
+  }
+  .step-nav {
+    padding: 4px 5px;
+    gap: 2px;
+  }
+  .step-tab {
+    padding: 2px 3px;
+    font-size: clamp(11.5px, 3.4vw, 13px);
+    white-space: nowrap;
+  }
+  .care-step-card {
+    padding: 13px;
+  }
+}
+
+@media (max-height: 680px) and (max-width: 960px) {
+  .stage-column {
+    height: 32dvh;
+    min-height: 176px;
+    max-height: 35dvh;
+  }
+}

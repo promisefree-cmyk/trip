@@ -32,7 +32,12 @@
 //   - 黄色・アンバー発光ゼロ。全シェーダーで厳密な Premultiplied Alpha（clamp(col,0,1)*alpha）を出力し骨の白飛びを防止。
 // =============================================================================
 
-import * as posture from './posture.js?v=20261117a';
+import * as posture from './posture.js?v=20261117b';
+import {
+  createSelfCareGuide3D,
+  sampleSurfaceStrokeByRaycaster,
+  resolveCareProfile,
+} from './selfcare_guide3d.js?v=20261117b';
 
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
@@ -2448,62 +2453,35 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
   }
 
   // ---------------------------------------------------------------------------
-  // ⑥ 3Dリリース器具（🎾リアル3Dテニスボール・🛞リアル3Dグリッドフォームローラー）＆トリガーライン擦り・緩和アニメーション
+  // ⑥ 3Dセルフケア・マッサージエンジン統合（サロン3Dハンド / ボール / ローラー / 支持面パネル / Raycaster表面吸着）
   // ---------------------------------------------------------------------------
-  const R_BALL = 0.11; // 直径 0.22 単位（テニスボール／リリースボールのリアル比率）
-  const R_ROLLER = 0.125; // 直径 0.25 単位（フォームローラーのリアル比率）
-  const L_ROLLER = 0.56; // 長さ 0.56 単位
-
-  let releaseGroup = null;
-  let releaseRig = null;
-  let ballToolGroup = null;
-  let ballSpinGroup = null;
-  let rollerToolGroup = null;
-  let rollerSpinGroup = null;
-  let handToolGroup = null;
-  let handPadGroup = null;
-  let handChevrons = [];
-  let rippleMeshes = [];
-  let strokeGuideMesh = null;
+  let selfCareGuide = null;
 
   const releaseState = {
     active: false,
     muscleId: null,
     strokeTarget: null,
     side: 'R',
-    tool: 'ball', // 'ball' | 'roller' | 'hand'
-    motion: 'roll', // 'stroke' | 'circle' | 'roll'
-    speed: 1.0,
-    scale: 1.0,
-    strokeSpan: 1.0,
+    tool: 'ball',
+    motion: 'roll',
     elapsed: 0,
-    rigRoleStart: null,
-    rigRoleEnd: null,
-    startSurfRest: new THREE.Vector3(),
-    endSurfRest: new THREE.Vector3(),
-    midSurfRest: new THREE.Vector3(),
-    outNormalRest: new THREE.Vector3(0, 0, 1),
-    tangentRest: new THREE.Vector3(0, 1, 0),
-    bitangentRest: new THREE.Vector3(1, 0, 0),
-    lastStartDef: new THREE.Vector3(Infinity, Infinity, Infinity),
-    lastEndDef: new THREE.Vector3(Infinity, Infinity, Infinity),
-    cachedOutShift: 0,
-    shiftComputed: false,
+    rigRole: null,
   };
 
-  // 体表エンベロープ判定用の主要表層筋リスト（深層筋リリース時やローラー横幅が隣接筋にめり込むのを防ぐ）
-  const OUTER_ENVELOPE_IDS = [
+  const TRUNK_SURFACE_ENVELOPE_IDS = [
     'pectoralis-major',
-    'deltoid',
-    'biceps-brachii',
-    'triceps-brachii',
-    'brachioradialis',
-    'flexor-carpi-radialis',
     'latissimus-dorsi',
     'trapezius',
     'serratus-anterior',
     'rectus-abdominis',
     'external-oblique',
+    'sternocleidomastoid',
+    'masseter',
+    'temporalis',
+    'splenius-capitis',
+  ];
+
+  const LEG_SURFACE_ENVELOPE_IDS = [
     'gluteus-maximus',
     'gluteus-medius',
     'tensor-fasciae-latae',
@@ -2511,351 +2489,44 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     'vastus-lateralis',
     'vastus-medialis',
     'sartorius',
+    'adductor-longus',
+    'gracilis',
     'biceps-femoris',
     'semitendinosus',
     'gastrocnemius',
     'soleus',
     'tibialis-anterior',
-    'sternocleidomastoid',
-    'masseter',
+    'fibularis-longus',
+    'flexor-digitorum-brevis',
+    'abductor-hallucis',
+    'abductor-digiti-minimi-foot',
+  ];
+
+  const ARM_SURFACE_ENVELOPE_IDS = [
+    'deltoid',
+    'biceps-brachii',
+    'triceps-brachii',
+    'brachialis',
+    'brachioradialis',
+    'flexor-carpi-radialis',
+    'flexor-carpi-ulnaris',
+    'flexor-digitorum-superficialis',
+    'extensor-carpi-radialis-longus',
+    'extensor-digitorum',
+    'pronator-teres',
+    'abductor-pollicis-brevis',
   ];
 
   function ensureReleaseTools() {
-    if (releaseGroup) return;
-    releaseGroup = new THREE.Group();
-    releaseGroup.name = 'fascia-release-tools';
-    releaseGroup.raycast = noRaycast;
-    releaseGroup.visible = false;
-
-    releaseRig = new THREE.Group();
-    releaseRig.name = 'release-rig';
-    releaseRig.raycast = noRaycast;
-    releaseGroup.add(releaseRig);
-
-    // ---- 1. 'ball'（🎾 リアル3Dテニスボール／リリースボール） ----
-    // ローカル座標: +Z = 体表外向き法線, +Y = ストローク進行方向, +X = 横方向
-    // ※ Three.js では transparent:false メッシュの後に transparent:true メッシュ（透視筋膜・矢印・X線シルエット）が描画されるため、
-    //    器具マテリアルに transparent:true, opacity:1.0, depthTest:true, depthWrite:true, renderOrder:50..51 を設定し、
-    //    背後の筋膜ラインや半透明筋肉がボール・ローラーの上に透けて重なる現象を100%防止する。
-    ballToolGroup = new THREE.Group();
-    ballToolGroup.name = 'tool-ball';
-    ballSpinGroup = new THREE.Group();
-    ballSpinGroup.position.set(0, 0, R_BALL + 0.014);
-
-    const ballGeo = new THREE.SphereGeometry(R_BALL, 40, 32);
-    const ballMat = new THREE.MeshStandardMaterial({
-      color: 0xd4a24c,
-      emissive: 0x8f5b18,
-      emissiveIntensity: 0.18,
-      roughness: 0.48,
-      metalness: 0.02,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    const ballMesh = new THREE.Mesh(ballGeo, ballMat);
-    ballMesh.renderOrder = 50;
-    ballMesh.raycast = noRaycast;
-    ballMesh.frustumCulled = false;
-
-    // 本物のテニスボールの立体白ライン（サドル曲線 TubeGeometry）
-    const seamPts = [];
-    const SEAM_STEPS = 96;
-    const rSeam = R_BALL * 1.006;
-    for (let i = 0; i <= SEAM_STEPS; i++) {
-      const t = (i / SEAM_STEPS) * Math.PI * 2;
-      const sx = Math.cos(t) + 0.34 * Math.cos(3 * t);
-      const sy = Math.sin(t) - 0.34 * Math.sin(3 * t);
-      const sz = 1.12 * Math.sin(2 * t);
-      const v = new THREE.Vector3(sx, sy, sz).normalize().multiplyScalar(rSeam);
-      seamPts.push(v);
+    if (!selfCareGuide) {
+      selfCareGuide = createSelfCareGuide3D({ parent: root });
     }
-    const seamCurve = new THREE.CatmullRomCurve3(seamPts, true);
-    const seamGeo = new THREE.TubeGeometry(seamCurve, 96, 0.0085, 8, true);
-    const seamMat = new THREE.MeshStandardMaterial({
-      color: 0xfaf8f4,
-      emissive: 0xefe8dc,
-      emissiveIntensity: 0.24,
-      roughness: 0.42,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    const seamMesh = new THREE.Mesh(seamGeo, seamMat);
-    seamMesh.renderOrder = 51;
-    seamMesh.raycast = noRaycast;
-    seamMesh.frustumCulled = false;
-
-    ballSpinGroup.add(ballMesh, seamMesh);
-    ballToolGroup.add(ballSpinGroup);
-    releaseRig.add(ballToolGroup);
-
-    // ---- 2. 'roller'（🛞 リアル3Dグリッドフォームローラー） ----
-    // 筋膜の走行方向(+Y)に対して直交（90度横向き = X軸方向）に配置し、ゴロゴロ自転しながら往復スライド
-    rollerToolGroup = new THREE.Group();
-    rollerToolGroup.name = 'tool-roller';
-    rollerSpinGroup = new THREE.Group();
-    rollerSpinGroup.position.set(0, 0, R_ROLLER + 0.016);
-
-    // (1) 内側の中空コアシャフト（両端に少し露出するダークチャコール軸 + 内穴）
-    const coreOuterGeo = new THREE.CylinderGeometry(R_ROLLER * 0.82, R_ROLLER * 0.82, L_ROLLER + 0.06, 36);
-    coreOuterGeo.rotateZ(Math.PI / 2);
-    const coreOuterMat = new THREE.MeshStandardMaterial({
-      color: 0x5a4a3f,
-      emissive: 0x3d3129,
-      emissiveIntensity: 0.12,
-      roughness: 0.52,
-      metalness: 0.16,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    const coreOuterMesh = new THREE.Mesh(coreOuterGeo, coreOuterMat);
-    coreOuterMesh.renderOrder = 50;
-    coreOuterMesh.raycast = noRaycast;
-    coreOuterMesh.frustumCulled = false;
-    rollerSpinGroup.add(coreOuterMesh);
-
-    const coreHoleGeo = new THREE.CylinderGeometry(R_ROLLER * 0.56, R_ROLLER * 0.56, L_ROLLER + 0.066, 28);
-    coreHoleGeo.rotateZ(Math.PI / 2);
-    const coreHoleMat = new THREE.MeshStandardMaterial({
-      color: 0x3b2f28,
-      roughness: 0.88,
-      metalness: 0.04,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    const coreHoleMesh = new THREE.Mesh(coreHoleGeo, coreHoleMat);
-    coreHoleMesh.renderOrder = 50;
-    coreHoleMesh.raycast = noRaycast;
-    coreHoleMesh.frustumCulled = false;
-    rollerSpinGroup.add(coreHoleMesh);
-
-    // (2) 4分割のEVAフォームクッションセグメント（間の溝でフォームローラーらしさを表現）
-    const segWidth = (L_ROLLER - 0.06) / 4;
-    const rollerBodyGeo = new THREE.CylinderGeometry(R_ROLLER, R_ROLLER, segWidth, 36);
-    rollerBodyGeo.rotateZ(Math.PI / 2);
-    const rollerBodyMat = new THREE.MeshStandardMaterial({
-      color: 0xce7e6b,
-      emissive: 0x8f4232,
-      emissiveIntensity: 0.16,
-      roughness: 0.46,
-      metalness: 0.04,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    for (let si = 0; si < 4; si++) {
-      const sx = -L_ROLLER * 0.375 + si * (L_ROLLER * 0.25);
-      const segMesh = new THREE.Mesh(rollerBodyGeo, rollerBodyMat);
-      segMesh.position.x = sx;
-      segMesh.renderOrder = 50;
-      segMesh.raycast = noRaycast;
-      segMesh.frustumCulled = false;
-      rollerSpinGroup.add(segMesh);
-    }
-
-    // (3) 立体マッサージ突起ブロック（円周8方向 × 4列 = 32個の独立したグリッド突起で回転が一目瞭然）
-    const bumpGeo = new THREE.BoxGeometry(segWidth * 0.72, 0.024, 0.018);
-    const bumpMat = new THREE.MeshStandardMaterial({
-      color: 0xe6a898,
-      emissive: 0xa35847,
-      emissiveIntensity: 0.18,
-      roughness: 0.38,
-      metalness: 0.04,
-      transparent: true,
-      opacity: 1.0,
-      depthTest: true,
-      depthWrite: true,
-    });
-    for (let si = 0; si < 4; si++) {
-      const sx = -L_ROLLER * 0.375 + si * (L_ROLLER * 0.25);
-      for (let k = 0; k < 8; k++) {
-        const ang = (k * Math.PI) / 4 + (si % 2) * (Math.PI / 8); // 互い違いのチェッカーグリッド配置
-        const bump = new THREE.Mesh(bumpGeo, bumpMat);
-        bump.position.set(sx, Math.cos(ang) * R_ROLLER, Math.sin(ang) * R_ROLLER);
-        bump.rotation.x = ang;
-        bump.renderOrder = 51;
-        bump.raycast = noRaycast;
-        bump.frustumCulled = false;
-        rollerSpinGroup.add(bump);
-      }
-    }
-
-    rollerToolGroup.add(rollerSpinGroup);
-    releaseRig.add(rollerToolGroup);
-
-    // ---- 2b. 'hand'（🤲 手でさする・やさしく圧迫する専用3Dセルフケアガイド） ----
-    // 温かみのあるウォームゴールド＆ソフトコーラルの二重タッチパッドリング ＋ 進行方向(+Y)へ流れる3連角丸シェブロン矢印リボン
-    handToolGroup = new THREE.Group();
-    handToolGroup.name = 'tool-hand';
-
-    handPadGroup = new THREE.Group();
-    handPadGroup.position.set(0, 0, 0.016);
-
-    // (1) 半透明ミルキーアイボリー中心ソフトタッチパッド（半径 0.052, opacity: 0.72）
-    const handPadCoreGeo = new THREE.SphereGeometry(0.052, 36, 16);
-    handPadCoreGeo.scale(1, 1, 0.14);
-    const handPadCoreMat = new THREE.MeshStandardMaterial({
-      color: 0xf6eee4,
-      emissive: 0xd9c3ac,
-      emissiveIntensity: 0.22,
-      roughness: 0.42,
-      metalness: 0.0,
-      transparent: true,
-      opacity: 0.72,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const handPadCoreMesh = new THREE.Mesh(handPadCoreGeo, handPadCoreMat);
-    handPadCoreMesh.renderOrder = 50;
-    handPadCoreMesh.raycast = noRaycast;
-    handPadCoreMesh.frustumCulled = false;
-    handPadGroup.add(handPadCoreMesh);
-
-    // (2) ソフトコーラル内リング（温かな手のひら体温のニュアンス）
-    const handInnerRingGeo = new THREE.TorusGeometry(0.058, 0.0052, 12, 48);
-    const handInnerRingMat = new THREE.MeshStandardMaterial({
-      color: 0xe5927e,
-      emissive: 0xa8523e,
-      emissiveIntensity: 0.20,
-      roughness: 0.38,
-      metalness: 0.02,
-      transparent: true,
-      opacity: 0.88,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const handInnerRingMesh = new THREE.Mesh(handInnerRingGeo, handInnerRingMat);
-    handInnerRingMesh.renderOrder = 51;
-    handInnerRingMesh.raycast = noRaycast;
-    handInnerRingMesh.frustumCulled = false;
-    handPadGroup.add(handInnerRingMesh);
-
-    // (3) ウォームアンバー外リング（TorusGeometry(0.078, 0.007, 12, 48), #CFA058）
-    const handOuterRingGeo = new THREE.TorusGeometry(0.078, 0.007, 12, 48);
-    const handOuterRingMat = new THREE.MeshStandardMaterial({
-      color: 0xcfa058,
-      emissive: 0x8f6220,
-      emissiveIntensity: 0.22,
-      roughness: 0.36,
-      metalness: 0.06,
-      transparent: true,
-      opacity: 0.94,
-      depthTest: true,
-      depthWrite: true,
-    });
-    const handOuterRingMesh = new THREE.Mesh(handOuterRingGeo, handOuterRingMat);
-    handOuterRingMesh.renderOrder = 51;
-    handOuterRingMesh.raycast = noRaycast;
-    handOuterRingMesh.frustumCulled = false;
-    handPadGroup.add(handOuterRingMesh);
-
-    handToolGroup.add(handPadGroup);
-
-    // (4) 進行方向（ローカル +Y）へ流れる3連の丸みのあるシェブロン矢印リボン
-    handChevrons = [0, 1, 2].map((ci) => {
-      const taper = 1.0 - ci * 0.11;
-      const hw = 0.048 * taper;
-      const tipY = 0.024 * taper;
-      const tailY = -0.014 * taper;
-      const chevCurve = new THREE.CatmullRomCurve3(
-        [
-          new THREE.Vector3(-hw, tailY, 0),
-          new THREE.Vector3(-hw * 0.46, tipY * 0.42, 0.001),
-          new THREE.Vector3(0, tipY, 0.002),
-          new THREE.Vector3(hw * 0.46, tipY * 0.42, 0.001),
-          new THREE.Vector3(hw, tailY, 0),
-        ],
-        false,
-        'centripetal',
-        0.5,
-      );
-      const rTube = 0.0062 * (1.0 - ci * 0.06);
-      const chevGeo = new THREE.TubeGeometry(chevCurve, 28, rTube, 10, false);
-      const capGeo = new THREE.SphereGeometry(rTube, 10, 8);
-      const chevHex = ci === 1 ? 0xe5927e : 0xcfa058;
-      const chevEmissive = ci === 1 ? 0xa34f3c : 0x8f6220;
-      const chevMat = new THREE.MeshStandardMaterial({
-        color: chevHex,
-        emissive: chevEmissive,
-        emissiveIntensity: 0.24,
-        roughness: 0.36,
-        metalness: 0.04,
-        transparent: true,
-        opacity: 0.85 - ci * 0.12,
-        depthTest: true,
-        depthWrite: false,
-      });
-
-      const chevGrp = new THREE.Group();
-      const baseY = 0.104 + ci * 0.046;
-      chevGrp.position.set(0, baseY, 0.020 + ci * 0.0015);
-      chevGrp.userData.baseY = baseY;
-
-      const chevMesh = new THREE.Mesh(chevGeo, chevMat);
-      chevMesh.renderOrder = 52;
-      chevMesh.raycast = noRaycast;
-      chevMesh.frustumCulled = false;
-
-      const capL = new THREE.Mesh(capGeo, chevMat);
-      capL.position.set(-hw, tailY, 0);
-      capL.renderOrder = 52;
-      capL.raycast = noRaycast;
-      capL.frustumCulled = false;
-
-      const capR = new THREE.Mesh(capGeo, chevMat);
-      capR.position.set(hw, tailY, 0);
-      capR.renderOrder = 52;
-      capR.raycast = noRaycast;
-      capR.frustumCulled = false;
-
-      chevGrp.add(chevMesh, capL, capR);
-      chevGrp.userData.mat = chevMat;
-      handToolGroup.add(chevGrp);
-      return chevGrp;
-    });
-
-    releaseRig.add(handToolGroup);
-
-    // ---- 3. 接触面から広がるリリース押圧波紋リング（depthTest: true で器具の背面に自然に表示） ----
-    const rippleGeo = new THREE.RingGeometry(0.085, 0.115, 40);
-    rippleMeshes = [0, 1, 2].map((i) => {
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xb87d2b,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.56,
-        depthTest: true,
-        depthWrite: false,
-        blending: THREE.NormalBlending,
-        toneMapped: false,
-      });
-      const m = new THREE.Mesh(rippleGeo, mat);
-      m.position.z = 0.008 + i * 0.001;
-      m.renderOrder = 30;
-      m.raycast = noRaycast;
-      m.frustumCulled = false;
-      releaseRig.add(m);
-      return m;
-    });
-
-    releaseGroup.traverse((o) => {
-      if (o.isMesh) o.frustumCulled = false;
-    });
-    root.add(releaseGroup);
   }
 
   /**
-   * 起点筋（muscleId）と終点方向（strokeTarget）から、体表上の起点・終点・外側法線（レストポーズ座標）を計算
+   * 対象筋（muscleId）の解剖学的位置に応じて、THREE.Raycaster でレスト体表外殻の7点曲線と法線を取得する
    */
-  function computeReleaseKinematics(muscleId, strokeTarget, side, strokeSpan = 1.0, tool = 'ball') {
+  function computeReleaseKinematics(muscleId, strokeTarget, side, strokeSpan = 1.0) {
     const an = analyze(muscleId);
     const effSide =
       side === 'L' || side === 'R'
@@ -2870,175 +2541,154 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       centerOf(muscleId, 'both') ||
       new THREE.Vector3(0, 0.5, 0.12);
 
-    // 外側法線の算出（背面筋・前外側筋・側面筋・前面筋の解剖学的位置＋頂点分布から体表手前側の法線を決定）
+    const sx = effSide === 'L' ? 1 : -1;
+    const rigRole = getRigRole ? getRigRole(muscleId, 'muscle') : null;
+    const isArmTarget = Boolean(rigRole && rigRole.z > 0.5);
+    const isLegTarget = Boolean(rigRole && rigRole.x > 0.5 && rigRole.x < 2.5);
+
+    const isPlantarFoot =
+      /^(plantar|flexor-digitorum-brevis|abductor-hallucis|abductor-digiti-minimi-foot|quadratus-plantae|flexor-hallucis-brevis)/.test(
+        muscleId,
+      );
+    const isThenarHand =
+      /^(abductor-pollicis|flexor-pollicis-brevis|opponens-pollicis|adductor-pollicis)/.test(muscleId);
+    const isForearmVolar =
+      /^(flexor-carpi|palmaris|flexor-digitorum-superficialis|flexor-digitorum-profundus|pronator)/.test(muscleId);
+    const isForearmRadial = /^brachioradialis$/.test(muscleId);
+    const isForearmDorsal = /^(extensor-carpi|extensor-digitorum|supinator)/.test(muscleId);
+    const isSubClavicle = /^(pectoralis-minor|subclavius)$/.test(muscleId);
+    const isBetweenScapula = /^(rhomboid-major|rhomboid-minor)$/.test(muscleId);
+    const isFlankRib = /^(external-oblique|internal-oblique|serratus-anterior)$/.test(muscleId);
+    const isFrontThigh = /^(rectus-femoris|vastus-medialis|vastus-intermedius|sartorius)$/.test(muscleId);
+    const isOuterHipThigh = /^(tensor-fasciae-latae|vastus-lateralis|fibularis)/.test(muscleId);
+    const isGluteLateral = /^(gluteus-medius|gluteus-minimus)$/.test(muscleId);
     const isBackMuscle =
-      /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|latissimus|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|rhomboid|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
-        muscleId,
-      );
-    const isAnteroLateralMuscle =
-      /abductor-pollicis|brachioradialis|flexor-carpi|sternocleidomastoid|scalene|tensor-fasciae-latae|masseter|temporalis|tibialis-anterior/.test(
-        muscleId,
-      );
-    const isLateralMuscle =
-      /gluteus-medius|gluteus-minimus|external-oblique|internal-oblique|serratus-anterior|deltoid|vastus-lateralis|fibularis/.test(
-        muscleId,
-      );
-    const isDeepMuscle =
-      /pectoralis-minor|psoas|iliacus|diaphragm|quadratus-lumborum|multifidus|rhomboid|subscapularis|serratus-anterior|piriformis/.test(
+      /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|rectus-capitis-posterior|obliquus-capitis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
         muscleId,
       );
 
-    const isFlankRibMuscle = /external-oblique|internal-oblique|serratus-anterior/.test(muscleId);
-    const sx = Math.sign(cStart.x) || (effSide === 'L' ? 1 : -1);
-    const outNormal = new THREE.Vector3(cStart.x * 0.9, 0, cStart.z);
-    if (isFlankRibMuscle) {
-      outNormal.set(sx * 0.86, 0, 0.50).normalize();
+    const outDirRest = new THREE.Vector3(0, 0, 1);
+    const strokeDirRest = new THREE.Vector3(0, 1, 0);
+    let spanLen = Math.min(0.48, Math.max(0.24, (an?.size || 0.32) * 0.82)) * strokeSpan;
+
+    if (isPlantarFoot) {
+      outDirRest.set(0, -1, 0);
+      strokeDirRest.set(0, 0, 1);
+      spanLen = 0.24 * strokeSpan;
+    } else if (isThenarHand) {
+      outDirRest.set(sx * 0.34, -0.06, 0.94).normalize();
+      strokeDirRest.set(sx * 0.24, -0.95, 0.16).normalize();
+      spanLen = 0.14 * strokeSpan;
+    } else if (isForearmVolar) {
+      outDirRest.set(sx * 0.18, 0.0, 0.98).normalize();
+      const ax = (an?.[effSide]?.axis || new THREE.Vector3(sx * 0.16, -0.97, 0.16)).clone().normalize();
+      strokeDirRest.copy(ax);
+      spanLen = 0.26 * strokeSpan;
+    } else if (isForearmRadial) {
+      outDirRest.set(sx * 0.72, 0.04, 0.69).normalize();
+      const ax = (an?.[effSide]?.axis || new THREE.Vector3(sx * 0.16, -0.97, 0.16)).clone().normalize();
+      strokeDirRest.copy(ax);
+      spanLen = 0.26 * strokeSpan;
+    } else if (isForearmDorsal) {
+      outDirRest.set(sx * 0.56, 0.0, -0.83).normalize();
+      const ax = (an?.[effSide]?.axis || new THREE.Vector3(sx * 0.16, -0.97, 0.16)).clone().normalize();
+      strokeDirRest.copy(ax);
+      spanLen = 0.26 * strokeSpan;
+    } else if (isSubClavicle) {
+      outDirRest.set(sx * 0.22, 0.20, 0.95).normalize();
+      strokeDirRest.set(sx * 0.88, 0.34, -0.22).normalize();
+      spanLen = 0.26 * strokeSpan;
+    } else if (isBetweenScapula) {
+      outDirRest.set(sx * 0.18, 0.06, -0.98).normalize();
+      strokeDirRest.set(0, 1, 0);
+      spanLen = 0.30 * strokeSpan;
+    } else if (isFlankRib) {
+      outDirRest.set(sx * 0.90, 0.04, 0.43).normalize();
+      strokeDirRest.set(0, -1, 0);
+      spanLen = 0.30 * strokeSpan;
+    } else if (isFrontThigh) {
+      outDirRest.set(sx * 0.14, 0.0, 0.99).normalize();
+      strokeDirRest.set(0, -1, 0);
+      spanLen = 0.44 * strokeSpan;
+    } else if (isOuterHipThigh) {
+      outDirRest.set(sx * 0.94, 0.0, 0.34).normalize();
+      strokeDirRest.set(0, -1, 0);
+      spanLen = 0.38 * strokeSpan;
+    } else if (isGluteLateral) {
+      outDirRest.set(sx * 0.84, 0.08, -0.53).normalize();
+      strokeDirRest.set(0, -1, 0);
+      spanLen = 0.28 * strokeSpan;
     } else if (isBackMuscle) {
-      outNormal.z = Math.min(outNormal.z, -0.68);
+      outDirRest.set(cStart.x * 0.7, 0.04, -0.82);
       if (/latissimus|teres|quadratus-lumborum|infraspinatus/.test(muscleId)) {
-        outNormal.x = sx * Math.max(Math.abs(outNormal.x), 0.52);
-      } else {
-        outNormal.x *= 0.42;
+        outDirRest.x = sx * Math.max(Math.abs(outDirRest.x), 0.56);
       }
-    } else if (isAnteroLateralMuscle) {
-      // 母指球・前腕・首前横・大腿筋膜張筋・咬筋などは正面からも側面からも手前に見えるよう斜め前外側へ強くバイアス
-      const latWeight = /abductor-pollicis|brachioradialis|flexor-carpi|tibialis-anterior/.test(muscleId) ? 0.46 : 0.58;
-      const fwdWeight = /abductor-pollicis|brachioradialis|flexor-carpi/.test(muscleId) ? 0.78 : 0.68;
-      outNormal.x = sx * Math.max(Math.abs(outNormal.x) * 0.75, latWeight);
-      outNormal.z = Math.max(outNormal.z, fwdWeight);
-    } else if (isLateralMuscle) {
-      outNormal.x = sx * Math.max(Math.abs(outNormal.x), 0.76);
-      outNormal.z = /gluteus-medius|gluteus-minimus/.test(muscleId)
-        ? Math.min(outNormal.z, -0.18)
-        : Math.max(outNormal.z * 0.5, 0.30);
+      outDirRest.normalize();
+      const ax = (an?.[effSide]?.axis || new THREE.Vector3(0, 1, 0)).clone().normalize();
+      strokeDirRest.copy(ax);
     } else {
-      // 小胸筋・大胸筋・上腕二頭筋・大腰筋・腹直筋・大腿直筋など前面筋は正面手前(+Z)へしっかり向ける
-      outNormal.z = Math.max(outNormal.z, 0.80);
-      outNormal.x = sx * Math.min(Math.max(Math.abs(cStart.x) * 0.48, 0.16), 0.42);
-    }
-    if (outNormal.lengthSq() < 1e-6) outNormal.set(0, 0, 1);
-    outNormal.normalize();
-
-    // 筋肉中心から人体外側法線方向へオフセットした体表位置を求める（深層筋や薄い筋でも絶対に埋もれさせない）
-    const meshes = safeMeshes(muscleId);
-    const minProj = isDeepMuscle ? 0.115 : 0.088;
-    let maxProj = minProj;
-    if (meshes.length) {
-      const pTmp = new THREE.Vector3();
-      let topSum = 0;
-      let topCnt = 0;
-      let peakProj = 0;
-      for (const m of meshes) {
-        const pos = m.geometry.attributes.position;
-        if (!pos) continue;
-        m.updateWorldMatrix(true, false);
-        const step = Math.max(1, Math.floor(pos.count / 300));
-        for (let i = 0; i < pos.count; i += step) {
-          pTmp.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
-          if (effSide === 'L' && pTmp.x < -0.03) continue;
-          if (effSide === 'R' && pTmp.x > 0.03) continue;
-          const proj = pTmp.sub(cStart).dot(outNormal);
-          if (proj > 0.015) {
-            topSum += proj;
-            topCnt++;
-            if (proj > peakProj) peakProj = proj;
-          }
-        }
-      }
-      if (topCnt > 0) {
-        const boost = isDeepMuscle ? 1.42 : 1.28;
-        const estimated = Math.max((topSum / topCnt) * boost, peakProj * (isDeepMuscle ? 1.08 : 0.95));
-        maxProj = isFlankRibMuscle
-          ? Math.min(0.145, Math.max(minProj, estimated))
-          : Math.min(0.19, Math.max(minProj, estimated));
-      }
+      outDirRest.set(sx * Math.min(Math.max(Math.abs(cStart.x) * 0.5, 0.18), 0.48), 0.04, 0.86).normalize();
+      const ax = (an?.[effSide]?.axis || new THREE.Vector3(0, 1, 0)).clone().normalize();
+      strokeDirRest.copy(ax);
     }
 
-    const startSurf = cStart.clone().addScaledVector(outNormal, maxProj);
-    const axis = isFlankRibMuscle
-      ? new THREE.Vector3(0, 1, 0)
-      : (an?.[effSide]?.axis || new THREE.Vector3(0, 1, 0)).clone().normalize();
-    const tangentAxis = axis.clone().addScaledVector(outNormal, -axis.dot(outNormal));
-    if (tangentAxis.lengthSq() < 1e-6) tangentAxis.set(0, 1, 0);
-    else tangentAxis.normalize();
-
-    // 終点方向（strokeTarget が指定されていればその筋肉方向、なければラインの次駅または筋肉主軸方向）
-    let targetId = strokeTarget;
-    if (!targetId && state.habit) {
-      const tl = state.habit.triggerLine || state.habit.goldenLine;
-      const seq = tl?.arrowPath || state.habit.shortenCore || state.habit.shorten || state.habit.chain || [];
-      const idx = seq.indexOf(muscleId);
-      if (idx >= 0 && idx < seq.length - 1) targetId = seq[idx + 1];
-      else if (idx > 0) targetId = seq[idx - 1];
-    } else if (!targetId && state.chainSpec) {
-      const seq = state.chainSpec.shortenCore || state.chainSpec.shortenLinked || [];
-      const idx = seq.indexOf(muscleId);
-      if (idx >= 0 && idx < seq.length - 1) targetId = seq[idx + 1];
-      else if (idx > 0) targetId = seq[idx - 1];
+    // 候補メッシュの収集（体幹・下肢ケア時にレストの垂れた腕メッシュに誤ヒットするのを完全排除！）
+    const candidateIdSet = new Set([muscleId]);
+    if (strokeTarget && !isArmTarget) {
+      const targetRig = getRigRole ? getRigRole(strokeTarget, 'muscle') : null;
+      if (!targetRig || targetRig.z <= 0.5) candidateIdSet.add(strokeTarget);
     }
-
-    let strokeDir = tangentAxis.clone();
-    let spanLen = isFlankRibMuscle
-      ? Math.min(0.38, Math.max(0.28, (an?.size || 0.32) * 0.72)) * strokeSpan
-      : Math.min(0.62, Math.max(0.34, (an?.size || 0.35) * 0.90)) * strokeSpan;
-
-    const rigRoleStart = getRigRole ? getRigRole(muscleId, 'muscle') : null;
-    let rigRoleEnd = getRigRole ? getRigRole(targetId || muscleId, 'muscle') : null;
-    const isStartArm = Boolean(rigRoleStart && rigRoleStart.z > 0.5);
-    const isEndArm = Boolean(rigRoleEnd && rigRoleEnd.z > 0.5);
-
-    // 腕の筋肉（上腕二頭筋など）から体幹の深層筋（小胸筋など）へローラーを跨がせると胸郭にめり込むため、
-    // 腕⇔体幹を跨ぐ場合は対象筋自身の長軸（tangentAxis）に沿って転がし、同一ボーンリグで追従させる
-    if (tool === 'hand' && targetId && targetId !== muscleId && isStartArm === isEndArm) {
-      const cEnd = centerOf(targetId, effSide) || centerOf(targetId, 'both');
-      if (cEnd) {
-        const diff = cEnd.clone().sub(cStart);
-        const dist = diff.length();
-        if (dist > 0.03) {
-          // 体表接平面へ完全投影し、終点が体の奥へ潜り込むのを防ぐ
-          diff.addScaledVector(outNormal, -diff.dot(outNormal));
-          const projLen = diff.length();
-          if (projLen > 0.08) {
-            strokeDir.copy(diff.divideScalar(projLen));
-          } else {
-            // ターゲットが真裏方向（小胸筋→菱形筋など）の場合は筋の接線主軸とブレンドして自然な体表軌道にする
-            strokeDir.copy(tangentAxis).addScaledVector(diff, 2.0).normalize();
-          }
-          spanLen = Math.min(0.68, Math.max(0.34, Math.max(projLen, dist * 0.60) * 0.72)) * strokeSpan;
-        }
+    if (isPlantarFoot) {
+      for (const id of [
+        'flexor-digitorum-brevis',
+        'abductor-hallucis',
+        'abductor-digiti-minimi-foot',
+        effSide === 'L' ? 'left-calcaneus' : 'right-calcaneus',
+        effSide === 'L' ? 'left-first-metatarsal-bone' : 'right-first-metatarsal-bone',
+        effSide === 'L' ? 'left-fifth-metatarsal-bone' : 'right-fifth-metatarsal-bone',
+      ]) {
+        candidateIdSet.add(id);
       }
-      startSurf.addScaledVector(strokeDir, -spanLen * 0.22);
+    } else if (isArmTarget) {
+      for (const id of ARM_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
+    } else if (isLegTarget) {
+      for (const id of LEG_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
     } else {
-      rigRoleEnd = rigRoleStart;
-      // 単一筋肉上で主軸に沿って転がす場合は、中心をまたぐように startSurf を手前にずらす
-      startSurf.addScaledVector(strokeDir, -spanLen * 0.45);
+      for (const id of TRUNK_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
     }
 
-    const endSurf = startSurf.clone().addScaledVector(strokeDir, spanLen);
-    const midSurf = startSurf.clone().lerp(endSurf, 0.5).addScaledVector(outNormal, 0.028);
+    const candidateMeshes = [];
+    for (const cid of candidateIdSet) {
+      for (const m of safeMeshes(cid)) {
+        candidateMeshes.push(m);
+      }
+    }
 
-    const bitangent = new THREE.Vector3().crossVectors(strokeDir, outNormal);
-    if (bitangent.lengthSq() < 1e-6) bitangent.set(1, 0, 0);
-    bitangent.normalize();
-    const tangent = new THREE.Vector3().crossVectors(outNormal, bitangent).normalize();
+    const raySample = sampleSurfaceStrokeByRaycaster({
+      centerRest: cStart,
+      strokeDirRest,
+      outDirRest,
+      spanLen,
+      candidateMeshes,
+      effSide,
+      sampleCount: 7,
+      fallbackOffset: 0.085,
+      surfaceClearance: 0.010,
+    });
 
     return {
       effSide,
-      targetId,
-      startSurf,
-      midSurf,
-      endSurf,
-      outNormal,
-      tangent,
-      bitangent,
-      rigRoleStart,
-      rigRoleEnd,
+      rigRole,
+      pointsRest: raySample.pointsRest,
+      normalsRest: raySample.normalsRest,
     };
   }
 
+  const _normProbeRest = new THREE.Vector3();
+
   /**
-   * 3Dリリース器具（🎾テニスボール・🛞フォームローラー）を表示し、
-   * トリガーポイントからトリガーラインにかけて大きく転がし・緩めるアニメーションを開始する
+   * 3Dセルフケアガイド（🤲サロン3Dハンド・🎾テニスボール・🛞フォームローラー＋半透明支持面パネル）を表示し、
+   * 対象部位の体表曲面にピタッと吸着したアニメーションを開始する
    */
   function showReleaseTool(config = {}) {
     if (!config || (typeof config === 'object' && config.enabled === false)) {
@@ -3060,79 +2710,62 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     ensureReleaseTools();
 
     const side = cfg.side || state.habit?.side || state.chainSpec?.side || 'both';
-    // 'pole' は 'roller'、'hand' は手当て・さすり専用3Dガイド（tool-hand）として独立表示
-    const rawTool = String(cfg.tool || '').toLowerCase();
-    const tool =
-      rawTool === 'roller' || rawTool === 'pole'
-        ? 'roller'
-        : rawTool === 'hand'
-          ? 'hand'
-          : 'ball';
-    const motion = ['stroke', 'circle', 'roll', 'press'].includes(cfg.motion)
+    const profile = resolveCareProfile(muscleId, cfg.tool);
+    const tool = profile.tool;
+    const motion = cfg.motion && ['stroke', 'circle', 'roll', 'cross', 'glide', 'press'].includes(cfg.motion)
       ? cfg.motion
-      : tool === 'hand'
-        ? 'stroke'
-        : 'roll';
-    const speed = Math.max(0.15, Math.min(3.5, Number(cfg.speed) || 1.0));
-    const scale = Math.max(0.4, Math.min(2.5, Number(cfg.scale) || 1.0));
-    const strokeSpan = Math.max(0.3, Math.min(2.5, Number(cfg.strokeSpan) || 1.0));
+      : profile.motion;
+    const speed = Math.max(0.2, Math.min(3.0, Number(cfg.speed) || 1.0));
+    const scale = Number.isFinite(Number(cfg.scale)) && Number(cfg.scale) !== 1.0
+      ? Number(cfg.scale)
+      : profile.scale;
+    const strokeSpan = Number.isFinite(Number(cfg.strokeSpan))
+      ? Number(cfg.strokeSpan) * profile.strokeSpan
+      : profile.strokeSpan;
 
-    // トリガーポイントのスポットライトも同期表示
     if (state.spotMuscleId !== muscleId) {
       showTriggerPoint(muscleId, side);
     }
 
-    const kin = computeReleaseKinematics(muscleId, cfg.strokeTarget, side, strokeSpan, tool);
+    const kin = computeReleaseKinematics(muscleId, cfg.strokeTarget, side, strokeSpan);
 
     releaseState.active = true;
     releaseState.muscleId = muscleId;
-    releaseState.strokeTarget = kin.targetId || null;
+    releaseState.strokeTarget = cfg.strokeTarget || null;
     releaseState.side = kin.effSide;
     releaseState.tool = tool;
     releaseState.motion = motion;
-    releaseState.speed = speed;
-    releaseState.scale = scale;
-    releaseState.strokeSpan = strokeSpan;
     releaseState.elapsed = 0;
-    releaseState.rigRoleStart = kin.rigRoleStart;
-    releaseState.rigRoleEnd = kin.rigRoleEnd;
-    releaseState.startSurfRest.copy(kin.startSurf);
-    releaseState.midSurfRest.copy(kin.midSurf);
-    releaseState.endSurfRest.copy(kin.endSurf);
-    releaseState.outNormalRest.copy(kin.outNormal);
-    releaseState.tangentRest.copy(kin.tangent);
-    releaseState.bitangentRest.copy(kin.bitangent);
-    releaseState.lastStartDef.set(Infinity, Infinity, Infinity);
-    releaseState.lastEndDef.set(Infinity, Infinity, Infinity);
-    releaseState.cachedOutShift = 0;
-    releaseState.shiftComputed = false;
+    releaseState.rigRole = kin.rigRole;
 
-    ballToolGroup.visible = tool === 'ball';
-    rollerToolGroup.visible = tool === 'roller';
-    if (handToolGroup) handToolGroup.visible = tool === 'hand';
-
-    // 波紋リングの色を器具に合わせる（hand はウォームゴールド × ソフトコーラル）
-    const rippleHex = tool === 'roller' ? 0xce7e6b : 0xcfa058;
-    const rippleSubHex = tool === 'roller' ? 0xb8624f : tool === 'hand' ? 0xe5927e : 0xb87d2b;
-    rippleMeshes.forEach((m, idx) => {
-      m.material.color.setHex(idx % 2 === 0 ? rippleHex : rippleSubHex);
+    const rigRole = kin.rigRole;
+    selfCareGuide.show({
+      targetId: muscleId,
+      tool,
+      handPose: cfg.handPose || profile.handPose,
+      motion,
+      supportSurface: cfg.supportSurface !== undefined ? cfg.supportSurface : profile.supportSurface,
+      effSide: kin.effSide,
+      speed,
+      scale,
+      strokeSpan,
+      pointsRest: kin.pointsRest,
+      normalsRest: kin.normalsRest,
+      transformFn: (restPt, restNorm, _idx, outPt, outNorm) => {
+        const pDef = deformPoint(restPt, rigRole, false);
+        outPt.copy(pDef);
+        _normProbeRest.copy(restPt).addScaledVector(restNorm, 0.045);
+        const nTipDef = deformPoint(_normProbeRest, rigRole, false);
+        outNorm.copy(nTipDef).sub(pDef);
+        if (outNorm.lengthSq() < 1e-8) outNorm.copy(restNorm);
+        else outNorm.normalize();
+      },
     });
 
-    releaseGroup.visible = true;
-    // 3D器具の上に depthTest:false の平面ターゲットノードが重ならないよう制御する
     if (nodeCore) nodeCore.visible = false;
     if (nodeHalo) nodeHalo.visible = false;
 
-    // 対象部位の上下を通過するX-Rayスキャン演出をトリガー
-    const defStart = deformPoint(kin.startSurf, kin.rigRoleStart, false);
-    triggerXRayScan({
-      duration: 1.2,
-      yStart: defStart.y + 0.52,
-      yEnd: defStart.y - 0.52,
-      x: defStart.x * 0.35,
-      z: defStart.z * 0.35,
-      scale: 0.88,
-    });
+
 
     updateReleaseTool(shared.uTime.value, 0);
   }
@@ -3145,10 +2778,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     releaseState.muscleId = null;
     releaseState.strokeTarget = null;
     releaseState.elapsed = 0;
-    releaseState.cachedOutShift = 0;
-    releaseState.shiftComputed = false;
-    if (releaseGroup) releaseGroup.visible = false;
-    if (strokeGuideMesh) strokeGuideMesh.visible = false;
+    selfCareGuide?.clear();
     if (state.nodeCount > 0) {
       if (nodeCore) nodeCore.visible = true;
       if (nodeHalo) nodeHalo.visible = true;
@@ -3158,321 +2788,19 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
   }
 
-  const relPosTmp = new THREE.Vector3();
-  const relNormPtTmp = new THREE.Vector3();
-  const relNormalDef = new THREE.Vector3();
-  const relTangentDef = new THREE.Vector3();
-  const relBitangentDef = new THREE.Vector3();
-  const relMidBaseTmp = new THREE.Vector3();
-  const relVertTmp = new THREE.Vector3();
-  const relDiffTmp = new THREE.Vector3();
-  const relRotMat = new THREE.Matrix4();
-
   function updateReleaseTool(t, dt) {
-    if (!releaseState.active || !releaseGroup || !releaseRig) return;
+    if (!releaseState.active || !selfCareGuide) return;
     releaseState.elapsed += dt;
+    selfCareGuide.update(t, dt);
 
-    const {
-      muscleId,
-      strokeTarget,
-      tool,
-      motion,
-      speed,
-      scale,
-      strokeSpan,
-      rigRoleStart,
-      rigRoleEnd,
-      startSurfRest,
-      midSurfRest,
-      endSurfRest,
-      outNormalRest,
-    } = releaseState;
-
-    // 現在の姿勢変形（deformPoint）に100%追従した体表座標と法線を算出
-    const sDef = deformPoint(startSurfRest, rigRoleStart, false);
-    const mDef = deformPoint(midSurfRest, rigRoleStart, false);
-    const eDef = deformPoint(endSurfRest, rigRoleEnd || rigRoleStart, false);
-    relNormPtTmp.copy(startSurfRest).addScaledVector(outNormalRest, 0.05);
-    const nDefPt = deformPoint(relNormPtTmp, rigRoleStart, false);
-
-    // 現在の姿勢変形（座位・うつ伏せ・関節屈曲）に100%追従した体表法線を算出
-    relNormalDef.copy(nDefPt).sub(sDef);
-    if (relNormalDef.lengthSq() < 1e-8) {
-      relNormalDef.copy(outNormalRest);
-    } else {
-      relNormalDef.normalize();
-    }
-
-    relTangentDef.copy(eDef).sub(sDef);
-    relTangentDef.addScaledVector(relNormalDef, -relTangentDef.dot(relNormalDef));
-    if (relTangentDef.lengthSq() < 1e-8) relTangentDef.set(0, 1, 0);
-    else relTangentDef.normalize();
-
-    relBitangentDef.crossVectors(relTangentDef, relNormalDef);
-    if (relBitangentDef.lengthSq() < 1e-8) relBitangentDef.set(1, 0, 0);
-    else relBitangentDef.normalize();
-    relTangentDef.crossVectors(relNormalDef, relBitangentDef).normalize();
-
-    // 始点・中点・終点を姿勢変形後の接平面上に揃え、片端が体の奥へ傾いてめり込むのを100%防ぐ
-    relMidBaseTmp.copy(sDef).lerp(eDef, 0.5);
-    const halfChord = Math.max(0.16, Math.min(0.30, sDef.distanceTo(eDef) * 0.48));
-    sDef.copy(relMidBaseTmp).addScaledVector(relTangentDef, -halfChord);
-    eDef.copy(relMidBaseTmp).addScaledVector(relTangentDef, halfChord);
-    mDef.copy(relMidBaseTmp);
-
-    // 最外殻オフセットは showReleaseTool() 開始時の初回1回のみ（目標セルフケア姿勢で）算出し、毎フレームの総当たりスキャンを廃止
-    if (!releaseState.shiftComputed) {
-      releaseState.shiftComputed = true;
-      const sTgt = deformPoint(startSurfRest, rigRoleStart, true);
-      const eTgt = deformPoint(endSurfRest, rigRoleEnd || rigRoleStart, true);
-      relNormPtTmp.copy(startSurfRest).addScaledVector(outNormalRest, 0.05);
-      const normTgt = deformPoint(relNormPtTmp, rigRoleStart, true).sub(sTgt);
-      if (normTgt.lengthSq() < 1e-8) normTgt.copy(outNormalRest);
-      else normTgt.normalize();
-
-      const tanTgt = eTgt.clone().sub(sTgt);
-      tanTgt.addScaledVector(normTgt, -tanTgt.dot(normTgt));
-      if (tanTgt.lengthSq() < 1e-8) tanTgt.set(0, 1, 0);
-      else tanTgt.normalize();
-
-      const bitanTgt = new THREE.Vector3().crossVectors(tanTgt, normTgt);
-      if (bitanTgt.lengthSq() < 1e-8) bitanTgt.set(1, 0, 0);
-      else bitanTgt.normalize();
-      tanTgt.crossVectors(normTgt, bitanTgt).normalize();
-
-      const midTgt = sTgt.clone().lerp(eTgt, 0.5);
-      const halfChordTgt = Math.max(0.16, Math.min(0.30, sTgt.distanceTo(eTgt) * 0.48));
-      const halfWidth = (tool === 'roller' ? L_ROLLER * 0.56 : tool === 'hand' ? 0.11 : R_BALL * 1.40) * scale;
-      const checkIds = new Set([muscleId, ...(strokeTarget ? [strokeTarget] : []), ...OUTER_ENVELOPE_IDS]);
-      let maxOver = -0.05;
-
-      for (const cid of checkIds) {
-        const cMeshes = safeMeshes(cid);
-        if (!cMeshes.length) continue;
-        const cRig = getRigRole ? getRigRole(cid, 'muscle') : null;
-        for (const m of cMeshes) {
-          const pos = m.geometry.attributes.position;
-          if (!pos) continue;
-          m.updateWorldMatrix(true, false);
-          const step = Math.max(1, Math.floor(pos.count / 220));
-          for (let i = 0; i < pos.count; i += step) {
-            relVertTmp.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
-            const vDef = deformPoint(relVertTmp, cRig, true);
-            relDiffTmp.copy(vDef).sub(midTgt);
-            const alongT = Math.abs(relDiffTmp.dot(tanTgt));
-            if (alongT > halfChordTgt + 0.12) continue;
-            const alongB = Math.abs(relDiffTmp.dot(bitanTgt));
-            if (alongB > halfWidth + 0.08) continue;
-            const alongN = relDiffTmp.dot(normTgt);
-            if (alongN > maxOver) maxOver = alongN;
-          }
-        }
-      }
-      releaseState.cachedOutShift = Math.min(0.32, Math.max(0.018, maxOver + 0.024));
-    }
-
-    // ストローク軌道ガイドチューブの更新（約5cm以上の大きなポーズ変更時のみ再生成し、通常再生中の再生成を0回に抑える）
-    const moved =
-      !strokeGuideMesh ||
-      sDef.distanceToSquared(releaseState.lastStartDef) > 2.5e-3 ||
-      eDef.distanceToSquared(releaseState.lastEndDef) > 2.5e-3;
-    if (moved) {
-      releaseState.lastStartDef.copy(sDef);
-      releaseState.lastEndDef.copy(eDef);
-    }
-
-    // 姿勢変形後の最外殻エンベロープの外側へ軌道をシフト（体の中へのめり込みをゼロにする）
-    const outShift = releaseState.cachedOutShift || 0.022;
-    sDef.addScaledVector(relNormalDef, outShift);
-    mDef.addScaledVector(relNormalDef, outShift + 0.014);
-    eDef.addScaledVector(relNormalDef, outShift);
-
-    if (moved) {
-      const guideCurve = new THREE.CatmullRomCurve3([sDef.clone(), mDef.clone(), eDef.clone()]);
-      const guideGeo = new THREE.TubeGeometry(guideCurve, 24, 0.0085, 8, false);
-      if (!strokeGuideMesh) {
-        const guideMat = new THREE.MeshBasicMaterial({
-          color: 0xcfa058,
-          transparent: true,
-          opacity: 0.48,
-          depthTest: true,
-          depthWrite: false,
-          blending: THREE.NormalBlending,
-          toneMapped: false,
-        });
-        strokeGuideMesh = new THREE.Mesh(guideGeo, guideMat);
-        strokeGuideMesh.renderOrder = 29;
-        strokeGuideMesh.raycast = noRaycast;
-        strokeGuideMesh.frustumCulled = false;
-        releaseGroup.add(strokeGuideMesh);
-      } else {
-        strokeGuideMesh.geometry.dispose();
-        strokeGuideMesh.geometry = guideGeo;
-      }
-    }
-    if (strokeGuideMesh) strokeGuideMesh.visible = true;
-
-    // ---- モーション別の位置・回転計算（体の中へ押し込まず、外殻表面上を滑らかに転がす） ----
-    const pathDist = Math.max(0.36, sDef.distanceTo(eDef));
-
-    if (motion === 'stroke') {
-      // 起点（トリガーポイント）からライン方向へ心地よいテンポでコロコロ転がり進める
-      const rawPhase = (((t * 0.30 * speed) % 1.0) + 1.0) % 1.0;
-      const strokeU = rawPhase < 0.80 ? smooth(0.0, 0.80, rawPhase) : 1.0 - smooth(0.80, 1.0, rawPhase);
-      const lift = rawPhase >= 0.80 ? Math.sin(((rawPhase - 0.80) / 0.20) * Math.PI) * 0.032 : 0.0;
-      const invU = 1 - strokeU;
-      relPosTmp
-        .set(0, 0, 0)
-        .addScaledVector(sDef, invU * invU)
-        .addScaledVector(mDef, 2 * invU * strokeU)
-        .addScaledVector(eDef, strokeU * strokeU)
-        .addScaledVector(relNormalDef, lift);
-
-      if (ballSpinGroup && tool === 'ball') {
-        ballSpinGroup.rotation.x = -(strokeU * pathDist) / R_BALL;
-        ballSpinGroup.rotation.y = Math.sin(strokeU * Math.PI * 2.0) * 0.35;
-      }
-      if (rollerSpinGroup && tool === 'roller') {
-        rollerSpinGroup.rotation.x = -(strokeU * pathDist) / R_ROLLER;
-      }
-    } else if (motion === 'circle') {
-      // トリガーポイントからトリガーラインに沿って往復しながら円・スパイラル軌道でゆったりほぐす
-      const wave = Math.sin(t * 1.05 * speed);
-      const travelU = 0.15 + 0.70 * (0.5 + 0.5 * wave);
-      const invU = 1 - travelU;
-      const ang = t * 1.85 * speed;
-      const rad = 0.068 * strokeSpan;
-      const cx = Math.cos(ang) * rad;
-      const cy = Math.sin(ang) * rad * 0.65;
-      relPosTmp
-        .set(0, 0, 0)
-        .addScaledVector(sDef, invU * invU)
-        .addScaledVector(mDef, 2 * invU * travelU)
-        .addScaledVector(eDef, travelU * travelU)
-        .addScaledVector(relBitangentDef, cx)
-        .addScaledVector(relTangentDef, cy);
-
-      if (ballSpinGroup && tool === 'ball') {
-        ballSpinGroup.rotation.x = -(travelU * pathDist) / R_BALL + Math.sin(ang) * 1.1;
-        ballSpinGroup.rotation.y = -Math.cos(ang) * 1.25;
-      }
-      if (rollerSpinGroup && tool === 'roller') {
-        rollerSpinGroup.rotation.x = -(travelU * pathDist) / R_ROLLER;
-      }
-    } else if (motion === 'press') {
-      // 'press': トリガーポイント上でゆったり圧迫ホールド＋微細な関節運動リリース
-      const pressWave = 0.5 - 0.5 * Math.cos(t * 1.45 * speed);
-      const deepHold = Math.pow(pressWave, 1.35);
-      const swayU = 0.18 + 0.14 * Math.sin(t * 0.725 * speed);
-      const invU = 1 - swayU;
-      relPosTmp
-        .set(0, 0, 0)
-        .addScaledVector(sDef, invU * invU)
-        .addScaledVector(mDef, 2 * invU * swayU)
-        .addScaledVector(eDef, swayU * swayU)
-        .addScaledVector(relNormalDef, (1.0 - deepHold) * 0.016);
-
-      if (ballSpinGroup && tool === 'ball') {
-        ballSpinGroup.rotation.x = -deepHold * 0.45 + Math.sin(t * 1.45 * speed) * 0.25;
-        ballSpinGroup.rotation.y = Math.cos(t * 0.725 * speed) * 0.35;
-      }
-      if (rollerSpinGroup && tool === 'roller') {
-        rollerSpinGroup.rotation.x = -swayU * (pathDist / R_ROLLER) * 0.5;
-      }
-    } else {
-      // 'roll': 筋膜ラインに沿って心地よいテンポで往復（sin(time * 1.15 * speed)）しながらボール・ローラー自体もリアルに自転
-      const wave = Math.sin(t * 1.15 * speed);
-      const rollU = 0.5 + 0.5 * wave;
-      const invU = 1 - rollU;
-      relPosTmp
-        .set(0, 0, 0)
-        .addScaledVector(sDef, invU * invU)
-        .addScaledVector(mDef, 2 * invU * rollU)
-        .addScaledVector(eDef, rollU * rollU);
-
-      if (rollerSpinGroup && tool === 'roller') {
-        rollerSpinGroup.rotation.x = -(rollU * pathDist) / R_ROLLER;
-      }
-      if (ballSpinGroup && tool === 'ball') {
-        ballSpinGroup.rotation.x = -(rollU * pathDist) / R_BALL;
-        ballSpinGroup.rotation.y = Math.cos(t * 1.15 * speed) * 0.4;
-      }
-    }
-
-    releaseRig.position.copy(relPosTmp);
-
-    // ローカル +X = bitangent, +Y = tangent, +Z = outNormal の回転行列を適用
-    relRotMat.makeBasis(relBitangentDef, relTangentDef, relNormalDef);
-    releaseRig.quaternion.setFromRotationMatrix(relRotMat);
-    releaseRig.scale.setScalar(scale);
-
-    // 'hand'（手でさする・圧迫する）専用タッチパッド＆3連シェブロン矢印アニメーション
-    if (tool === 'hand' && handToolGroup) {
-      if (handPadGroup) {
-        if (motion === 'circle') {
-          const cAng = t * 2.1 * speed;
-          handPadGroup.position.set(Math.cos(cAng) * 0.016, Math.sin(cAng) * 0.016, 0.016);
-          const pulse = 1.0 + 0.04 * Math.sin(cAng);
-          handPadGroup.scale.set(pulse, pulse, 1);
-        } else if (motion === 'press') {
-          const pWave = 0.5 - 0.5 * Math.cos(t * 1.45 * speed);
-          handPadGroup.position.set(0, 0, 0.016 - pWave * 0.006);
-          const pScale = 1.0 + pWave * 0.06;
-          handPadGroup.scale.set(pScale, pScale, 1);
-        } else {
-          const breathe = 1.0 + 0.035 * Math.sin(t * 2.2 * speed);
-          handPadGroup.position.set(0, 0, 0.016);
-          handPadGroup.scale.set(breathe, breathe, 1);
-        }
-      }
-      for (let ci = 0; ci < handChevrons.length; ci++) {
-        const ch = handChevrons[ci];
-        const baseY = ch.userData.baseY || 0.104 + ci * 0.046;
-        const cMat = ch.userData.mat;
-        if (motion === 'circle') {
-          const cWave = 0.5 + 0.5 * Math.sin(t * 2.4 * speed - ci * 0.85);
-          ch.position.y = baseY + cWave * 0.008;
-          const sc = 0.94 + 0.08 * cWave;
-          ch.scale.set(sc, sc, 1);
-          if (cMat) cMat.opacity = 0.34 + 0.44 * cWave;
-        } else if (motion === 'press') {
-          const pWave = 0.5 - 0.5 * Math.cos(t * 1.45 * speed - ci * 0.35);
-          ch.position.y = baseY - pWave * 0.006;
-          const sc = 0.95 + 0.06 * pWave;
-          ch.scale.set(sc, sc, 1);
-          if (cMat) cMat.opacity = 0.30 + 0.42 * pWave;
-        } else {
-          // 'stroke' / 'roll': 進行方向(+Y)へ位相差をつけて流れる3連シェブロン波動
-          const flow = (((t * 0.95 * speed - ci * 0.24) % 1.0) + 1.0) % 1.0;
-          const bell = Math.sin(flow * Math.PI);
-          ch.position.y = baseY + flow * 0.022;
-          const sc = 0.92 + 0.12 * bell;
-          ch.scale.set(sc, sc, 1);
-          if (cMat) cMat.opacity = 0.22 + 0.72 * bell;
-        }
-      }
-    }
-
-    // 接触面から広がるリリース波紋リングのアニメーション（リアルサイズ）
-    for (let i = 0; i < rippleMeshes.length; i++) {
-      const rp = (((t * (tool === 'hand' ? 0.48 : 0.55) * speed + i / rippleMeshes.length) % 1.0) + 1.0) % 1.0;
-      const rScale = 0.82 + rp * (tool === 'roller' ? 1.45 : tool === 'hand' ? 0.98 : 1.15);
-      const baseOp = tool === 'hand' ? 0.50 : 0.68;
-      const rAlpha = (1.0 - rp) * (baseOp - i * 0.11);
-      const rm = rippleMeshes[i];
-      rm.scale.set(tool === 'roller' ? rScale * 1.48 : rScale, rScale, 1);
-      rm.material.opacity = Math.max(0, rAlpha);
-    }
-
-    // 対象筋肉（muscleId ＆ strokeTarget）の赤い緊張（uWrinkle）に対して、
-    // 時間とともにシアン〜エメラルドの緩和グロウ（uRelease）を混じらせる
+    // 対象筋肉（muscleId ＆ strokeTarget）の赤い緊張に対して穏やかな緩和グロウ（uRelease）を反映
     const relaxProgress = clamp01(releaseState.elapsed / 3.2) * (0.72 + 0.24 * (0.5 + 0.5 * Math.sin(t * 1.8)));
-    const entryMain = state.muscles.get(muscleId);
+    const entryMain = state.muscles.get(releaseState.muscleId);
     if (entryMain && entryMain.u.uRelease) {
       entryMain.u.uRelease.value = relaxProgress;
     }
-    if (strokeTarget) {
-      const entrySub = state.muscles.get(strokeTarget);
+    if (releaseState.strokeTarget) {
+      const entrySub = state.muscles.get(releaseState.strokeTarget);
       if (entrySub && entrySub.u.uRelease) {
         entrySub.u.uRelease.value = relaxProgress * 0.75;
       }
@@ -3774,16 +3102,14 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       nodeHalo.material.dispose();
       nodeGeo = nodeCore = nodeHalo = null;
     }
-    for (const grp of [releaseGroup, scanGroup]) {
-      if (!grp) continue;
-      grp.traverse((obj) => {
+    selfCareGuide?.dispose?.();
+    selfCareGuide = null;
+    if (scanGroup) {
+      scanGroup.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) obj.material.dispose();
       });
     }
-    releaseGroup = releaseRig = ballToolGroup = ballSpinGroup = rollerToolGroup = rollerSpinGroup = handToolGroup = handPadGroup = strokeGuideMesh = null;
-    handChevrons = [];
-    rippleMeshes = [];
     scanGroup = scanRingMesh = scanGlowMesh = scanDiscMesh = null;
     analysisCache.clear();
     poleCache.clear();

@@ -3,12 +3,13 @@
 // index.html は <script type="module" src="js/main.js"> のみを読み込む。
 // =============================================================================
 
-import * as dataModule from './data.js?v=20261117a';
-import * as anatomyDetails from './anatomy_details.js?v=20261117a';
-import { createFascia } from './fascia.js?v=20261117a';
-import * as posture from './posture.js?v=20261117a';
-import { createUI } from './ui.js?v=20261117a';
-import { createViewer } from './viewer.js?v=20261117a';
+import * as dataModule from './data.js?v=20261117b';
+import * as anatomyDetails from './anatomy_details.js?v=20261117b';
+import { createFascia } from './fascia.js?v=20261117b';
+import * as posture from './posture.js?v=20261117b';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261117b';
+import { createUI } from './ui.js?v=20261117b';
+import { createViewer } from './viewer.js?v=20261117b';
 
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
@@ -72,7 +73,7 @@ const jaMessage = (err) =>
 
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261117a');
+    const res = await fetch('models/atlas_metadata.json?v=20261117b');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -500,8 +501,8 @@ async function start() {
     };
 
     /**
-     * トリガーポイントの筋肉ID・habit・payloadから、3Dリリース器具（🎾ボール・🛞ローラー）と
-     * 軌道（stroke / circle / roll）の設定を解決する
+     * トリガーポイントの筋肉ID・habit・payloadから、3Dリリース器具（🤲指・🎾ボール・🛞ローラー）と
+     * 軌道（stroke / circle / roll / glide）・床壁パネル設定を安全ルール込みで解決する
      */
     const resolveReleaseConfig = (habit, muscleId, payload = null) => {
       const pObj = payload && typeof payload === 'object' ? payload : {};
@@ -520,34 +521,18 @@ async function start() {
         }
       }
 
-      const rawTool = String(pObj.tool || tpEntry.tool || '').toLowerCase();
-      const isDelicateHandMuscle = /^(sternocleidomastoid|scalenus-anterior|scalenus-medius|platysma)$/.test(
-        muscleId || '',
-      );
-      let tool = null;
-      if (rawTool === 'hand' || isDelicateHandMuscle) {
-        tool = 'hand';
-      } else if (rawTool === 'roller' || rawTool === 'pole') {
-        tool = 'roller';
-      } else if (rawTool === 'ball') {
-        tool = 'ball';
-      } else if (
-        /biceps-femoris|semitendinosus|semimembranosus|rectus-femoris|vastus-lateralis|vastus-medialis|tensor-fasciae-latae|latissimus-dorsi|gastrocnemius|soleus|tibialis-anterior|fibularis|erector-spinae|longissimus|iliocostalis|external-oblique|brachioradialis|biceps-brachii|triceps-brachii/.test(
-          muscleId,
-        )
-      ) {
-        tool = 'roller';
-      } else {
-        tool = 'ball';
-      }
-
-      let motion = pObj.motion || tpEntry.motion || null;
-      if (!motion) {
-        motion = tool === 'hand' ? 'stroke' : 'roll';
-      }
+      const requestedTool = String(pObj.tool || tpEntry.tool || '').toLowerCase();
+      const profile = resolveCareProfile(muscleId, requestedTool || null);
+      const tool = profile.tool;
+      const motion =
+        (pObj.toolSwitchOnly ? null : pObj.motion || tpEntry.motion) ||
+        profile.motion ||
+        (tool === 'hand' ? 'stroke' : 'roll');
 
       const speed = Number.isFinite(Number(pObj.speed ?? tpEntry.speed)) ? Number(pObj.speed ?? tpEntry.speed) : 1.0;
-      const scale = Number.isFinite(Number(pObj.scale ?? tpEntry.scale)) ? Number(pObj.scale ?? tpEntry.scale) : 1.0;
+      const scale = Number.isFinite(Number(pObj.scale ?? tpEntry.scale))
+        ? Number(pObj.scale ?? tpEntry.scale)
+        : profile.scale || 1.0;
       const strokeSpan = Number.isFinite(Number(pObj.strokeSpan ?? tpEntry.strokeSpan))
         ? Number(pObj.strokeSpan ?? tpEntry.strokeSpan)
         : 1.0;
@@ -559,6 +544,8 @@ async function start() {
         view: pObj.view || tpEntry.view || null,
         tool,
         motion,
+        handPose: pObj.handPose || tpEntry.handPose || profile.handPose || 'thumb',
+        supportSurface: pObj.supportSurface || tpEntry.supportSurface || profile.supportSurface || 'none',
         speed,
         scale,
         strokeSpan,
@@ -568,24 +555,45 @@ async function start() {
     /** トリガーポイント・セルフケア・単体筋肉が最も見やすいカメラアングルを解決 */
     const viewForReleaseTarget = (muscleId, habit = currentHabit, relCfg = null) => {
       if (relCfg?.view) return relCfg.view;
+      const id = muscleId || '';
+      const s = relCfg?.side || habit?.side;
+      // P4: 足裏（足裏アーチ＋テニスボール＋床マットが斜め横下からくっきり見える角度）
+      if (/plantar|flexor-digitorum-brevis|abductor-hallucis|quadratus-plantae/.test(id)) {
+        return s === 'L' ? 'sole-left' : 'sole-right';
+      }
+      // P3: 肩甲骨の間（背中＋ボール＋壁パネルの3層が立体的に見える斜め後ろ角度）
+      if (/rhomboid/.test(id)) {
+        return s === 'L' ? 'back-left' : 'back-right';
+      }
+      // P1・P2: 前腕・親指の付け根・鎖骨の下（指先の接地と手首の動きが立体的に見える斜め前角度）
       if (
-        /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus-dorsi|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|rhomboid|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
-          muscleId || '',
+        /abductor-pollicis|opponens-pollicis|flexor-pollicis|brachioradialis|flexor-carpi|extensor-carpi|pronator|supinator|pectoralis-minor|subclavius/.test(
+          id,
+        )
+      ) {
+        return s === 'L' ? 'front-left' : 'front-right';
+      }
+      // P5: 太もも前（ローラー・ボールうつ伏せ時は斜め横から床マット＋ローラー＋大腿が見える角度）
+      if (/rectus-femoris|vastus-intermedius|vastus-medialis|sartorius|tibialis-anterior/.test(id) && (relCfg?.tool === 'roller' || relCfg?.tool === 'ball')) {
+        return 'prone-side';
+      }
+      if (
+        /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus-dorsi|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
+          id,
         )
       ) {
         return 'back';
       }
       if (
         /tensor-fasciae-latae|gluteus-medius|gluteus-minimus|external-oblique|internal-oblique|serratus-anterior|deltoid|vastus-lateralis|fibularis/.test(
-          muscleId || '',
+          id,
         )
       ) {
-        const s = relCfg?.side || habit?.side;
         return s === 'L' ? 'left' : 'right';
       }
       if (
-        /abductor-pollicis|brachioradialis|flexor-carpi|biceps-brachii|pectoralis|sternocleidomastoid|scalene|masseter|temporalis|diaphragm|rectus-abdominis|psoas|iliacus|tibialis-anterior|rectus-femoris|vastus-medialis|adductor|gracilis|sartorius/.test(
-          muscleId || '',
+        /biceps-brachii|pectoralis|sternocleidomastoid|scalene|scalenus|platysma|masseter|temporalis|diaphragm|rectus-abdominis|psoas|iliacus|tibialis-anterior|rectus-femoris|vastus-medialis|adductor|gracilis|sartorius/.test(
+          id,
         )
       ) {
         return 'front';
@@ -672,8 +680,46 @@ async function start() {
 
       const baseFocusIds = [muscleId, strokeTarget].filter(Boolean);
       let landmarkIds;
-      if (
-        /plantar|hallucis|digitorum-longus|digitorum-brevis|toe|calcane|tibia|fibula|gastrocnemius|soleus|popliteus|femoris|vastus|sartorius|gracilis|adductor|pectineus|patella/.test(
+      let closeSelfCare = false;
+      let focusBoxSide = 'both';
+      if (/plantar|flexor-digitorum-brevis|abductor-hallucis|quadratus-plantae/.test(muscleId)) {
+        landmarkIds = [
+          focusSide === 'L' ? 'left-calcaneus' : 'right-calcaneus',
+          focusSide === 'L' ? 'left-first-metatarsal-bone' : 'right-first-metatarsal-bone',
+          focusSide === 'L' ? 'left-fifth-metatarsal-bone' : 'right-fifth-metatarsal-bone',
+        ];
+        closeSelfCare = true;
+        focusBoxSide = focusSide;
+      } else if (
+        /pollicis|carpi|palmaris|brachioradialis|pronator|supinator|flexor-digitorum-(superficialis|profundus)|extensor-digitorum$|extensor-indicis|-hand$/.test(
+          muscleId,
+        )
+      ) {
+        landmarkIds = [
+          'brachioradialis',
+          'flexor-carpi-radialis',
+          focusSide === 'L' ? 'left-middle-finger-distal-phalanx' : 'right-middle-finger-distal-phalanx',
+        ];
+        closeSelfCare = true;
+        focusBoxSide = focusSide;
+      } else if (/pectoralis-minor|subclavius|sternocleidomastoid|scalenus|scalene|platysma|masseter|temporalis/.test(muscleId)) {
+        landmarkIds = [
+          'mandible',
+          'sternocleidomastoid',
+          'pectoralis-major',
+          'deltoid',
+        ];
+        closeSelfCare = true;
+      } else if (/rhomboid/.test(muscleId)) {
+        landmarkIds = [
+          'trapezius',
+          'rhomboid-major',
+          'infraspinatus',
+          'latissimus-dorsi',
+        ];
+        closeSelfCare = true;
+      } else if (
+        /hallucis|toe|calcane|tibia|fibula|gastrocnemius|soleus|popliteus|femoris|vastus|sartorius|gracilis|adductor|pectineus|patella/.test(
           muscleId,
         )
       ) {
@@ -710,20 +756,13 @@ async function start() {
           'biceps-brachii',
           'rectus-abdominis',
         ];
-        if (
-          /pollicis|digiti|digitorum|carpi|palmaris|brachioradialis|pronator|supinator/.test(muscleId)
-        ) {
-          landmarkIds.push(
-            'flexor-carpi-radialis',
-            'right-middle-finger-distal-phalanx',
-            'left-middle-finger-distal-phalanx',
-          );
-        }
       }
-      const focusIds = [...new Set([...baseFocusIds, ...landmarkIds])];
+      const focusIds = closeSelfCare
+        ? [...new Set([muscleId, ...landmarkIds])]
+        : [...new Set([...baseFocusIds, ...landmarkIds])];
       const view = viewForReleaseTarget(muscleId, currentHabit, { ...relCfg, side: focusSide });
       viewer.syncUiClearanceNow?.();
-      viewer.focus(focusIds, { view, side: 'both', selfCareModal: true });
+      viewer.focus(focusIds, { view, side: focusBoxSide, selfCareModal: true, closeSelfCare });
       lastPart = muscleId;
     };
 
@@ -1206,15 +1245,18 @@ async function start() {
         const relCfg = rawRelCfg ? { ...rawRelCfg, side: effSide } : null;
         const xrayAlpha = Number(targetHabit?.triggerLine?.xrayOpacity ?? targetHabit?.goldenLine?.xrayOpacity) || 0.22;
         viewer.setXRayMode?.(true, { skinOpacity: xrayAlpha });
-        fascia.triggerXRayScan?.();
+
         if (muscleId && relCfg) {
-          setSelfCarePose({
-            muscleId,
-            tool: relCfg.tool,
-            motion: relCfg.motion,
-            side: relCfg.side,
-            target: relCfg.strokeTarget,
-          });
+          setSelfCarePose(
+            {
+              muscleId,
+              tool: relCfg.tool,
+              motion: relCfg.motion,
+              side: relCfg.side,
+              target: relCfg.strokeTarget,
+            },
+            { immediate: true },
+          );
         }
         focusSelfCareView(muscleId, targetHabit, relCfg);
         if (muscleId && relCfg) {
@@ -1241,13 +1283,16 @@ async function start() {
         const xrayAlpha = Number(targetHabit?.triggerLine?.xrayOpacity ?? targetHabit?.goldenLine?.xrayOpacity) || 0.22;
         viewer.setXRayMode?.(true, { skinOpacity: xrayAlpha });
         if (muscleId && relCfg) {
-          setSelfCarePose({
-            muscleId,
-            tool: relCfg.tool,
-            motion: relCfg.motion,
-            side: relCfg.side,
-            target: relCfg.strokeTarget,
-          });
+          setSelfCarePose(
+            {
+              muscleId,
+              tool: relCfg.tool,
+              motion: relCfg.motion,
+              side: relCfg.side,
+              target: relCfg.strokeTarget,
+            },
+            { immediate: true },
+          );
         }
         focusSelfCareView(muscleId, targetHabit, relCfg);
         if (muscleId && relCfg) {
@@ -1274,7 +1319,7 @@ async function start() {
       safe((on) => {
         const enabled = Boolean(on);
         viewer.setXRayMode?.(enabled);
-        if (enabled) fascia.triggerXRayScan?.();
+        
       }, 'レントゲン透視切替'),
     );
     ui.on('view', safe((name) => viewer.view(name), '視点切替'));

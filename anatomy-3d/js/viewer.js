@@ -22,7 +22,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 // 姿勢変形（posture.js）: 名前付き import だと export 欠落時にモジュール全体が落ちるので名前空間で受ける
-import * as posture from './posture.js?v=20261117a';
+import * as posture from './posture.js?v=20261117b';
 
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
@@ -35,7 +35,7 @@ const getRigRole =
 // 定数
 // ---------------------------------------------------------------------------
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261117a';
+const ASSET_QUERY = '?v=20261117b';
 const IDLE_TIMEOUT_MS = 45000; // 無操作45秒以上で省電力 4fps 待機モードへ移行（観察中の15fps低下カクつきを完全防止）
 const IDLE_FRAME_INTERVAL_MS = 250; // 約 4fps（250ms間隔）の静かな待機（画面に触れた瞬間0msで60fpsへ即復帰）
 
@@ -149,6 +149,23 @@ const VIEW_DIRS = {
   side: new THREE.Vector3(0.992, 0.03, 0.10).normalize(), // 真横（側面）から頭の前傾・骨盤・背骨カーブを一目で確認
   left: new THREE.Vector3(0.90, 0.05, 0.42).normalize(), // 身体の左斜め横（+X/+Z）から立体的に作業姿勢を見る
   right: new THREE.Vector3(-0.90, 0.05, 0.42).normalize(), // 身体の右斜め横（-X/+Z）から立体的に作業姿勢を見る
+  'front-right': new THREE.Vector3(-0.46, 0.08, 0.88).normalize(), // 前腕・親指・鎖骨下を立体的に見る右斜め前
+  'front-left': new THREE.Vector3(0.46, 0.08, 0.88).normalize(), // 左斜め前
+  'back-right': new THREE.Vector3(-0.42, 0.07, -0.90).normalize(), // 肩甲骨間＋ボール＋壁パネルの3層が見える右斜め後ろ
+  'back-left': new THREE.Vector3(0.42, 0.07, -0.90).normalize(), // 左斜め後ろ
+  'sole-right': new THREE.Vector3(-0.76, -0.13, 0.64).normalize(), // 足裏＋ボール＋床マットがはっきり見える低い右斜め前
+  'sole-left': new THREE.Vector3(0.76, -0.13, 0.64).normalize(), // 低い左斜め前
+  'prone-side': new THREE.Vector3(-0.88, 0.16, 0.45).normalize(), // うつ伏せ太もも前ローラー＋床マットが立体的に見える右斜め横
+};
+
+const VIEW_BADGE_MAP = {
+  'front-right': 'front',
+  'front-left': 'front',
+  'back-right': 'back',
+  'back-left': 'back',
+  'sole-right': 'right',
+  'sole-left': 'left',
+  'prone-side': 'right',
 };
 
 const TAP_MOVE_PX = 6; // これ以内の移動ならタップ扱い
@@ -2937,9 +2954,9 @@ varying vec3 vExtWorldPos;`,
     ensureUiBoxObserved();
     if (!cachedUiEl || cachedUiEl.classList.contains('is-present')) return 0;
     if (cachedLegendEl && !cachedLegendEl.hidden && cachedLegendBottom > 0) {
-      return Math.max(TOP_UI_CLEAR_PX, Math.min(156, cachedLegendBottom + 18));
+      return Math.max(TOP_UI_CLEAR_PX, Math.min(172, cachedLegendBottom + 28));
     }
-    return TOP_UI_CLEAR_PX;
+    return Math.max(TOP_UI_CLEAR_PX, 84);
   };
 
   const readRightRailClearPx = () => {
@@ -2947,7 +2964,7 @@ varying vec3 vExtWorldPos;`,
     ensureUiBoxObserved();
     if (!cachedUiEl || cachedUiEl.classList.contains('is-present')) return 0;
     if (cachedRailEl && cachedRailEl.classList.contains('is-tucked')) return 0;
-    return 64;
+    return 74;
   };
 
   const readSheetVis = () => {
@@ -2961,9 +2978,10 @@ varying vec3 vExtWorldPos;`,
     const liveToastH = cachedToastEl && !cachedToastEl.hidden
       ? Math.max(cachedToastH, cachedToastEl.offsetHeight || 0)
       : 0;
-    const scH = liveScH > 0 ? liveScH + 18 : 0;
-    const toastH = liveToastH > 0 ? liveToastH + 26 : 0;
-    return Math.max(Number.isFinite(inlineVal) ? Math.max(0, inlineVal) : 0, scH, toastH);
+    const sheetH = Number.isFinite(inlineVal) && inlineVal > 0 ? inlineVal + 20 : 0;
+    const scH = liveScH > 0 ? liveScH + 28 : 0;
+    const toastH = liveToastH > 0 ? liveToastH + 28 : 0;
+    return Math.max(sheetH, scH, toastH);
   };
 
   let smoothSheetVis = readSheetVis();
@@ -3034,7 +3052,7 @@ varying vec3 vExtWorldPos;`,
     } else if (cachedWinW >= 740 && !isPresent) {
       // タブレット(768px〜)・PCでは左下フローティングカードと右レールの間のオープンステージ中央へ3D人体を配置し被り0pxを保証
       const leftCardRight = cachedWinW >= 900 ? 446 : 364;
-      const rightRailLeft = w - (readRightRailClearPx() || 64);
+      const rightRailLeft = w - (readRightRailClearPx() || 74);
       const corridorCenter = (leftCardRight + rightRailLeft) * 0.5;
       const blend = THREE.MathUtils.clamp(1.0 - (w - 1024) / 760, 0.35, 1.0);
       const desiredCenterX = THREE.MathUtils.lerp(w * 0.5, corridorCenter, blend);
@@ -3075,11 +3093,11 @@ varying vec3 vExtWorldPos;`,
     if (cachedWinW < 740 && isHomeFullBodyFraming && !tween && !xrayMode) {
       const neededDist =
         fitClearDistance(
-          BODY_HALF_HEIGHT * 1.15,
-          BODY_HALF_WIDTH * 1.18,
-          Math.max(smoothSheetVis, 140),
+          BODY_HALF_HEIGHT * 1.18,
+          BODY_HALF_WIDTH * 1.20,
+          Math.max(smoothSheetVis, 160),
           true,
-        ) + 0.50;
+        ) + 0.58;
       homeZoomDirTmp.copy(camera.position).sub(controls.target);
       const curDist = homeZoomDirTmp.length();
       if (curDist > 1e-4) {
@@ -3100,7 +3118,7 @@ varying vec3 vExtWorldPos;`,
 
   const homeTarget = () => new THREE.Vector3(BODY_CENTER.x, BODY_CENTER.y, BODY_CENTER.z);
   const homeDistance = () =>
-    fitClearDistance(BODY_HALF_HEIGHT * 1.15, BODY_HALF_WIDTH * 1.18, Math.max(smoothSheetVis, 220)) + 0.50;
+    fitClearDistance(BODY_HALF_HEIGHT * 1.18, BODY_HALF_WIDTH * 1.20, Math.max(smoothSheetVis, 230)) + 0.58;
 
   let currentView = 'front';
   let lastNotifiedView = 'front';
@@ -3117,7 +3135,8 @@ varying vec3 vExtWorldPos;`,
   };
 
   const checkViewChange = (forcedView) => {
-    const nextView = forcedView && VIEW_DIRS[forcedView] ? forcedView : detectCameraView();
+    const rawView = forcedView && VIEW_DIRS[forcedView] ? forcedView : detectCameraView();
+    const nextView = VIEW_BADGE_MAP[rawView] || rawView;
     currentView = nextView;
     if (nextView === lastNotifiedView) return;
     lastNotifiedView = nextView;
@@ -3897,8 +3916,8 @@ varying vec3 vExtWorldPos;`,
       const hDirLen = Math.hypot(dir.x, dir.z) || 1;
       const horiz = (sz.x * Math.abs(dir.z) + sz.z * Math.abs(dir.x)) / hDirLen;
       const depthSpan = (sz.x * Math.abs(dir.x) + sz.z * Math.abs(dir.z)) / hDirLen;
-      const minFloorH = opts.inspectorOpen ? 0.56 : 0.60;
-      const minFloorW = opts.inspectorOpen ? 0.44 : 0.50;
+      const minFloorH = opts.closeSelfCare ? 0.38 : opts.inspectorOpen ? 0.56 : 0.60;
+      const minFloorW = opts.closeSelfCare ? 0.34 : opts.inspectorOpen ? 0.44 : 0.50;
       const halfH = Math.max(sz.y * 0.5, minFloorH);
       const halfW = Math.max(horiz * 0.5, minFloorW);
       const padMul = opts.selfCareModal ? 1.34 : opts.inspectorOpen ? 1.36 : 1.36;
@@ -3906,7 +3925,11 @@ varying vec3 vExtWorldPos;`,
       const rawDist =
         fitClearDistance(halfH * padMul, halfW * (padMul + 0.06), fallbackVis) +
         depthSpan * 0.45;
-      const minDist = opts.selfCareModal ? Math.max(6.2, homeDistance() * 0.56) : 2.85;
+      const minDist = opts.closeSelfCare
+        ? 3.15
+        : opts.selfCareModal
+          ? Math.max(6.2, homeDistance() * 0.56)
+          : 2.85;
       const dist = THREE.MathUtils.clamp(rawDist, minDist, homeDistance() * 1.12);
       flyTo(center, dir, dist);
     },

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" id="meta-theme-color" content="#EEF2F7" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta name="description" content="新しく追加する3D筋膜アニメーション候補10件と実装済み12件について、最初（0%）と最後（100%）の姿勢・端的な説明・疲れをためない日常の工夫・ホームページコラム連携を1画面で一覧チェックできる確認表。" />
+  <title>3Dアニメーション＆文章 一覧チェック表 — 筋膜シート単体 3D</title>
+  <link rel="stylesheet" href="css/fascia_check_list.css?v=20261117b" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 上部固定ヘッダー -->
+  <header class="top-bar">
+    <div class="brand-wrap">
+      <h1 class="app-title">3Dアニメーション＆文章 一覧チェック表</h1>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        id="btnTheme"
+        class="theme-pill-btn"
+        aria-pressed="false"
+        aria-label="画面モードを通常とダークモードで切り替える"
+      >
+        <span class="theme-pill-item is-active" data-theme-pill="light">通常</span>
+        <span class="theme-pill-item" data-theme-pill="dark">ダークモード</span>
+      </button>
+      <a href="fascia-only.html" class="viewer-link-btn">現在の3Dビューアを開く</a>
+    </div>
+  </header>
+
+  <!-- 読み込み＆スナップショット生成プログレスバナー -->
+  <div id="bake-banner" class="bake-banner" role="status" aria-live="polite">
+    <div class="bake-banner-inner">
+      <div class="bake-head">
+        <span id="bake-status-text" class="bake-status-text">骨格と全11本の筋膜シートを読み込んでいます…</span>
+        <span id="bake-pct" class="bake-pct">0%</span>
+      </div>
+      <div class="bake-track">
+        <div id="bake-fill" class="bake-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 絞り込みタブ ＆ 採用候補チェック集計バー -->
+  <section class="control-bar" aria-label="表示の絞り込みと採用チェック管理">
+    <div class="control-bar-inner">
+      <div class="filter-tabs" role="tablist" aria-label="候補の絞り込み">
+        <button type="button" class="filter-tab is-active" data-filter="new" role="tab" aria-selected="true">
+          新追加候補（10件）
+        </button>
+        <button type="button" class="filter-tab" data-filter="existing" role="tab" aria-selected="false">
+          実装済み（12件）
+        </button>
+        <button type="button" class="filter-tab" data-filter="all" role="tab" aria-selected="false">
+          すべて表示（22件）
+        </button>
+      </div>
+
+      <div class="selection-bar">
+        <span id="selected-count-label" class="selected-count-label">採用チェック中：0 件</span>
+        <div class="selection-actions">
+          <button type="button" id="btn-copy-selected" class="sel-action-btn" disabled>選択リストをコピー</button>
+          <button type="button" id="btn-clear-selected" class="sel-action-btn sel-action-sub" hidden>全解除</button>
+        </div>
+      </div>
+
+      <!-- 色の共通見かた（1行コンパクト） -->
+      <div class="mini-legend" aria-label="3D筋膜シートの色の見かた">
+        <span class="mini-legend-item">
+          <span class="swatch-line swatch-short" aria-hidden="true"></span>
+          <span><strong>赤（横じわ）</strong>：縮んで固まる筋膜（原因）</span>
+        </span>
+        <span class="mini-legend-item">
+          <span class="swatch-line swatch-stretch" aria-hidden="true"></span>
+          <span><strong>青（縦スジ）</strong>：引っぱられて張る筋膜（症状）</span>
+        </span>
+        <span class="mini-legend-item">
+          <span class="swatch-pin" aria-hidden="true"></span>
+          <span><strong>金のピン</strong>：ピン留め部（筋膜の癒着部）</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- メインカード一覧 -->
+  <main class="page-main">
+    <div id="checklist-container" class="checklist-grid"></div>
+  </main>
+
+  <!-- 共有ライブ3Dプレイヤー（ボタンを押したカード内へ移動して開く・WebGLは常に1つだけ！） -->
+  <div id="shared-live-dock" class="live-dock" hidden>
+    <div class="live-stage-wrap" id="live-stage-wrap"></div>
+    <div class="live-controls" aria-label="ライブ3Dアニメーション操作">
+      <div class="live-quick-btns">
+        <button type="button" id="btn-live-zero" class="live-ctrl-btn">最初（0%）</button>
+        <button type="button" id="btn-live-hundred" class="live-ctrl-btn">最後（100%）</button>
+        <button type="button" id="btn-live-play" class="live-ctrl-btn live-ctrl-primary">一時停止</button>
+        <button type="button" id="btn-live-reset-cam" class="live-ctrl-btn">向きを戻す</button>
+      </div>
+      <div class="live-slider-row">
+        <label for="live-scrub-slider" class="live-slider-label">姿勢の変化（0% ⇄ 100%）</label>
+        <span id="live-scrub-readout" class="live-slider-val">50%</span>
+      </div>
+      <input
+        type="range"
+        id="live-scrub-slider"
+        class="live-slider"
+        min="0"
+        max="100"
+        step="1"
+        value="50"
+        aria-label="姿勢の最初0%から最後100%までの確認スライダー"
+      />
+      <p class="live-hint">3D画面を指やマウスでなぞると360度自由な角度から確認できます。</p>
+    </div>
+  </div>
+
+  <script type="module" src="js/fascia_check_list.js?v=20261117b"></script>
+</body>
+</html>
