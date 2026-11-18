@@ -1,11 +1,5 @@
-// =============================================================================
-// sw.js — Service Worker（大量同時アクセス負荷軽減 ＆ 2回目以降通信ゼロ化）
-// =============================================================================
-
-const CACHE_NAME = 'fascia-3d-v20261118d';
-
+const CACHE_NAME = 'fascia-3d-v20261118e';
 const EXCLUDED_PATHS = ['/studio.html', '/VideoMasterStudio.html'];
-
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -14,7 +8,6 @@ self.addEventListener('install', (event) => {
       .then(() => self.skipWaiting()),
   );
 });
-
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -29,12 +22,10 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim()),
   );
 });
-
 function isExcluded(url) {
   const lowerPath = url.pathname.toLowerCase();
   return EXCLUDED_PATHS.some((p) => lowerPath.endsWith(p.toLowerCase()));
 }
-
 function isImmutableOrModelAsset(url, isSameOrigin) {
   if (!isSameOrigin) {
     return (
@@ -50,12 +41,10 @@ function isImmutableOrModelAsset(url, isSameOrigin) {
   }
   return false;
 }
-
 function isRevalidateAsset(url, isSameOrigin) {
   if (!isSameOrigin) return false;
   return /\.(js|mjs|css|svg|webmanifest)$/i.test(url.pathname) || url.pathname.endsWith('/manifest.json');
 }
-
 async function networkFirstNavigation(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
@@ -70,7 +59,6 @@ async function networkFirstNavigation(request) {
     throw err;
   }
 }
-
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   if (request.cache !== 'reload') {
@@ -83,7 +71,6 @@ async function cacheFirst(request) {
   }
   return response;
 }
-
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
@@ -95,7 +82,6 @@ async function staleWhileRevalidate(request) {
       return response;
     })
     .catch(() => null);
-
   if (cached) {
     return cached;
   }
@@ -103,11 +89,9 @@ async function staleWhileRevalidate(request) {
   if (fresh) return fresh;
   return fetch(request);
 }
-
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
-
   let url;
   try {
     url = new URL(request.url);
@@ -115,15 +99,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
-
   const isSameOrigin = url.origin === self.location.origin;
-
-  // 制作・管理用ページと Service Worker 自身はキャッシュ対象外
   if (isSameOrigin && (isExcluded(url) || url.pathname.endsWith('/sw.js'))) {
     return;
   }
-
-  // HTML ナビゲーション: Network-First（更新即時反映 ＋ オフライン時キャッシュフォールバック）
   if (
     request.mode === 'navigate' ||
     (isSameOrigin && (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')))
@@ -131,14 +110,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirstNavigation(request));
     return;
   }
-
-  // 3Dモデル・メタデータ・Three.js CDN・?v= 付きアセット: Cache-First（2回目以降通信ゼロ）
   if (isImmutableOrModelAsset(url, isSameOrigin)) {
     event.respondWith(cacheFirst(request));
     return;
   }
-
-  // favicon.svg / manifest.json 等の補助アセット: Stale-While-Revalidate
   if (isRevalidateAsset(url, isSameOrigin)) {
     event.respondWith(staleWhileRevalidate(request));
   }

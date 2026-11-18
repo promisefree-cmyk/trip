@@ -1,16 +1,3 @@
-// =============================================================
-// data.js — 筋膜ライン 3D のデータ定義（解剖学・労働衛生バイオメカニクス担当）
-// 出典: Thomas W. Myers "Anatomy Trains"（3rd/4th ed.）の各ライン走行に準拠。
-// 筋 ID はすべて models/atlas_metadata.json の muscles[].id に実在するもののみ。
-// 表示用フィールドは日本語のみ（英語はコメントに限る）。
-// 座標の左右: side 'R' = 本人の右側（-X）, 'L' = 本人の左側（+X）。
-// =============================================================
-
-// -------------------------------------------------------------
-// pose ヘルパー（v1.1）: 未指定のキーは 0（まっすぐ立位）で埋める。
-// trunkFlex/headForward/shoulderIn/armsFold/sit: 0..1
-// pelvisTilt: +後傾 / -前傾、trunkRotate: +左へねじれ、sideBend: +左へ傾く、hipShift: +骨盤が左へ
-// -------------------------------------------------------------
 function P(o = {}) {
   return {
     trunkFlex: 0, headForward: 0, shoulderIn: 0, pelvisTilt: 0,
@@ -18,10 +5,6 @@ function P(o = {}) {
     ...o,
   };
 }
-
-// -------------------------------------------------------------
-// CATEGORIES — 3大カテゴリー定義（仕事・日常・スポーツ）
-// -------------------------------------------------------------
 export const CATEGORIES = [
   {
     id: 'work',
@@ -45,10 +28,6 @@ export const CATEGORIES = [
     groups: ['ゴルフ・球技・ラケット', 'ランニング・サッカー・自転車', '筋トレ・ヨガ・水泳'],
   },
 ];
-
-// -------------------------------------------------------------
-// BODY_PARTS — 気になる痛み・違和感の部位辞書（5部位）
-// -------------------------------------------------------------
 export const BODY_PARTS = [
   { id: 'neck-jaw', label: '首・頭・あご', keywords: ['首', 'ストレートネック', 'あご', '顎', '食いしばり', '頭の重さ', '目の疲れ', '顔たるみ'] },
   { id: 'shoulder-arm', label: '肩・腕・手', keywords: ['肩の重さ', '腕が上がりづらい', '巻き肩', '腕', '肘', '手首', '親指', '手首の張り'] },
@@ -56,12 +35,6 @@ export const BODY_PARTS = [
   { id: 'waist-pelvis', label: '腰・骨盤・お尻', keywords: ['腰の重さ', '急な腰の張り', '反り腰', '骨盤', 'お尻の上', 'お尻'] },
   { id: 'hip-leg', label: '股関節・ひざ・足', keywords: ['股関節', '太もも', 'もも裏', 'ひざ', '膝', 'ふくらはぎ', 'すね', '足裏', 'むくみ'] },
 ];
-
-// -------------------------------------------------------------
-// TRIGGER_LINES — 全12本のトリガーライン（筋膜の連続ライン）＆トリガーポイント（点）マスター
-// Single Source of Truth: ここを1箇所直せば全45動作の selfCare 等に自動反映される。
-// fasciaChain は骨の駅をまたいで引き合う筋膜の隣接順（旧参照互換用エイリアス arrowPath も保持）。
-// -------------------------------------------------------------
 export const TRIGGER_LINES = [
   {
     id: 'TL-01',
@@ -869,13 +842,7 @@ export const TRIGGER_LINES = [
     ],
   },
 ];
-
-// 互換用エイリアス
 export const GOLDEN_LINES = TRIGGER_LINES;
-
-// -------------------------------------------------------------
-// LINES — 11枚の筋膜シート（面）。track は原典の走行順に並べる。
-// -------------------------------------------------------------
 export const LINES = [
   {
     id: 'SBL',
@@ -1240,13 +1207,7 @@ export const LINES = [
     side: 'cross',
   },
 ];
-
-// -------------------------------------------------------------
-// MUSCLE_LAYERS — 全177筋の表層（Express: 多関節・浅層ライン）vs 深層（Local: 単関節・姿勢保持・深層ライン）分類
-// Thomas Myers "Anatomy Trains" の深さ規則・Express vs Local 原則に準拠。
-// -------------------------------------------------------------
 export const MUSCLE_LAYERS = Object.freeze({
-  // 頭部・顔面・咀嚼（24）
   'frontalis': 'surface',
   'occipitalis': 'surface',
   'epicranial-aponeurosis': 'surface',
@@ -1271,8 +1232,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'temporalis': 'deep',
   'medial-pterygoid': 'deep',
   'lateral-pterygoid': 'deep',
-
-  // 頸部・舌骨・斜角筋・椎前筋（17）
   'platysma': 'surface',
   'sternocleidomastoid': 'surface',
   'digastric': 'deep',
@@ -1290,8 +1249,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'longus-capitis': 'deep',
   'rectus-capitis-anterior': 'deep',
   'rectus-capitis-lateralis': 'deep',
-
-  // 背部・脊柱・後頭下筋（22）
   'trapezius': 'surface',
   'latissimus-dorsi': 'surface',
   'levator-scapulae': 'deep',
@@ -1314,8 +1271,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'rectus-capitis-posterior-minor': 'deep',
   'obliquus-capitis-superior': 'deep',
   'obliquus-capitis-inferior': 'deep',
-
-  // 胸郭・横隔膜・腹壁・骨盤底（21）
   'pectoralis-major': 'surface',
   'pectoralis-minor': 'deep',
   'subclavius': 'deep',
@@ -1337,8 +1292,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'iliococcygeus': 'deep',
   'coccygeus': 'deep',
   'external-anal-sphincter': 'deep',
-
-  // 肩甲帯・上腕・前腕・手内在筋（40）
   'deltoid': 'surface',
   'supraspinatus': 'deep',
   'infraspinatus': 'deep',
@@ -1379,8 +1332,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'lumbricals-hand': 'deep',
   'palmar-interossei': 'deep',
   'dorsal-interossei-hand': 'deep',
-
-  // 股関節・臀部・大腿（26）
   'iliacus': 'deep',
   'psoas-major': 'deep',
   'gluteus-maximus': 'surface',
@@ -1407,8 +1358,6 @@ export const MUSCLE_LAYERS = Object.freeze({
   'biceps-femoris': 'surface',
   'semitendinosus': 'surface',
   'semimembranosus': 'deep',
-
-  // 下腿・足部（27）
   'tibialis-anterior': 'surface',
   'extensor-hallucis-longus': 'deep',
   'extensor-digitorum-longus': 'surface',
@@ -1437,20 +1386,17 @@ export const MUSCLE_LAYERS = Object.freeze({
   'plantar-interossei': 'deep',
   'dorsal-interossei-foot': 'deep',
 });
-
 const MUSCLE_ID_ALIASES = Object.freeze({
   'semispinalis-capitis': 'semispinalis',
   'psoas-minor': 'psoas-major',
   'pelvic-floor': 'pubococcygeus',
   'levator-ani': 'pubococcygeus',
 });
-
 function normalizeMuscleId(id) {
   if (typeof id !== 'string' || !id) return '';
   const stripped = id.trim().replace(/^(left|right)-/i, '').replace(/_(l|r)$/i, '');
   return MUSCLE_ID_ALIASES[stripped] || stripped;
 }
-
 /**
  * 筋IDから表層（'surface'）か深層（'deep'）を返す。
  * @param {string} id
@@ -1460,50 +1406,32 @@ export function getMuscleLayer(id) {
   const norm = normalizeMuscleId(id);
   return MUSCLE_LAYERS[norm] === 'deep' ? 'deep' : 'surface';
 }
-
-// -------------------------------------------------------------
-// FASCIA_STATION_BRIDGES — 骨の駅（Station）・分岐器（Switch）・ロータリー（Roundhouse）で
-// 筋膜の張力が受け渡される解剖学ブリッジ定義（全16駅グループ＋局所筋膜連結）
-// -------------------------------------------------------------
 export const FASCIA_STATION_BRIDGES = [
-  // 1. 烏口突起（肩の前の突起：深前腕線の要衝）
   { from: 'pectoralis-minor', to: 'biceps-brachii', stationJa: '肩の前の突起（烏口突起）', lineIds: ['DFAL'], crossSide: false },
   { from: 'pectoralis-minor', to: 'coracobrachialis', stationJa: '肩の前の突起（烏口突起）', lineIds: ['DFAL'], crossSide: false },
   { from: 'coracobrachialis', to: 'brachialis', stationJa: '二の腕の骨の膜', lineIds: ['DFAL'], crossSide: false },
-
-  // 2. 肩甲骨の内側の縁・棘突起（スイッチポイント）
   { from: 'rhomboid-major', to: 'serratus-anterior', stationJa: '肩甲骨の内側の縁', lineIds: ['SPL'], crossSide: false },
   { from: 'rhomboid-minor', to: 'serratus-anterior', stationJa: '肩甲骨の内側の縁', lineIds: ['SPL'], crossSide: false },
   { from: 'rhomboid-major', to: 'infraspinatus', stationJa: '肩甲骨の内側の縁', lineIds: ['DBAL'], crossSide: false },
   { from: 'levator-scapulae', to: 'supraspinatus', stationJa: '肩甲骨の上角', lineIds: ['DBAL'], crossSide: false },
   { from: 'splenius-capitis', to: 'rhomboid-major', stationJa: '首〜背中の背骨の突起（左右交差）', lineIds: ['SPL'], crossSide: true },
   { from: 'splenius-cervicis', to: 'rhomboid-minor', stationJa: '首〜背中の背骨の突起（左右交差）', lineIds: ['SPL'], crossSide: true },
-
-  // 3. ろっ骨の外側（前鋸筋と腹斜筋・肋間筋の噛み合い）
   { from: 'serratus-anterior', to: 'external-oblique', stationJa: 'ろっ骨の外側（第5〜9肋骨）', lineIds: ['SPL'], crossSide: false },
   { from: 'pectoralis-major', to: 'rectus-abdominis', stationJa: '胸の下のろっ骨軟骨', lineIds: ['SFL', 'FFL'], crossSide: false },
   { from: 'external-oblique', to: 'external-intercostals', stationJa: 'ろっ骨の横の縁', lineIds: ['LL'], crossSide: false },
   { from: 'internal-oblique', to: 'internal-intercostals', stationJa: '下のろっ骨の内側', lineIds: ['LL'], crossSide: false },
-
-  // 4. お腹の真ん中の白線・恥骨結合（左右交差）
   { from: 'external-oblique', to: 'internal-oblique', stationJa: 'お腹の真ん中の白線（左右交差）', lineIds: ['SPL'], crossSide: true },
   { from: 'linea-alba', to: 'rectus-abdominis', stationJa: 'お腹の真ん中の白線', lineIds: ['SFL', 'FFL'], crossSide: false },
   { from: 'rectus-abdominis', to: 'adductor-longus', stationJa: '恥骨の前の腱膜（左右交差）', lineIds: ['FFL'], crossSide: true },
   { from: 'pectoralis-major', to: 'adductor-longus', stationJa: 'お腹の白線〜恥骨（左右交差）', lineIds: ['FFL'], crossSide: true },
-
-  // 5. 腰背部の厚い筋膜（胸腰筋膜・仙骨の左右交差）
   { from: 'latissimus-dorsi', to: 'gluteus-maximus', stationJa: '腰の後ろの厚い筋膜（左右交差）', lineIds: ['BFL'], crossSide: true },
   { from: 'gluteus-maximus', to: 'vastus-lateralis', stationJa: 'お尻の外側〜太もも外側の筋膜帯', lineIds: ['BFL', 'LL'], crossSide: false },
   { from: 'latissimus-dorsi', to: 'teres-major', stationJa: '脇のうしろの筋膜束', lineIds: ['SFAL'], crossSide: false },
-
-  // 6. 骨盤の前の出っ張り（上前腸骨棘・ラウンドハウス）
   { from: 'internal-oblique', to: 'tensor-fasciae-latae', stationJa: '骨盤の前の出っ張り（上前腸骨棘）', lineIds: ['SPL', 'LL'], crossSide: false },
   { from: 'external-oblique', to: 'gluteus-medius', stationJa: '骨盤の上の縁（腸骨稜）', lineIds: ['LL'], crossSide: false },
   { from: 'gluteus-medius', to: 'tensor-fasciae-latae', stationJa: '骨盤の横の筋膜', lineIds: ['LL'], crossSide: false },
   { from: 'tensor-fasciae-latae', to: 'sartorius', stationJa: '骨盤の前の出っ張り（上前腸骨棘）', lineIds: ['SFL', 'LL'], crossSide: false },
   { from: 'iliacus', to: 'rectus-femoris', stationJa: '骨盤の前の奥（下前腸骨棘）', lineIds: ['DFL', 'SFL'], crossSide: false },
-
-  // 7. 恥骨・小転子・骨盤底（脚の付け根の内側中継駅）
   { from: 'rectus-abdominis', to: 'pectineus', stationJa: '下腹の恥骨の上縁', lineIds: ['SFL', 'DFL'], crossSide: false },
   { from: 'pyramidalis', to: 'adductor-longus', stationJa: '恥骨の前の結合部（左右交差）', lineIds: ['SFL', 'FFL'], crossSide: true },
   { from: 'psoas-major', to: 'pectineus', stationJa: '太ももの付け根の内側（小転子）', lineIds: ['DFL'], crossSide: false },
@@ -1514,28 +1442,20 @@ export const FASCIA_STATION_BRIDGES = [
   { from: 'obturator-internus', to: 'pubococcygeus', stationJa: '骨盤の内側の筋膜（腱弓）', lineIds: ['DFL'], crossSide: false },
   { from: 'piriformis', to: 'coccygeus', stationJa: '仙骨の前の筋膜', lineIds: ['DFL'], crossSide: false },
   { from: 'piriformis', to: 'gluteus-maximus', stationJa: '仙骨の横の靱帯（仙結節靱帯）', lineIds: ['DFL', 'SBL'], crossSide: false },
-
-  // 8. 坐骨（お尻の下の骨）・仙結節靱帯
   { from: 'biceps-femoris', to: 'longissimus', stationJa: '坐骨〜仙骨をつなぐ靱帯', lineIds: ['SBL', 'SPL'], crossSide: false },
   { from: 'biceps-femoris', to: 'multifidus', stationJa: '坐骨〜仙骨の背側筋膜', lineIds: ['SBL'], crossSide: false },
   { from: 'semitendinosus', to: 'gluteus-maximus', stationJa: 'お尻の下の骨（坐骨結節）', lineIds: ['SBL'], crossSide: false },
   { from: 'semimembranosus', to: 'iliocostalis', stationJa: '坐骨〜腰背部の筋膜', lineIds: ['SBL'], crossSide: false },
   { from: 'longissimus', to: 'iliocostalis', stationJa: '背骨の横の筋膜シート', lineIds: ['SBL', 'SPL'], crossSide: false },
-
-  // 9. ひざのお皿とすねの前の出っ張り（脛骨粗面）
   { from: 'rectus-femoris', to: 'tibialis-anterior', stationJa: 'ひざのお皿とすねの上の出っ張り', lineIds: ['SFL'], crossSide: false },
   { from: 'vastus-lateralis', to: 'tibialis-anterior', stationJa: 'ひざ外側の支帯とすねの上', lineIds: ['SFL', 'SPL'], crossSide: false },
   { from: 'vastus-medialis', to: 'tibialis-anterior', stationJa: 'ひざ内側の支帯とすねの上', lineIds: ['SFL'], crossSide: false },
   { from: 'tibialis-anterior', to: 'extensor-digitorum-longus', stationJa: 'すねの前の筋膜区画', lineIds: ['SFL'], crossSide: false },
   { from: 'extensor-digitorum-longus', to: 'extensor-digitorum-brevis', stationJa: '足首の前の支帯', lineIds: ['SFL'], crossSide: false },
-
-  // 10. すねの外側の骨の頭（腓骨頭）と足裏のあぶみ
   { from: 'biceps-femoris', to: 'fibularis-longus', stationJa: 'ひざ下の外側の出っ張り（腓骨頭）', lineIds: ['SPL'], crossSide: false },
   { from: 'tensor-fasciae-latae', to: 'fibularis-longus', stationJa: '太もも外側の腸脛靱帯〜腓骨頭', lineIds: ['LL'], crossSide: false },
   { from: 'tibialis-anterior', to: 'fibularis-longus', stationJa: '土踏まずの骨（足裏のあぶみ）', lineIds: ['SPL'], crossSide: false },
   { from: 'fibularis-longus', to: 'fibularis-brevis', stationJa: '外くるぶしのうしろの腱鞘', lineIds: ['LL'], crossSide: false },
-
-  // 11. ひざ裏の噛み合い・かかとの骨と足底腱膜
   { from: 'biceps-femoris', to: 'gastrocnemius', stationJa: 'ひざ裏の筋膜の交差点', lineIds: ['SBL'], crossSide: false },
   { from: 'popliteus', to: 'tibialis-posterior', stationJa: 'ひざ裏の奥の筋膜', lineIds: ['DFL'], crossSide: false },
   { from: 'adductor-magnus', to: 'tibialis-posterior', stationJa: '太もも内側の腱のトンネル〜すね裏', lineIds: ['DFL'], crossSide: false },
@@ -1546,38 +1466,28 @@ export const FASCIA_STATION_BRIDGES = [
   { from: 'gastrocnemius', to: 'flexor-digitorum-brevis', stationJa: 'かかとの骨（足底腱膜の連結）', lineIds: ['SBL'], crossSide: false },
   { from: 'soleus', to: 'flexor-digitorum-brevis', stationJa: 'かかとの骨の膜', lineIds: ['SBL'], crossSide: false },
   { from: 'flexor-digitorum-brevis', to: 'abductor-hallucis', stationJa: 'かかとの内側の足底腱膜', lineIds: ['SBL'], crossSide: false },
-
-  // 12. みぞおちのドーム（横隔膜と腸腰筋・腰方形筋の交差）
   { from: 'diaphragm', to: 'psoas-major', stationJa: 'みぞおちの奥の横隔膜脚（内側弓状靱帯）', lineIds: ['DFL'], crossSide: false },
   { from: 'diaphragm', to: 'quadratus-lumborum', stationJa: 'ろっ骨の下縁（外側弓状靱帯）', lineIds: ['DFL'], crossSide: false },
   { from: 'diaphragm', to: 'transversus-thoracis', stationJa: 'みぞおちの剣状突起の裏', lineIds: ['DFL'], crossSide: false },
   { from: 'diaphragm', to: 'transversus-abdominis', stationJa: 'ろっ骨の内側の軟骨縁', lineIds: ['DFL'], crossSide: false },
   { from: 'transversus-thoracis', to: 'scalenus-anterior', stationJa: '胸の上の奥の筋膜ドーム', lineIds: ['DFL'], crossSide: false },
   { from: 'longus-colli', to: 'scalenus-anterior', stationJa: '首の骨の前側の筋膜（椎前筋膜）', lineIds: ['DFL'], crossSide: false },
-
-  // 13. 鎖骨・胸骨柄（胸の上の中継駅）
   { from: 'sternocleidomastoid', to: 'pectoralis-major', stationJa: '鎖骨の内側・胸骨の上端', lineIds: ['SFL'], crossSide: false },
   { from: 'sternocleidomastoid', to: 'sternohyoid', stationJa: '胸骨の上端の裏側', lineIds: ['SFL', 'DFL'], crossSide: false },
   { from: 'subclavius', to: 'pectoralis-minor', stationJa: '鎖骨の下の胸筋膜（鎖骨胸筋筋膜）', lineIds: ['DFAL'], crossSide: false },
   { from: 'trapezius', to: 'deltoid', stationJa: '鎖骨の外側と肩峰（肩の屋根）', lineIds: ['SBAL'], crossSide: false },
-
-  // 14. 耳の後ろの骨（乳様突起）・後頭骨稜・帽状腱膜
   { from: 'sternocleidomastoid', to: 'splenius-capitis', stationJa: '耳の後ろの出っ張り骨（乳様突起）', lineIds: ['LL'], crossSide: false },
   { from: 'semispinalis', to: 'occipitalis', stationJa: '頭のうしろの骨の段差（上項線）', lineIds: ['SBL'], crossSide: false },
   { from: 'rectus-capitis-posterior-minor', to: 'occipitalis', stationJa: '頭の付け根の奥（後頭骨）', lineIds: ['SBL'], crossSide: false },
   { from: 'occipitalis', to: 'epicranial-aponeurosis', stationJa: '後頭部の帽状腱膜', lineIds: ['SBL'], crossSide: false },
   { from: 'epicranial-aponeurosis', to: 'frontalis', stationJa: '頭頂の帽状腱膜〜おでこ', lineIds: ['SBL'], crossSide: false },
   { from: 'frontalis', to: 'orbicularis-oculi', stationJa: 'まゆ毛の骨の縁', lineIds: ['SBL'], crossSide: false },
-
-  // 15. 下あごの骨・舌骨（のど仏の上の浮いた骨）
   { from: 'masseter', to: 'temporalis', stationJa: 'ほお骨のアーチと下あごの突起', lineIds: ['DFL'], crossSide: false },
   { from: 'medial-pterygoid', to: 'mylohyoid', stationJa: '下あごの内側の縁', lineIds: ['DFL'], crossSide: false },
   { from: 'digastric', to: 'sternohyoid', stationJa: 'のどの上の浮いた骨（舌骨）', lineIds: ['DFL'], crossSide: false },
   { from: 'omohyoid', to: 'scalenus-anterior', stationJa: '首の前の筋膜ループ（舌骨〜肩甲骨）', lineIds: ['DFL'], crossSide: false },
   { from: 'platysma', to: 'depressor-anguli-oris', stationJa: '下あごの縁の筋膜', lineIds: ['SFL'], crossSide: false },
   { from: 'zygomaticus-major', to: 'orbicularis-oris', stationJa: '口角の筋膜の結び目（モダイオラス）', lineIds: ['SFL'], crossSide: false },
-
-  // 16. 肘の内側・外側の出っ張り（上顆）と手首の骨
   { from: 'biceps-brachii', to: 'supinator', stationJa: '肘の前側の橈骨粗面', lineIds: ['DFAL'], crossSide: false },
   { from: 'biceps-brachii', to: 'pronator-teres', stationJa: '肘の内側の上腕二頭筋腱膜', lineIds: ['DFAL', 'SFAL'], crossSide: false },
   { from: 'supinator', to: 'abductor-pollicis-brevis', stationJa: '手首の親指側の骨（茎状突起）', lineIds: ['DFAL'], crossSide: false },
@@ -1592,8 +1502,6 @@ export const FASCIA_STATION_BRIDGES = [
   { from: 'triceps-brachii', to: 'extensor-carpi-ulnaris', stationJa: '肘の先端の骨（肘頭）〜尺骨の縁', lineIds: ['DBAL'], crossSide: false },
   { from: 'extensor-carpi-ulnaris', to: 'abductor-digiti-minimi-hand', stationJa: '手首の小指側の豆状骨', lineIds: ['DBAL'], crossSide: false },
 ];
-
-// 単独筋および経線末端・深層補助筋を主要筋膜ラインへ結ぶ局所筋膜連結マップ
 const LOCAL_FASCIA_NEIGHBORS = Object.freeze({
   'temporoparietalis': { linked: ['epicranial-aponeurosis', 'temporalis', 'occipitalis'], stationJa: '側頭部の筋膜〜帽状腱膜', lineIds: ['SBL', 'DFL'] },
   'orbicularis-oculi': { linked: ['frontalis', 'corrugator-supercilii', 'zygomaticus-minor'], stationJa: 'まゆ毛と目のまわりの骨縁', lineIds: ['SBL'] },
@@ -1664,12 +1572,7 @@ const LOCAL_FASCIA_NEIGHBORS = Object.freeze({
   'plantar-interossei': { linked: ['quadratus-plantae', 'adductor-hallucis', 'tibialis-posterior'], stationJa: '足裏の中足骨の膜', lineIds: ['DFL', 'SBL'] },
   'dorsal-interossei-foot': { linked: ['extensor-digitorum-brevis', 'extensor-digitorum-longus', 'fibularis-tertius'], stationJa: '足の甲の中足骨の膜', lineIds: ['SFL'] },
 });
-
-// -------------------------------------------------------------
-// ANTAGONIST_MAP — 全177筋の表裏拮抗（Locked-Short に対して Locked-Long で張る対側筋）マップ
-// -------------------------------------------------------------
 export const ANTAGONIST_MAP = {
-  // 頭部・顔面・咀嚼（24）
   'frontalis': ['corrugator-supercilii', 'procerus', 'orbicularis-oculi'],
   'occipitalis': ['sternocleidomastoid', 'longus-capitis', 'frontalis'],
   'epicranial-aponeurosis': ['sternocleidomastoid', 'platysma', 'masseter'],
@@ -1694,8 +1597,6 @@ export const ANTAGONIST_MAP = {
   'temporalis': ['digastric', 'mylohyoid', 'geniohyoid', 'splenius-capitis'],
   'medial-pterygoid': ['digastric', 'mylohyoid', 'lateral-pterygoid'],
   'lateral-pterygoid': ['masseter', 'temporalis', 'digastric'],
-
-  // 頸部・舌骨・斜角筋・椎前筋（17）
   'platysma': ['splenius-capitis', 'semispinalis', 'zygomaticus-major'],
   'sternocleidomastoid': ['splenius-capitis', 'semispinalis', 'longus-colli', 'splenius-cervicis'],
   'digastric': ['masseter', 'temporalis', 'medial-pterygoid'],
@@ -1713,8 +1614,6 @@ export const ANTAGONIST_MAP = {
   'longus-capitis': ['rectus-capitis-posterior-major', 'rectus-capitis-posterior-minor', 'semispinalis'],
   'rectus-capitis-anterior': ['rectus-capitis-posterior-minor', 'rectus-capitis-posterior-major', 'obliquus-capitis-superior'],
   'rectus-capitis-lateralis': ['obliquus-capitis-inferior', 'splenius-capitis', 'sternocleidomastoid'],
-
-  // 背部・脊柱・後頭下筋（22）
   'trapezius': ['pectoralis-minor', 'serratus-anterior', 'pectoralis-major', 'subclavius'],
   'latissimus-dorsi': ['deltoid', 'supraspinatus', 'pectoralis-minor', 'serratus-anterior'],
   'levator-scapulae': ['serratus-anterior', 'pectoralis-minor', 'trapezius'],
@@ -1737,8 +1636,6 @@ export const ANTAGONIST_MAP = {
   'rectus-capitis-posterior-minor': ['longus-capitis', 'rectus-capitis-anterior', 'longus-colli'],
   'obliquus-capitis-superior': ['longus-capitis', 'rectus-capitis-anterior', 'sternocleidomastoid'],
   'obliquus-capitis-inferior': ['longus-colli', 'sternocleidomastoid', 'scalenus-anterior'],
-
-  // 胸郭・横隔膜・腹壁・骨盤底（21）
   'pectoralis-major': ['rhomboid-major', 'infraspinatus', 'trapezius', 'teres-minor'],
   'pectoralis-minor': ['rhomboid-major', 'rhomboid-minor', 'trapezius', 'infraspinatus'],
   'subclavius': ['rhomboid-minor', 'trapezius', 'infraspinatus'],
@@ -1760,8 +1657,6 @@ export const ANTAGONIST_MAP = {
   'iliococcygeus': ['diaphragm', 'gluteus-medius', 'piriformis'],
   'coccygeus': ['iliacus', 'psoas-major', 'diaphragm'],
   'external-anal-sphincter': ['diaphragm', 'transversus-abdominis', 'gluteus-maximus'],
-
-  // 肩甲帯・上腕・前腕・手内在筋（40）
   'deltoid': ['latissimus-dorsi', 'pectoralis-major', 'teres-major'],
   'supraspinatus': ['latissimus-dorsi', 'pectoralis-major', 'subscapularis'],
   'infraspinatus': ['subscapularis', 'pectoralis-major', 'pectoralis-minor'],
@@ -1802,8 +1697,6 @@ export const ANTAGONIST_MAP = {
   'lumbricals-hand': ['extensor-digitorum', 'dorsal-interossei-hand', 'flexor-digitorum-superficialis'],
   'palmar-interossei': ['dorsal-interossei-hand', 'abductor-digiti-minimi-hand', 'abductor-pollicis-brevis'],
   'dorsal-interossei-hand': ['palmar-interossei', 'adductor-pollicis', 'flexor-digitorum-superficialis'],
-
-  // 股関節・臀部・大腿（26）
   'iliacus': ['gluteus-maximus', 'biceps-femoris', 'multifidus', 'semitendinosus'],
   'psoas-major': ['gluteus-maximus', 'multifidus', 'longissimus', 'biceps-femoris'],
   'gluteus-maximus': ['psoas-major', 'iliacus', 'rectus-femoris', 'pectineus'],
@@ -1830,8 +1723,6 @@ export const ANTAGONIST_MAP = {
   'biceps-femoris': ['rectus-femoris', 'vastus-lateralis', 'iliacus', 'tibialis-anterior'],
   'semitendinosus': ['rectus-femoris', 'vastus-medialis', 'iliacus'],
   'semimembranosus': ['rectus-femoris', 'vastus-medialis', 'vastus-intermedius'],
-
-  // 下腿・足部（27）
   'tibialis-anterior': ['gastrocnemius', 'soleus', 'fibularis-longus', 'tibialis-posterior'],
   'extensor-hallucis-longus': ['flexor-hallucis-longus', 'flexor-hallucis-brevis', 'gastrocnemius'],
   'extensor-digitorum-longus': ['flexor-digitorum-longus', 'flexor-digitorum-brevis', 'soleus'],
@@ -1860,7 +1751,6 @@ export const ANTAGONIST_MAP = {
   'plantar-interossei': ['dorsal-interossei-foot', 'abductor-hallucis', 'abductor-digiti-minimi-foot'],
   'dorsal-interossei-foot': ['plantar-interossei', 'adductor-hallucis', 'flexor-digitorum-brevis'],
 };
-
 const COUNTER_LINE_FALLBACK = Object.freeze({
   SFL: 'SBL',
   SBL: 'SFL',
@@ -1874,7 +1764,6 @@ const COUNTER_LINE_FALLBACK = Object.freeze({
   LL: 'DFL',
   SPL: 'DFL',
 });
-
 function getLineNeighbors(muscleId) {
   const neighbors = [];
   const lineIds = [];
@@ -1909,13 +1798,11 @@ function getLineNeighbors(muscleId) {
   }
   return { neighbors, lineIds };
 }
-
 function collectBridgesForChain(coreList, shortLinked, antagList, longLinked, maxCount = 4) {
   const activeSet = new Set([...coreList, ...shortLinked, ...antagList, ...longLinked]);
   const coreSet = new Set(coreList);
   const scored = [];
   const seenPairs = new Set();
-
   for (const br of FASCIA_STATION_BRIDGES) {
     const hasFrom = activeSet.has(br.from);
     const hasTo = activeSet.has(br.to);
@@ -1939,7 +1826,6 @@ function collectBridgesForChain(coreList, shortLinked, antagList, longLinked, ma
       });
     }
   }
-
   for (const m of [...coreList, ...shortLinked]) {
     const local = LOCAL_FASCIA_NEIGHBORS[m];
     if (!local) continue;
@@ -1959,8 +1845,6 @@ function collectBridgesForChain(coreList, shortLinked, antagList, longLinked, ma
       });
     }
   }
-
-  // 万一2件未満の場合は core / shortLinked に接続する駅ブリッジで補完
   if (scored.length < 2) {
     for (const br of FASCIA_STATION_BRIDGES) {
       if (!coreSet.has(br.from) && !coreSet.has(br.to) && !shortLinked.includes(br.from) && !shortLinked.includes(br.to)) {
@@ -1981,11 +1865,9 @@ function collectBridgesForChain(coreList, shortLinked, antagList, longLinked, ma
       if (scored.length >= 3) break;
     }
   }
-
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, Math.max(2, Math.min(5, maxCount))).map((s) => s.bridge);
 }
-
 /**
  * 任意の筋ID（177筋すべて対応）を起点に、筋膜の双方向張力ネットワークを純粋計算する。
  * 重複優先順位: shortenCore > shortenLinked > lengthenAntagonist > lengthenLinked
@@ -2009,16 +1891,12 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
       involvedLineIds: [],
     };
   }
-
   const maxLinked = Math.max(2, Math.min(4, Number(opts.maxLinked) || 3));
   const maxAntagonist = Math.max(2, Math.min(4, Number(opts.maxAntagonist) || 3));
   const maxBridges = Math.max(2, Math.min(5, Number(opts.maxBridges) || 4));
-
   const used = new Set([normSeed]);
   const shortenCore = [normSeed];
   const directAntagSet = new Set(ANTAGONIST_MAP[normSeed] || []);
-
-  // 1) shortenLinked: 同一ライン・骨の駅ブリッジ上の隣接筋（拮抗筋を除外）
   const { neighbors: seedNeighbors, lineIds } = getLineNeighbors(normSeed);
   const shortenLinked = [];
   for (const cand of seedNeighbors) {
@@ -2039,8 +1917,6 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
       if (shortenLinked.length >= 2) break;
     }
   }
-
-  // 2) lengthenAntagonist: 対側で引き伸ばされて張る拮抗筋（2〜4筋）
   const lengthenAntagonist = [];
   for (const ant of ANTAGONIST_MAP[normSeed] || []) {
     if (!MUSCLE_LAYERS[ant] || used.has(ant)) continue;
@@ -2060,8 +1936,6 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
       }
     }
   }
-
-  // 3) lengthenLinked: 拮抗筋と骨の駅・同一経線で連なる周辺伸張筋（2〜4筋）
   const lengthenLinked = [];
   for (const ant of lengthenAntagonist) {
     const { neighbors: antNeighbors } = getLineNeighbors(ant);
@@ -2073,8 +1947,6 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
     }
     if (lengthenLinked.length >= maxLinked) break;
   }
-
-  // 4) involvedLineIds: 関与する筋膜ラインID一覧
   const involvedLineIds = [...lineIds];
   for (const m of shortenLinked) {
     for (const line of LINES) {
@@ -2083,10 +1955,7 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
       }
     }
   }
-
-  // 5) bridges: この張力ネットワーク内で骨の駅をまたぐブリッジ（2〜5件）
   const bridges = collectBridgesForChain(shortenCore, shortenLinked, lengthenAntagonist, lengthenLinked, maxBridges);
-
   return {
     seedMuscleId: normSeed,
     layer: getMuscleLayer(normSeed),
@@ -2101,10 +1970,6 @@ export function computeMyofascialChain(seedMuscleId, opts = {}) {
     involvedLineIds,
   };
 }
-
-// -------------------------------------------------------------
-// OCCUPATIONS — 仕事5種＋日常2種＋スポーツ3種＝全10サブカテゴリー
-// -------------------------------------------------------------
 export const OCCUPATIONS = [
   {
     id: 'beautician',
@@ -2177,15 +2042,7 @@ export const OCCUPATIONS = [
     habits: ['gym-bench-push', 'gym-squat-lift', 'swim-crawl-yoga', 'yoga-pilates-open'],
   },
 ];
-
-// -------------------------------------------------------------
-// HABITS — 仕事・日常・スポーツの代表動作とクセ（全45個）
-// shorten = 縮んでしわが寄る側、lengthen = 引き伸ばされて張る側、
-// chain = 固まりが広がる順番、yore = 筋膜のよれが生じる交差点（1〜3筋）。
-// triggerLineId で12本のトリガーライン（TRIGGER_LINES）と自動結合。
-// -------------------------------------------------------------
 export const HABITS = [
-  // ================ 1. 美容師・理容師（work） ================
   {
     id: 'hair-cut-arm',
     category: 'work',
@@ -2276,8 +2133,6 @@ export const HABITS = [
     symptom: '右お尻の張り・股関節の引っかかり',
     similar: ['stand-hip-l', 'leg-cross-r', 'childcare-hip-l'],
   },
-
-  // ================ 2. デスクワーク（work） ================
   {
     id: 'desk-round',
     category: 'work',
@@ -2368,8 +2223,6 @@ export const HABITS = [
     symptom: '片側のお尻の奥の重だるさ・骨盤の傾き',
     similar: ['stand-hip-r', 'childcare-hip-l', 'drive-long'],
   },
-
-  // ================ 3. 整体師・介護・看護（work） ================
   {
     id: 'therapist-press',
     category: 'work',
@@ -2460,8 +2313,6 @@ export const HABITS = [
     symptom: '左お尻の張り・左股関節の違和感',
     similar: ['childcare-hip-l', 'stand-hip-r', 'leg-cross-r'],
   },
-
-  // ================ 4. 家事・育児（daily） ================
   {
     id: 'childcare-hip-l',
     category: 'daily',
@@ -2582,8 +2433,6 @@ export const HABITS = [
     symptom: '浅い呼吸・背中の張り・立つ時の腰の重さ',
     similar: ['phone-neck', 'drive-long', 'desk-round'],
   },
-
-  // ================ 5. 土木・建築・運転（work） ================
   {
     id: 'heavy-lift-dig',
     category: 'work',
@@ -2674,8 +2523,6 @@ export const HABITS = [
     symptom: '車を降りる時の腰のこわばり・お尻の張り・すねの疲れ',
     similar: ['sofa-slouch', 'leg-cross-r', 'desk-round'],
   },
-
-  // ================ 6. 立ち仕事・料理・接客（work） ================
   {
     id: 'cook-pan-hold',
     category: 'work',
@@ -2801,8 +2648,6 @@ export const HABITS = [
     symptom: '肩甲骨のあいだのこり・巻き肩・浅い呼吸',
     similar: ['desk-round', 'hair-cut-arm', 'cook-pan-hold'],
   },
-
-  // ================ 7. 姿勢・睡眠・カバン（daily） ================
   {
     id: 'bag-shoulder-r',
     category: 'daily',
@@ -2873,8 +2718,6 @@ export const HABITS = [
     symptom: '朝起きた時の首や肩のこわばり・食いしばり',
     similar: ['phone-neck', 'arms-fold', 'sofa-slouch'],
   },
-
-  // ================ 8. ゴルフ・球技・ラケット（sports） ================
   {
     id: 'golf-swing-rot',
     category: 'sports',
@@ -2965,8 +2808,6 @@ export const HABITS = [
     symptom: '腕を大きく振り上げる時の肩の違和感・肩甲骨の引っかかり',
     similar: ['overhead-tool', 'laundry-reach', 'swim-crawl-yoga'],
   },
-
-  // ================ 9. ランニング・サッカー・自転車（sports） ================
   {
     id: 'running-strike',
     category: 'sports',
@@ -3057,8 +2898,6 @@ export const HABITS = [
     symptom: '脚の付け根まわりの張り・前ももの張り・反り腰',
     similar: ['running-strike', 'sway-back', 'gym-squat-lift'],
   },
-
-  // ================ 10. 筋トレ・ヨガ・水泳（sports） ================
   {
     id: 'gym-bench-push',
     category: 'sports',
@@ -3149,8 +2988,6 @@ export const HABITS = [
     symptom: '腕を回す時の肩の引っかかり・脇の下〜肩甲骨の張り',
     similar: ['volleyball-smash', 'laundry-reach', 'overhead-tool'],
   },
-
-  // ================ 11. 追加15項目（仕事・日常・スポーツ拡充） ================
   {
     id: 'nail-eye-fine',
     category: 'work',
@@ -3602,10 +3439,6 @@ export const HABITS = [
     similar: ['floor-sit-cross', 'gym-squat-lift', 'swim-crawl-yoga'],
   },
 ];
-
-// -------------------------------------------------------------
-// FEELINGS — 問診型ホームの主役：「いま一番つらい違和感」16個からワンタップ逆引き
-// -------------------------------------------------------------
 export const FEELINGS = [
   { id: 'heavy-shoulder', partBadge: '肩・背中', tag: '肩がズーンと重い', label: '肩の奥がズーンと重く、揉んでもすぐ戻る', triggerLineId: 'TL-01', goldenLineId: 'GL-01', habits: ['hair-cut-arm', 'desk-round', 'therapist-press', 'arms-fold', 'bag-shoulder-r', 'gym-bench-push'] },
   { id: 'locked-lowback', partBadge: '腰・お尻', tag: '立つと腰が伸びない', label: 'イスから立つ時、腰が引っ張られて伸びない', triggerLineId: 'TL-05', goldenLineId: 'GL-05', habits: ['hair-shampoo-bend', 'care-lift-bend', 'drive-long', 'sofa-slouch', 'cycling-aero', 'gym-squat-lift'] },
@@ -3624,10 +3457,6 @@ export const FEELINGS = [
   { id: 'scapula-board', partBadge: '肩・背中', tag: '肩甲骨がガチガチ', label: '肩甲骨のあいだが板のように固まって苦しい', triggerLineId: 'TL-10', goldenLineId: 'GL-10', habits: ['desk-round', 'laptop-low-screen', 'arms-fold', 'nail-eye-fine'] },
   { id: 'buttock-sciatic', partBadge: '腰・お尻', tag: 'お尻の奥の重さ', label: '長く座ると、お尻の奥からもも裏が重だるい', triggerLineId: 'TL-12', goldenLineId: 'GL-12', habits: ['leg-cross-r', 'drive-long', 'floor-sit-cross', 'sofa-slouch'] },
 ];
-
-// -------------------------------------------------------------
-// STORIES — 厳選6本 × 各4ステップ完結（0.5秒で認識できる短い言葉）
-// -------------------------------------------------------------
 export const STORIES = [
   {
     id: 'phone-pc-jaw',
@@ -3906,24 +3735,15 @@ export const STORIES = [
     ],
   },
 ];
-
-// -------------------------------------------------------------
-// 動画制作マスターページ（studio.html）連携・カスタムレシピ保存＆オーバーライド読込
-// セキュリティ強化：Prototype Pollution 対策＆型・文字列長サニタイズ
-// -------------------------------------------------------------
 export const STUDIO_STORAGE_KEY = 'fascia_studio_recipes_v1';
-
 const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
 function isSafeKey(k) {
   return typeof k === 'string' && k.length > 0 && k.length <= 128 && !UNSAFE_KEYS.has(k);
 }
-
 function sanitizeStr(val, maxLen = 500) {
   if (typeof val !== 'string') return '';
   return val.length > maxLen ? val.slice(0, maxLen) : val;
 }
-
 function sanitizeScalar(key, val) {
   const numKeys = new Set(['xrayOpacity', 'speed', 'strokeSpan', 'durationSec', 'twist']);
   if (numKeys.has(key)) {
@@ -3935,13 +3755,11 @@ function sanitizeScalar(key, val) {
   }
   return undefined;
 }
-
 function safeParseJson(raw) {
   if (typeof raw !== 'string' || !raw || raw.length > 200000) return null;
   const parsed = JSON.parse(raw, (k, v) => (UNSAFE_KEYS.has(k) ? undefined : v));
   return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
 }
-
 function safeShallowMerge(target, src) {
   const out = Object.create(null);
   if (target && typeof target === 'object') {
@@ -3956,7 +3774,6 @@ function safeShallowMerge(target, src) {
   }
   return { ...out };
 }
-
 export function saveStudioRecipe(lineOrHabitId, patch) {
   if (typeof window === 'undefined' || !window.localStorage) return {};
   try {
@@ -3983,18 +3800,15 @@ export function saveStudioRecipe(lineOrHabitId, patch) {
     return {};
   }
 }
-
 function normTool(t) {
   if (t === 'hand') return 'hand';
   return t === 'pole' || t === 'roller' ? 'roller' : 'ball';
 }
-
 function normToolLabel(tool) {
   const n = normTool(tool);
   if (n === 'hand') return '🤲 指でやる';
   return n === 'roller' ? '🛞 ローラー' : '🎾 ボール';
 }
-
 function normalizeFourStageGradient(item, fallbackTl = null) {
   const used = new Set();
   const takeUnique = (arr) => {
@@ -4008,10 +3822,8 @@ function normalizeFourStageGradient(item, fallbackTl = null) {
     }
     return out;
   };
-
   const baseShort = Array.isArray(item.shorten) ? item.shorten : [];
   const baseLong = Array.isArray(item.lengthen) ? item.lengthen : [];
-
   item.shortenCore = takeUnique(
     Array.isArray(item.shortenCore) && item.shortenCore.length
       ? item.shortenCore
@@ -4032,7 +3844,6 @@ function normalizeFourStageGradient(item, fallbackTl = null) {
       ? item.lengthenLinked
       : [...baseLong.slice(2), ...(fallbackTl?.lengthenLinked || [])].slice(0, 4)
   );
-
   if (!Array.isArray(item.stationBridges) || !item.stationBridges.length) {
     const computed = collectBridgesForChain(
       item.shortenCore,
@@ -4048,7 +3859,6 @@ function normalizeFourStageGradient(item, fallbackTl = null) {
         : [];
   }
 }
-
 function bindTriggerLinesToHabits() {
   for (const tl of TRIGGER_LINES) {
     if (tl.tool !== undefined) {
@@ -4069,14 +3879,12 @@ function bindTriggerLinesToHabits() {
     tl.rootMuscles = tl.triggerPoints.map((p) => p.id);
     tl.steps = tl.triggerPoints.map((p) => p.step);
   }
-
   const triggerLineMap = {};
   for (const tl of TRIGGER_LINES) {
     if (tl.id) triggerLineMap[tl.id] = tl;
     if (tl.code) triggerLineMap[tl.code] = tl;
     if (tl.goldenId) triggerLineMap[tl.goldenId] = tl;
   }
-
   for (const h of HABITS) {
     const tl = triggerLineMap[h.triggerLineId || h.goldenLineId];
     normalizeFourStageGradient(h, tl || null);
@@ -4090,7 +3898,6 @@ function bindTriggerLinesToHabits() {
       : tl.triggerPoints;
     const activeSteps = activeTps.map((p) => p.step);
     const activeRoots = activeTps.map((p) => p.id);
-
     h.triggerLineId = tl.code || tl.id;
     h.goldenLineId = tl.goldenId || tl.id;
     h.triggerLine = tl;
@@ -4129,7 +3936,6 @@ function bindTriggerLinesToHabits() {
     };
   }
 }
-
 function applyStudioOverrides() {
   bindTriggerLinesToHabits();
   if (typeof window === 'undefined' || !window.localStorage) return;
@@ -4141,7 +3947,6 @@ function applyStudioOverrides() {
     if (!raw) return;
     const recipes = safeParseJson(raw);
     if (!recipes) return;
-
     const tlTopKeys = [
       'name', 'shortName', 'youtubeUrl', 'youtubeTitle', 'videoDuration',
       'point', 'pulledLabel', 'causalSummary', 'quickCheck', 'safetyNote',
@@ -4149,7 +3954,6 @@ function applyStudioOverrides() {
       'tool', 'toolLabel', 'motion', 'strokeTarget', 'durationSec',
     ];
     const tpKeys = ['id', 'label', 'easyLabel', 'tool', 'toolLabel', 'motion', 'strokeTarget', 'durationSec', 'step'];
-
     for (const tl of TRIGGER_LINES) {
       const ov =
         (isSafeKey(tl.code) && recipes[tl.code]) ||
@@ -4159,7 +3963,6 @@ function applyStudioOverrides() {
         (isSafeKey(tl.id) && recipes.triggerLines?.[tl.id]) ||
         (isSafeKey(tl.goldenId) && recipes.triggerLines?.[tl.goldenId]);
       if (!ov || typeof ov !== 'object') continue;
-
       for (const k of tlTopKeys) {
         if (!isSafeKey(k) || ov[k] === undefined) continue;
         const clean = sanitizeScalar(k, ov[k]);
@@ -4210,11 +4013,7 @@ function applyStudioOverrides() {
         }
       }
     }
-
-    // トリガーラインの更新を全 HABITS へ再反映（normTool 正規化込み）
     bindTriggerLinesToHabits();
-
-    // 個別 HABIT 単位のオーバーライドもマージ
     const habitScalarKeys = [
       'label', 'feel', 'symptom', 'point', 'insight', 'youtubeUrl',
       'pulledLabel', 'causalSummary', 'quickCheck', 'safetyNote',
@@ -4284,12 +4083,7 @@ function applyStudioOverrides() {
     console.warn('[data] applyStudioOverrides failed:', err);
   }
 }
-
 applyStudioOverrides();
-
-// -------------------------------------------------------------
-// セキュリティ保護：マスターデータの完全凍結（改ざん・意図しない書き換え防止）
-// -------------------------------------------------------------
 function deepFreeze(obj, seen = new WeakSet()) {
   if (!obj || typeof obj !== 'object' || seen.has(obj)) return obj;
   seen.add(obj);
@@ -4298,7 +4092,6 @@ function deepFreeze(obj, seen = new WeakSet()) {
   }
   return Object.freeze(obj);
 }
-
 deepFreeze(CATEGORIES);
 deepFreeze(BODY_PARTS);
 deepFreeze(TRIGGER_LINES);

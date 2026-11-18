@@ -1,45 +1,24 @@
-// =============================================================================
-// unified_fascia_sheets.js — 一体型3Dエンジン用：全11本アナトミートレイン連続3D筋膜シート統合モジュール
-//
-// 特徴:
-// 1. fascia_only_sheets.js の体表エンベロープ (buildBodyEnvelope) と FASCIA_LINE_DEFS、
-//    および fascia_only_biomechanics.js の BONY_STATIONS (42箇所の骨ピン留め部) を再利用。
-// 2. 各頂点に連続リグウェイト属性 (aRigA, aRigB) を焼き込み、posture.js の poseUniforms と
-//    100%同一の数式・ピボット・回転順序で変形させることで、全45動作 (HABITS)・連動ストーリー・
-//    全セルフケア姿勢において骨格・筋肉・顔ヴェール・11本筋膜シートが 0.000mm のズレなく完全同期変形する。
-// 3. 肩関節・股関節・膝関節・肘関節・前腕回内・手首をまたぐシート境界も連続角度補間で滑らかに接続し、
-//    頭上サーブ (#23)・スマッシュ (#24)・足組み (#06)・あぐら (#41) でもポリゴン裂け 0.000mm を保証する。
-// =============================================================================
-
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261118d';
-import { BONE, BONY_STATIONS } from './fascia_only_biomechanics.js?v=20261118d';
-import { buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_only_sheets.js?v=20261118d';
-
+import * as posture from './posture.js?v=20261118e';
+import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261118e';
 export { FASCIA_LINE_DEFS };
-
 const SEG_COUNT = 32;
-
 function clamp(x, min, max) {
   return x < min ? min : x > max ? max : x;
 }
-
 function smoothstep(e0, e1, x) {
   const t = clamp((x - e0) / (e1 - e0 || 1e-6), 0, 1);
   return t * t * (3 - 2 * t);
 }
-
 function mix(a, b, t) {
   return a + (b - a) * t;
 }
-
 function mirrorThetaToLeft(thetaR) {
   let th = Math.PI - thetaR;
   while (th > Math.PI) th -= Math.PI * 2;
   while (th < -Math.PI) th += Math.PI * 2;
   return th;
 }
-
 function evalProfileTable(table, v) {
   if (v <= table[0].v) return { ...table[0] };
   if (v >= table[table.length - 1].v) return { ...table[table.length - 1] };
@@ -62,7 +41,6 @@ function evalProfileTable(table, v) {
   }
   return { ...table[table.length - 1] };
 }
-
 function getLegAxisCenter(isRight, y) {
   const s = isRight ? -1 : +1;
   let ax = 0.30;
@@ -82,12 +60,6 @@ function getLegAxisCenter(isRight, y) {
   }
   return { cx: s * ax, cz };
 }
-
-// -----------------------------------------------------------------------------
-// 1. スキニング重み生成 ＆ posture.js 完全連続リグ属性 (aRigA, aRigB) への変換
-//    aRigA = vec4(wHip, wKnee, wArm, wElbow)
-//    aRigB = vec4(wPron, wWrist, wHead, limbSide)
-// -----------------------------------------------------------------------------
 function makeWeights(entries) {
   const filtered = entries
     .filter((e) => e[1] > 1e-4)
@@ -104,13 +76,11 @@ function makeWeights(entries) {
   }
   return { idx, w };
 }
-
 function getBodyChainSkin(side, y, region = 'auto') {
   const isRight = side === 'R';
   const B_FOOT = isRight ? BONE.FOOT_R : BONE.FOOT_L;
   const B_SHANK = isRight ? BONE.SHANK_R : BONE.SHANK_L;
   const B_FEMUR = isRight ? BONE.FEMUR_R : BONE.FEMUR_L;
-
   if (region === 'foot') {
     return makeWeights([[B_FOOT, 1]]);
   }
@@ -125,7 +95,6 @@ function getBodyChainSkin(side, y, region = 'auto') {
     return makeWeights([[B_SHANK, 1]]);
   }
   if (y < -1.42) {
-    // posture.js の kneeMode=2 (smoothstep(-1.72, -1.42, y)) と完全一致
     const t = smoothstep(-1.72, -1.42, y);
     return makeWeights([
       [B_SHANK, 1 - t],
@@ -136,7 +105,6 @@ function getBodyChainSkin(side, y, region = 'auto') {
     return makeWeights([[B_FEMUR, 1]]);
   }
   if (y < +0.18) {
-    // posture.js の hipMode=2 (smoothstep(-0.24, 0.14, y)) と滑らかに同期
     const t = smoothstep(-0.22, +0.18, y);
     return makeWeights([
       [B_FEMUR, 1 - t],
@@ -158,17 +126,14 @@ function getBodyChainSkin(side, y, region = 'auto') {
   }
   return makeWeights([[BONE.HEAD, 1]]);
 }
-
 function getArmChainSkin(isRight, y, radialWeight = 0.5) {
   const B_GIRDLE = isRight ? BONE.GIRDLE_R : BONE.GIRDLE_L;
   const B_HUM = isRight ? BONE.HUMERUS_R : BONE.HUMERUS_L;
   const B_ULNA = isRight ? BONE.ULNA_R : BONE.ULNA_L;
   const B_RAD = isRight ? BONE.RADIUS_R : BONE.RADIUS_L;
   const B_HAND = isRight ? BONE.HAND_R : BONE.HAND_L;
-
   const distalFactor = 1 - smoothstep(0.08, 0.88, y);
   const effRadW = radialWeight * (0.12 + 0.88 * distalFactor);
-
   if (y >= 1.98) {
     const t = smoothstep(1.98, 2.12, y);
     return makeWeights([
@@ -203,7 +168,6 @@ function getArmChainSkin(isRight, y, radialWeight = 0.5) {
   }
   return makeWeights([[B_HAND, 1]]);
 }
-
 function boneToRigTraits(boneIdx) {
   switch (boneIdx) {
     case BONE.HEAD:
@@ -242,7 +206,6 @@ function boneToRigTraits(boneIdx) {
       return { hip: 0, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: 0 };
   }
 }
-
 function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
   let wHip = 0;
   let wKnee = 0;
@@ -252,7 +215,6 @@ function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
   let wWrist = 0;
   let wHead = 0;
   let sideVote = 0;
-
   for (let i = 0; i < 4; i++) {
     const bw = skin.w[i] || 0;
     if (bw <= 1e-5) continue;
@@ -266,7 +228,6 @@ function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
     wHead += tr.head * bw;
     if (tr.side !== 0) sideVote += tr.side * bw;
   }
-
   let limbSide = 0;
   if (Math.abs(sideVote) > 1e-4) {
     limbSide = sideVote > 0 ? +1 : -1;
@@ -275,16 +236,11 @@ function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
   } else {
     limbSide = restPos.x >= 0 ? +1 : -1;
   }
-
   return {
     rigA: [wHip, wKnee, wArm, wElbow],
     rigB: [wPron, wWrist, wHead, limbSide],
   };
 }
-
-// -----------------------------------------------------------------------------
-// 2. GLSL & JS 完全一致の連続シート姿勢変形 (posture.js 100%同期)
-// -----------------------------------------------------------------------------
 const POSE_SHEET_GLSL = /* glsl */ `
 uniform vec4 uPoseA;
 uniform vec4 uPoseB;
@@ -294,7 +250,6 @@ uniform vec4 uPoseE;
 uniform vec4 uPoseF;
 uniform vec4 uPoseG;
 uniform vec4 uPoseH;
-
 vec3 sheetPitchFwd(vec3 p, vec3 piv, float a) {
   float c = cos(a);
   float s = sin(a);
@@ -302,7 +257,6 @@ vec3 sheetPitchFwd(vec3 p, vec3 piv, float a) {
   float dz = p.z - piv.z;
   return vec3(p.x, piv.y + dy * c - dz * s, piv.z + dz * c + dy * s);
 }
-
 vec3 sheetRollLeft(vec3 p, vec3 piv, float a) {
   float c = cos(a);
   float s = sin(a);
@@ -310,7 +264,6 @@ vec3 sheetRollLeft(vec3 p, vec3 piv, float a) {
   float dy = p.y - piv.y;
   return vec3(piv.x + dx * c + dy * s, piv.y + dy * c - dx * s, p.z);
 }
-
 vec3 sheetYawLeft(vec3 p, vec3 piv, float a) {
   float c = cos(a);
   float s = sin(a);
@@ -318,14 +271,12 @@ vec3 sheetYawLeft(vec3 p, vec3 piv, float a) {
   float dz = p.z - piv.z;
   return vec3(piv.x + dx * c + dz * s, p.y, piv.z + dz * c - dx * s);
 }
-
 vec3 sheetRotateAxis(vec3 p, vec3 piv, vec3 axis, float a) {
   float c = cos(a);
   float sn = sin(a);
   vec3 v = p - piv;
   return piv + v * c + cross(axis, v) * sn + axis * dot(axis, v) * (1.0 - c);
 }
-
 vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   float trunkFlex   = uPoseA.x;
   float headForward = uPoseA.y;
@@ -359,7 +310,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   float legAdductR  = uPoseH.y;
   float lieSide     = uPoseH.z;
   float floorSit    = uPoseH.w;
-
   float act = abs(trunkFlex) + abs(headForward) + abs(shoulderIn)
             + abs(pelvisTilt) + abs(trunkRotate) + abs(sideBend)
             + abs(hipShift) + abs(armsFold) + abs(sit) + abs(prone)
@@ -371,10 +321,8 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
             + abs(pronateL) + abs(pronateR) + abs(wristExtL) + abs(wristExtR)
             + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit);
   if (act < 1e-5) return wp;
-
   vec3 p0 = wp;
   vec3 p = wp;
-
   float hipWeight   = clamp(rigA.x, 0.0, 1.0);
   float kneeWeight  = clamp(rigA.y, 0.0, 1.0);
   float armMask     = clamp(rigA.z, 0.0, 1.0);
@@ -382,15 +330,11 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   float pronWeight  = clamp(rigB.x, 0.0, 1.0);
   float wristWeight = clamp(rigB.y, 0.0, 1.0);
   float headWeight  = clamp(rigB.z, 0.0, 1.0);
-
   float sBody = p0.x >= 0.0 ? 1.0 : -1.0;
   float s = (hipWeight + armMask) > 1e-4 && abs(rigB.w) > 0.5 ? sign(rigB.w) : sBody;
   float isL = s > 0.0 ? 1.0 : 0.0;
   float ax = abs(p0.x);
-
   float yEff = mix(mix(p0.y, 2.02, armMask), -0.16, hipWeight);
-
-  // 2. 上肢アクション変形
   float armRaise  = mix(armRaiseR,  armRaiseL,  isL);
   float armSpread = mix(armSpreadR, armSpreadL, isL);
   float elFlex    = mix(elFlexR,    elFlexL,    isL);
@@ -399,7 +343,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   float wristExt  = mix(wristExtR,  wristExtL,  isL);
   float customArmAct = abs(armRaise) + abs(armSpread) + abs(elFlex) + abs(foreYaw) + abs(pronate) + abs(wristExt);
   float sitArm = sit * clamp(1.0 - (armsFold + customArmAct) * 1.8, 0.0, 1.0);
-
   if ((armsFold > 1e-4 || sitArm > 1e-4 || customArmAct > 1e-4) && armMask > 1e-4) {
     float shMask = armMask;
     vec3 pivEl = vec3(s * 0.865, 0.925, -0.128);
@@ -408,7 +351,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     vec3 pivUlnaHead = vec3(s * 0.9565, 0.0322, 0.0585);
     vec3 pronAxis = normalize(pivUlnaHead - pivRadHead);
     vec3 pivWrist = vec3(s * 1.012, 0.016, 0.068);
-
     if (customArmAct > 1e-4) {
       if (abs(wristExt) > 1e-4 && wristWeight > 1e-5) {
         p = sheetPitchFwd(p, pivWrist, clamp(wristExt, -0.80, 1.10) * 0.96 * wristWeight);
@@ -420,27 +362,23 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
       }
       p = sheetPitchFwd(p, pivEl, -1.08 * elFlex * elMask);
       p = sheetYawLeft(p, pivEl, -s * 0.85 * foreYaw * elMask);
-
       float torsoFwd = 0.55 * max(0.0, trunkFlex) + 0.75 * max(0.0, hipHinge);
       float compFwd = torsoFwd * smoothstep(0.05, 0.45, armRaise);
       p = sheetRollLeft(p, pivSh, -s * 0.78 * armSpread * shMask);
       p = sheetPitchFwd(p, pivSh, -(1.05 * armRaise + compFwd) * shMask);
       p.z += 0.05 * clamp(armRaise, 0.0, 1.0) * shMask;
     }
-
     if (armsFold > 1e-4) {
       float foldBend = 1.0 - pow(clamp(1.0 - armsFold, 0.0, 1.0), 1.45);
       float midHold = smoothstep(0.15, 0.45, armsFold) * (1.0 - smoothstep(0.78, 0.96, armsFold));
       float bendReach = smoothstep(0.35, 0.70, trunkFlex) * smoothstep(0.18, 0.45, armsFold);
       float workReach = clamp(midHold * 0.75 + bendReach * 0.85, 0.0, 1.0);
       float crossRate = mix(0.54, 1.0, smoothstep(0.75, 0.96, armsFold)) * (1.0 - 0.38 * bendReach);
-
       float wElB = elMask * foldBend;
       float wElC = elMask * armsFold * crossRate;
       p = sheetYawLeft(p, pivEl, -s * 0.75 * wElC);
       p = sheetPitchFwd(p, pivEl, (-1.18 - s * 0.05) * wElB);
       p = sheetYawLeft(p, pivEl, -s * (1.28 - s * 0.04) * wElC);
-
       float shAdduct = (0.26 * armsFold - 0.18 * workReach) * shMask;
       float shPitch = ((-0.52 - s * 0.03) * armsFold - (0.30 * workReach + 0.16 * bendReach)) * shMask;
       p = sheetRollLeft(p, pivSh, s * shAdduct);
@@ -448,7 +386,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
       p.z += 0.06 * workReach * shMask;
       p.y += 0.04 * midHold * (1.0 - bendReach) * shMask;
     }
-
     if (sitArm > 1e-4) {
       float wElS = elMask * sitArm;
       float wShS = shMask * sitArm;
@@ -461,8 +398,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
       p = sheetPitchFwd(p, pivSh, -0.10 * wShS);
     }
   }
-
-  // 3. 巻き肩 (shoulderIn)
   if (shoulderIn > 1e-4) {
     float armOverheadAtten = 1.0 - 0.78 * smoothstep(1.10, 2.15, armRaise);
     float trunkSh = smoothstep(0.36, 0.66, ax)
@@ -475,8 +410,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     p = sheetPitchFwd(p, pivClav, 0.08 * wShIn);
     p.z += 0.04 * wShIn;
   }
-
-  // 4. 頭頸部 (headForward / headPitch)
   float neckGate = (1.0 - armMask) * (1.0 - hipWeight);
   if (headForward > 1e-4 && neckGate > 1e-4) {
     float wNeck = mix(smoothstep(1.82, 2.32, p0.y), 1.0, headWeight) * neckGate * headForward;
@@ -493,8 +426,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     p = sheetPitchFwd(p, vec3(0.0, 2.15, -0.10), 0.46 * wNeckP);
     p = sheetPitchFwd(p, vec3(0.0, 2.48, -0.04), 0.42 * wHeadP);
   }
-
-  // 5. 胸腰椎屈伸 (trunkFlex) ＆ 股関節ヒンジ (hipHinge)
   if (abs(trunkFlex) > 1e-4) {
     float wFlexT = smoothstep(0.75, 1.95, yEff) * trunkFlex;
     float wFlexL = smoothstep(0.05, 1.25, yEff) * trunkFlex;
@@ -507,20 +438,14 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     float wCounter = (1.0 - hipWeight) * smoothstep(-1.62, 0.05, yEff);
     p.z -= 0.22 * hipHinge * wCounter;
   }
-
-  // 6. 体幹回旋 (trunkRotate)
   if (abs(trunkRotate) > 1e-4) {
     float wRot = smoothstep(0.02, 1.95, yEff) * trunkRotate;
     p = sheetYawLeft(p, vec3(0.0, 0.0, -0.06), 0.52 * wRot);
   }
-
-  // 7. 体幹側屈 (sideBend)
   if (abs(sideBend) > 1e-4) {
     float wBend = smoothstep(0.05, 1.75, yEff) * sideBend;
     p = sheetRollLeft(p, vec3(0.0, 0.35, -0.06), 0.34 * wBend);
   }
-
-  // 8. 骨盤前後傾 (pelvisTilt)
   if (abs(pelvisTilt) > 1e-4) {
     float wPelvRot = smoothstep(-0.15, 0.18, yEff) * (1.0 - smoothstep(0.45, 1.15, yEff));
     p = sheetPitchFwd(p, vec3(0.0, 0.0, -0.05), -0.26 * pelvisTilt * wPelvRot);
@@ -529,8 +454,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     float wSlouch = smoothstep(0.20, 1.15, yEff);
     p = sheetPitchFwd(p, vec3(0.0, 0.35, -0.06), 0.14 * pelvisTilt * wSlouch);
   }
-
-  // 9. 骨盤左右シフト（体幹側）
   if (hipWeight < 0.9999 && abs(hipShift) > 1e-4) {
     float trunkRatio = 1.0 - hipWeight;
     float wShift = smoothstep(-3.15, 0.05, yEff) * (1.0 - 0.35 * smoothstep(0.25, 2.10, yEff));
@@ -538,15 +461,12 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     float wHipRoll = smoothstep(-0.35, 0.05, yEff) * (1.0 - smoothstep(0.30, 1.00, yEff));
     p = sheetRollLeft(p, vec3(0.0, 0.05, -0.05), -0.10 * hipShift * wHipRoll * trunkRatio);
   }
-
-  // 10. 下肢統合フォワードキネマティクス
   vec3 pivKneeSide = vec3(s * 0.185, -1.62, 0.02);
   vec3 pivHipSide  = vec3(s * 0.185, -0.02, -0.03);
   float legSwing   = mix(legSwingR, legSwingL, isL);
   float legAdduct  = mix(legAdductR, legAdductL, isL);
   float standRatio = clamp(1.0 - clamp(sit, 0.0, 1.0) - clamp(floorSit, 0.0, 1.0) - clamp(prone, 0.0, 1.0), 0.0, 1.0);
   float hingeLegAng = 0.1375 * hipHinge * standRatio * hipWeight;
-
   float autoSwingKnee = max(0.0, -legSwing * 0.72) + max(0.0, legSwing * 0.12);
   float sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0.0, 1.2)) * sit;
   float totalKneePitch = sitKnee
@@ -557,7 +477,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   if (abs(totalKneePitch) > 1e-4 && kneeWeight > 1e-5) {
     p = sheetPitchFwd(p, pivKneeSide, totalKneePitch * kneeWeight);
   }
-
   if (hipWeight > 1e-5) {
     if (legAdduct > 1e-4) {
       p = sheetRollLeft(p, pivHipSide, s * 0.32 * legAdduct * hipWeight);
@@ -566,7 +485,6 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     if (sit > 1e-4) {
       p = sheetRollLeft(p, pivHipSide, -s * 0.035 * sit * (1.0 - clamp(legAdduct, 0.0, 1.0)) * hipWeight);
     }
-
     float slouchComp = clamp(trunkFlex * 0.7 + max(0.0, pelvisTilt) * 0.4, 0.0, 1.0);
     float hipPitchSit = (-1.38 + 0.14 * slouchComp) * sit - 0.28 * legAdduct * sit;
     float hipPitchFloor = (-1.38 - s * 0.05) * floorSit;
@@ -579,19 +497,16 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     if (abs(totalHipPitch) > 1e-4) {
       p = sheetPitchFwd(p, pivHipSide, totalHipPitch * hipWeight);
     }
-
     if (floorSit > 1e-4) {
       p = sheetRollLeft(p, pivHipSide, s * (1.16 - s * 0.04) * floorSit * hipWeight);
       p = sheetYawLeft(p, pivHipSide, s * 0.56 * floorSit * hipWeight);
     }
-
     if (abs(legSpread) > 1e-4) {
       float sitRatio = clamp(sit, 0.0, 1.0);
       p = sheetRollLeft(p, pivHipSide, -s * 0.46 * legSpread * (1.0 - 0.55 * sitRatio) * hipWeight);
       p = sheetYawLeft(p, pivHipSide, s * (0.30 + 0.38 * sitRatio) * legSpread * hipWeight);
     }
   }
-
   if (hipWeight > 1e-5 && abs(hipHinge) > 1e-4) {
     p.y += 1.60 * (1.0 - cos(hingeLegAng)) * hipWeight;
     p.z -= (1.60 * sin(hingeLegAng) + 0.22 * hipHinge * (1.0 - standRatio) * hipWeight);
@@ -619,16 +534,12 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     p = sheetRollLeft(p, vec3(0.0, -3.15, -0.03 - 0.18 * kneeBend), angLegShift);
     p.x += 0.24 * hipShift * (1.0 - standRatio) * hipWeight;
   }
-
-  // 11. 横向き寝ロール
   if (lieSide > 1e-4) {
     p = sheetRollLeft(p, vec3(0.0, 0.35, 0.0), 1.34 * lieSide);
     p.y -= 0.25 * lieSide;
   }
-
   return p;
 }
-
 vec3 poseDeformSheetNormal(vec3 wp, vec3 n, vec4 rigA, vec4 rigB) {
   vec3 n0 = normalize(n);
   vec3 up = abs(n0.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -643,8 +554,6 @@ vec3 poseDeformSheetNormal(vec3 wp, vec3 n, vec4 rigA, vec4 rigB) {
   return len > 1e-8 ? wn / len : n0;
 }
 `;
-
-// JS 版の連続シート変形（GLSL poseDeformSheet と100%一致：骨ピン追従＆実空間ひずみ計算用）
 function pitchFwdJS(p, pivX, pivY, pivZ, a) {
   const c = Math.cos(a);
   const s = Math.sin(a);
@@ -653,7 +562,6 @@ function pitchFwdJS(p, pivX, pivY, pivZ, a) {
   p.y = pivY + dy * c - dz * s;
   p.z = pivZ + dz * c + dy * s;
 }
-
 function rollLeftJS(p, pivX, pivY, pivZ, a) {
   const c = Math.cos(a);
   const s = Math.sin(a);
@@ -662,7 +570,6 @@ function rollLeftJS(p, pivX, pivY, pivZ, a) {
   p.x = pivX + dx * c + dy * s;
   p.y = pivY + dy * c - dx * s;
 }
-
 function yawLeftJS(p, pivX, pivY, pivZ, a) {
   const c = Math.cos(a);
   const s = Math.sin(a);
@@ -671,7 +578,6 @@ function yawLeftJS(p, pivX, pivY, pivZ, a) {
   p.x = pivX + dx * c + dz * s;
   p.z = pivZ + dz * c - dx * s;
 }
-
 function rotateAxisJS(p, pivX, pivY, pivZ, axX, axY, axZ, a) {
   const c = Math.cos(a);
   const sn = Math.sin(a);
@@ -687,10 +593,8 @@ function rotateAxisJS(p, pivX, pivY, pivZ, axX, axY, axZ, a) {
   p.y = pivY + vy * c + cy * sn + axY * dot * omc;
   p.z = pivZ + vz * c + cz * sn + axZ * dot * omc;
 }
-
 function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   out.set(restPos.x, restPos.y, restPos.z);
-
   const trunkFlex   = poseObj.trunkFlex   || 0;
   const headForward = poseObj.headForward || 0;
   const shoulderIn  = poseObj.shoulderIn  || 0;
@@ -723,7 +627,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   const legAdductR  = poseObj.legAdductR  || 0;
   const lieSide     = poseObj.lieSide     || 0;
   const floorSit    = poseObj.floorSit    || 0;
-
   const act =
     Math.abs(trunkFlex) + Math.abs(headForward) + Math.abs(shoulderIn) +
     Math.abs(pelvisTilt) + Math.abs(trunkRotate) + Math.abs(sideBend) +
@@ -735,7 +638,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     Math.abs(wristExtL) + Math.abs(wristExtR) + Math.abs(legAdductL) + Math.abs(legAdductR) +
     Math.abs(lieSide) + Math.abs(floorSit);
   if (act < 1e-5) return out;
-
   const x0 = restPos.x;
   const y0 = restPos.y;
   const hipWeight   = clamp(rigA[0], 0, 1);
@@ -745,13 +647,11 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   const pronWeight  = clamp(rigB[0], 0, 1);
   const wristWeight = clamp(rigB[1], 0, 1);
   const headWeight  = clamp(rigB[2], 0, 1);
-
   const sBody = x0 >= 0 ? 1 : -1;
   const s = hipWeight + armMask > 1e-4 && Math.abs(rigB[3]) > 0.5 ? Math.sign(rigB[3]) : sBody;
   const isL = s > 0 ? 1 : 0;
   const ax = Math.abs(x0);
   const yEff = mix(mix(y0, 2.02, armMask), -0.16, hipWeight);
-
   const armRaise  = mix(armRaiseR,  armRaiseL,  isL);
   const armSpread = mix(armSpreadR, armSpreadL, isL);
   const elFlex    = mix(elFlexR,    elFlexL,    isL);
@@ -762,7 +662,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     Math.abs(armRaise) + Math.abs(armSpread) + Math.abs(elFlex) +
     Math.abs(foreYaw) + Math.abs(pronate) + Math.abs(wristExt);
   const sitArm = sit * clamp(1 - (armsFold + customArmAct) * 1.8, 0, 1);
-
   if ((armsFold > 1e-4 || sitArm > 1e-4 || customArmAct > 1e-4) && armMask > 1e-4) {
     const shMask = armMask;
     const pivElX = s * 0.865, pivElY = 0.925, pivElZ = -0.128;
@@ -775,7 +674,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     const pAxLen = Math.hypot(pAxX, pAxY, pAxZ) || 1;
     pAxX /= pAxLen; pAxY /= pAxLen; pAxZ /= pAxLen;
     const pivWristX = s * 1.012, pivWristY = 0.016, pivWristZ = 0.068;
-
     if (customArmAct > 1e-4) {
       if (Math.abs(wristExt) > 1e-4 && wristWeight > 1e-5) {
         pitchFwdJS(out, pivWristX, pivWristY, pivWristZ, clamp(wristExt, -0.80, 1.10) * 0.96 * wristWeight);
@@ -787,27 +685,23 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
       }
       pitchFwdJS(out, pivElX, pivElY, pivElZ, -1.08 * elFlex * elMask);
       yawLeftJS(out, pivElX, pivElY, pivElZ, -s * 0.85 * foreYaw * elMask);
-
       const torsoFwd = 0.55 * Math.max(0, trunkFlex) + 0.75 * Math.max(0, hipHinge);
       const compFwd = torsoFwd * smoothstep(0.05, 0.45, armRaise);
       rollLeftJS(out, pivShX, pivShY, pivShZ, -s * 0.78 * armSpread * shMask);
       pitchFwdJS(out, pivShX, pivShY, pivShZ, -(1.05 * armRaise + compFwd) * shMask);
       out.z += 0.05 * clamp(armRaise, 0, 1) * shMask;
     }
-
     if (armsFold > 1e-4) {
       const foldBend = 1 - Math.pow(clamp(1 - armsFold, 0, 1), 1.45);
       const midHold = smoothstep(0.15, 0.45, armsFold) * (1 - smoothstep(0.78, 0.96, armsFold));
       const bendReach = smoothstep(0.35, 0.70, trunkFlex) * smoothstep(0.18, 0.45, armsFold);
       const workReach = clamp(midHold * 0.75 + bendReach * 0.85, 0, 1);
       const crossRate = mix(0.54, 1.0, smoothstep(0.75, 0.96, armsFold)) * (1 - 0.38 * bendReach);
-
       const wElB = elMask * foldBend;
       const wElC = elMask * armsFold * crossRate;
       yawLeftJS(out, pivElX, pivElY, pivElZ, -s * 0.75 * wElC);
       pitchFwdJS(out, pivElX, pivElY, pivElZ, (-1.18 - s * 0.05) * wElB);
       yawLeftJS(out, pivElX, pivElY, pivElZ, -s * (1.28 - s * 0.04) * wElC);
-
       const shAdduct = (0.26 * armsFold - 0.18 * workReach) * shMask;
       const shPitch = ((-0.52 - s * 0.03) * armsFold - (0.30 * workReach + 0.16 * bendReach)) * shMask;
       rollLeftJS(out, pivShX, pivShY, pivShZ, s * shAdduct);
@@ -815,7 +709,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
       out.z += 0.06 * workReach * shMask;
       out.y += 0.04 * midHold * (1 - bendReach) * shMask;
     }
-
     if (sitArm > 1e-4) {
       const wElS = elMask * sitArm;
       const wShS = shMask * sitArm;
@@ -828,7 +721,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
       pitchFwdJS(out, pivShX, pivShY, pivShZ, -0.10 * wShS);
     }
   }
-
   if (shoulderIn > 1e-4) {
     const armOverheadAtten = 1 - 0.78 * smoothstep(1.10, 2.15, armRaise);
     const trunkSh =
@@ -841,7 +733,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     pitchFwdJS(out, s * 0.35, 1.85, -0.06, 0.08 * wShIn);
     out.z += 0.04 * wShIn;
   }
-
   const neckGate = (1 - armMask) * (1 - hipWeight);
   if (headForward > 1e-4 && neckGate > 1e-4) {
     const wNeck = mix(smoothstep(1.82, 2.32, y0), 1, headWeight) * neckGate * headForward;
@@ -858,7 +749,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     pitchFwdJS(out, 0, 2.15, -0.10, 0.46 * wNeckP);
     pitchFwdJS(out, 0, 2.48, -0.04, 0.42 * wHeadP);
   }
-
   if (Math.abs(trunkFlex) > 1e-4) {
     const wFlexT = smoothstep(0.75, 1.95, yEff) * trunkFlex;
     const wFlexL = smoothstep(0.05, 1.25, yEff) * trunkFlex;
@@ -871,7 +761,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     const wCounter = (1 - hipWeight) * smoothstep(-1.62, 0.05, yEff);
     out.z -= 0.22 * hipHinge * wCounter;
   }
-
   if (Math.abs(trunkRotate) > 1e-4) {
     const wRot = smoothstep(0.02, 1.95, yEff) * trunkRotate;
     yawLeftJS(out, 0, 0, -0.06, 0.52 * wRot);
@@ -895,14 +784,12 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     const wHipRoll = smoothstep(-0.35, 0.05, yEff) * (1 - smoothstep(0.30, 1.00, yEff));
     rollLeftJS(out, 0, 0.05, -0.05, -0.10 * hipShift * wHipRoll * trunkRatio);
   }
-
   const pivKneeX = s * 0.185, pivKneeY = -1.62, pivKneeZ = 0.02;
   const pivHipX  = s * 0.185, pivHipY  = -0.02, pivHipZ  = -0.03;
   const legSwing  = mix(legSwingR, legSwingL, isL);
   const legAdduct = mix(legAdductR, legAdductL, isL);
   const standRatio = clamp(1 - clamp(sit, 0, 1) - clamp(floorSit, 0, 1) - clamp(prone, 0, 1), 0, 1);
   const hingeLegAng = 0.1375 * hipHinge * standRatio * hipWeight;
-
   const autoSwingKnee = Math.max(0, -legSwing * 0.72) + Math.max(0, legSwing * 0.12);
   const sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0, 1.2)) * sit;
   const totalKneePitch =
@@ -910,7 +797,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   if (Math.abs(totalKneePitch) > 1e-4 && kneeWeight > 1e-5) {
     pitchFwdJS(out, pivKneeX, pivKneeY, pivKneeZ, totalKneePitch * kneeWeight);
   }
-
   if (hipWeight > 1e-5) {
     if (legAdduct > 1e-4) {
       rollLeftJS(out, pivHipX, pivHipY, pivHipZ, s * 0.32 * legAdduct * hipWeight);
@@ -938,7 +824,6 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
       yawLeftJS(out, pivHipX, pivHipY, pivHipZ, s * (0.30 + 0.38 * sitRatio) * legSpread * hipWeight);
     }
   }
-
   if (hipWeight > 1e-5 && Math.abs(hipHinge) > 1e-4) {
     out.y += 1.60 * (1 - Math.cos(hingeLegAng)) * hipWeight;
     out.z -= 1.60 * Math.sin(hingeLegAng) + 0.22 * hipHinge * (1 - standRatio) * hipWeight;
@@ -972,26 +857,18 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   }
   return out;
 }
-
-// -----------------------------------------------------------------------------
-// 3. GLSL コラーゲン線維＆3D横じわ・縦ファイバーシェーダー（ライト＆ダーク両対応）
-// -----------------------------------------------------------------------------
 const UNIFIED_FASCIA_VS = /* glsl */ `
   ${POSE_SHEET_GLSL}
-
   attribute vec4 aRigA;
   attribute vec4 aRigB;
   attribute vec4 aFasciaMeta;
-
   uniform float uSegStrain[${SEG_COUNT}];
   uniform float uTime;
-
   varying vec2 vUv;
   varying vec3 vWorldPos;
   varying vec3 vWorldNormal;
   varying float vStrain;
   varying vec4 vMeta;
-
   float sampleStrainProfile(float v) {
     float fv = clamp(v, 0.0, 1.0) * float(${SEG_COUNT - 1});
     int i0 = int(floor(fv));
@@ -999,21 +876,15 @@ const UNIFIED_FASCIA_VS = /* glsl */ `
     float t = fv - float(i0);
     return mix(uSegStrain[i0], uSegStrain[i1], t);
   }
-
   void main() {
     vUv = uv;
     vMeta = aFasciaMeta;
-
     float strain = sampleStrainProfile(uv.y);
     vStrain = strain;
-
     vec3 wp0 = (modelMatrix * vec4(position, 1.0)).xyz;
     vec3 wn0 = normalize(mat3(modelMatrix) * normal);
-
     vec3 wp = poseDeformSheet(wp0, aRigA, aRigB);
     vec3 wn = poseDeformSheetNormal(wp0, wn0, aRigA, aRigB);
-
-    // 1) 短縮時 (strain < 0): 原因側の赤い3D横方向アコーディオンじわ（凹凸波）
     float shortAmt = clamp((-strain - 0.012) / 0.14, 0.0, 1.35);
     if (shortAmt > 0.001) {
       float edgeGuard = sin(clamp(uv.x, 0.0, 1.0) * 3.14159265);
@@ -1023,62 +894,48 @@ const UNIFIED_FASCIA_VS = /* glsl */ `
       wp += wn * wrinkleDisp;
       wn = normalize(wn + vec3(0.0, cos(wavePhase) * 0.24 * shortAmt * endGuard, 0.0));
     }
-
-    // 2) 伸張時 (strain > 0): 症状側の青い縦ファイバーがピンと張る
     float stretchAmt = clamp((strain - 0.012) / 0.16, 0.0, 1.35);
     if (stretchAmt > 0.001) {
       wp += wn * (0.0012 * stretchAmt);
     }
-
     vWorldPos = wp;
     vWorldNormal = wn;
     gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0);
   }
 `;
-
 const UNIFIED_FASCIA_FS = /* glsl */ `
   uniform float uDarkTheme;
   uniform float uBaseOpacity;
   uniform float uTime;
-
   varying vec2 vUv;
   varying vec3 vWorldPos;
   varying vec3 vWorldNormal;
   varying float vStrain;
   varying vec4 vMeta;
-
   void main() {
     vec3 N = normalize(vWorldNormal);
     if (!gl_FrontFacing) N = -N;
     vec3 V = normalize(cameraPosition - vWorldPos);
-
     float facing = clamp(abs(dot(N, V)), 0.0, 1.0);
     float fresnel = pow(1.0 - facing, 2.05);
-
     vec3 L1 = normalize(vec3(-0.45, 0.68, 0.58));
     vec3 L2 = normalize(vec3(0.55, 0.22, 0.60));
     float diff = clamp(dot(N, L1) * 0.5 + 0.5, 0.0, 1.0) * 0.76 + max(dot(N, L2), 0.0) * 0.24;
     vec3 H = normalize(L1 + V);
     float spec = pow(max(dot(N, H), 0.0), 28.0);
-
     float u = vUv.x;
     float v = vUv.y;
     float fiberType = vMeta.x;
     float yBranchZone = vMeta.y;
-
     float stretchT = clamp((vStrain - 0.010) / 0.145, 0.0, 1.20);
     float shortT   = clamp((-vStrain - 0.010) / 0.135, 0.0, 1.20);
-
     float crimpAmp = mix(0.016, 0.0, clamp(stretchT * 1.35, 0.0, 1.0)) + 0.022 * shortT;
     float uCrimped = u + sin(v * 92.0) * crimpAmp;
-
     float f1 = 0.5 + 0.5 * sin(uCrimped * 88.0);
     float f2 = 0.5 + 0.5 * sin(uCrimped * 196.0 + 1.3);
     float longFibers = pow(f1, 1.6) * 0.68 + f2 * 0.32;
-
     float denseBandMask = clamp(fiberType, 0.0, 1.0) * (1.0 - step(1.5, fiberType));
     longFibers = mix(longFibers, pow(f1, 1.15) * 0.78 + f2 * 0.35, denseBandMask * 0.65);
-
     if (yBranchZone > 0.01) {
       float splitDist = mix(0.14, 0.33, yBranchZone);
       float antBranch = exp(-pow((u - (0.5 + splitDist)) / 0.15, 2.0));
@@ -1086,154 +943,102 @@ const UNIFIED_FASCIA_FS = /* glsl */ `
       float medSheet = 0.48;
       longFibers *= mix(1.0, clamp(medSheet + (antBranch + postBranch) * 0.72, 0.42, 1.25), yBranchZone);
     }
-
     float basketMask = step(1.5, fiberType);
     float diagA = 0.5 + 0.5 * sin((u * 38.0 + v * 76.0));
     float diagB = 0.5 + 0.5 * sin((u * 38.0 - v * 76.0));
     float basketWeave = pow(diagA, 2.2) * 0.52 + pow(diagB, 2.2) * 0.52;
-
     float retinaculum = vMeta.z * (0.5 + 0.5 * sin(v * 260.0));
-
     float collagenTex = mix(longFibers, longFibers * 0.42 + basketWeave * 0.78, basketMask);
     collagenTex = clamp(collagenTex + retinaculum * 0.35, 0.0, 1.25);
-
     float crossWrinkleWave = 0.5 + 0.5 * sin(v * 135.0 + sin(u * 9.42) * 0.85);
     float wrinkleCrest = pow(crossWrinkleWave, 1.75);
     float wrinkleTrough = 1.0 - crossWrinkleWave;
-
     float flowWave = 0.5 + 0.5 * sin(v * 34.0 - uTime * 2.4);
     float tensionGlint = pow(f1, 2.6) * (0.55 + 0.45 * flowWave) * clamp(stretchT, 0.0, 1.0);
-
-    // サロンリネン（ライト）＆ ディープスレートネイビー（ダーク）両方で美しく映える真珠コラーゲン膜
     vec3 neutralLightBg = mix(vec3(0.42, 0.53, 0.62), vec3(0.78, 0.85, 0.90), 0.30 + 0.70 * diff);
     neutralLightBg = mix(neutralLightBg, vec3(0.22, 0.34, 0.44), fresnel * 0.62);
-
     vec3 neutralDarkBg = mix(vec3(0.56, 0.65, 0.76), vec3(0.90, 0.95, 1.00), 0.30 + 0.70 * diff);
     neutralDarkBg = mix(neutralDarkBg, vec3(0.78, 0.88, 0.98), fresnel * 0.52);
-
     vec3 baseCol = mix(neutralLightBg, neutralDarkBg, uDarkTheme);
     baseCol += (collagenTex - 0.45) * mix(0.19, 0.18, uDarkTheme);
-
-    // 伸張側（症状：青い縦ファイバー）
     vec3 stretchCoreLight = mix(vec3(0.024, 0.56, 0.82), vec3(0.07, 0.30, 0.82), clamp(stretchT * 0.75, 0.0, 1.0));
     vec3 stretchFiberLight = vec3(0.28, 0.86, 0.98);
     vec3 stretchColLight = mix(stretchCoreLight * (0.72 + 0.38 * diff), stretchFiberLight, collagenTex * 0.58 + tensionGlint * 0.42);
-
     vec3 stretchCoreDark = mix(vec3(0.03, 0.64, 0.88), vec3(0.11, 0.42, 0.94), clamp(stretchT * 0.70, 0.0, 1.0));
     vec3 stretchFiberDark = vec3(0.52, 0.94, 1.00);
     vec3 stretchColDark = mix(stretchCoreDark * (0.75 + 0.35 * diff), stretchFiberDark, collagenTex * 0.62 + tensionGlint * 0.45);
-
     vec3 stretchCol = mix(stretchColLight, stretchColDark, uDarkTheme);
-
-    // 短縮側（原因：赤い3D横じわ）
     vec3 shortBaseLight = vec3(0.76, 0.11, 0.24) * (0.76 + 0.32 * diff);
     vec3 shortCrestLight = vec3(0.98, 0.52, 0.60);
     vec3 shortValleyLight = vec3(0.42, 0.04, 0.12);
     vec3 shortColLight = mix(shortBaseLight, shortCrestLight, wrinkleCrest * 0.56);
     shortColLight = mix(shortColLight, shortValleyLight, pow(wrinkleTrough, 2.0) * 0.52);
-
     vec3 shortBaseDark = vec3(0.88, 0.18, 0.32) * (0.78 + 0.30 * diff);
     vec3 shortCrestDark = vec3(1.00, 0.68, 0.75);
     vec3 shortValleyDark = vec3(0.45, 0.06, 0.15);
     vec3 shortColDark = mix(shortBaseDark, shortCrestDark, wrinkleCrest * 0.60);
     shortColDark = mix(shortColDark, shortValleyDark, pow(wrinkleTrough, 2.0) * 0.48);
-
     vec3 shortCol = mix(shortColLight, shortColDark, uDarkTheme);
-
     vec3 col = baseCol;
     col = mix(col, stretchCol, smoothstep(0.0, 0.85, stretchT));
     col = mix(col, shortCol, smoothstep(0.0, 0.85, shortT));
-
     col += vec3(1.0, 0.99, 0.97) * spec * mix(0.22, 0.34, denseBandMask);
-
     float edgeDist = min(u, 1.0 - u) * 2.0;
     float edgeFade = smoothstep(0.0, 0.11, edgeDist);
     float borderLine = exp(-pow((edgeDist - 0.10) / 0.048, 2.0));
     float endFade = smoothstep(0.0, 0.035, v) * (1.0 - smoothstep(0.965, 1.0, v));
-
     float activeBoost = clamp(max(stretchT, shortT), 0.0, 1.0);
     float baseAlpha = mix(0.35, 0.38, uDarkTheme) + denseBandMask * 0.11;
     float strainAlpha = baseAlpha + activeBoost * 0.36 + fresnel * 0.24 + borderLine * 0.26 + collagenTex * 0.09;
-
     float faceMul = gl_FrontFacing ? 1.0 : 0.62;
     float alpha = clamp(strainAlpha * edgeFade * endFade * uBaseOpacity * vMeta.w * faceMul, 0.0, 0.90);
-
     if (alpha < 0.012) discard;
-
     vec3 rimTint = mix(
       mix(vec3(0.28, 0.38, 0.48), vec3(0.82, 0.90, 0.98), uDarkTheme),
       col * 1.18,
       activeBoost
     );
     col = mix(col, rimTint, borderLine * 0.38);
-
     gl_FragColor = vec4(col, alpha);
   }
 `;
-
-// -----------------------------------------------------------------------------
-// 4. 各シートスパン ⇄ 解剖学筋肉ID群の対応テーブル（全45動作・ストーリー・筋肉連鎖発色用）
-// -----------------------------------------------------------------------------
 const SPAN_MUSCLE_MAP = {
-  // 1. LL (ラテラル・ライン)
   'fibular': ['fibularis-longus', 'fibularis-brevis', 'fibularis-tertius', 'abductor-digiti-minimi-foot'],
   'tfl-itb': ['tensor-fasciae-latae', 'gluteus-medius', 'gluteus-minimus', 'vastus-lateralis'],
   'oblique': ['external-oblique', 'internal-oblique'],
   'intercostal': ['external-intercostals', 'internal-intercostals', 'serratus-anterior'],
   'neck-scm': ['sternocleidomastoid', 'scalenus-anterior', 'scalenus-medius', 'scalenus-posterior'],
   'neck-spl': ['splenius-capitis', 'splenius-cervicis', 'levator-scapulae'],
-
-  // 2. DFL (ディープ・フロント・ライン)
   'tibpost': ['tibialis-posterior', 'flexor-hallucis-longus', 'flexor-digitorum-longus', 'popliteus', 'soleus'],
   'adductor': ['adductor-longus', 'adductor-brevis', 'adductor-magnus', 'adductor-minimus', 'pectineus', 'gracilis', 'piriformis', 'obturator-internus', 'pubococcygeus'],
   'iliopsoas': ['psoas-major', 'psoas-minor', 'iliacus'],
   'ql': ['quadratus-lumborum'],
   'diaphragm': ['diaphragm', 'transversus-thoracis', 'transversus-abdominis'],
   'jaw-neck': ['masseter', 'temporalis', 'medial-pterygoid', 'lateral-pterygoid', 'mylohyoid', 'digastric', 'sternohyoid', 'omohyoid', 'longus-colli', 'longus-capitis', 'scalenus-anterior', 'platysma'],
-
-  // 3. SBL (スーパーフィシャル・バック・ライン)
   'sbl-plantar': ['flexor-digitorum-brevis', 'abductor-hallucis', 'quadratus-plantae'],
   'sbl-calf': ['gastrocnemius', 'soleus', 'calcaneal-tendon', 'plantaris'],
   'sbl-ham': ['biceps-femoris', 'semitendinosus', 'semimembranosus'],
   'sbl-lumbar': ['multifidus', 'longissimus', 'iliocostalis', 'spinalis', 'gluteus-maximus'],
   'sbl-upperback': ['longissimus', 'iliocostalis', 'semispinalis', 'splenius-capitis', 'trapezius', 'rhomboid-major'],
   'sbl-scalp': ['rectus-capitis-posterior-major', 'rectus-capitis-posterior-minor', 'obliquus-capitis-superior', 'obliquus-capitis-inferior', 'occipitalis', 'epicranial-aponeurosis', 'frontalis'],
-
-  // 4. SFL (スーパーフィシャル・フロント・ライン)
   'sfl-shin': ['tibialis-anterior', 'extensor-digitorum-longus', 'extensor-hallucis-longus', 'extensor-digitorum-brevis'],
   'sfl-quad': ['rectus-femoris', 'vastus-medialis', 'vastus-lateralis', 'vastus-intermedius', 'sartorius'],
   'sfl-abs': ['rectus-abdominis', 'pyramidalis', 'linea-alba'],
   'sfl-chest-neck': ['pectoralis-major', 'sternocleidomastoid', 'sternohyoid', 'platysma', 'depressor-anguli-oris', 'depressor-labii-inferioris', 'zygomaticus-major'],
-
-  // 5. SPL (スパイラル・ライン)
   'spl-leg': ['tibialis-anterior', 'fibularis-longus', 'biceps-femoris', 'tensor-fasciae-latae'],
   'spl-sling': ['external-oblique', 'internal-oblique', 'serratus-anterior', 'rhomboid-major', 'rhomboid-minor'],
   'spl-upper': ['splenius-capitis', 'splenius-cervicis', 'levator-scapulae'],
-
-  // 6. DFAL (深前アーム・ライン)
   'dfal-pec': ['pectoralis-minor', 'subclavius', 'coracobrachialis'],
   'dfal-arm': ['biceps-brachii', 'brachialis', 'coracobrachialis', 'brachioradialis', 'supinator', 'pronator-teres', 'abductor-pollicis-brevis', 'flexor-pollicis-brevis', 'flexor-pollicis-longus', 'opponens-pollicis'],
-
-  // 7. SFAL (表前アーム・ライン)
   'sfal-pec': ['pectoralis-major', 'latissimus-dorsi'],
   'sfal-flex': ['pronator-teres', 'flexor-carpi-radialis', 'flexor-carpi-ulnaris', 'palmaris-longus', 'flexor-digitorum-superficialis', 'flexor-digitorum-profundus', 'lumbricals-hand'],
-
-  // 8. DBAL (深後アーム・ライン)
   'dbal-rhomboid': ['rhomboid-major', 'rhomboid-minor', 'levator-scapulae', 'supraspinatus', 'infraspinatus', 'teres-minor', 'subscapularis'],
   'dbal-ulnar': ['triceps-brachii', 'anconeus', 'extensor-carpi-ulnaris', 'abductor-digiti-minimi-hand', 'flexor-digiti-minimi-brevis-hand'],
-
-  // 9. SBAL (表後アーム・ライン)
   'sbal-deltoid': ['trapezius', 'deltoid', 'supraspinatus'],
   'sbal-extensor': ['brachioradialis', 'extensor-carpi-radialis-longus', 'extensor-carpi-radialis-brevis', 'extensor-digitorum', 'extensor-digiti-minimi', 'extensor-carpi-ulnaris'],
-
-  // 10. BFL / 11. FFL (機能ライン)
   'bfl-diag': ['latissimus-dorsi', 'gluteus-maximus', 'vastus-lateralis', 'teres-major'],
   'ffl-diag': ['pectoralis-major', 'rectus-abdominis', 'adductor-longus', 'pectineus', 'pyramidalis'],
 };
-
-// -----------------------------------------------------------------------------
-// 5. 単一シートメッシュビルダー
-// -----------------------------------------------------------------------------
 function buildUnifiedSheetMesh({
   id,
   lineId,
@@ -1252,11 +1057,9 @@ function buildUnifiedSheetMesh({
   const rigAArr = new Float32Array(vertCount * 4);
   const rigBArr = new Float32Array(vertCount * 4);
   const metaArr = new Float32Array(vertCount * 4);
-
   const explicitSideSign = sideTag === 'R' ? -1 : sideTag === 'L' ? +1 : 0;
   const sampleUs = [-0.50, 0.0, +0.50];
   const fiberSamples = sampleUs.map(() => []);
-
   for (let iv = 0; iv <= nv; iv++) {
     const v = iv / nv;
     for (let iu = 0; iu <= nu; iu++) {
@@ -1265,30 +1068,24 @@ function buildUnifiedSheetMesh({
       const res = stationEvalFn(uNorm, v);
       const rig = skinToContinuousRig(res.skin, res.pos, res.sideSign ?? explicitSideSign);
       const k = iv * (nu + 1) + iu;
-
       positions[k * 3] = res.pos.x;
       positions[k * 3 + 1] = res.pos.y;
       positions[k * 3 + 2] = res.pos.z;
-
       uvs[k * 2] = u01;
       uvs[k * 2 + 1] = v;
-
       rigAArr[k * 4] = rig.rigA[0];
       rigAArr[k * 4 + 1] = rig.rigA[1];
       rigAArr[k * 4 + 2] = rig.rigA[2];
       rigAArr[k * 4 + 3] = rig.rigA[3];
-
       rigBArr[k * 4] = rig.rigB[0];
       rigBArr[k * 4 + 1] = rig.rigB[1];
       rigBArr[k * 4 + 2] = rig.rigB[2];
       rigBArr[k * 4 + 3] = rig.rigB[3];
-
       metaArr[k * 4] = res.fiberType || 0;
       metaArr[k * 4 + 1] = res.yBranch || 0;
       metaArr[k * 4 + 2] = res.retinaculum || 0;
       metaArr[k * 4 + 3] = alphaScale;
     }
-
     for (let su = 0; su < sampleUs.length; su++) {
       const sRes = stationEvalFn(sampleUs[su], v);
       const sRig = skinToContinuousRig(sRes.skin, sRes.pos, sRes.sideSign ?? explicitSideSign);
@@ -1300,7 +1097,6 @@ function buildUnifiedSheetMesh({
       });
     }
   }
-
   const indices = [];
   for (let iv = 0; iv < nv; iv++) {
     for (let iu = 0; iu < nu; iu++) {
@@ -1311,7 +1107,6 @@ function buildUnifiedSheetMesh({
       indices.push(a, b, c, b, d, c);
     }
   }
-
   const geom = new THREE.BufferGeometry();
   geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
@@ -1320,7 +1115,6 @@ function buildUnifiedSheetMesh({
   geom.setAttribute('aFasciaMeta', new THREE.BufferAttribute(metaArr, 4));
   geom.setIndex(indices);
   geom.computeVertexNormals();
-
   const restStepLen = fiberSamples.map((pts) => {
     const lens = new Float32Array(nv);
     for (let iv = 0; iv < nv; iv++) {
@@ -1328,7 +1122,6 @@ function buildUnifiedSheetMesh({
     }
     return lens;
   });
-
   const spanInfos = (spans || [{ id: 'all', v0: 0, v1: 1, complianceRatio: 1.0 }]).map((sp) => {
     const i0 = Math.max(0, Math.min(nv - 1, Math.round(sp.v0 * nv)));
     const i1 = Math.max(i0 + 1, Math.min(nv, Math.round(sp.v1 * nv)));
@@ -1346,10 +1139,8 @@ function buildUnifiedSheetMesh({
       roleTargetStrain: null, // null = 幾何ひずみのみ, 数値 = 動作ロール目標ひずみ
     };
   });
-
   const segStrainArray = new Float32Array(SEG_COUNT);
   const lineDef = FASCIA_LINE_DEFS.find((d) => d.id === lineId);
-
   const mat = new THREE.ShaderMaterial({
     vertexShader: UNIFIED_FASCIA_VS,
     fragmentShader: UNIFIED_FASCIA_FS,
@@ -1371,17 +1162,14 @@ function buildUnifiedSheetMesh({
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-
   const mesh = new THREE.Mesh(geom, mat);
   mesh.name = `unified-fascia:${id}`;
   mesh.renderOrder = renderOrder;
   mesh.frustumCulled = false;
   mesh.raycast = () => {}; // ピック判定は下の骨格・筋肉へ透過
   mesh.userData = { sheetId: id, lineId, sideTag };
-
   const rawStepStrain = new Float32Array(nv);
   const spanBlended = new Float32Array(nv);
-
   const updateStrain = (poseObj, loadFactor = 1.0, modeType = 'idle') => {
     for (let su = 0; su < fiberSamples.length; su++) {
       const pts = fiberSamples[su];
@@ -1390,7 +1178,6 @@ function buildUnifiedSheetMesh({
         evalDeformSheetJS(p.restPos, p.rigA, p.rigB, poseObj, p.curPos);
       }
     }
-
     for (let iv = 0; iv < nv; iv++) {
       let dL0 = 0;
       let dL1 = 0;
@@ -1400,7 +1187,6 @@ function buildUnifiedSheetMesh({
       }
       rawStepStrain[iv] = (dL1 - dL0) / Math.max(1e-5, dL0);
     }
-
     for (let sIdx = 0; sIdx < spanInfos.length; sIdx++) {
       const sp = spanInfos[sIdx];
       let curSum = 0;
@@ -1412,10 +1198,8 @@ function buildUnifiedSheetMesh({
       }
       const meanL1 = curSum / fiberSamples.length;
       const geomStrain = clamp((meanL1 - sp.meanL0) / Math.max(1e-4, sp.effectiveComplianceLen), -0.22, 0.22);
-
       let spanTensionStrain = 0;
       let stepOffset = 0;
-
       if (modeType === 'idle') {
         spanTensionStrain = 0;
       } else if (modeType === 'line') {
@@ -1428,13 +1212,11 @@ function buildUnifiedSheetMesh({
       } else {
         spanTensionStrain = geomStrain * 0.42;
       }
-
       for (let iv = sp.i0; iv < sp.i1; iv++) {
         const stepContrib = modeType === 'idle' ? 0 : rawStepStrain[iv] * (sp.roleTargetStrain !== null ? 0.28 : 0.55) + stepOffset;
         spanBlended[iv] = spanTensionStrain * 0.80 + stepContrib * 0.20;
       }
     }
-
     for (let s = 0; s < SEG_COUNT; s++) {
       const centerIv = ((s + 0.5) / SEG_COUNT) * nv;
       let acc = 0;
@@ -1448,7 +1230,6 @@ function buildUnifiedSheetMesh({
       segStrainArray[s] = acc / wSum;
     }
   };
-
   return {
     id,
     lineId,
@@ -1460,31 +1241,20 @@ function buildUnifiedSheetMesh({
     updateStrain,
   };
 }
-
-// -----------------------------------------------------------------------------
-// 6. 全11アナトミートレイン連続3D筋膜シート＆骨ピン統合システムの生成
-// -----------------------------------------------------------------------------
 export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
   const envelope = buildBodyEnvelope(muscleRoot, skeletonRoot);
-
   const sharedUniforms = {
     uDarkTheme: { value: 0 },
     uTime: { value: 0 },
   };
-
   const group = new THREE.Group();
   group.name = 'unified-fascia-continuum';
   scene.add(group);
-
   const sheets = [];
   const registerSheet = (sh) => {
     sheets.push(sh);
     group.add(sh.mesh);
   };
-
-  // ===========================================================================
-  // 【1】LL: ラテラル・ライン
-  // ===========================================================================
   const LL_PROFILE_R = [
     { v: 0.00, y: -3.24, thLeg: 0.35, thTor: Math.PI, span: 0.16, off: 0.005, fType: 1.0, yBr: 0, ret: 0 },
     { v: 0.04, y: -3.21, thLeg: Math.PI - 0.15, thTor: Math.PI, span: 0.18, off: 0.005, fType: 1.0, yBr: 0, ret: 0 },
@@ -1500,7 +1270,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     { v: 0.89, y: +1.64, thLeg: Math.PI, thTor: Math.PI - 0.01, span: 0.50, off: 0.0065, fType: 2.0, yBr: 0, ret: 0 },
     { v: 1.00, y: +2.08, thLeg: Math.PI, thTor: Math.PI, span: 0.34, off: 0.006, fType: 1.8, yBr: 0, ret: 0 },
   ];
-
   for (const side of ['R', 'L']) {
     const isR = side === 'R';
     registerSheet(
@@ -1524,7 +1293,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
           const thTorR = p.thTor - uNorm * p.span;
           const thLeg = isR ? thLegR : mirrorThetaToLeft(thLegR);
           const thTor = isR ? thTorR : mirrorThetaToLeft(thTorR);
-
           const pos = new THREE.Vector3();
           if (v < 0.075) {
             const tStirrup = v / 0.075;
@@ -1556,7 +1324,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `ll-neck-scm-${side.toLowerCase()}`,
@@ -1577,7 +1344,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `ll-neck-spl-${side.toLowerCase()}`,
@@ -1599,14 +1365,9 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【2】DFL: ディープ・フロント・ライン
-  // ===========================================================================
   for (const side of ['R', 'L']) {
     const isR = side === 'R';
     const sSign = isR ? -1 : +1;
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dfl-tibpost-${side.toLowerCase()}`,
@@ -1648,7 +1409,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
     const DFL_CORE_TABLE = [
       { v: 0.00, y: -1.52, ax: 0.22, xHalf: 0.030, z: -0.02, zHalf: 0.045 },
       { v: 0.28, y: -0.82, ax: 0.16, xHalf: 0.048, z: +0.01, zHalf: 0.065 },
@@ -1656,7 +1416,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       { v: 0.76, y: +0.44, ax: 0.125, xHalf: 0.052, z: +0.01, zHalf: 0.042 },
       { v: 1.00, y: +1.10, ax: 0.082, xHalf: 0.036, z: -0.03, zHalf: 0.032 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dfl-adductor-psoas-${side.toLowerCase()}`,
@@ -1699,7 +1458,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dfl-ql-${side.toLowerCase()}`,
@@ -1727,7 +1485,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dfl-neck-jaw-${side.toLowerCase()}`,
@@ -1766,7 +1523,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
   registerSheet(
     buildUnifiedSheetMesh({
       id: 'dfl-diaphragm',
@@ -1798,15 +1554,10 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       sharedUniforms,
     }),
   );
-
-  // ===========================================================================
-  // 【3】SPL: スパイラル・ライン
-  // ===========================================================================
   for (const sys of ['RtoL', 'LtoR']) {
     const startRight = sys === 'RtoL';
     const legSide = startRight ? 'R' : 'L';
     const isLegR = legSide === 'R';
-
     const SPL_TABLE = [
       { v: 0.00, y: -3.20, thLegR: 0.45, thTorR: 0, span: 0.16, off: 0.0095, fType: 1.0 },
       { v: 0.12, y: -2.42, thLegR: Math.PI * 0.62, thTorR: 0, span: 0.22, off: 0.0095, fType: 0.6 },
@@ -1820,7 +1571,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       { v: 0.89, y: +2.02, thLegR: 0, thTorR: -Math.PI * 0.46, span: 0.22, off: 0.010, fType: 0.8 },
       { v: 1.00, y: +2.71, thLegR: 0, thTorR: -Math.PI * 0.84, span: 0.18, off: 0.010, fType: 0.9 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `spl-${sys.toLowerCase()}`,
@@ -1853,10 +1603,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【4】SBL: スーパーフィシャル・バック・ライン
-  // ===========================================================================
   const SBL_TABLE_R = [
     { v: 0.00, y: -3.25, thLeg: -Math.PI * 0.5, thTor: -Math.PI * 0.5, span: 0.22, off: 0.006, fType: 1.0 },
     { v: 0.07, y: -3.12, thLeg: -Math.PI * 0.52, thTor: -Math.PI * 0.5, span: 0.18, off: 0.006, fType: 1.0 },
@@ -1870,7 +1616,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     { v: 0.90, y: +2.82, thLeg: -Math.PI * 0.5, thTor: -Math.PI * 0.57, span: 0.22, off: 0.006, fType: 1.0 },
     { v: 1.00, y: +2.92, thLeg: -Math.PI * 0.5, thTor: +Math.PI * 0.56, span: 0.22, off: 0.006, fType: 1.0 },
   ];
-
   for (const side of ['R', 'L']) {
     const isR = side === 'R';
     const sSign = isR ? -1 : +1;
@@ -1948,10 +1693,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【5】SFL: スーパーフィシャル・フロント・ライン
-  // ===========================================================================
   const SFL_TABLE_R = [
     { v: 0.00, y: -3.18, thLeg: Math.PI * 0.52, thTor: Math.PI * 0.5, span: 0.20, off: 0.006, fType: 0.8 },
     { v: 0.16, y: -2.35, thLeg: Math.PI * 0.56, thTor: Math.PI * 0.5, span: 0.24, off: 0.0065, fType: 0.6 },
@@ -1963,7 +1704,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     { v: 0.84, y: +2.06, thLeg: Math.PI * 0.5, thTor: Math.PI * 0.55, span: 0.12, off: 0.007, fType: 1.0 },
     { v: 1.00, y: +2.71, thLeg: Math.PI * 0.5, thTor: Math.PI * 1.08, span: 0.14, off: 0.008, fType: 0.9 },
   ];
-
   for (const side of ['R', 'L']) {
     const isR = side === 'R';
     registerSheet(
@@ -2000,17 +1740,11 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【6〜9】アーム4ライン（DFAL, SFAL, DBAL, SBAL：肩甲帯〜上腕〜前腕〜手まで完全連続）
-  // ===========================================================================
   for (const side of ['R', 'L']) {
     const isR = side === 'R';
     const sSign = isR ? -1 : +1;
     const B_GIRDLE = isR ? BONE.GIRDLE_R : BONE.GIRDLE_L;
     const B_HUM = isR ? BONE.HUMERUS_R : BONE.HUMERUS_L;
-
-    // 6. DFAL
     const DFAL_ARM_TABLE = [
       { v: 0.22, y: +1.94, thR: Math.PI * 0.62, span: 0.16, radW: 0.8 },
       { v: 0.36, y: +1.64, thR: Math.PI * 0.59, span: 0.24, radW: 0.82 },
@@ -2019,7 +1753,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       { v: 0.84, y: +0.10, thR: Math.PI * 0.88, span: 0.24, radW: 1.0 },
       { v: 1.00, y: -0.18, thR: Math.PI * 0.82, span: 0.26, radW: 1.0 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dfal-${side.toLowerCase()}`,
@@ -2083,15 +1816,12 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
-    // 7. SFAL
     const SFAL_ARM_TABLE = [
       { v: 0.28, y: +1.82, thR: Math.PI * 0.45, span: 0.26, radW: 0.3 },
       { v: 0.58, y: +0.93, thR: Math.PI * 0.16, span: 0.24, radW: 0.25 },
       { v: 0.84, y: +0.05, thR: Math.PI * 0.46, span: 0.30, radW: 0.55 },
       { v: 1.00, y: -0.24, thR: Math.PI * 0.50, span: 0.34, radW: 0.6 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `sfal-${side.toLowerCase()}`,
@@ -2144,15 +1874,12 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
-    // 8. DBAL (肩甲骨〜上腕境界 v=0.16..0.34 を連続角度補間で裂け目 0.000mm に接続)
     const DBAL_ARM_TABLE = [
       { v: 0.28, y: +1.92, thR: -Math.PI * 0.56, span: 0.26, radW: 0.15 },
       { v: 0.58, y: +0.92, thR: -Math.PI * 0.44, span: 0.24, radW: 0.0 },
       { v: 0.86, y: +0.04, thR: -Math.PI * 0.16, span: 0.22, radW: 0.0 },
       { v: 1.00, y: -0.22, thR: -Math.PI * 0.12, span: 0.24, radW: 0.1 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `dbal-${side.toLowerCase()}`,
@@ -2206,15 +1933,12 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         sharedUniforms,
       }),
     );
-
-    // 9. SBAL (肩峰〜三角筋境界 v=0.18..0.36 を連続角度補間で裂け目 0.000mm に接続)
     const SBAL_ARM_TABLE = [
       { v: 0.28, y: +2.04, thR: Math.PI * 1.02, span: 0.34, radW: 0.5 },
       { v: 0.58, y: +0.93, thR: Math.PI * 1.06, span: 0.24, radW: 0.6 },
       { v: 0.85, y: +0.05, thR: Math.PI * 1.46, span: 0.28, radW: 0.72 },
       { v: 1.00, y: -0.24, thR: Math.PI * 1.50, span: 0.32, radW: 0.75 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `sbal-${side.toLowerCase()}`,
@@ -2242,7 +1966,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
               0.007,
             );
             const pos = pNeckBack.lerp(pAcrom, st);
-            // v=0.28 時点で getArmChainSkin(y=2.04) の B_HUM 重み (1 - smoothstep(1.98, 2.12, 2.04) ≈ 0.61) と完全一致させる
             const endHumW = 1 - smoothstep(1.98, 2.12, 2.04);
             const wHum = smoothstep(0.55, 1.0, t) * endHumW;
             const baseSkin = getBodyChainSkin(side, yTrap);
@@ -2276,16 +1999,11 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【10】BFL: バック・ファンクショナル・ライン
-  // ===========================================================================
   for (const sys of ['RtoL', 'LtoR']) {
     const armIsR = sys === 'RtoL';
     const legSide = armIsR ? 'L' : 'R';
     const isLegR = legSide === 'R';
     const B_HUM_ARM = armIsR ? BONE.HUMERUS_R : BONE.HUMERUS_L;
-
     const BFL_TABLE = [
       { v: 0.00, y: -0.95, thLegL: -Math.PI * 0.10, thTorR: 0, span: 0.22, off: 0.011 },
       { v: 0.24, y: -0.06, thLegL: -Math.PI * 0.34, thTorR: -Math.PI * 0.34, span: 0.28, off: 0.011 },
@@ -2293,7 +2011,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       { v: 0.74, y: +1.34, thLegL: 0, thTorR: -Math.PI * 0.82, span: 0.28, off: 0.011 },
       { v: 1.00, y: +1.82, thLegL: 0, thTorR: -Math.PI * 0.94, span: 0.20, off: 0.010 },
     ];
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `bfl-${sys.toLowerCase()}`,
@@ -2342,17 +2059,12 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 【11】FFL: フロント・ファンクショナル・ライン
-  // ===========================================================================
   for (const sys of ['RtoL', 'LtoR']) {
     const armIsR = sys === 'RtoL';
     const legSide = armIsR ? 'L' : 'R';
     const sLeg = legSide === 'R' ? -1 : +1;
     const B_FEM_LEG = legSide === 'R' ? BONE.FEMUR_R : BONE.FEMUR_L;
     const B_HUM_ARM = armIsR ? BONE.HUMERUS_R : BONE.HUMERUS_L;
-
     registerSheet(
       buildUnifiedSheetMesh({
         id: `ffl-${sys.toLowerCase()}`,
@@ -2418,10 +2130,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }),
     );
   }
-
-  // ===========================================================================
-  // 7. 骨ピン留めステーション (42箇所) の生成＆連続リグ同期
-  // ===========================================================================
   const stationsGroup = new THREE.Group();
   stationsGroup.name = 'unified-bony-stations';
   const pinCoreGeom = new THREE.SphereGeometry(0.016, 12, 10);
@@ -2438,51 +2146,59 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     transparent: true,
     opacity: 0.80,
   });
-
+  const maxStations = BONY_STATIONS.length;
+  const coreInst = new THREE.InstancedMesh(pinCoreGeom, pinCoreMat, maxStations);
+  const ringInst = new THREE.InstancedMesh(pinRingGeom, pinRingMat, maxStations);
+  coreInst.name = 'stations-core-instanced';
+  ringInst.name = 'stations-ring-instanced';
+  coreInst.renderOrder = 3;
+  ringInst.renderOrder = 3;
+  coreInst.frustumCulled = false;
+  ringInst.frustumCulled = false;
+  coreInst.raycast = () => {};
+  ringInst.raycast = () => {};
+  stationsGroup.add(coreInst, ringInst);
   const stationNodes = BONY_STATIONS.map((st) => {
-    const holder = new THREE.Group();
-    holder.name = `station:${st.id}`;
-    const core = new THREE.Mesh(pinCoreGeom, pinCoreMat);
-    const ring = new THREE.Mesh(pinRingGeom, pinRingMat);
-    core.renderOrder = 3;
-    ring.renderOrder = 3;
-    core.raycast = () => {};
-    ring.raycast = () => {};
-    holder.add(core, ring);
     const restPos = new THREE.Vector3(st.pos[0], st.pos[1], st.pos[2]);
-    holder.position.copy(restPos);
-    stationsGroup.add(holder);
     const rig = skinToContinuousRig({ idx: [st.bone, 0, 0, 0], w: [1, 0, 0, 0] }, restPos, 0);
     return {
       def: st,
-      holder,
-      ring,
+      active: true,
       restPos,
+      worldPos: restPos.clone(),
       rigA: rig.rigA,
       rigB: rig.rigB,
     };
   });
   group.add(stationsGroup);
-
-  // ===========================================================================
-  // 8. 表示状態＆ロール発色ステート管理
-  // ===========================================================================
+  const _instMat = new THREE.Matrix4();
+  const _instQuatId = new THREE.Quaternion();
+  const _instScaleOne = new THREE.Vector3(1, 1, 1);
+  let lastStrainHash = NaN;
+  let lastStationQuatHash = NaN;
+  let activeStationNodes = stationNodes.slice();
   const activeLines = new Set(FASCIA_LINE_DEFS.map((d) => d.id));
   let systemVisible = true;
   let showStations = true;
   let currentMode = 'idle'; // 'idle' | 'habit' | 'line' | 'step' | 'chain'
-
   const syncVisibility = () => {
     group.visible = systemVisible;
     for (const sh of sheets) {
       sh.mesh.visible = systemVisible && activeLines.has(sh.lineId);
     }
+    activeStationNodes = [];
     for (const node of stationNodes) {
       const relevant = node.def.lines.some((lid) => activeLines.has(lid));
-      node.holder.visible = systemVisible && showStations && relevant;
+      node.active = systemVisible && showStations && relevant;
+      if (node.active) activeStationNodes.push(node);
     }
+    const visCount = activeStationNodes.length;
+    coreInst.count = visCount;
+    ringInst.count = visCount;
+    stationsGroup.visible = visCount > 0;
+    lastStrainHash = NaN;
+    lastStationQuatHash = NaN;
   };
-
   const clearRoleTargets = () => {
     for (const sh of sheets) {
       sh.material.uniforms.uBaseOpacity.value = sh.baseOpacity;
@@ -2491,7 +2207,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }
     }
   };
-
   /**
    * 縮む筋群・伸びる筋群・左右指定・対象ラインから各シートスパンのロール発色目標を計算する
    */
@@ -2504,13 +2219,10 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     lengthenLinked = [],
   }) => {
     clearRoleTargets();
-
     const sCoreSet = new Set(shortenCore || []);
     const sLinkSet = new Set(shortenLinked || []);
     const lAntSet = new Set(lengthenAntagonist || []);
     const lLinkSet = new Set(lengthenLinked || []);
-
-    // 表示するラインを決定（未指定時は関連筋を含むライン、それもなければ全11本）
     let resolvedLines = (lineIds || []).filter(Boolean);
     if (!resolvedLines.length) {
       const inferred = new Set();
@@ -2525,12 +2237,9 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       }
       resolvedLines = inferred.size ? [...inferred] : FASCIA_LINE_DEFS.map((d) => d.id);
     }
-
     activeLines.clear();
     for (const lid of resolvedLines) activeLines.add(lid);
-
     const wantSide = side === 'R' || side === 'L' ? side : 'both';
-
     for (const sh of sheets) {
       if (!activeLines.has(sh.lineId)) continue;
       const sideScale =
@@ -2539,7 +2248,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
           : sh.sideTag === wantSide
             ? 1.0
             : 0.30;
-
       for (const sp of sh.spanInfos) {
         const mList = SPAN_MUSCLE_MAP[sp.id] || [];
         let shortScore = 0;
@@ -2550,7 +2258,6 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
           if (lAntSet.has(m)) longScore = Math.max(longScore, 1.0);
           else if (lLinkSet.has(m)) longScore = Math.max(longScore, 0.78);
         }
-
         if (shortScore > 0 || longScore > 0) {
           if (shortScore >= longScore) {
             sp.roleTargetStrain = -0.165 * shortScore * sideScale;
@@ -2562,41 +2269,70 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
         }
       }
     }
-
     syncVisibility();
   };
-
   syncVisibility();
-
   const update = (time, delta, cameraQuat = null) => {
     const dt = Math.min(0.1, Math.max(0, Number.isFinite(delta) ? delta : 1 / 60));
     sharedUniforms.uTime.value = Number.isFinite(time) ? time : sharedUniforms.uTime.value + dt;
-
     if (!systemVisible) return;
-
-    const poseObj = posture.getPose();
+    const uA = posture.poseUniforms.uPoseA.value;
+    const uB = posture.poseUniforms.uPoseB.value;
+    const uC = posture.poseUniforms.uPoseC.value;
+    const uD = posture.poseUniforms.uPoseD.value;
+    const uE = posture.poseUniforms.uPoseE.value;
+    const uF = posture.poseUniforms.uPoseF.value;
+    const uG = posture.poseUniforms.uPoseG.value;
+    const uH = posture.poseUniforms.uPoseH.value;
     const rawCyc = clamp(posture.poseUniforms.uContractCycle.value || 0, 0, 1);
-    const loadFactor =
-      currentMode === 'habit'
-        ? 0.42 + 0.58 * rawCyc
-        : currentMode === 'step' || currentMode === 'chain'
-          ? 0.88
-          : 1.0;
-
-    for (const sh of sheets) {
-      if (!sh.mesh.visible) continue;
-      sh.updateStrain(poseObj, loadFactor, currentMode);
-    }
-
-    if (showStations) {
-      for (const node of stationNodes) {
-        if (!node.holder.visible) continue;
-        evalDeformSheetJS(node.restPos, node.rigA, node.rigB, poseObj, node.holder.position);
-        if (cameraQuat) node.ring.quaternion.copy(cameraQuat);
+    const poseHash =
+      uA.x * 1.1 + uA.y * 1.3 + uA.z * 1.7 + uA.w * 1.9 +
+      uB.x * 2.3 + uB.y * 2.9 + uB.z * 3.1 + uB.w * 3.7 +
+      uC.x * 4.1 + uC.y * 4.3 + uC.z * 4.7 + uC.w * 5.3 +
+      uD.x * 5.9 + uD.y * 6.1 + uD.z * 6.7 + uD.w * 7.1 +
+      uE.x * 7.3 + uE.y * 7.9 + uE.z * 8.3 + uE.w * 8.9 +
+      uF.x * 9.7 + uF.y * 10.1 + uF.z * 10.3 + uF.w * 10.7 +
+      uG.x * 10.9 + uG.y * 11.3 + uG.z * 12.7 + uG.w * 13.1 +
+      uH.x * 13.7 + uH.y * 13.9 + uH.z * 14.9 + uH.w * 15.1 +
+      rawCyc * 17.3;
+    const poseChanged = !(Math.abs(poseHash - lastStrainHash) < 1e-6);
+    const camHash = cameraQuat
+      ? cameraQuat.x * 3.1 + cameraQuat.y * 5.3 + cameraQuat.z * 7.9 + cameraQuat.w * 11.3
+      : 0;
+    const camChanged = !(Math.abs(camHash - lastStationQuatHash) < 1e-6);
+    if (poseChanged) {
+      lastStrainHash = poseHash;
+      const poseObj = posture.getPose();
+      const loadFactor =
+        currentMode === 'habit'
+          ? 0.42 + 0.58 * rawCyc
+          : currentMode === 'step' || currentMode === 'chain'
+            ? 0.88
+            : 1.0;
+      for (const sh of sheets) {
+        if (!sh.mesh.visible) continue;
+        sh.updateStrain(poseObj, loadFactor, currentMode);
+      }
+      if (showStations && activeStationNodes.length > 0) {
+        for (let i = 0; i < activeStationNodes.length; i++) {
+          const node = activeStationNodes[i];
+          evalDeformSheetJS(node.restPos, node.rigA, node.rigB, poseObj, node.worldPos);
+          _instMat.compose(node.worldPos, _instQuatId, _instScaleOne);
+          coreInst.setMatrixAt(i, _instMat);
+        }
+        coreInst.instanceMatrix.needsUpdate = true;
       }
     }
+    if (showStations && activeStationNodes.length > 0 && (poseChanged || camChanged)) {
+      lastStationQuatHash = camHash;
+      const qUse = cameraQuat || _instQuatId;
+      for (let i = 0; i < activeStationNodes.length; i++) {
+        _instMat.compose(activeStationNodes[i].worldPos, qUse, _instScaleOne);
+        ringInst.setMatrixAt(i, _instMat);
+      }
+      ringInst.instanceMatrix.needsUpdate = true;
+    }
   };
-
   return {
     group,
     sheets,

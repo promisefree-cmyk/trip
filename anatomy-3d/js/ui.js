@@ -1,21 +1,11 @@
-// =============================================================================
-// ui.js — アナトミー筋膜・筋肉 3D（一体型 3ステップ統合UI v=20261118d）
-// ・トップヘッダー（通常｜ダーク）＆ ステージ直下バー（［筋膜｜筋肉］＋［一時停止］）連携
-// ・常設3ステップ進捗バー：［ ① 選ぶ ］ → ［ ② 原因と動き ］ → ［ ③ ゆるめる順番 ］
-// ・全端末で文字被り 0px・途中省略（…）0箇所・タップ領域 44px 以上
-// =============================================================================
-
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261118d';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261118d';
-
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261118e';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261118e';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
-
 /* -------------------------------------------------------------------------- */
 /* アイコン・定数辞書                                                          */
 /* -------------------------------------------------------------------------- */
-
 const ICONS = {
   feel: '<path d="M13 2.5 5.5 13h5.5l-1 8.5L18.5 11H13l0-8.5Z" fill="currentColor" fill-opacity="0.18"/>',
   habit:
@@ -35,7 +25,6 @@ const ICONS = {
   search: '<circle cx="10.8" cy="10.8" r="6.3"/><path d="M15.5 15.5 20 20"/>',
   play: '<path d="M8 5.8v12.4a.8.8 0 0 0 1.2.7l9.6-6.2a.8.8 0 0 0 0-1.4L9.2 5.1A.8.8 0 0 0 8 5.8Z" fill="currentColor" stroke="none"/>',
 };
-
 const FEEL_REGIONS = [
   {
     id: 'neck',
@@ -63,7 +52,6 @@ const FEEL_REGIONS = [
     sub: '股関節の詰まり・前もも・ふくらはぎ・足裏など',
   },
 ];
-
 const EXTRA_LEG_FEELING = {
   id: 'front-thigh-knee',
   partGroup: 'leg',
@@ -72,7 +60,6 @@ const EXTRA_LEG_FEELING = {
   label: '階段や立ち仕事で、前ももやひざまわりが張る',
   habits: ['soccer-kick', 'sway-back', 'running-strike', 'cycling-aero'],
 };
-
 const HABIT_CATEGORIES_4 = [
   {
     id: 'work',
@@ -99,7 +86,6 @@ const HABIT_CATEGORIES_4 = [
     sub: '掃除・洗い物・抱っこ・ベビーカー・洗濯干し',
   },
 ];
-
 const POSTURE_HABIT_IDS = new Set([
   'leg-cross-r',
   'leg-cross-l',
@@ -116,27 +102,23 @@ const POSTURE_HABIT_IDS = new Set([
   'heels-commute-walk',
   'sway-back',
 ]);
-
 const HOUSEWORK_HABIT_IDS = new Set([
   'vacuum-dish-bend',
   'childcare-hip-l',
   'stroller-cart-push',
   'laundry-reach',
 ]);
-
 const TOOL_LABEL = {
   hand: '🤲 指でやる',
   ball: '🎾 ボール',
   roller: '🛞 ローラー',
   pole: '🛞 ローラー',
 };
-
 const RELEASE_TOOLS = [
   { id: 'hand', label: TOOL_LABEL.hand, motion: 'stroke' },
   { id: 'ball', label: TOOL_LABEL.ball, motion: 'circle' },
   { id: 'roller', label: TOOL_LABEL.roller, motion: 'roll' },
 ];
-
 const DEFAULT_MUSCLE_TOOL = {
   'abductor-pollicis-brevis': 'ball',
   'flexor-pollicis-longus': 'ball',
@@ -213,7 +195,6 @@ const DEFAULT_MUSCLE_TOOL = {
   'iliocostalis': 'roller',
   'multifidus': 'ball',
 };
-
 const FRIENDLY_TP_LABELS = {
   'abductor-pollicis-brevis': '親指のふくらみ',
   'flexor-pollicis-longus': '親指の奥',
@@ -326,7 +307,6 @@ const FRIENDLY_TP_LABELS = {
   'abductor-digiti-minimi-hand': '手の小指側',
   'flexor-digiti-minimi-brevis-hand': '小指のふくらみ',
 };
-
 const DELICATE_MUSCLE_SAFETY = {
   sternocleidomastoid:
     '首の前・横には大切な血管や神経が通っています。強い器具で押さず、指の腹で皮膚をやさしく撫でる程度にしてください。',
@@ -349,11 +329,9 @@ const DELICATE_MUSCLE_SAFETY = {
   subclavius:
     '鎖骨のすぐ下は神経や血管に近い場所です。指の腹でやさしくくるくる撫でるようにゆるめてください。',
 };
-
 /* -------------------------------------------------------------------------- */
 /* DOM 生成ヘルパー                                                            */
 /* -------------------------------------------------------------------------- */
-
 function h(tag, props = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
@@ -376,7 +354,6 @@ function h(tag, props = {}, ...children) {
   }
   return el;
 }
-
 const iconCache = new Map();
 function icon(name, cls = '') {
   const key = `${name}|${cls}`;
@@ -389,32 +366,27 @@ function icon(name, cls = '') {
   }
   return proto.cloneNode(true);
 }
-
 function cleanTitle(str) {
   return String(str || '')
     .replace(/ゴールデンライン/g, 'トリガーライン')
     .replace(/^[^\p{L}\p{N}①②③④⑤]+\s*/u, '')
     .trim();
 }
-
 function sanitizeText(str) {
   return String(str || '')
     .replace(/ゴールデンライン/g, 'トリガーライン')
     .replace(/^[⚠️⚠\uFE0F\s]+/u, '')
     .trim();
 }
-
 function normalizeToolId(raw) {
   const s = String(raw || '').toLowerCase();
   if (s === 'pole' || s === 'roller') return 'roller';
   if (s === 'ball') return 'ball';
   return 'hand';
 }
-
 /* -------------------------------------------------------------------------- */
 /* UI 本体                                                                     */
 /* -------------------------------------------------------------------------- */
-
 export function createUI({
   lines = [],
   habits = [],
@@ -434,10 +406,8 @@ export function createUI({
       : Array.isArray(goldenLines)
         ? goldenLines
         : [];
-
   const root = document.getElementById('ui-root') || document.body;
   root.textContent = '';
-
   /* ---------- イベントディスパッチャ ---------- */
   const handlers = new Map();
   function on(event, cb) {
@@ -455,7 +425,6 @@ export function createUI({
       }
     });
   }
-
   /* ---------- データ辞書構築 ---------- */
   const lineById = new Map(lines.map((l) => [l.id, l]));
   const habitById = new Map(habits.map((hb) => [hb.id, hb]));
@@ -471,12 +440,10 @@ export function createUI({
       if (key && !triggerLineById.has(key)) triggerLineById.set(key, tl);
     }
   }
-
   const resolveLine = (x) => (x && typeof x === 'object' ? x : lineById.get(x) || null);
   const resolveHabit = (x) => (x && typeof x === 'object' ? x : habitById.get(x) || null);
   const resolveStory = (x) => (x && typeof x === 'object' ? x : storyById.get(x) || null);
   const resolveTriggerLine = (x) => (x && typeof x === 'object' ? x : triggerLineById.get(x) || null);
-
   const nameOf = (id) => {
     if (!names || !id) return '';
     if (typeof names === 'function') return names(id) || '';
@@ -484,14 +451,12 @@ export function createUI({
     const v = names[id];
     return typeof v === 'string' ? v : v?.nameJa || '';
   };
-
   const shortMuscleNameOf = (id, preferred = '') => {
     const cleanPref = String(preferred || '').replace(/^[①②③④⑤1-5１-５][.．、\s]*/u, '').trim();
     if (cleanPref) return sanitizeText(cleanPref);
     if (id && FRIENDLY_TP_LABELS[id]) return FRIENDLY_TP_LABELS[id];
     return nameOf(id) || id || '';
   };
-
   /* ---------- 17違和感リスト構築＆5部位分類 ---------- */
   const allFeelings = [...feelings];
   if (
@@ -500,7 +465,6 @@ export function createUI({
   ) {
     allFeelings.push(EXTRA_LEG_FEELING);
   }
-
   function classifyFeelingRegion(f) {
     const pg = String(f?.partGroup || '').toLowerCase();
     if (pg === 'neck' || pg === 'head' || pg === 'jaw') return 'neck';
@@ -508,7 +472,6 @@ export function createUI({
     if (pg === 'back' || pg === 'chest') return 'back';
     if (pg === 'waist' || pg === 'hip' || pg === 'pelvis') return 'waist';
     if (pg === 'leg' || pg === 'foot' || pg === 'knee') return 'leg';
-
     const txt = `${f?.partBadge || ''} ${f?.tag || ''} ${f?.label || ''}`;
     if (/(首|あご|顎|頭|目|こめかみ|食いしば)/.test(txt)) return 'neck';
     if (/(肩甲骨|背中|胸|呼吸|息|巻き肩|猫背)/.test(txt) && !/(腕|手首|親指)/.test(txt)) return 'back';
@@ -516,7 +479,6 @@ export function createUI({
     if (/(股関節|もも|ひざ|膝|ふくらはぎ|すね|足裏|かかと|足首)/.test(txt)) return 'leg';
     return 'waist';
   }
-
   /* ---------- 全45動作の4分類（漏れ・重複 0件） ---------- */
   function classifyHabitCategory4(hb) {
     if (!hb) return 'work';
@@ -535,7 +497,6 @@ export function createUI({
     }
     return 'work';
   }
-
   const habitsByCat4 = {
     work: [],
     sports: [],
@@ -546,7 +507,6 @@ export function createUI({
     const cat = classifyHabitCategory4(hb);
     habitsByCat4[cat].push(hb);
   }
-
   /* ---------- 因果解説・主要部位・セルフケア手順データ解決 ---------- */
   function extractHabitTriggerPoints(hb) {
     if (!hb) return [];
@@ -562,7 +522,6 @@ export function createUI({
             : Array.isArray(tl?.rootMuscles) && tl.rootMuscles.length
               ? tl.rootMuscles
               : [...(hb.shortenCore || []), ...(hb.shorten || [])];
-
     const nums = ['①', '②', '③'];
     const seen = new Set();
     const list = [];
@@ -596,7 +555,6 @@ export function createUI({
     }
     return list;
   }
-
   function resolveShortenMuscles(hb) {
     const tl = hb?.triggerLine || hb?.goldenLine || resolveTriggerLine(hb?.triggerLineId || hb?.goldenLineId);
     const ids = [
@@ -616,7 +574,6 @@ export function createUI({
     }
     return out;
   }
-
   function resolveLengthenMuscles(hb, excludeIds = new Set()) {
     const tl = hb?.triggerLine || hb?.goldenLine || resolveTriggerLine(hb?.triggerLineId || hb?.goldenLineId);
     const ids = [
@@ -636,7 +593,6 @@ export function createUI({
     }
     return out;
   }
-
   function resolveCausalSummaryText(hb) {
     const tl = hb?.triggerLine || hb?.goldenLine || resolveTriggerLine(hb?.triggerLineId || hb?.goldenLineId);
     const explicit = sanitizeText(hb?.causalSummary || tl?.causalSummary || '');
@@ -649,7 +605,6 @@ export function createUI({
     }
     return sanitizeText(hb?.feel || '離れた場所の縮みが筋膜を伝わり、気になる場所を引っぱっています。');
   }
-
   function resolveSafetyNoteText(hb, muscleIds = []) {
     const tl = hb?.triggerLine || hb?.goldenLine || resolveTriggerLine(hb?.triggerLineId || hb?.goldenLineId);
     const explicit = sanitizeText(hb?.safetyNote || tl?.safetyNote || hb?.selfCare?.safetyNote || '');
@@ -659,7 +614,6 @@ export function createUI({
     }
     return '';
   }
-
   function buildSelfCareSteps(hb) {
     const raw = hb?.selfCare || {};
     const tpList = extractHabitTriggerPoints(hb);
@@ -668,14 +622,12 @@ export function createUI({
       : Array.isArray(raw.targetMuscles) && raw.targetMuscles.length
         ? raw.targetMuscles
         : resolveShortenMuscles(hb).map((m) => m.id).slice(0, 3);
-
     const rawSteps =
       Array.isArray(raw.steps) && raw.steps.length
         ? raw.steps
         : tpList.length && tpList.some((tp) => tp.step)
           ? tpList.map((tp) => tp.step)
           : targetMuscles.map((mId) => `${shortMuscleNameOf(mId)}のまわりを心地よい強さで30秒ほぐします。`);
-
     const count = Math.max(targetMuscles.length, rawSteps.length, 1);
     const steps = [];
     const nums = ['①', '②', '③', '④'];
@@ -692,7 +644,6 @@ export function createUI({
       const rawStepStr =
         typeof st === 'string' ? st : st?.step || st?.text || st?.desc || tp?.step || '';
       const cleanStep = sanitizeText(rawStepStr).replace(/^[①②③④⑤1-5１-５][.．、\s]*/u, '').trim();
-
       let reqTool =
         (typeof st === 'object' && st?.tool) ||
         tp?.tool ||
@@ -712,7 +663,6 @@ export function createUI({
       const baseText = !cleanStep || hasMismatchedWord ? profile.guideText : cleanStep;
       const durSec = tp?.durationSec || 30;
       const nextTpId = tpList[i + 1]?.id || tpList[0]?.id || null;
-
       steps.push({
         index: i,
         num: nums[i] || `${i + 1}`,
@@ -729,7 +679,6 @@ export function createUI({
     }
     return steps;
   }
-
   /* ---------- UI ステート ---------- */
   const state = {
     step: 1, // 1: 選ぶ | 2: 原因と動き | 3: ゆるめる順番
@@ -738,7 +687,6 @@ export function createUI({
     habitCatId: 'work', // 'work' | 'sports' | 'posture' | 'housework' | 'all'
     searchOpen: false,
     searchQuery: '',
-
     activeType: null, // 'habit' | 'story' | null
     currentHabit: null,
     currentStory: null,
@@ -747,15 +695,12 @@ export function createUI({
     activeLineId: null, // Step1 'lines' 図鑑で選択中のラインID
     focusedRoleMuscleId: null, // Step2 2カラムカードで単体フォーカス中の筋肉ID
     pickedPart: null, // 3D直接タップ時のミニ部位バナー情報
-
     scSteps: [],
     scStepIndex: 0,
-
     unifiedLayer: 'fascia', // 'fascia' | 'muscle'
     theme: 'light', // 'light' | 'dark'
     paused: false,
   };
-
   /* ---------- 外部シェルボタン（index.html）結線 ---------- */
   const btnThemeLight = document.getElementById('btn-theme-light');
   const btnThemeDark = document.getElementById('btn-theme-dark');
@@ -767,7 +712,6 @@ export function createUI({
   const stageLoaderText = document.getElementById('stage-loader-text');
   const stageLoaderFill = document.getElementById('stage-loader-fill');
   const metaThemeColor = document.getElementById('meta-theme-color');
-
   function applyThemeDOM(themeMode) {
     const next = themeMode === 'dark' ? 'dark' : 'light';
     state.theme = next;
@@ -786,7 +730,6 @@ export function createUI({
       btnThemeDark.setAttribute('aria-pressed', String(on));
     }
   }
-
   function applyUnifiedLayerDOM(layerMode) {
     const next = layerMode === 'muscle' ? 'muscle' : 'fascia';
     state.unifiedLayer = next;
@@ -801,7 +744,6 @@ export function createUI({
       btnLayerMuscle.setAttribute('aria-pressed', String(on));
     }
   }
-
   function applyPausedDOM(paused) {
     state.paused = Boolean(paused);
     if (btnPlayToggle) {
@@ -812,7 +754,6 @@ export function createUI({
       btnPlayLabel.textContent = state.paused ? '▶ 再生' : '一時停止';
     }
   }
-
   btnThemeLight?.addEventListener('click', () => {
     if (state.theme === 'light') return;
     applyThemeDOM('light');
@@ -823,7 +764,6 @@ export function createUI({
     applyThemeDOM('dark');
     emit('theme', 'dark');
   });
-
   btnLayerFascia?.addEventListener('click', () => {
     if (state.unifiedLayer === 'fascia') return;
     applyUnifiedLayerDOM('fascia');
@@ -834,12 +774,10 @@ export function createUI({
     applyUnifiedLayerDOM('muscle');
     emit('unified-layer', 'muscle');
   });
-
   btnPlayToggle?.addEventListener('click', () => {
     applyPausedDOM(!state.paused);
     emit('play-toggle', state.paused);
   });
-
   /* ---------- 常設3ステップ進捗バー ＆ スクロール領域 ---------- */
   const progBtn1 = h('button', {
     type: 'button',
@@ -864,7 +802,6 @@ export function createUI({
     onclick: () => goToStep(3),
     text: '③ ゆるめる順番',
   });
-
   const progressBar = h(
     'nav',
     { class: 'step-progress-bar', 'aria-label': '操作のステップ進捗' },
@@ -874,30 +811,23 @@ export function createUI({
     h('span', { class: 'step-prog-arrow', 'aria-hidden': 'true', text: '→' }),
     progBtn3,
   );
-
   const scrollBody = h('div', { class: 'panel-scroll-body' });
   root.append(progressBar, scrollBody);
-
   function syncProgressBar() {
     const hasCauseTarget = Boolean(state.currentHabit || state.currentStory);
     const hasCareTarget = Boolean(state.currentHabit);
-
     progBtn1.classList.toggle('is-current', state.step === 1);
     progBtn2.classList.toggle('is-current', state.step === 2);
     progBtn3.classList.toggle('is-current', state.step === 3);
-
     progBtn1.setAttribute('aria-current', state.step === 1 ? 'step' : 'false');
     progBtn2.setAttribute('aria-current', state.step === 2 ? 'step' : 'false');
     progBtn3.setAttribute('aria-current', state.step === 3 ? 'step' : 'false');
-
     progBtn2.disabled = !hasCauseTarget;
     progBtn3.disabled = !hasCareTarget;
   }
-
   function scrollTopNow() {
     scrollBody.scrollTop = 0;
   }
-
   /* ---------- ステップ遷移アクション ---------- */
   function goToStep(targetStep) {
     if (targetStep === 1) {
@@ -932,7 +862,6 @@ export function createUI({
       openStep3SelfCare(state.currentHabit);
     }
   }
-
   function openHabitStep2(hb, opts = {}) {
     const resolved = resolveHabit(hb);
     if (!resolved) return;
@@ -951,7 +880,6 @@ export function createUI({
       emit('habit', resolved.id);
     }
   }
-
   function openStoryStep2(stObj, stepIdx = 0, opts = {}) {
     const resolved = resolveStory(stObj);
     if (!resolved) return;
@@ -960,7 +888,6 @@ export function createUI({
     state.activeType = 'story';
     state.currentStory = resolved;
     state.storyStepIdx = Math.max(0, Math.min((resolved.steps?.length || 1) - 1, Number(stepIdx) || 0));
-    // ストーリーからセルフケアに進めるよう関連動作を解決しておく
     const fallbackHabit =
       resolveHabit(resolved.relatedHabitId) ||
       habits.find((hItem) => (hItem.shorten || []).some((m) => (resolved.steps?.[0]?.focus || []).includes(m))) ||
@@ -975,7 +902,6 @@ export function createUI({
       emit('story', resolved.id);
     }
   }
-
   function openStep3SelfCare(hb) {
     const resolved = resolveHabit(hb) || state.currentHabit;
     if (!resolved) return;
@@ -988,7 +914,6 @@ export function createUI({
     state.step = 3;
     render();
     scrollTopNow();
-
     const first = state.scSteps[0];
     if (first) {
       emitSelfCareStepPayload(resolved, first, 0, false);
@@ -996,7 +921,6 @@ export function createUI({
       emit('selfcare', resolved.id);
     }
   }
-
   function emitSelfCareStepPayload(hb, st, idx, toolSwitchOnly = false) {
     if (!hb || !st?.muscleId) return;
     const profile = resolveCareProfile(st.muscleId, st.tool, st.shortName);
@@ -1016,12 +940,10 @@ export function createUI({
       toolSwitchOnly,
     });
   }
-
   /* ---------- 検索ロジック ---------- */
   function matchSearchItems(qRaw) {
     const q = String(qRaw || '').trim().toLowerCase();
     if (!q) return { habits: [], feelings: [], lines: [] };
-
     const matchedFeelings = allFeelings.filter((f) =>
       `${f.label || ''} ${f.partBadge || ''} ${f.tag || ''}`.toLowerCase().includes(q),
     );
@@ -1039,7 +961,6 @@ export function createUI({
     );
     return { habits: matchedHabits, feelings: matchedFeelings, lines: matchedLines };
   }
-
   /* ---------- 描画部品：3D直接タップ時のミニ部位バナー ---------- */
   function renderPickedPartBanner() {
     if (!state.pickedPart) return null;
@@ -1082,15 +1003,11 @@ export function createUI({
       ),
     );
   }
-
   /* ---------- 描画：ステップ ①「選ぶ」 ---------- */
   function renderStep1() {
     const frag = document.createDocumentFragment();
-
     const pickedBanner = renderPickedPartBanner();
     if (pickedBanner) frag.append(pickedBanner);
-
-    // 上部バー：見出し（または戻るボタン）＋ 右端コンパクト「検索」トグル
     const isSubRoute = state.step1Route !== 'home' && !state.searchOpen;
     const topBarLeft = isSubRoute
       ? h(
@@ -1117,7 +1034,6 @@ export function createUI({
           '← 戻る',
         )
       : h('h2', { class: 'step1-heading', text: '気になる入り口を選んでください' });
-
     const searchBtn = h(
       'button',
       {
@@ -1138,14 +1054,10 @@ export function createUI({
       icon('search'),
       h('span', { text: '検索' }),
     );
-
     frag.append(h('div', { class: 'step1-top-bar' }, topBarLeft, searchBtn));
-
-    // 検索ボックス展開時
     if (state.searchOpen) {
       const resultsHost = h('div', { class: 'full-row-stack' });
       const countNote = h('p', { class: 'search-count-note' });
-
       const updateSearchList = () => {
         resultsHost.textContent = '';
         const q = state.searchQuery.trim();
@@ -1184,7 +1096,6 @@ export function createUI({
           );
         }
       };
-
       const searchInput = h('input', {
         type: 'search',
         class: 'search-input',
@@ -1196,7 +1107,6 @@ export function createUI({
           updateSearchList();
         },
       });
-
       const clearBtn = h('button', {
         type: 'button',
         class: 'search-clear-btn',
@@ -1208,7 +1118,6 @@ export function createUI({
           searchInput.focus();
         },
       });
-
       frag.append(
         h(
           'div',
@@ -1221,8 +1130,6 @@ export function createUI({
       updateSearchList();
       if (state.searchQuery.trim()) return frag;
     }
-
-    // --- Route A: 3つの入り口ホーム ---
     if (state.step1Route === 'home') {
       const stack = h(
         'div',
@@ -1282,11 +1189,26 @@ export function createUI({
             },
           },
           h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('line')),
+            h('span', { class: 'row-body' },
+              h('span', { class: 'row-title', text: '全身11本の筋膜ライン図鑑' }),
+              h('span', { class: 'row-sub', text: '頭から足裏までつながる11本の筋膜シート一覧' }),
+            ),
+            h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+          ),
+        h(
+          'a',
+          {
+            href: 'fascia-check-list.html',
+            id: 'entry-checklist',
+            class: 'list-row-btn',
+            style: { 'text-decoration': 'none', color: 'inherit' },
+          },
+          h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('play')),
           h(
             'span',
             { class: 'row-body' },
-            h('span', { class: 'row-title', text: '全身11本の筋膜ライン図鑑' }),
-            h('span', { class: 'row-sub', text: '頭から足裏までつながる11本の筋膜シート一覧' }),
+            h('span', { class: 'row-title', text: '全45アニメーション 最初・最後チェック表' }),
+            h('span', { class: 'row-sub', text: '全動作の開始（0%）と終了（100%）を横並びで確認・修正番号コピー' }),
           ),
           h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
         ),
@@ -1294,8 +1216,6 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
-    // --- Route B1: 5部位リスト ---
     if (state.step1Route === 'feel-regions') {
       frag.append(
         h('h2', { class: 'subnav-title', style: { 'margin-bottom': '8px' }, text: 'どのあたりが気になりますか？' }),
@@ -1331,8 +1251,6 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
-    // --- Route B2: 部位別の違和感リスト（全17項目・横一行フル幅で見切れゼロ） ---
     if (state.step1Route === 'feel-list') {
       const reg = FEEL_REGIONS.find((r) => r.id === state.feelRegionId) || FEEL_REGIONS[0];
       const items = allFeelings.filter((f) => classifyFeelingRegion(f) === reg.id);
@@ -1350,8 +1268,6 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
-    // --- Route C1: 4分類（仕事・スポーツ・日常姿勢・家事育児）＋ 連動ストーリー ---
     if (state.step1Route === 'habit-cats') {
       frag.append(
         h('h2', {
@@ -1388,7 +1304,6 @@ export function createUI({
           ),
         );
       }
-
       if (stories.length > 0) {
         stack.append(
           h(
@@ -1414,7 +1329,6 @@ export function createUI({
           ),
         );
       }
-
       stack.append(
         h(
           'button',
@@ -1438,19 +1352,31 @@ export function createUI({
           ),
           h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
         ),
+        h(
+          'a',
+          {
+            href: 'fascia-check-list.html',
+            class: 'list-row-btn',
+            style: { 'text-decoration': 'none', color: 'inherit' },
+          },
+          h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('habit')),
+          h(
+            'span',
+            { class: 'row-body' },
+            h('span', { class: 'row-title', text: `全${habits.length}アニメーション 最初・最後チェック表` }),
+            h('span', { class: 'row-sub', text: '最初と最後の姿勢を左右に並べて見比べ・番号チェック' }),
+          ),
+          h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+        ),
       );
-
       frag.append(stack);
       return frag;
     }
-
-    // --- Route C2: 各カテゴリーの動作リスト ---
     if (state.step1Route === 'habit-list') {
       const catMeta = HABIT_CATEGORIES_4.find((c) => c.id === state.habitCatId);
       const list = state.habitCatId === 'all' ? habits : habitsByCat4[state.habitCatId] || habits;
       const heading = catMeta ? `${catMeta.label}（${list.length}件）` : `全${list.length}動作一覧`;
       frag.append(h('h2', { class: 'subnav-title', style: { 'margin-bottom': '8px' }, text: heading }));
-
       const stack = h('div', { class: 'full-row-stack' });
       for (const hb of list) {
         stack.append(makeHabitRow(hb));
@@ -1458,8 +1384,6 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
-    // --- Route C3: 連動4ステップストーリー一覧 ---
     if (state.step1Route === 'stories') {
       frag.append(
         h('h2', {
@@ -1493,8 +1417,6 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
-    // --- Route D: 全身11本の筋膜ライン図鑑 ---
     if (state.step1Route === 'lines') {
       frag.append(
         h('h2', {
@@ -1503,8 +1425,6 @@ export function createUI({
           text: `全身${lines.length}本の筋膜ライン図鑑`,
         }),
       );
-
-      // 選択中のライン解説カード
       const activeLine = state.activeLineId ? lineById.get(state.activeLineId) : null;
       if (activeLine) {
         const relatedHabits = habits.filter((hb) => (hb.lines || []).includes(activeLine.id)).slice(0, 5);
@@ -1513,7 +1433,6 @@ export function createUI({
           .map((mId) => shortMuscleNameOf(mId))
           .filter(Boolean);
         const uniqTrack = [...new Set(trackLabels)];
-
         frag.append(
           h(
             'div',
@@ -1559,7 +1478,6 @@ export function createUI({
           ),
         );
       }
-
       const showAllBtn = h(
         'button',
         {
@@ -1581,7 +1499,6 @@ export function createUI({
         ),
       );
       frag.append(showAllBtn);
-
       const stack = h('div', { class: 'full-row-stack' });
       for (const l of lines) {
         stack.append(
@@ -1596,10 +1513,8 @@ export function createUI({
       frag.append(stack);
       return frag;
     }
-
     return frag;
   }
-
   function makeFeelingRow(f) {
     const matchedHabits = (f.habits || []).map((hid) => resolveHabit(hid)).filter(Boolean);
     return h(
@@ -1633,7 +1548,6 @@ export function createUI({
       h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
     );
   }
-
   function makeHabitRow(hb) {
     const isCurrent = state.currentHabit?.id === hb.id;
     const sub = sanitizeText(hb.symptom || hb.feel || hb.occupation || '');
@@ -1655,7 +1569,6 @@ export function createUI({
       h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
     );
   }
-
   function makeLineRow(l, onTap) {
     const isSelected = state.activeLineId === l.id;
     return h(
@@ -1679,7 +1592,6 @@ export function createUI({
       h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
     );
   }
-
   /* ---------- 描画：ステップ ②「原因と動き」 ---------- */
   function renderStep2() {
     if (state.activeType === 'story' && state.currentStory) {
@@ -1687,13 +1599,9 @@ export function createUI({
     }
     const hb = state.currentHabit || habits[0];
     if (!hb) return renderStep1();
-
     const wrap = h('div', { class: 'step2-wrap' });
-
     const pickedBanner = renderPickedPartBanner();
     if (pickedBanner) wrap.append(pickedBanner);
-
-    // 1. [ ← 戻る ] ＋ 動作・症状タイトル（見切れゼロ）
     wrap.append(
       h(
         'div',
@@ -1711,8 +1619,6 @@ export function createUI({
         h('h2', { class: 'subnav-title', text: cleanTitle(hb.label) }),
       ),
     );
-
-    // 違和感逆引きから入った場合：関連する原因動作のワンタップ切替バー
     if (state.feelingContext && state.feelingContext.habits.length > 1) {
       wrap.append(
         h(
@@ -1737,14 +1643,11 @@ export function createUI({
         ),
       );
     }
-
-    // 2. わかりやすい因果解説ボックス（途中省略 `…` 一切なし！）
     const causalSummary = resolveCausalSummaryText(hb);
     const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
     const quickCheck = sanitizeText(hb.quickCheck || tl?.quickCheck || '');
     const feelDetail = sanitizeText(hb.feel || '');
     const extraLine = quickCheck || (feelDetail && feelDetail !== causalSummary ? feelDetail : '');
-
     wrap.append(
       h(
         'div',
@@ -1763,12 +1666,9 @@ export function createUI({
         h('span', { text: '▶ ③ ゆるめる順番（3Dマッサージ）を見る' }),
       ),
     );
-
-    // 3. 2カラム整理カード：左「● 縮んでいる原因」 ／ 右「● 引っぱられて張る場所」
     const shortMuscles = resolveShortenMuscles(hb);
     const shortIdSet = new Set(shortMuscles.map((m) => m.id));
     const longMuscles = resolveLengthenMuscles(hb, shortIdSet);
-
     const makeRoleMuscleButton = (mObj) => {
       const isFocused = state.focusedRoleMuscleId === mObj.id;
       return h(
@@ -1793,7 +1693,6 @@ export function createUI({
         h('span', { 'aria-hidden': 'true', text: isFocused ? '戻す' : '見る' }),
       );
     };
-
     wrap.append(
       h(
         'div',
@@ -1834,7 +1733,6 @@ export function createUI({
         ),
       ),
     );
-
     if (state.focusedRoleMuscleId) {
       wrap.append(
         h('button', {
@@ -1849,17 +1747,12 @@ export function createUI({
         }),
       );
     }
-
-
-
     return wrap;
   }
-
   function renderStep2Story(story) {
     const steps = Array.isArray(story.steps) ? story.steps : [];
     const curStep = steps[state.storyStepIdx] || steps[0] || {};
     const wrap = h('div', { class: 'step2-wrap' });
-
     wrap.append(
       h(
         'div',
@@ -1873,8 +1766,6 @@ export function createUI({
         h('h2', { class: 'subnav-title', text: cleanTitle(story.title) }),
       ),
     );
-
-    // 4ステップ切替バー
     wrap.append(
       h(
         'div',
@@ -1893,7 +1784,6 @@ export function createUI({
         ),
       ),
     );
-
     wrap.append(
       h(
         'div',
@@ -1904,7 +1794,6 @@ export function createUI({
         }),
       ),
     );
-
     const sIds = [...new Set([...(curStep.shortenCore || []), ...(curStep.shorten || [])])].slice(0, 3);
     const lIds = [...new Set([...(curStep.lengthenAntagonist || []), ...(curStep.lengthen || [])])].slice(0, 3);
     if (sIds.length || lIds.length) {
@@ -1959,7 +1848,6 @@ export function createUI({
         ),
       );
     }
-
     if (state.currentHabit) {
       wrap.append(
         h(
@@ -1973,10 +1861,8 @@ export function createUI({
         ),
       );
     }
-
     return wrap;
   }
-
   /* ---------- 描画：ステップ ③「ゆるめる順番」 ---------- */
   function renderStep3() {
     const hb = state.currentHabit;
@@ -1986,10 +1872,7 @@ export function createUI({
     }
     const idx = Math.max(0, Math.min(state.scSteps.length - 1, state.scStepIndex));
     const cur = state.scSteps[idx];
-
     const wrap = h('div', { class: 'step3-wrap' });
-
-    // 1. [ ← ② 原因へ ] ＋ タイトル
     wrap.append(
       h(
         'div',
@@ -2010,8 +1893,6 @@ export function createUI({
         }),
       ),
     );
-
-    // 2. 手順ステップ切替ボタン（① 〇〇 ／ ② 〇〇 ／ ③ 〇〇）
     wrap.append(
       h(
         'div',
@@ -2037,8 +1918,6 @@ export function createUI({
         }),
       ),
     );
-
-    // 3. 安全ガード付き道具ワンタップ切替ピル
     if (cur) {
       const rule = getAllowedToolsAndDefault(cur.muscleId);
       const allowedList = rule.allowedTools || rule.allowed || ['hand', 'ball', 'roller'];
@@ -2047,7 +1926,6 @@ export function createUI({
         ? normalizeToolId(cur.tool)
         : rule.defaultTool;
       cur.tool = activeTool;
-
       if (onlyHand) {
         wrap.append(
           h('div', {
@@ -2086,13 +1964,10 @@ export function createUI({
           ),
         );
       }
-
-      // 4. やさしいやり方ガイド（1〜2行・省略ゼロ）
       const profile = resolveCareProfile(cur.muscleId, cur.tool, cur.shortName);
       const guideBody =
         cur.userSwitchedTool && cur.tool !== cur.initialTool ? profile.guideText : cur.baseText;
       const durSuffix = /\d+\s*秒/.test(guideBody) ? '' : `（目安 ${cur.durationSec || 30}秒）`;
-
       wrap.append(
         h(
           'div',
@@ -2107,8 +1982,6 @@ export function createUI({
           }),
         ),
       );
-
-      // 安全ポイント（該当部位または動作にある場合）
       const safetyNote = resolveSafetyNoteText(hb, [
         cur.muscleId,
         ...state.scSteps.map((s) => s.muscleId),
@@ -2123,13 +1996,9 @@ export function createUI({
         );
       }
     }
-
-    // 5. 控えめな1行免責注記
     wrap.append(h('p', { class: 'sc-disclaimer', text: DISCLAIMER_TEXT }));
-
     return wrap;
   }
-
   /* ---------- メイン再描画 ---------- */
   function render() {
     syncProgressBar();
@@ -2142,13 +2011,10 @@ export function createUI({
       scrollBody.append(renderStep1());
     }
   }
-
   render();
-
   /* ---------- 外部公開 API（main.js 互換＋一体型拡張） ---------- */
   return {
     on,
-
     setLoading(pct = 0, text = '準備しています…') {
       if (stageLoader) stageLoader.classList.remove('is-hidden');
       if (stageLoaderText && text) stageLoaderText.textContent = String(text);
@@ -2157,7 +2023,6 @@ export function createUI({
         stageLoaderFill.style.width = `${clamped}%`;
       }
     },
-
     hideLoading() {
       if (stageLoaderFill) stageLoaderFill.style.width = '100%';
       if (stageLoader) {
@@ -2169,19 +2034,15 @@ export function createUI({
         }, 260);
       }
     },
-
     setTheme(themeMode) {
       applyThemeDOM(themeMode);
     },
-
     setUnifiedLayer(layerMode) {
       applyUnifiedLayerDOM(layerMode);
     },
-
     setPaused(paused) {
       applyPausedDOM(paused);
     },
-
     showHabit(habit) {
       const resolved = resolveHabit(habit);
       if (!resolved) return;
@@ -2193,7 +2054,6 @@ export function createUI({
         ),
       });
     },
-
     showLine(line) {
       const resolved = resolveLine(line);
       if (!resolved) return;
@@ -2202,23 +2062,19 @@ export function createUI({
       state.activeLineId = resolved.id;
       render();
     },
-
     showStory(story, index = 0) {
       const resolved = resolveStory(story);
       if (!resolved) return;
       openStoryStep2(resolved, index, { fromExternal: true });
     },
-
     showPart(part) {
       if (!part || !part.id) return;
       state.pickedPart = part;
       render();
     },
-
     openSelfCare(habit) {
       openStep3SelfCare(habit || state.currentHabit);
     },
-
     resetHome() {
       state.step = 1;
       state.step1Route = 'home';
@@ -2234,11 +2090,9 @@ export function createUI({
       render();
       scrollTopNow();
     },
-
     closeCard() {
       this.resetHome();
     },
-
     setProgress() {},
     setStep(index) {
       if (state.activeType === 'story' && state.currentStory) {

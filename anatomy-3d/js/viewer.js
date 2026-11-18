@@ -1,52 +1,24 @@
-// =============================================================================
-// viewer.js — 3D 人体ビューア（筋肉＋骨格）
-// 担当: 3D エンジニア（統合担当）
-//
-// 契約（CONTRACT.md）:
-//   export async function createViewer(container, { onProgress }) => ({
-//     THREE, scene, camera, renderer, controls,
-//     getMeshes(id), getCenter(id, side), allIds(),
-//     setLayer('muscle'|'bone', 'on'|'ghost'|'off'),
-//     highlight(ids, color), ghostOthers(ids), resetLook(),
-//     hide(id), showAll(),
-//     focus(ids), view('front'|'back'|'left'|'right'),
-//     onPick(cb), onFrame(cb),
-//   })
-//
-// 座標系: Y 上向き / 身体の正面 = +Z / 身体の左 = +X・右 = -X / 身長 ≈ 6.5 単位
-// =============================================================================
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-// 姿勢変形（posture.js）: 名前付き import だと export 欠落時にモジュール全体が落ちるので名前空間で受ける
-import * as posture from './posture.js?v=20261118d';
-
+import * as posture from './posture.js?v=20261118e';
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
 const getRigRole =
   typeof posture.getRigRole === 'function'
     ? posture.getRigRole
     : () => new THREE.Vector4(-1, -1, -1, -1);
-
-// ---------------------------------------------------------------------------
-// 定数
-// ---------------------------------------------------------------------------
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261118d';
-const IDLE_TIMEOUT_MS = 45000; // 無操作45秒以上で省電力 4fps 待機モードへ移行（観察中の15fps低下カクつきを完全防止）
-const IDLE_FRAME_INTERVAL_MS = 250; // 約 4fps（250ms間隔）の静かな待機（画面に触れた瞬間0msで60fpsへ即復帰）
-
-// Content-Length が取れない環境向けのフォールバック（Meshopt圧縮後の実ファイルサイズ）
+const ASSET_QUERY = '?v=20261118e';
+const IDLE_TIMEOUT_MS = 1800; // アニメーション停止中・静止閲覧時に1.8秒カメラ静止で省電力スリープへ移行（触れれば0msで60fps即復帰）
+const IDLE_FRAME_INTERVAL_MS = 1000; // 静止待機中は描画をほぼ停止しスマホの発熱・電池消費を最小化
 const FALLBACK_BYTES = {
   'muscles.glb': 1543520,
   'skeleton.glb': 1497840,
   'head_sculpt.glb': 604132,
 };
-
-// 彫刻フェイス（案B：半透明ヴェール×透過アート解剖）の裏側で非表示にする頭蓋骨・顔面骨（頸椎 C1〜C7・舌骨・体幹四肢の骨格は常時表示）
 const CRANIAL_FACIAL_BONE_IDS = new Set([
   'frontal-bone',
   'left-parietal-bone',
@@ -76,8 +48,6 @@ const CRANIAL_FACIAL_BONE_IDS = new Set([
   'third-cervical-vertebra-c3',
   'intervertebral-disc-c2-c3',
 ]);
-
-// 半透明ヴェール下に透過表示される頭部・表情・咀嚼筋群
 const HEAD_FACIAL_MUSCLE_IDS = new Set([
   'epicranial-aponeurosis',
   'temporoparietalis',
@@ -104,8 +74,6 @@ const HEAD_FACIAL_MUSCLE_IDS = new Set([
   'depressor-labii-inferioris',
   'mentalis',
 ]);
-
-// 初期待機時（該当ライン・動作・タップ未選択時）のみ非表示にし、頭蓋骨の眼窩・鼻骨・上下顎を美しく見せる顔面表層の薄い表情筋ストリップ集合
 const IDLE_HIDDEN_FACIAL_STRIP_IDS = new Set([
   'frontalis',
   'temporoparietalis',
@@ -126,10 +94,6 @@ const IDLE_HIDDEN_FACIAL_STRIP_IDS = new Set([
   'depressor-labii-inferioris',
   'mentalis',
 ]);
-
-// skeleton.glb と muscles.glb は変換時のスケール・中心が異なる。
-// 各 *_manifest.json の transform（world = (src - centerMm) * scale, axes [x, z, -y]）から
-// 骨格を筋肉と同じ座標系へ正確に重ねるための変換を算出しておく。
 const MUSCLE_TF = { center: [-0.6569976806640625, -97.01134777069092, 816.8721876144409], scale: 0.004 };
 const SKELETON_TF = { center: [-0.667999267578125, -109.74665069580078, 817.0244853496552], scale: 0.0025 };
 const SKELETON_SCALE = MUSCLE_TF.scale / SKELETON_TF.scale; // = 1.6
@@ -138,11 +102,9 @@ const SKELETON_OFFSET = new THREE.Vector3(
   (SKELETON_TF.center[2] - MUSCLE_TF.center[2]) * MUSCLE_TF.scale, //  y =  src.z
   -(SKELETON_TF.center[1] - MUSCLE_TF.center[1]) * MUSCLE_TF.scale, // z = -src.y
 );
-
 const BODY_CENTER = new THREE.Vector3(0, 0, 0);
 const BODY_HALF_HEIGHT = 3.35;
 const BODY_HALF_WIDTH = 1.3;
-
 const VIEW_DIRS = {
   front: new THREE.Vector3(0, 0, 1),
   back: new THREE.Vector3(0, 0, -1),
@@ -157,7 +119,6 @@ const VIEW_DIRS = {
   'sole-left': new THREE.Vector3(0.76, -0.13, 0.64).normalize(), // 低い左斜め前
   'prone-side': new THREE.Vector3(-0.88, 0.16, 0.45).normalize(), // うつ伏せ太もも前ローラー＋床マットが立体的に見える右斜め横
 };
-
 const VIEW_BADGE_MAP = {
   'front-right': 'front',
   'front-left': 'front',
@@ -167,22 +128,17 @@ const VIEW_BADGE_MAP = {
   'sole-left': 'left',
   'prone-side': 'right',
 };
-
 const TAP_MOVE_PX = 6; // これ以内の移動ならタップ扱い
 const TAP_MAX_MS = 700; // 長押しはタップにしない
 const TWEEN_SEC = 0.62; // カメラ補間の長さ（部位オートズームが心地よく決まる速度）
 const TOP_UI_CLEAR_PX = 76; // スマホ縦画面の .legend 下端＋余白の3D安全クリアランス基準値
-
 const GHOST_OPACITY = { muscle: 0.22, bone: 0.30 };
 const GHOST_TONE = new THREE.Color('#EDE6DC');
 const VEIL_TONE = new THREE.Color('#EADFD3');
 const DEEP_SILHOUETTE_TONE = new THREE.Color('#ECE5DA');
 const XRAY_GHOST_TONE = new THREE.Color('#E3D3BA');
 const XRAY_BONE_EMISSIVE = new THREE.Color('#78634B');
-
-// アナトミートレイン準拠の深層筋（DFAL / DBAL / DFL / 深部コア・回旋筋腱板・深層外旋六筋等）内蔵フォールバック集合
 const DEFAULT_DEEP_MUSCLE_IDS = new Set([
-  // 胸郭・肩甲帯・上肢深層（DFAL / DBAL / ローテーターカフ）
   'pectoralis-minor',
   'subclavius',
   'serratus-anterior',
@@ -210,7 +166,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'flexor-pollicis-brevis',
   'opponens-digiti-minimi-hand',
   'flexor-digiti-minimi-brevis-hand',
-  // 体幹・呼吸・脊柱・頸部・咀嚼深層（DFL / 脊柱深層）
   'diaphragm',
   'psoas-major',
   'psoas-minor',
@@ -250,7 +205,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'digastric',
   'stylohyoid',
   'omohyoid',
-  // 骨盤底・股関節深層・大腿深層（DFL / 外旋六筋）
   'piriformis',
   'obturator-internus',
   'obturator-externus',
@@ -268,7 +222,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'adductor-minimus',
   'vastus-intermedius',
   'articularis-genus',
-  // 下腿・足底深層（DFL / ヒラメ筋・後脛骨筋等）
   'soleus',
   'plantaris',
   'popliteus',
@@ -280,7 +233,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'adductor-hallucis',
   'flexor-digiti-minimi-brevis-foot',
 ]);
-
 function inferDefaultFasciaLayer(id) {
   if (!id) return 'surface';
   if (DEFAULT_DEEP_MUSCLE_IDS.has(id)) return 'deep';
@@ -289,60 +241,41 @@ function inferDefaultFasciaLayer(id) {
   }
   return 'surface';
 }
-
-// ---------------------------------------------------------------------------
-// 表示スタイル（'real' = Human Anatomy Atlas 2027 高精細写実 / 'illust' = 医学イラスト調）
-// ---------------------------------------------------------------------------
-// 全ベース材質・輪郭材質で同じ uniform オブジェクトを共有する（切替時に再コンパイル不要）
 const styleUniforms = {
   uIllust: { value: 0 },
-  // ライトリグはカメラに追従しているので、キーライト方向はビュー空間で固定
   uIllustLight: { value: new THREE.Vector3(-3.5, 6.5, 6.0).normalize() },
-  // 輪郭線の太さ（カメラ距離に比例させ、画面上でほぼ一定の太さにする）
   uOutline: { value: 0.0014 },
-  // レントゲン透視（X-Ray Fluoroscope）モード (0..1) ＆ 外層シルエット不透明度
   uXRay: { value: 0 },
   uXRaySkinAlpha: { value: 0.16 },
-  // 骨格は常時自然に表示（0 = 通常サテンアイボリー / 1 = 筋膜シート・動作注目時の落ち着いたストーンアイボリー）
   uBoneMuted: { value: 0 },
   uHasActiveRoles: { value: 0 },
-  // 筋肉選択時のハイライト演出（選択中の筋肉をくっきり浮き立たせ、非選択筋を少し落ち着かせる）
   uHasSelection: { value: 0 },
   uPulseTime: { value: 0 },
   uDarkMode: { value: 0 },
 };
-
-// Proposal A: Rooton 公式HP連動『ウォームサロンリネン（#F6F2EA）⇄ ディープスレートネイビー（#0B132B）』シェーダー
 const ILLUST_FRAG = /* glsl */ `
   if ( diffuseColor.a < 0.99 ) {
     vec3 nG = normalize( normal );
     vec3 vG = normalize( vViewPosition );
     float facingG = clamp( abs( dot( nG, vG ) ), 0.0, 1.0 );
     float fresG = pow( 1.0 - facingG, mix( 2.10, 1.75, uXRay ) );
-
     vec3 linenFillLight = mix( vec3( 0.78, 0.71, 0.62 ), vec3( 0.90, 0.85, 0.78 ), 0.45 + 0.55 * facingG );
     vec3 sepiaRimLight  = vec3( 0.205, 0.145, 0.098 );
     vec3 slateFillDark  = mix( vec3( 0.20, 0.28, 0.42 ), vec3( 0.36, 0.46, 0.62 ), 0.45 + 0.55 * facingG );
     vec3 slateRimDark   = vec3( 0.68, 0.78, 0.92 );
-
     vec3 linenFill = mix( linenFillLight, slateFillDark, uDarkMode );
     vec3 sepiaRim  = mix( sepiaRimLight, slateRimDark, uDarkMode );
-
     vec3 stdGhost  = mix( linenFill, sepiaRim, clamp( fresG * 0.80, 0.0, 0.84 ) );
     float stdA     = uUninvolved > 0.5 ? ( 0.065 + 0.245 * fresG ) : ( 0.085 + 0.265 * fresG );
-
     if ( uVeilMode > 2.5 ) {
-      // 'fascia' モード専用: ごく薄い上品な身体サロン輪郭ヴェール（平均約 8〜12% 不透明度）
       vec3 veilFill = mix( vec3( 0.88, 0.84, 0.78 ), vec3( 0.26, 0.36, 0.52 ), uDarkMode );
       vec3 veilRim  = mix( vec3( 0.32, 0.25, 0.19 ), vec3( 0.66, 0.78, 0.92 ), uDarkMode );
       stdGhost = mix( veilFill, veilRim, clamp( fresG * 0.74, 0.0, 0.80 ) );
       stdA = 0.048 + 0.125 * pow( fresG, 1.25 );
     } else if ( uVeilMode > 1.5 ) {
-      // 'deep' モード: 表層筋を極薄の輪郭シルエットへ退避
       stdGhost = mix( mix( vec3( 0.86, 0.81, 0.74 ), slateFillDark, uDarkMode ), sepiaRim, clamp( fresG * 0.78, 0.0, 0.82 ) );
       stdA = 0.022 + 0.155 * pow( fresG, 1.35 );
     } else if ( uVeilMode > 0.5 ) {
-      // 'see-through' モード
       if ( uRoleInvolved > 0.5 ) {
         stdGhost = mix( vec3( 0.78, 0.58, 0.40 ), mix( vec3( 0.36, 0.22, 0.12 ), slateRimDark, uDarkMode * 0.5 ), fresG * 0.68 );
         stdA = 0.13 + 0.24 * fresG;
@@ -351,7 +284,6 @@ const ILLUST_FRAG = /* glsl */ `
         stdA = 0.055 + 0.235 * fresG;
       }
     }
-
     vec3 xrFill  = mix( vec3( 0.88, 0.83, 0.75 ), slateFillDark, uDarkMode );
     vec3 xrEdge  = mix( vec3( 0.30, 0.21, 0.13 ), slateRimDark, uDarkMode );
     vec3 xrGhost = mix( xrFill, xrEdge, clamp( fresG * 0.82, 0.0, 0.86 ) );
@@ -359,7 +291,6 @@ const ILLUST_FRAG = /* glsl */ `
     float xrA = clamp( uXRaySkinAlpha * ( 0.28 + 1.55 * fresG ), 0.028, 0.38 );
     diffuseColor.a = mix( stdA, xrA, uXRay );
   } else if ( uAtlasMeta.x > 0.5 ) {
-    // ---- 水彩セピア線画 × 象牙アイボリー解剖骨格シェーダー（ライト＆ダーク両対応） ----
     vec3 nB = normalize( normal );
     vec3 vB = normalize( vViewPosition );
     vec3 lKey = normalize( uIllustLight );
@@ -367,7 +298,6 @@ const ILLUST_FRAG = /* glsl */ `
     float hlB = dot( nB, lKey ) * 0.5 + 0.5;
     float fillB = max( dot( nB, lFill ), 0.0 );
     float facingB = clamp( abs( dot( nB, vB ) ), 0.0, 1.0 );
-
     float cavAO = 0.84 + 0.16 * pow( facingB, 0.42 );
     vec3 boneWarm   = mix( vec3( 0.945, 0.910, 0.845 ), vec3( 0.92, 0.90, 0.86 ), uDarkMode );
     vec3 boneShadow = mix( vec3( 0.665, 0.560, 0.425 ), vec3( 0.52, 0.50, 0.48 ), uDarkMode );
@@ -377,12 +307,10 @@ const ILLUST_FRAG = /* glsl */ `
       litB = mix( litB, bandB, 0.65 );
     }
     vec3 colB = mix( boneShadow, boneWarm, litB ) * cavAO;
-
     float nEdgeB = smoothstep( 0.16, 0.54, length( fwidth( nB ) ) );
     float contourB = clamp( pow( 1.0 - facingB, 2.25 ) * mix( 0.72, 0.46, uDarkMode ) + nEdgeB * 0.30, 0.0, 0.86 );
     vec3 sepiaInkB = mix( vec3( 0.155, 0.105, 0.068 ), vec3( 0.24, 0.26, 0.32 ), uDarkMode );
     vec3 baseBoneOut = mix( colB, sepiaInkB, contourB ) + totalEmissiveRadiance * 0.25;
-
     if ( uSelected > 0.5 ) {
       float selRimB = pow( 1.0 - facingB, 1.9 );
       vec3 boneSelBase = vec3( 0.62, 0.38, 0.10 );
@@ -400,36 +328,27 @@ const ILLUST_FRAG = /* glsl */ `
     }
     outgoingLight = baseBoneOut;
   } else {
-    // ---- 人工ストライプ 0%・滑らかな水彩ウォームブラッシュ骨格筋 × 象牙アイボリー腱 × セピア細線輪郭 ----
     vec3 nBase = normalize( normal );
     vec3 v0 = normalize( vViewPosition );
     vec3 lKey = normalize( uIllustLight );
     vec3 lFill = normalize( vec3( 4.2, 1.2, 3.2 ) );
-
-    // 筋長軸に沿った滑らかな筋腱移行（ギザギザや人工縞模様は一切入れない）
     vec3 absPos = vec3( abs( vAtlasPos.x ), vAtlasPos.y, vAtlasPos.z );
     vec3 relM = absPos - uAtlasCenter;
     float sProj = dot( relM, uAtlasAxis );
     float spanLen = max( uAtlasSpan.y - uAtlasSpan.x, 0.08 );
     float uLong = clamp( ( sProj - uAtlasSpan.x ) / spanLen, 0.0, 1.0 );
     float endDist = min( uLong, 1.0 - uLong );
-
     float mtjBody = ( 1.0 - smoothstep( 0.02, 0.20, endDist ) ) * 0.62;
     float mtjTip  = ( 1.0 - smoothstep( 0.0, 0.065, endDist ) ) * 0.16;
     float nuchalTendonSoft = 1.0 - smoothstep( 2.34, 2.43, vAtlasPos.y );
     float endTendon = clamp( mtjBody + mtjTip, 0.0, 0.72 ) * mix( 1.0, 0.28, uIsFacialMuscle ) * nuchalTendonSoft;
     float tendonMask = clamp( max( uAtlasMeta.y, endTendon ), 0.0, 1.0 );
-
-    // C1連続の頂点法線のみから滑らかな陰影を算出（dFdx(nBase)による三角形ごとのフラット面ジャンプを完全排除！）
     float cavityAO = 1.0;
-
     float facingGeo = clamp( abs( dot( nBase, v0 ) ), 0.0, 1.0 );
     float underAO = 1.0 - 0.10 * smoothstep( 0.05, 0.75, -nBase.y );
     float sulcusAO = ( 0.76 + 0.24 * pow( facingGeo, 0.48 ) ) * cavityAO * underAO;
-
     vec3 tendonCol = vec3( 0.91, 0.87, 0.79 ); // #F4EFE6 象牙腱
     vec3 surfCol = mix( diffuseColor.rgb, tendonCol, tendonMask );
-
     float hlM = clamp( dot( nBase, lKey ) * 0.5 + 0.5, 0.0, 1.0 );
     float fillM = max( dot( nBase, lFill ), 0.0 );
     float diffAmt = clamp( pow( hlM, 1.24 ) * 0.82 + fillM * 0.20, 0.0, 1.0 );
@@ -437,18 +356,13 @@ const ILLUST_FRAG = /* glsl */ `
       float bandM = 0.28 + smoothstep( 0.20, 0.36, diffAmt ) * 0.42 + smoothstep( 0.58, 0.74, diffAmt ) * 0.30;
       diffAmt = mix( diffAmt, bandM, 0.60 );
     }
-
     vec3 shadowMul = mix( vec3( 0.64, 0.52, 0.45 ), vec3( 0.74, 0.68, 0.60 ), tendonMask );
     vec3 shadowTone = surfCol * shadowMul;
     vec3 litTone = mix( surfCol * 1.08, vec3( 0.95, 0.91, 0.85 ), 0.18 );
     vec3 colM = mix( shadowTone, litTone, diffAmt ) * sulcusAO;
-
-    // 水彩イラストの細いセピア輪郭タッチ
     float contourM = pow( 1.0 - facingGeo, 2.45 ) * 0.52;
     vec3 sepiaEdgeM = vec3( 0.22, 0.15, 0.10 );
     vec3 baseMusOut = mix( colM, sepiaEdgeM, contourM ) + totalEmissiveRadiance * 0.25;
-
-    // タップ・選択時のハニーアンバー水彩ハイライト
     if ( uSelected > 0.5 ) {
       float isLeftV = step( 0.0, vAtlasPos.x );
       float tappedMatch = abs( uSelectSide ) < 0.2
@@ -463,14 +377,12 @@ const ILLUST_FRAG = /* glsl */ `
       selCol = mix( selCol, vec3( 0.24, 0.14, 0.06 ), selRim * 0.42 );
       baseMusOut = mix( baseMusOut, selCol, 0.88 * tappedMatch );
     } else if ( uUninvolved > 0.5 || uHasSelection > 0.5 ) {
-      // ソリッド描画フォールバック時も決して黒・グレーにせず、温かい生成り和紙トーンへ柔らかに馴染ませる
       vec3 linenLow = vec3( 0.72, 0.65, 0.56 );
       vec3 linenHi  = vec3( 0.90, 0.86, 0.79 );
       vec3 warmLinen = mix( linenLow, linenHi, diffAmt ) * sulcusAO;
       warmLinen = mix( warmLinen, sepiaEdgeM, pow( 1.0 - facingGeo, 2.35 ) * 0.44 );
       baseMusOut = mix( baseMusOut, warmLinen, 0.90 );
     }
-
     if ( uXRay > 0.01 ) {
       float rimMX = pow( 1.0 - facingGeo, 2.1 );
       vec3 xrMusCol = mix( vec3( 0.88, 0.83, 0.75 ), vec3( 0.30, 0.21, 0.13 ), rimMX * 0.72 );
@@ -479,7 +391,6 @@ const ILLUST_FRAG = /* glsl */ `
     outgoingLight = baseMusOut;
   }
 `;
-
 /** 筋肉IDから決定論的な個体差ハッシュ（[-0.5, +0.5] × 3成分）を算出（隣接筋同士の色分離を高める） */
 function muscleIdVariation(id = '') {
   let h = 2166136261;
@@ -492,7 +403,6 @@ function muscleIdVariation(id = '') {
   const u3 = ((h >>> 20) & 0x3ff) / 1023 - 0.5;
   return { u1, u2, u3 };
 }
-
 /**
  * Proposal A: Rooton 公式HP連動のやさしい水彩シャンパン・ウォームブラッシュ筋配色
  * 生々しい赤肉感を排し、清潔で温かみのあるサロン水彩イラスト調に統一
@@ -505,14 +415,12 @@ function atlasColorOf(base, kind, id = '') {
   const hsl = {};
   c.getHSL(hsl, THREE.SRGBColorSpace);
   const { u1, u2, u3 } = muscleIdVariation(id);
-
   if (HEAD_FACIAL_MUSCLE_IDS.has(id)) {
     const hf = (0.046 + u1 * 0.012 + 1.0) % 1.0;
     const sf = THREE.MathUtils.clamp(0.34 + u2 * 0.06, 0.28, 0.40);
     const lf = THREE.MathUtils.clamp(0.76 + u3 * 0.05, 0.72, 0.80);
     return new THREE.Color().setHSL(hf, sf, lf, THREE.SRGBColorSpace);
   }
-
   const isDeep = inferDefaultFasciaLayer(id) === 'deep';
   const idBlendL = u3 * 0.75 + (hsl.l - 0.5) * 0.25;
   const h = (0.048 + u1 * 0.016 + 1.0) % 1.0; // 温かいテラコッタ・ピーチベージュ域
@@ -521,7 +429,6 @@ function atlasColorOf(base, kind, id = '') {
   const l = THREE.MathUtils.clamp(lBase + idBlendL * 0.065, 0.69, 0.81);
   return new THREE.Color().setHSL(h, s, l, THREE.SRGBColorSpace);
 }
-
 /** 水彩サロンイラスト配色 */
 function illustColorOf(base, kind, id = '') {
   if (kind === 'bone') return new THREE.Color('#f7f3ea');
@@ -534,11 +441,6 @@ function illustColorOf(base, kind, id = '') {
   const l = THREE.MathUtils.clamp((isDeep ? 0.74 : 0.78) + u3 * 0.05, 0.71, 0.82);
   return new THREE.Color().setHSL(h, s, l, THREE.SRGBColorSpace);
 }
-
-// ---------------------------------------------------------------------------
-// ユーティリティ
-// ---------------------------------------------------------------------------
-
 /** 表示用の日本語エラー（main.js はこのメッセージのみ画面に出す） */
 function jaError(message, cause) {
   const err = new Error(message);
@@ -546,9 +448,7 @@ function jaError(message, cause) {
   if (cause) err.cause = cause;
   return err;
 }
-
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
 /**
  * fetch をストリームで読み、受信バイト数を逐次通知する（一時的な通信切断時は最大3回まで自動リトライ）。
  * @returns {Promise<ArrayBuffer>}
@@ -560,7 +460,6 @@ async function fetchWithProgress(url, fallbackTotal, onBytes) {
       const fetchOpts = attempt > 0 ? { cache: 'default' } : {};
       const response = await fetch(url, fetchOpts);
       if (!response.ok) throw jaError(`データが見つかりません（${response.status}）`);
-
       const contentLength = Number(response.headers.get('content-length')) || 0;
       const total = contentLength || fallbackTotal || 0;
       let buf;
@@ -568,7 +467,6 @@ async function fetchWithProgress(url, fallbackTotal, onBytes) {
         buf = await response.arrayBuffer();
         onBytes(buf.byteLength, buf.byteLength);
       } else if (contentLength > 0) {
-        // Content-Length が判明している場合は単一の Uint8Array に直接書き込み、chunks との二重確保（22MB スパイク）を排除
         const reader = response.body.getReader();
         let bytes = new Uint8Array(contentLength);
         let received = 0;
@@ -620,15 +518,9 @@ async function fetchWithProgress(url, fallbackTotal, onBytes) {
   if (lastErr && lastErr.ja) throw lastErr;
   throw jaError('通信できませんでした。電波の良い場所でもう一度お試しください。', lastErr);
 }
-
 function isGlb(buffer) {
   return buffer.byteLength >= 12 && new DataView(buffer).getUint32(0, true) === 0x46546c67; // 'glTF'
 }
-
-// ---------------------------------------------------------------------------
-// 本体
-// ---------------------------------------------------------------------------
-
 /**
  * @param {HTMLElement} container 描画先（#stage）
  * @param {{ onProgress?: (pct:number, text:string) => void, metadata?: object }} [options]
@@ -642,10 +534,7 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
       console.warn('[viewer] onProgress でエラー', e);
     }
   };
-
   report(0, '準備しています…');
-
-  // ----- レンダラー --------------------------------------------------------
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
@@ -665,10 +554,7 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   canvas.style.touchAction = 'none';
   canvas.setAttribute('aria-label', '人体の3Dモデル');
   container.appendChild(canvas);
-
   const scene = new THREE.Scene();
-
-  // 柔らかい環境光（反射のムラを抑えた医療アトラス調・WebGL コンテキスト復旧時にも再構築可能）
   let envTex = null;
   const buildEnvTexture = () => {
     try {
@@ -683,8 +569,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
     }
   };
   buildEnvTexture();
-
-  // ----- カメラ / 操作（強制リフローゼロのため ResizeObserver ＆ resize 時のみサイズを更新） -----
   let cachedWinW = window.innerWidth || 1024;
   let cachedWinH = window.innerHeight || 768;
   let cachedStageW = container.clientWidth || cachedWinW;
@@ -707,7 +591,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   const { w: w0, h: h0 } = size();
   const camera = new THREE.PerspectiveCamera(32, w0 / h0, 0.015, 80);
   renderer.setSize(w0, h0, false);
-
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.09;
@@ -719,8 +602,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   controls.minDistance = 0.45;
   controls.maxDistance = 40;
   controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-
-  // ----- 照明（和紙クリーム空間に調和する柔らかい自然光3点照明） ------------
   const hemi = new THREE.HemisphereLight(0xfffcf5, 0xd8cbb8, 1.06);
   scene.add(hemi);
   const key = new THREE.DirectionalLight(0xfffaf0, 1.85); // キー：左上前方・柔らかな陽光
@@ -729,7 +610,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   fill.position.set(5, 2, 4);
   const rim = new THREE.DirectionalLight(0xfffdf9, 0.85); // リム：背面上方
   rim.position.set(1, 5, -7);
-  // ライトはカメラに追従させ、どの向きから見ても同じ陰影にする
   const lightRig = new THREE.Group();
   lightRig.add(key, fill, rim);
   for (const l of [key, fill, rim]) {
@@ -737,11 +617,8 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
     l.target.position.set(0, 0, 0);
   }
   camera.add(lightRig);
-  // カメラ空間では -Z が前方なので、リグを「カメラから見た前方の物体」基準に置く
   lightRig.position.set(0, 0, -8);
   scene.add(camera);
-
-  // ----- メタデータ --------------------------------------------------------
   let meta = metadata;
   if (!meta) {
     try {
@@ -756,10 +633,7 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   const info = new Map();
   for (const m of meta.muscles || []) info.set(m.id, { ...m, kind: 'muscle' });
   for (const b of meta.bones || []) info.set(b.id, { ...b, kind: 'bone' });
-
   report(3, '人体モデルをダウンロード中…');
-
-  // ----- GLB ダウンロード（並列・進捗合算：筋肉＋実物頭蓋骨を含む骨格＋サロン彫刻フェイス） -----
   const files = ['muscles.glb', 'skeleton.glb'];
   const allDlFiles = ['muscles.glb', 'skeleton.glb', 'head_sculpt.glb'];
   const prog = Object.fromEntries(allDlFiles.map((f) => [f, { got: 0, total: FALLBACK_BYTES[f] }]));
@@ -793,8 +667,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
     }),
   ]);
   const buffers = [muscleBuf, skeletonBuf];
-
-  // ----- GLB 解析（Meshopt 圧縮 GLB にもネイティブ対応） --------------------
   const loader = new GLTFLoader();
   if (MeshoptDecoder) {
     loader.setMeshoptDecoder(MeshoptDecoder);
@@ -810,7 +682,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
       throw jaError('人体モデルを展開できませんでした。', e);
     }
   }
-
   let headSculptScene = null;
   if (headSculptBuf && isGlb(headSculptBuf)) {
     try {
@@ -820,7 +691,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
       console.warn('[viewer] head_sculpt.glb の展開をスキップしました', err);
     }
   }
-
   const root = new THREE.Group();
   root.name = 'anatomy';
   const muscleRoot = parsed[0].scene;
@@ -830,8 +700,6 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
   skeletonRoot.scale.setScalar(SKELETON_SCALE);
   skeletonRoot.position.copy(SKELETON_OFFSET);
   root.add(skeletonRoot, muscleRoot);
-
-  // ----- 3層ハイブリッド頭部造形（実物頭蓋骨 + 全頭筋水彩コア + 穏やかな閉眼サロン顔ヴェール） -----
   const headSculptMeshes = [];
   const headSculptUniforms = {
     uIllust: styleUniforms.uIllust,
@@ -863,9 +731,7 @@ export async function createViewer(container, { onProgress, metadata } = {}) {
       obj.castShadow = false;
       obj.receiveShadow = false;
       obj.frustumCulled = false;
-
       if (!isVeil) {
-        // 1) head-sculpt-core: 体幹・首の筋肉(ILLUST_FRAG)と100%同一発色の水彩ローズベージュ頭筋＋帽状腱膜＋セピア筋間溝
         const coreMat = new THREE.MeshStandardMaterial({
           map: embeddedMap,
           color: 0xffffff,
@@ -911,21 +777,17 @@ varying vec3 vCoreWorldPos;`,
                 float postSoftC = 1.0 - smoothstep( -0.20, 0.02, vCoreWorldPos.z );
                 float neckFadeC = smoothstep( jawCutY - 0.008 - 0.012 * postSoftC, jawCutY + 0.016 + 0.024 * postSoftC, vCoreWorldPos.y );
                 if ( neckFadeC < 0.008 ) discard;
-
                 vec3 nBase = normalize( normal );
                 vec3 v0 = normalize( vViewPosition );
                 vec3 lKey = normalize( uIllustLight );
                 vec3 lFill = normalize( vec3( 4.2, 1.2, 3.2 ) );
                 float cavityAO = 1.0;
-
                 float facingGeo = clamp( abs( dot( nBase, v0 ) ), 0.0, 1.0 );
                 float underAO = 1.0 - 0.10 * smoothstep( 0.05, 0.75, -nBase.y );
                 float sulcusAO = ( 0.76 + 0.24 * pow( facingGeo, 0.48 ) ) * cavityAO * underAO;
-
                 vec3 surfCol = diffuseColor.rgb;
                 float isTendonTex = smoothstep( 0.66, 0.84, dot( surfCol, vec3( 0.3333 ) ) )
                                   * ( 1.0 - clamp( ( surfCol.r - surfCol.g ) * 2.8, 0.0, 1.0 ) );
-
                 float hlM = clamp( dot( nBase, lKey ) * 0.5 + 0.5, 0.0, 1.0 );
                 float fillM = max( dot( nBase, lFill ), 0.0 );
                 float diffAmt = clamp( pow( hlM, 1.24 ) * 0.82 + fillM * 0.20, 0.0, 1.0 );
@@ -933,12 +795,10 @@ varying vec3 vCoreWorldPos;`,
                   float bandM = 0.28 + smoothstep( 0.20, 0.36, diffAmt ) * 0.42 + smoothstep( 0.58, 0.74, diffAmt ) * 0.30;
                   diffAmt = mix( diffAmt, bandM, 0.60 );
                 }
-
                 vec3 shadowMul = mix( vec3( 0.64, 0.52, 0.45 ), vec3( 0.74, 0.68, 0.60 ), isTendonTex );
                 vec3 shadowTone = surfCol * shadowMul;
                 vec3 litTone = mix( surfCol * 1.08, vec3( 0.95, 0.91, 0.85 ), 0.18 );
                 vec3 colM = mix( shadowTone, litTone, diffAmt ) * sulcusAO;
-
                 float rimGateC = smoothstep( 0.12, 0.72, neckFadeC );
                 float contourM = pow( 1.0 - facingGeo, 2.45 ) * 0.44 * rimGateC;
                 vec3 sepiaEdgeM = vec3( 0.22, 0.15, 0.10 );
@@ -953,9 +813,6 @@ varying vec3 vCoreWorldPos;`,
         obj.userData.isHeadVeil = false;
         obj.renderOrder = 2;
       } else {
-        // 2) head-sculpt-veil:
-        //    - 通常時: 穏やかに閉じたまぶた・鼻・唇・耳を優しいアイボリー磁器肌＋セピア線画で描き、筋肉エリア上は極薄艶で頭筋を鮮明に見せる
-        //    - 透視退避時(uSkullThrough=1): 頭蓋・頬・顎を生成りリネン透過にして内側の実物頭蓋骨・下顎骨をくっきり透視させつつ、閉じ目・鼻・唇に優しいヴェールを残す
         const veilMat = new THREE.MeshStandardMaterial({
           map: embeddedMap,
           color: 0xffffff,
@@ -1017,21 +874,15 @@ varying vec3 vVeilWorldPos;`,
                 float st = clamp( max( uSkullThrough, uXRay ), 0.0, 1.0 );
                 float vis = 1.0 - st;
                 float postSoftV = 1.0 - smoothstep( -0.20, 0.02, vVeilWorldPos.z );
-
-                // 通常時(st=0): 顎先(z>0.24, y>=2.496)は100%不透明シャープ、喉元奥・耳下・うなじは密着面でシルクのようにフェード
                 float neckGateNorm = smoothstep( jawCutY + 0.003, jawCutY + 0.020 + 0.026 * postSoftV, vVeilWorldPos.y );
-                // 透視時(st=1): 後頭部は後頭骨下端(Y~2.636)まで引き上げて環椎C1・軸椎C2を100%クリアに見せる
                 float jawCutSt = jawCutY + 0.066 * postSoftV;
                 float neckGateSt = smoothstep( jawCutSt - 0.010, jawCutSt + 0.024, vVeilWorldPos.y );
                 float neckGate = mix( neckGateNorm, neckGateSt, st );
                 if ( neckGate < 0.006 ) discard;
-
                 float axR = abs( vVeilWorldPos.x );
                 float ryR = vVeilWorldPos.y;
                 float rzR = vVeilWorldPos.z;
                 float frontFace = smoothstep( 0.24, 0.30, rzR );
-
-                // 閉じまぶた領域では理想的な連続球面ドーム法線へ92%ブレンドし、ポリゴン継ぎ目の水平ハイライト線を光学的に0.0px化！
                 float eyeDomeMask = smoothstep( 0.070, 0.086, axR )
                                   * ( 1.0 - smoothstep( 0.156, 0.174, axR ) )
                                   * smoothstep( 2.844, 2.856, ryR )
@@ -1040,7 +891,6 @@ varying vec3 vVeilWorldPos;`,
                 float sxEye = vVeilWorldPos.x >= 0.0 ? 1.0 : -1.0;
                 vec3 wEyeDomeN = normalize( vec3( ( axR - 0.120 ) * 2.1 * sxEye, ( ryR - 2.872 ) * 4.6, 0.27 ) );
                 vec3 vEyeDomeN = normalize( ( viewMatrix * vec4( wEyeDomeN, 0.0 ) ).xyz );
-
                 vec3 nV = normalize( mix( normalize( normal ), vEyeDomeN, eyeDomeMask * 0.92 ) );
                 vec3 vV = normalize( vViewPosition );
                 vec3 lKey = normalize( uIllustLight );
@@ -1051,46 +901,37 @@ varying vec3 vVeilWorldPos;`,
                 float facingV = clamp( abs( dot( nV, vV ) ), 0.0, 1.0 );
                 float fresV = pow( 1.0 - facingV, 2.30 );
                 float curvAO = 0.84 + 0.16 * pow( facingV, 0.46 );
-
                 float tEyeX = clamp( ( axR - 0.078 ) / ( 0.166 - 0.078 ), 0.0, 1.0 );
                 float yLash = 2.8636 + 0.0020 * smoothstep( 0.0, 0.90, tEyeX ) - 0.0024 * sin( 3.14159265 * tEyeX );
                 float lashSpan = smoothstep( 0.075, 0.086, axR ) * ( 1.0 - smoothstep( 0.156, 0.168, axR ) ) * frontFace;
                 float lashVec = exp( -pow( ( ryR - yLash ) / 0.0016, 2.0 ) ) * lashSpan;
                 float lashOuter = exp( -pow( ( ryR - ( yLash - 0.0005 ) ) / 0.0023, 2.0 ) ) * lashSpan * smoothstep( 0.52, 0.96, tEyeX );
                 float lashTotal = clamp( lashVec + lashOuter * 0.40, 0.0, 1.0 ) * vis;
-
                 float yFold = yLash + 0.0114 + 0.0026 * sin( 3.14159265 * tEyeX );
                 float foldSpan = smoothstep( 0.082, 0.092, axR ) * ( 1.0 - smoothstep( 0.150, 0.162, axR ) ) * frontFace;
                 float foldVec = exp( -pow( ( ryR - yFold ) / 0.0014, 2.0 ) ) * foldSpan * vis;
-
                 float upperLidWarm = smoothstep( yLash - 0.0034, yLash + 0.0005, ryR )
                                    * ( 1.0 - smoothstep( yFold - 0.0015, yFold + 0.0080, ryR ) ) * lashSpan * vis;
                 float lidAntiGlare = smoothstep( yLash - 0.0036, yLash - 0.0004, ryR )
                                    * ( 1.0 - smoothstep( yFold + 0.0010, yFold + 0.0085, ryR ) ) * lashSpan * vis;
-
                 float tBrowX = clamp( ( axR - 0.050 ) / ( 0.174 - 0.050 ), 0.0, 1.0 );
                 float yBrow = 2.899 + 0.0095 * sin( 3.14159265 * pow( tBrowX, 0.82 ) ) - 0.004 * smoothstep( 0.70, 1.0, tBrowX );
                 float browVec = exp( -pow( ( ryR - yBrow ) / 0.0044, 2.0 ) )
                               * smoothstep( 0.048, 0.066, axR ) * ( 1.0 - smoothstep( 0.154, 0.174, axR ) ) * frontFace * vis;
-
                 float tLipX = clamp( axR / 0.084, 0.0, 1.0 );
                 float yStom = 2.5992 + 0.0018 * smoothstep( 0.0, 0.95, tLipX );
                 float stomVec = exp( -pow( ( ryR - yStom ) / 0.0014, 2.0 ) )
                               * ( 1.0 - smoothstep( 0.070, 0.084, axR ) ) * smoothstep( 0.28, 0.34, rzR ) * vis;
-
                 vec3 texCol = diffuseColor.rgb;
                 float rawA = diffuseColor.a * vis;
                 vec3 sepiaContour = vec3( 0.205, 0.145, 0.098 );
                 vec3 lashInk      = vec3( 0.25, 0.165, 0.125 );
                 vec3 softTaupe    = vec3( 0.50, 0.37, 0.31 );
                 vec3 lidWarmTone  = vec3( 0.745, 0.595, 0.535 );
-
                 texCol = mix( texCol, lidWarmTone, upperLidWarm * 0.58 );
                 texCol = mix( texCol, softTaupe, clamp( foldVec * 0.40 + browVec * 0.42, 0.0, 0.65 ) );
                 texCol = mix( texCol, lashInk, clamp( lashTotal * 0.85 + stomVec * 0.68, 0.0, 0.90 ) );
                 rawA = max( rawA, max( lashTotal * 0.95, max( foldVec * 0.84, max( stomVec * 0.92, browVec * 0.38 ) ) ) );
-
-                // 通常時: 筋肉と調和する温かなピーチアイボリー肌＋単一パス繊細セピア線画（閉じ目アンチグレアで白い横スリット0px！）
                 float inkMask = clamp( lashTotal + stomVec + foldVec * 0.5, 0.0, 1.0 );
                 float glareBlock = max( inkMask, lidAntiGlare );
                 float effDiffV = mix( diffV, min( diffV, 0.56 ), lidAntiGlare * 0.86 );
@@ -1100,8 +941,6 @@ varying vec3 vVeilWorldPos;`,
                 float fresGate = smoothstep( 0.04, 0.18, rawA ) * smoothstep( 0.18, 0.72, neckGateNorm );
                 salonVeilCol = mix( salonVeilCol, sepiaContour, clamp( fresV * 0.42 * fresGate, 0.0, 0.55 ) );
                 float normalA = clamp( rawA + fresV * 0.11 * fresGate, 0.0, 0.93 ) * neckGateNorm;
-
-                // 透視退避時(st=1.0): 顔パーツ・線画をフェードし、薄いサロン輪郭ヴェール（約8〜12%不透明度）にする！
                 vec3 linenFill = mix(
                   mix( vec3( 0.84, 0.79, 0.72 ), vec3( 0.92, 0.88, 0.82 ), 0.45 + 0.55 * facingV ),
                   mix( vec3( 0.24, 0.34, 0.50 ), vec3( 0.38, 0.50, 0.68 ), 0.45 + 0.55 * facingV ),
@@ -1110,7 +949,6 @@ varying vec3 vVeilWorldPos;`,
                 vec3 rimVeilCol = mix( sepiaContour, vec3( 0.66, 0.78, 0.92 ), uDarkMode );
                 vec3 linenGhostCol = mix( linenFill, rimVeilCol, clamp( fresV * 0.76, 0.0, 0.82 ) );
                 float throughA = ( 0.048 + 0.155 * fresV ) * neckGateSt;
-
                 outgoingLight = mix( salonVeilCol, linenGhostCol, st );
                 diffuseColor.a = mix( normalA, throughA, st );
               }
@@ -1129,22 +967,15 @@ varying vec3 vVeilWorldPos;`,
       headSculptLoaded = true;
     }
   }
-
   scene.add(root);
-
-  // ----- Mesh 登録・マテリアル個別生成 --------------------------------------
   /** @type {Map<string, THREE.Mesh[]>} */
   const meshesById = new Map();
   /** @type {THREE.Mesh[]} */
   const allMeshes = [];
-
   scene.updateMatrixWorld(true);
-
-  // ----- 重心キャッシュ（起動時の頂点走査と同時に構築し二度手間を排除） -----
   const centerCache = new Map();
   const centerAccum = new Map(); // id -> { sumL, sumR, sumBoth, cntL, cntR, cntBoth }
   const tmpBasisV = new THREE.Vector3();
-
   const getOrCreateAccum = (id) => {
     let acc = centerAccum.get(id);
     if (!acc) {
@@ -1160,12 +991,10 @@ varying vec3 vVeilWorldPos;`,
     }
     return acc;
   };
-
   /** 筋肉のレストポーズ主軸（筋線維方向）と起始・停止スパンを算出し、同時に左右・全体の重心を蓄積 */
   const computeAtlasFiberBasis = (obj, kind, id) => {
     const pos = obj.geometry.attributes.position;
     const acc = getOrCreateAccum(id);
-
     if (kind === 'bone') {
       if (pos && pos.count > 0) {
         const step = Math.max(1, Math.floor(pos.count / 450));
@@ -1189,7 +1018,6 @@ varying vec3 vVeilWorldPos;`,
         meta: new THREE.Vector2(1, 0),
       };
     }
-
     const isTendon = /tendon|aponeurosis|linea-alba|ligament|retinaculum/.test(id) ? 1 : 0;
     if (!pos || pos.count < 4) {
       return {
@@ -1270,7 +1098,6 @@ varying vec3 vVeilWorldPos;`,
       meta: new THREE.Vector2(0, isTendon),
     };
   };
-
   /** イラストモード（style === 'illust'）が選択されたときのみ輪郭メッシュを遅延生成 */
   const ensureHull = (obj) => {
     if (obj.userData.hull) return obj.userData.hull;
@@ -1306,14 +1133,12 @@ varying vec3 vVeilWorldPos;`,
     obj.userData.hull = hull;
     return hull;
   };
-
   const smoothstep01 = (e0, e1, x) => {
     const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
     return t * t * (3 - 2 * t);
   };
   const tmpConformV = new THREE.Vector3();
   const tmpInvMat = new THREE.Matrix4();
-
   /** 舌骨下筋群の顎下付着、および全15種の後頸・乳様突起付着筋の上項線ギザ端を頭蓋スカルプトの内側上方へ滑らかに引き上げ格納する */
   const INFRAHYOID_TUCK_IDS = new Set(['sternohyoid', 'omohyoid', 'thyrohyoid']);
   const NUCHAL_TOP_TUCK_IDS = new Set([
@@ -1333,7 +1158,6 @@ varying vec3 vVeilWorldPos;`,
     'obliquus-capitis-superior',
     'obliquus-capitis-inferior',
   ]);
-
   const conformCranialGeometry = (obj, id = '') => {
     const isHyoid = INFRAHYOID_TUCK_IDS.has(id);
     const isNuchal = NUCHAL_TOP_TUCK_IDS.has(id);
@@ -1387,7 +1211,6 @@ varying vec3 vVeilWorldPos;`,
     obj.geometry.computeBoundingBox();
     obj.geometry.computeBoundingSphere();
   };
-
   /** 下顎骨（mandible）の自然な閉口レスト補正（顎関節 TMJ 軸まわりに顎先を上前方へ閉口回転） */
   const conformMandibleRest = (obj, id = '') => {
     if (id !== 'mandible') return;
@@ -1416,7 +1239,6 @@ varying vec3 vVeilWorldPos;`,
     const prevNorm = obj.geometry.attributes.normal;
     obj.geometry = obj.geometry.clone();
     obj.geometry.setAttribute('position', new THREE.BufferAttribute(nextArr, 3));
-    // Meshopt量子化(Int8BufferAttribute)の法線潰れを防ぐため必ず deleteAttribute('normal') の直後に computeVertexNormals() を実行
     obj.geometry.deleteAttribute('normal');
     obj.geometry.computeVertexNormals();
     const newNorm = obj.geometry.attributes.normal;
@@ -1438,7 +1260,6 @@ varying vec3 vVeilWorldPos;`,
     obj.geometry.computeBoundingBox();
     obj.geometry.computeBoundingSphere();
   };
-
   /**
    * 人間の自然な肉付き・紡錘状の力こぶ（上腕二頭筋 長頭・短頭）と主要表層筋の解剖学的スカルプト。
    * 起始・停止の腱付着端は変位 0 にアンカー固定し、骨や隣接筋とのめり込み・Zファイティングをゼロに保つ。
@@ -1454,17 +1275,14 @@ varying vec3 vVeilWorldPos;`,
     'vastus-lateralis',
     'vastus-medialis',
   ]);
-
   const sculptHumanMusculature = (obj, id = '') => {
     if (!SCULPT_MUSCLE_IDS.has(id)) return;
     const pos = obj.geometry?.attributes?.position;
     if (!pos || pos.count === 0) return;
-
     obj.updateMatrixWorld(true);
     tmpInvMat.copy(obj.matrixWorld).invert();
     const nextArr = new Float32Array(pos.count * 3);
     let changed = false;
-
     for (let i = 0; i < pos.count; i++) {
       tmpConformV.fromBufferAttribute(pos, i).applyMatrix4(obj.matrixWorld);
       let wx = tmpConformV.x;
@@ -1472,45 +1290,32 @@ varying vec3 vVeilWorldPos;`,
       let wz = tmpConformV.z;
       const sx = wx >= 0 ? 1 : -1;
       let ax = Math.abs(wx);
-
       if (id === 'biceps-brachii') {
-        // 近位腱（wy > 1.88）と遠位腱（wy < 0.92）は変位 0 で骨付着位置に完全アンカー固定
         if (wy > 0.92 && wy < 1.88) {
           const anchorMask = smoothstep01(0.92, 1.05, wy) * (1 - smoothstep01(1.75, 1.88, wy));
           if (anchorMask > 1e-4) {
-            // 主筋腹の紡錘ドーム（wy ≈ 1.38 ピーク）＋ 三角筋直下のくびれ補填ベル（wy ∈ [1.46, 1.76]）
             const dMain = (wy - 1.38) / (wy < 1.38 ? 0.31 : 0.34);
             const mainBell = Math.exp(-dMain * dMain * 1.45);
             const pinchBell = smoothstep01(1.46, 1.60, wy) * (1 - smoothstep01(1.66, 1.78, wy));
             const fusiformY = anchorMask * Math.min(1.06, mainBell * 0.88 + pinchBell * 0.56);
-
-            // 腕軸中心 cx(wy): wy=1.10 で 0.84 ➔ wy=1.70 で 0.72 へ線形補間
             const tArm = Math.max(0, Math.min(1, (wy - 1.10) / (1.70 - 1.10)));
             const cx = 0.84 + (0.72 - 0.84) * tArm;
             const dx = ax - cx;
-
-            // 内外側の厚み補填（約 +31% 拡幅 ＋ 外側へ最大 +0.018 補填して三角筋下〜前腕のシルエットを力強く接続）
             const widthGain = 0.31 * fusiformY;
             const latOutward = smoothstep01(-0.015, 0.055, dx) * (0.014 * mainBell + 0.018 * pinchBell) * anchorMask;
             ax = cx + dx * (1 + widthGain) + latOutward;
-
-            // 前方（+Z）への紡錘状ドーム隆起（後面 wz <= -0.075 は上腕骨・上腕筋に干渉しないよう固定）
             const frontWeight = smoothstep01(-0.075, 0.025, wz);
             const archX = Math.max(0.28, 1 - Math.pow(dx / 0.150, 2) * 0.40);
             const liftZ = (0.060 * mainBell + 0.026 * pinchBell) * anchorMask * frontWeight * archX;
-
-            // 外側「長頭」と内側「短頭」を分ける繊細な解剖学的縦溝（bicipital cleft）
             const cleftMaskY = smoothstep01(1.12, 1.30, wy) * (1 - smoothstep01(1.68, 1.84, wy));
             const cleft = Math.exp(-Math.pow((dx + 0.003) / 0.022, 2));
             const cleftDepth = 0.0062 * cleft * cleftMaskY * frontWeight;
-
             wx = sx * ax;
             wz += liftZ - cleftDepth;
             changed = true;
           }
         }
       } else if (id === 'brachialis') {
-        // 上腕筋: 二頭筋と三頭筋の間から覗く上腕外側の立体感（前面 +Z は二頭筋を突き抜けないよう固定）
         if (wy > 1.00 && wy < 1.58) {
           const mB = smoothstep01(1.00, 1.14, wy) * (1 - smoothstep01(1.45, 1.58, wy));
           const latB = smoothstep01(0.81, 0.90, ax);
@@ -1521,7 +1326,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'triceps-brachii') {
-        // 上腕三頭筋: 後方（-Z）と外側頭（±X）の自然な馬蹄形の張り
         if (wy > 1.12 && wy < 1.84) {
           const mT = smoothstep01(1.12, 1.28, wy) * (1 - smoothstep01(1.68, 1.84, wy));
           const backW = smoothstep01(0.17, 0.27, -wz);
@@ -1535,7 +1339,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'deltoid') {
-        // 三角筋: 肩の丸みと上腕二頭筋・大胸筋との境界（三角筋粗面・三角筋胸筋溝）のメリハリ
         if (wy > 1.62 && wy < 2.04) {
           const mD = smoothstep01(1.62, 1.74, wy) * (1 - smoothstep01(1.94, 2.04, wy));
           if (mD > 1e-4) {
@@ -1547,7 +1350,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'pectoralis-major') {
-        // 大胸筋: 胸骨・鎖骨・上腕停止腱を固定したまま胸郭前面の自然な厚みを補填
         if (wy > 1.30 && wy < 2.04) {
           const mPY = smoothstep01(1.30, 1.46, wy) * (1 - smoothstep01(1.90, 2.04, wy));
           const mPX = smoothstep01(0.06, 0.16, ax) * (1 - smoothstep01(0.48, 0.62, ax));
@@ -1558,7 +1360,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'gastrocnemius') {
-        // 腓腹筋: 膝裏起始とアキレス腱移行部を固定し、内側頭・外側頭の人間らしいふくらはぎを形成
         if (wy > -2.38 && wy < -1.48) {
           const mGY = smoothstep01(-2.38, -2.14, wy) * (1 - smoothstep01(-1.66, -1.48, wy));
           const mGZ = smoothstep01(0.24, 0.36, -wz);
@@ -1571,7 +1372,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'rectus-femoris') {
-        // 大腿直筋: 骨盤起始・膝蓋腱側を固定し前面中央の紡錘状の張りを補填
         if (wy > -1.55 && wy < 0.02) {
           const mRY = smoothstep01(-1.55, -1.16, wy) * (1 - smoothstep01(-0.22, 0.02, wy));
           const mRZ = smoothstep01(0.08, 0.19, wz);
@@ -1581,7 +1381,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'vastus-lateralis') {
-        // 外側広筋: 大腿外側の自然なスイープを補填
         if (wy > -1.56 && wy < -0.20) {
           const mVLY = smoothstep01(-1.56, -1.20, wy) * (1 - smoothstep01(-0.42, -0.20, wy));
           if (mVLY > 1e-4) {
@@ -1592,7 +1391,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       } else if (id === 'vastus-medialis') {
-        // 内側広筋: 膝上内側のティアドロップ（VMO）の立体感を補填
         if (wy > -1.58 && wy < -0.35) {
           const mVMY = smoothstep01(-1.58, -1.30, wy) * (1 - smoothstep01(-0.56, -0.35, wy));
           if (mVMY > 1e-4) {
@@ -1603,18 +1401,15 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-
       tmpConformV.set(wx, wy, wz).applyMatrix4(tmpInvMat);
       nextArr[i * 3] = tmpConformV.x;
       nextArr[i * 3 + 1] = tmpConformV.y;
       nextArr[i * 3 + 2] = tmpConformV.z;
     }
-
     if (!changed) return;
     const prevNorm = obj.geometry.attributes.normal;
     obj.geometry = obj.geometry.clone();
     obj.geometry.setAttribute('position', new THREE.BufferAttribute(nextArr, 3));
-    // Meshopt量子化(Int8BufferAttribute)のまま computeVertexNormals() を呼ぶと float が 0 に切り捨てられるため一度削除して Float32 で再生成する
     obj.geometry.deleteAttribute('normal');
     obj.geometry.computeVertexNormals();
     const newNorm = obj.geometry.attributes.normal;
@@ -1636,7 +1431,6 @@ varying vec3 vVeilWorldPos;`,
     obj.geometry.computeBoundingBox();
     obj.geometry.computeBoundingSphere();
   };
-
   /** 首・顎下・鎖骨・肩甲帯・表情咀嚼筋の座標ベース法線ウェルディング（0.25mm空間バケット＋同方向半球ガードでUV分割/フラット面のカクつきを100%解消） */
   const SMOOTH_NECK_MUSCLE_IDS = new Set([
     'platysma',
@@ -1672,7 +1466,6 @@ varying vec3 vVeilWorldPos;`,
     'longus-capitis',
     ...HEAD_FACIAL_MUSCLE_IDS,
   ]);
-
   const smoothWeldedNeckNormals = (obj, id = '') => {
     if (!SMOOTH_NECK_MUSCLE_IDS.has(id)) return;
     const geom = obj.geometry;
@@ -1680,13 +1473,11 @@ varying vec3 vVeilWorldPos;`,
     if (!pos || pos.count < 3) return;
     const prevNorm = geom.attributes.normal;
     const nextGeom = geom.clone();
-
     obj.updateMatrixWorld(true);
     const mw = obj.matrixWorld;
     const me = mw.elements;
     const vCount = pos.count;
     const worldPos = new Float32Array(vCount * 3);
-
     if (id === 'platysma') {
       tmpInvMat.copy(mw).invert();
       const nextPos = new Float32Array(vCount * 3);
@@ -1721,8 +1512,6 @@ varying vec3 vVeilWorldPos;`,
         worldPos[i * 3 + 2] = tmpConformV.z;
       }
     }
-
-    // 1) 各頂点の自身に隣接する三角形から面積重み付きワールド法線 ownN を算出
     const ownN = new Float32Array(vCount * 3);
     const idxAttr = nextGeom.index;
     const triCount = idxAttr ? Math.floor(idxAttr.count / 3) : Math.floor(vCount / 3);
@@ -1740,9 +1529,6 @@ varying vec3 vVeilWorldPos;`,
       ownN[i1 * 3] += fnx; ownN[i1 * 3 + 1] += fny; ownN[i1 * 3 + 2] += fnz;
       ownN[i2 * 3] += fnx; ownN[i2 * 3 + 1] += fny; ownN[i2 * 3 + 2] += fnz;
     }
-
-    // 2) 0.25mm (x4000) 空間バケットに頂点を登録し、同一面方向 (dot > 0.15) の重複・UV分割頂点のみ法線を完全結合
-    //    （広頸筋のような表裏2層シートで反対面の法線が打ち消し合うのを数学的に100%防止）
     const buckets = new Map();
     const vKeys = new Float64Array(vCount);
     for (let i = 0; i < vCount; i++) {
@@ -1759,7 +1545,6 @@ varying vec3 vVeilWorldPos;`,
         grp.push(i);
       }
     }
-
     const weldedW = new Float32Array(vCount * 3);
     for (let i = 0; i < vCount; i++) {
       const ox = ownN[i * 3], oy = ownN[i * 3 + 1], oz = ownN[i * 3 + 2];
@@ -1789,8 +1574,6 @@ varying vec3 vVeilWorldPos;`,
       weldedW[i * 3 + 1] = sy / sLen;
       weldedW[i * 3 + 2] = sz / sLen;
     }
-
-    // 3) バケット代表頂点グラフ上で3反復のC1ラプラシアン法線緩和を行い、UV分割や粗いポリゴン稜線も100%滑らかに統合
     const repOf = new Int32Array(vCount);
     for (let i = 0; i < vCount; i++) {
       const grp = buckets.get(vKeys[i]);
@@ -1807,7 +1590,6 @@ varying vec3 vVeilWorldPos;`,
       }
       repOf[i] = rep;
     }
-
     let curW = weldedW;
     for (let iter = 0; iter < 3; iter++) {
       const adjSum = new Float32Array(vCount * 3);
@@ -1852,7 +1634,6 @@ varying vec3 vVeilWorldPos;`,
       curW = nxtW;
     }
     const smoothW = curW;
-
     const localN = new Float32Array(vCount * 3);
     for (let i = 0; i < vCount; i++) {
       const wx = smoothW[i * 3], wy = smoothW[i * 3 + 1], wz = smoothW[i * 3 + 2];
@@ -1868,7 +1649,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-      // n_local = normalize( mat3(matrixWorld)^T * n_world )
       const lx = me[0] * fx + me[1] * fy + me[2] * fz;
       const ly = me[4] * fx + me[5] * fy + me[6] * fz;
       const lz = me[8] * fx + me[9] * fy + me[10] * fz;
@@ -1877,7 +1657,6 @@ varying vec3 vVeilWorldPos;`,
       localN[i * 3 + 1] = ly / lLen;
       localN[i * 3 + 2] = lz / lLen;
     }
-
     nextGeom.deleteAttribute('normal');
     const newNorm = new THREE.BufferAttribute(localN, 3);
     if (prevNorm && prevNorm.count === vCount && vCount > 0) {
@@ -1900,7 +1679,6 @@ varying vec3 vVeilWorldPos;`,
     }
     obj.geometry = nextGeom;
   };
-
   const register = (group, kind) => {
     const srcMeshes = [];
     group.traverse((obj) => {
@@ -1920,8 +1698,6 @@ varying vec3 vVeilWorldPos;`,
       const illustColor = illustColorOf(baseColor, kind, id);
       const atlasBasis = computeAtlasFiberBasis(obj, kind, id);
       const rigRole = getRigRole(id, kind);
-
-      // 既存マテリアルを破棄して、構造ごとに独立した MeshStandardMaterial を作る
       const old = Array.isArray(obj.material) ? obj.material : [obj.material];
       old.forEach((m) => m?.dispose?.());
       const mat = new THREE.MeshStandardMaterial({
@@ -1954,7 +1730,6 @@ varying vec3 vVeilWorldPos;`,
         uAtlasSpan: { value: atlasBasis.span },
         uAtlasMeta: { value: atlasBasis.meta },
       };
-      // 姿勢変形（posture.injectPose）＋ Human Anatomy Atlas 2027 高精細シェーダー／イラスト調陰影を注入
       mat.onBeforeCompile = (shader) => {
         injectPose(shader, rigRole);
         Object.assign(shader.uniforms, matUniforms);
@@ -1980,7 +1755,6 @@ varying vec3 vVeilWorldPos;`,
       if (!obj.geometry.attributes.normal) obj.geometry.computeVertexNormals();
       if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
       if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
-
       obj.userData.structureId = id;
       obj.userData.kind = kind;
       obj.userData.fasciaLayer = kind === 'muscle' ? inferDefaultFasciaLayer(id) : 'bone';
@@ -2003,8 +1777,6 @@ varying vec3 vVeilWorldPos;`,
   register(muscleRoot, 'muscle');
   register(skeletonRoot, 'bone');
   if (!allMeshes.length) throw jaError('人体モデルの中身が空でした。');
-
-  // 起動時の頂点走査から得た重心を centerCache に一括登録
   for (const [id, acc] of centerAccum) {
     const all = acc.cntBoth ? acc.sumBoth.clone().divideScalar(acc.cntBoth) : new THREE.Vector3();
     centerCache.set(`${id}|both`, all);
@@ -2012,9 +1784,6 @@ varying vec3 vVeilWorldPos;`,
     centerCache.set(`${id}|R`, acc.cntR ? acc.sumR.clone().divideScalar(acc.cntR) : all.clone());
   }
   centerAccum.clear();
-
-  // ----- 手首から先・足首から先の「サロン・シルエットヴェール」プロシージャル生成（追加通信 0 byte） -----
-  // 3Dグリッド符号付き距離場（指間分離ガード付きメタボール smooth-min 融合 ＋ Surface Nets ＋ 3回体積保持ラプラシアン緩和）
   const extremityVeilMeshes = [];
   const extremityVeilUniforms = {
     uIllustLight: headSculptUniforms.uIllustLight,
@@ -2032,7 +1801,6 @@ varying vec3 vVeilWorldPos;`,
       /calcane|talus|navicular|cuboid|cuneiform|metatars|toe|sesamoid-bones-of-the-foot|halluc|plantar|digitorum-brevis|digitorum-longus|extensor-digitorum|lumbricals-foot|interossei|digiti-minimi.*foot|abductor-digiti-minimi-foot|fibularis|tibialis|soleus|tibia|fibula/i;
     const FOOT_EXCLUDE_RE =
       /hand|carpal|metacarp|pollic|finger|thumb|palmar|carpi|radius|ulna/i;
-
     const handMeshes = [];
     const footMeshes = [];
     for (const m of allMeshes) {
@@ -2040,7 +1808,6 @@ varying vec3 vVeilWorldPos;`,
       if (!HAND_EXCLUDE_RE.test(id) && HAND_INCLUDE_RE.test(id)) handMeshes.push(m);
       if (!FOOT_EXCLUDE_RE.test(id) && FOOT_INCLUDE_RE.test(id)) footMeshes.push(m);
     }
-
     const cOffX = [0, 1, 0, 1, 0, 1, 0, 1];
     const cOffY = [0, 0, 1, 1, 0, 0, 1, 1];
     const cOffZ = [0, 0, 0, 0, 1, 1, 1, 1];
@@ -2048,7 +1815,6 @@ varying vec3 vVeilWorldPos;`,
     const edgeB = [1, 3, 5, 7, 2, 3, 6, 7, 4, 5, 6, 7];
     const cornerVals = new Float32Array(8);
     const tmpExtV = new THREE.Vector3();
-
     const handChains = [
       ['scaphoid', 'trapezium', 'first-metacarpal-bone', 'thumb-proximal-phalanx', 'thumb-distal-phalanx'],
       ['capitate', 'second-metacarpal-bone', 'index-finger-proximal-phalanx', 'index-finger-middle-phalanx', 'index-finger-distal-phalanx'],
@@ -2065,12 +1831,10 @@ varying vec3 vVeilWorldPos;`,
       ['cuboid', 'fifth-metatarsal-bone', 'little-toe-proximal-phalanx', 'little-toe-middle-phalanx', 'little-toe-distal-phalanx'],
       ['first-metatarsal-bone', 'second-metatarsal-bone', 'third-metatarsal-bone', 'fourth-metatarsal-bone', 'fifth-metatarsal-bone'],
     ];
-
     const buildSingleExtremityVeil = (isHand, isLeft, rigRole) => {
       const q = isHand ? 86 : 72;
       const bucketMap = new Map();
       const pts = []; // [x, y, z, radius, fingerChannel]
-
       const addSample = (wx, wy, wz, r, ch) => {
         const kx = Math.round(wx * q) + 2048;
         const ky = Math.round(wy * q) + 2048;
@@ -2085,7 +1849,6 @@ varying vec3 vVeilWorldPos;`,
         bucketMap.set(key, pts.length);
         pts.push(wx, wy, wz, r, ch);
       };
-
       const classifyFinger = (id, wy) => {
         if (!isHand) return 0;
         if (/thumb/i.test(id) || (/pollic/i.test(id) && wy < -0.14)) return 1;
@@ -2095,7 +1858,6 @@ varying vec3 vVeilWorldPos;`,
         if (/little-finger/i.test(id) || (/digiti-minimi/i.test(id) && wy < -0.28)) return 5;
         return 0;
       };
-
       const pointRadius = (wy, wz) => {
         if (isHand) {
           if (wy < -0.45) return 0.0112;
@@ -2107,14 +1869,12 @@ varying vec3 vVeilWorldPos;`,
         if (wy > -2.96) return 0.0162;
         return 0.0182;
       };
-
       const inRegion = (wx, wy) => {
         if (isHand) {
           return (isLeft ? wx > 0.55 : wx < -0.55) && Math.abs(wx) > 0.72 && wy < 0.14 && wy > -0.65;
         }
         return (isLeft ? wx > 0.05 : wx < -0.05) && wy < -2.72 && wy > -3.33;
       };
-
       const boneCentroids = new Map();
       const candidates = isHand ? handMeshes : footMeshes;
       for (const m of candidates) {
@@ -2149,7 +1909,6 @@ varying vec3 vVeilWorldPos;`,
           boneCentroids.set(clean, [sx / sc, sy / sc, sz / sc, classifyFinger(id, sy / sc)]);
         }
       }
-
       for (const chain of isHand ? handChains : footChains) {
         for (let c = 0; c < chain.length - 1; c++) {
           const a = boneCentroids.get(chain[c]);
@@ -2166,10 +1925,8 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-
       const nPts = pts.length / 5;
       if (nPts < 16) return null;
-
       let minX = Infinity;
       let minY = Infinity;
       let minZ = Infinity;
@@ -2194,19 +1951,16 @@ varying vec3 vVeilWorldPos;`,
       maxX += pad;
       maxY += pad;
       maxZ += pad;
-
       const nx = isHand ? 40 : 34;
       const ny = isHand ? 48 : 34;
       const nz = isHand ? 28 : 48;
       const dx = (maxX - minX) / (nx - 1);
       const dy = (maxY - minY) / (ny - 1);
       const dz = (maxZ - minZ) / (nz - 1);
-
       const totalVoxels = nx * ny * nz;
       const sdf = new Float32Array(totalVoxels).fill(1.0);
       const ownerCh = new Uint8Array(totalVoxels);
       const kSmooth = isHand ? 0.0062 : 0.0105;
-
       for (let p = 0; p < nPts; p++) {
         const px = pts[p * 5];
         const py = pts[p * 5 + 1];
@@ -2220,7 +1974,6 @@ varying vec3 vVeilWorldPos;`,
         const j1 = Math.min(ny - 1, Math.ceil((py + reach - minY) / dy));
         const k0 = Math.max(0, Math.floor((pz - reach - minZ) / dz));
         const k1 = Math.min(nz - 1, Math.ceil((pz + reach - minZ) / dz));
-
         for (let k = k0; k <= k1; k++) {
           const gz = minZ + k * dz - pz;
           const gz2 = gz * gz;
@@ -2253,14 +2006,11 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-
-      // Surface Nets による均一クワッド等値面抽出
       const cellVertIdx = new Int32Array((nx - 1) * (ny - 1) * (nz - 1)).fill(-1);
       const outPos = [];
       const rawIdx = [];
       const vIdx = (i, j, k) => i + j * nx + k * nx * ny;
       const cIdx = (i, j, k) => i + j * (nx - 1) + k * (nx - 1) * (ny - 1);
-
       for (let k = 0; k < nz - 1; k++) {
         for (let j = 0; j < ny - 1; j++) {
           for (let i = 0; i < nx - 1; i++) {
@@ -2297,7 +2047,6 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-
       for (let k = 1; k < nz - 1; k++) {
         for (let j = 1; j < ny - 1; j++) {
           for (let i = 1; i < nx - 1; i++) {
@@ -2338,11 +2087,8 @@ varying vec3 vVeilWorldPos;`,
           }
         }
       }
-
       const rawVCnt = outPos.length / 3;
       if (rawVCnt < 12 || rawIdx.length < 12) return null;
-
-      // 最大連結成分のみを抽出（内部気泡や微小浮遊ポリゴンを100%除去）
       const headEdge = new Int32Array(rawVCnt).fill(-1);
       const edgeTo = new Int32Array(rawIdx.length * 2);
       const edgeNext = new Int32Array(rawIdx.length * 2);
@@ -2363,7 +2109,6 @@ varying vec3 vVeilWorldPos;`,
         pushDirEdge(c, a);
         pushDirEdge(a, c);
       }
-
       const compId = new Int32Array(rawVCnt).fill(-1);
       const bfsQueue = new Int32Array(rawVCnt);
       let bestComp = 0;
@@ -2391,7 +2136,6 @@ varying vec3 vVeilWorldPos;`,
         }
         curComp++;
       }
-
       const remap = new Int32Array(rawVCnt).fill(-1);
       const cleanPos = [];
       for (let i = 0; i < rawVCnt; i++) {
@@ -2407,8 +2151,6 @@ varying vec3 vVeilWorldPos;`,
         const c = remap[rawIdx[t + 2]];
         if (a >= 0 && b >= 0 && c >= 0) outIdx.push(a, b, c);
       }
-
-      // 3反復の体積保持ラプラシアンスムージング（Taubin緩和）で指・足指をシルクのように滑らかに整える
       let posArr = new Float32Array(cleanPos);
       const vCnt = posArr.length / 3;
       const sumArr = new Float32Array(vCnt * 3);
@@ -2452,14 +2194,11 @@ varying vec3 vVeilWorldPos;`,
         smoothPass(0.50);
         smoothPass(-0.48);
       }
-
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
       geo.setIndex(outIdx);
       geo.computeVertexNormals();
       geo.computeBoundingSphere();
-
-      // head-sculpt-veil ＆ 前腕・下腿筋と調和する温かいサロン水彩ピーチローズ（#DFC2B8）＋セピア輪郭フレネル
       const isFootUniform = { value: isHand ? 0 : 1 };
       const extMat = new THREE.MeshStandardMaterial({
         color: new THREE.Color('#DFC2B8'),
@@ -2518,7 +2257,6 @@ varying vec3 vExtWorldPos;`,
               float ankleFade = 1.0 - smoothstep( -2.985, -2.775, vExtWorldPos.y );
               float collarGate = mix( wristFade, ankleFade, step( 0.5, uIsFootVeil ) );
               if ( collarGate < 0.005 ) discard;
-
               float st = clamp( max( max( uSkullThrough, uXRay ), uDeepLayer ), 0.0, 1.0 );
               vec3 nE = normalize( normal );
               vec3 vE = normalize( vViewPosition );
@@ -2530,8 +2268,6 @@ varying vec3 vExtWorldPos;`,
               float facingE = clamp( abs( dot( nE, vE ) ), 0.0, 1.0 );
               float fresE = pow( 1.0 - facingE, 2.25 );
               float curvAO = 0.85 + 0.15 * pow( facingE, 0.46 );
-
-              // 通常待機時(st=0): 骨の隙間を上品に包むサロン水彩ピーチローズ肌＋繊細セピア輪郭
               vec3 sepiaContour = vec3( 0.205, 0.145, 0.098 );
               vec3 peachShadow = diffuseColor.rgb * vec3( 0.72, 0.61, 0.55 );
               vec3 peachLit    = mix( diffuseColor.rgb * 1.03, vec3( 0.950, 0.895, 0.855 ), 0.16 );
@@ -2540,8 +2276,6 @@ varying vec3 vExtWorldPos;`,
               salonVeilCol = mix( salonVeilCol, sepiaContour, clamp( fresE * 0.44 * fresGate, 0.0, 0.56 ) );
               float baseVeilA = mix( 0.91, 0.95, smoothstep( 0.0, 1.0, 1.0 - facingE ) );
               float normalA = clamp( baseVeilA + fresE * 0.04 * fresGate, 0.0, 0.96 ) * collarGate;
-
-              // 透視退避時(st=1): ごく薄いサロン輪郭ヴェール（約8〜12%不透明度・ライト＆ダーク両対応）
               vec3 linenFill = mix(
                 mix( vec3( 0.82, 0.77, 0.69 ), vec3( 0.91, 0.87, 0.80 ), 0.45 + 0.55 * facingE ),
                 mix( vec3( 0.24, 0.34, 0.50 ), vec3( 0.38, 0.50, 0.68 ), 0.45 + 0.55 * facingE ),
@@ -2550,7 +2284,6 @@ varying vec3 vExtWorldPos;`,
               vec3 rimVeilCol = mix( sepiaContour, vec3( 0.66, 0.78, 0.92 ), uDarkMode );
               vec3 linenGhostCol = mix( linenFill, rimVeilCol, clamp( fresE * 0.76, 0.0, 0.82 ) );
               float throughA = ( 0.048 + 0.155 * fresE ) * collarGate;
-
               outgoingLight = mix( salonVeilCol, linenGhostCol, st );
               diffuseColor.a = mix( normalA, throughA, st );
             }
@@ -2558,7 +2291,6 @@ varying vec3 vExtWorldPos;`,
           );
       };
       extMat.customProgramCacheKey = () => `av-extremity-veil-${label}-v2`;
-
       const veilMesh = new THREE.Mesh(geo, extMat);
       veilMesh.name = `extremity-veil-${label}`;
       veilMesh.raycast = () => {}; // タップ判定を透過し、指先・母指球・足底などの筋肉・骨タップを妨げない
@@ -2571,7 +2303,6 @@ varying vec3 vExtWorldPos;`,
       extremityVeilMeshes.push(veilMesh);
       return veilMesh;
     };
-
     const handRigL =
       meshesById.get('left-third-metacarpal-bone')?.[0]?.userData?.rigRole ||
       getRigRole('left-third-metacarpal-bone', 'bone');
@@ -2584,14 +2315,11 @@ varying vec3 vExtWorldPos;`,
     const footRigR =
       meshesById.get('right-calcaneus')?.[0]?.userData?.rigRole ||
       getRigRole('right-calcaneus', 'bone');
-
     buildSingleExtremityVeil(true, true, handRigL);
     buildSingleExtremityVeil(true, false, handRigR);
     buildSingleExtremityVeil(false, true, footRigL);
     buildSingleExtremityVeil(false, false, footRigR);
   }
-
-  // ----- 表示状態 ＆ アナトミートレイン2層（surface / deep）＋ 一体型（fascia / muscle）制御 -----
   const layer = { muscle: 'on', bone: 'on' };
   const hidden = new Set();
   /** ghostOthers で「残す」ID 集合（null = ゴーストなし） */
@@ -2607,16 +2335,13 @@ varying vec3 vExtWorldPos;`,
   let xraySkinOpacity = 0.16;
   /** 一体型アプリの表示レイヤー（'muscle' = 3D立体筋肉 / 'fascia' = 白い骨格＋極薄サロン輪郭ヴェール＋11本3D筋膜シート） */
   let unifiedLayerMode = 'muscle';
-
   /** data.js の MUSCLE_LAYERS ({ [id]: 'surface' | 'deep' }) を保持 */
   const customMuscleLayers = new Map();
   /** 'see-through'（重ね透視：初期デフォルト） | 'surface'（表層のみ） | 'deep'（深層のみ） */
   let fasciaLayerMode = 'see-through';
   /** 現在アクティブな深層筋 ID 集合（'see-through' モード時の自動コラーゲンベール透視トリガー） */
   const activeDeepSet = new Set();
-
   const resolveMuscleLayer = (id) => customMuscleLayers.get(id) || inferDefaultFasciaLayer(id);
-
   const applyState = () => {
     const illust = style === 'illust';
     const isUnifiedFascia = unifiedLayerMode === 'fascia';
@@ -2627,11 +2352,6 @@ varying vec3 vExtWorldPos;`,
     styleUniforms.uBoneMuted.value = 0;
     const selSideVal = highlightSide === 'L' ? 1 : highlightSide === 'R' ? -1 : 0;
     const hasActiveDeep = activeDeepSet.size > 0;
-
-    // 3層ハイブリッド頭部状態遷移:
-    // - 通常待機時(!shouldSeeSkullThrough): head-sculpt-core(全頭筋水彩造形) + head-sculpt-veil(穏やかなサロン顔)を表示
-    // - 筋膜モード / 動作・ライン・筋肉選択時 / 深層モード / X線時(shouldSeeSkullThrough):
-    //   head-sculpt-core を退避(visible=false)し、半透明サロン輪郭ヴェール越しに skeleton.glb の実物頭蓋骨・下顎骨をくっきり透過表示！
     const shouldSeeSkullThrough =
       isUnifiedFascia ||
       hasActiveRoles ||
@@ -2640,7 +2360,6 @@ varying vec3 vExtWorldPos;`,
       xrayMode ||
       fasciaLayerMode === 'deep' ||
       layer.muscle === 'ghost';
-
     headSculptUniforms.uSkullThrough.value = shouldSeeSkullThrough ? 1 : 0;
     extremityVeilUniforms.uDeepLayer.value = isUnifiedFascia || fasciaLayerMode === 'deep' ? 1 : 0;
     if (headSculptLoaded) {
@@ -2655,13 +2374,11 @@ varying vec3 vExtWorldPos;`,
     for (const em of extremityVeilMeshes) {
       em.visible = layer.muscle !== 'off';
     }
-
     for (const mesh of allMeshes) {
       const { structureId: id, kind, matUniforms } = mesh.userData;
       const baseColor = illust ? mesh.userData.illustColor : mesh.userData.atlasColor;
       const mode = layer[kind];
       const mLayer = kind === 'muscle' ? (mesh.userData.fasciaLayer || resolveMuscleLayer(id)) : 'bone';
-
       if (isUnifiedFascia) {
         if (kind === 'bone') {
           mesh.visible = true;
@@ -2688,7 +2405,6 @@ varying vec3 vExtWorldPos;`,
           mat.emissive.setRGB(0, 0, 0);
           mat.emissiveIntensity = 0;
         } else {
-          // 筋膜モード時: 深層筋・顔面筋を退避し、表層筋のみ約8〜12%不透明度の極薄サロン輪郭ヴェール(veilMode=3)として表示
           const showBodySilhouette =
             mode !== 'off' &&
             !hidden.has(id) &&
@@ -2720,9 +2436,6 @@ varying vec3 vExtWorldPos;`,
         }
         continue;
       }
-
-      // 'surface' モード時は深層筋を非表示（頭蓋骨・下顎骨を含む全242骨は全モード100%常時表示！）
-      // 首・顎下の実メッシュ(platysma, digastric, stylohyoid, mylohyoid, geniohyoid等)も常時100%表示！
       const hideByFasciaMode = kind === 'muscle' && fasciaLayerMode === 'surface' && mLayer === 'deep';
       const hideSkullBehindSculpt = headSculptLoaded && !shouldSeeSkullThrough && CRANIAL_FACIAL_BONE_IDS.has(id);
       const isHighlightedOrActiveRole =
@@ -2743,7 +2456,6 @@ varying vec3 vExtWorldPos;`,
             !hidden.has(id) &&
             !hideByFasciaMode &&
             !hideIdleFacialStrip;
-
       const isHighlighted = highlights.has(id);
       const customCol = isHighlighted ? highlights.get(id) : null;
       const isRoleInvolved = kind === 'muscle' && (hasActiveRoles ? activeRoleIds.has(id) : (keep !== null ? keep.has(id) : false));
@@ -2752,30 +2464,23 @@ varying vec3 vExtWorldPos;`,
         !isHighlighted &&
         (hasActiveRoles ? !activeRoleIds.has(id) : (keep !== null ? !keep.has(id) : false));
       const xrayMuscleGhost = xrayMode && kind === 'muscle' && !isHighlighted;
-
       let ghost = false;
       let veilMode = 0; // 0: 通常ゴースト, 1: 重ね透視コラーゲンベール, 2: 深層モード極薄ガラス輪郭シルエット
-
       const uninvolvedOrNonSelected =
         isUninvolvedMuscle || (hasSel > 0 && !isHighlighted && !isRoleInvolved);
-
       if (kind === 'muscle') {
         if (fasciaLayerMode === 'deep') {
           if (mLayer === 'surface') {
-            // 'deep' モード: 表層筋は極薄のセピア線画シルエットへ退避
             ghost = true;
             veilMode = 2;
           } else {
-            // 無関係な深層筋も生成りリネンヴェールへ透過退避し、骨格と対象筋を鮮明に見せる
             ghost = !isHighlighted && (mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost);
             veilMode = 0;
           }
         } else if (fasciaLayerMode === 'surface') {
-          // 無関係な表層筋は生成りリネンヴェールへ透過退避し、中のセピア骨格とアンバー/テラコッタ筋膜を透視可能にする
           ghost = !isHighlighted && (mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost);
           veilMode = 0;
         } else {
-          // 'see-through'（重ね透視：初期デフォルト）
           if (hasActiveDeep && mLayer === 'surface') {
             ghost = true;
             veilMode = 1;
@@ -2788,11 +2493,9 @@ varying vec3 vExtWorldPos;`,
           }
         }
       } else {
-        // 骨格は全モード常時くっきり白い解剖骨格としてソリッド描画（ghost化・透過・消去禁止）
         ghost = false;
         veilMode = 0;
       }
-
       if (matUniforms) {
         matUniforms.uVeilMode.value = veilMode;
         matUniforms.uUninvolved.value = isUninvolvedMuscle ? 1 : 0;
@@ -2802,7 +2505,6 @@ varying vec3 vExtWorldPos;`,
         matUniforms.uSelectCustom.value = customCol ? 1 : 0;
         if (customCol) matUniforms.uSelectColor.value.copy(customCol);
       }
-
       mesh.userData.ghost = ghost;
       mesh.userData.veilMode = veilMode;
       if (illust) {
@@ -2811,7 +2513,6 @@ varying vec3 vExtWorldPos;`,
       } else if (mesh.userData.hull) {
         mesh.userData.hull.visible = false;
       }
-
       const mat = mesh.material;
       if (mat.transparent !== ghost) {
         mat.transparent = ghost;
@@ -2832,7 +2533,6 @@ varying vec3 vExtWorldPos;`,
       }
       mat.depthWrite = !ghost;
       mesh.renderOrder = ghost ? (veilMode === 1 ? 2 : 1) : 0;
-
       if (ghost) {
         if (xrayMode) {
           mat.color.copy(baseColor).lerp(XRAY_GHOST_TONE, 0.68);
@@ -2861,7 +2561,6 @@ varying vec3 vExtWorldPos;`,
     }
   };
   applyState();
-
   const v = new THREE.Vector3();
   /**
    * 構造のジオメトリ頂点（ワールド座標）の重心を返す。
@@ -2874,7 +2573,6 @@ varying vec3 vExtWorldPos;`,
     if (centerCache.has(cacheKey)) return centerCache.get(cacheKey).clone();
     const list = meshesById.get(id);
     if (!list || !list.length) return null;
-
     const sum = { L: new THREE.Vector3(), R: new THREE.Vector3(), both: new THREE.Vector3() };
     const cnt = { L: 0, R: 0, both: 0 };
     for (const mesh of list) {
@@ -2894,26 +2592,20 @@ varying vec3 vExtWorldPos;`,
         }
       }
     }
-    // 3 種類まとめてキャッシュ（L/R に頂点がない＝片側だけ・正中のみの構造は全体の重心で代用）
     const all = cnt.both ? sum.both.clone().divideScalar(cnt.both) : new THREE.Vector3();
     centerCache.set(`${id}|both`, all);
     centerCache.set(`${id}|L`, cnt.L ? sum.L.divideScalar(cnt.L) : all.clone());
     centerCache.set(`${id}|R`, cnt.R ? sum.R.divideScalar(cnt.R) : all.clone());
     return centerCache.get(cacheKey).clone();
   };
-
-  // ----- カメラ補間 -------------------------------------------------------
   let tween = null; // { t, fromTarget, toTarget, fromDir, rot, fromDist, toDist }
   const qTmp = new THREE.Quaternion();
   const qIdentity = new THREE.Quaternion();
-
   const stopDamping = () => {
-    // OrbitControls の慣性が補間と喧嘩しないよう残留量を消す（内部プロパティは存在時のみ）
     controls._sphericalDelta?.set?.(0, 0, 0);
     controls._panOffset?.set?.(0, 0, 0);
     if (typeof controls._scale === 'number') controls._scale = 1;
   };
-
   const flyTo = (target, dir, dist, immediate = false) => {
     const d = dir.clone().normalize();
     const clampedDist = THREE.MathUtils.clamp(dist, controls.minDistance, controls.maxDistance);
@@ -2932,7 +2624,6 @@ varying vec3 vExtWorldPos;`,
     const fromTheta = Math.atan2(fromDir.x, fromDir.z);
     const toTheta = Math.atan2(d.x, d.z);
     let dTheta = Math.atan2(Math.sin(toTheta - fromTheta), Math.cos(toTheta - fromTheta));
-    // 正面⇄背面（約180度反転）のときは常に一定の水平方向へスムーズに回り込む
     if (Math.abs(Math.abs(dTheta) - Math.PI) < 1e-3) {
       dTheta = Math.PI;
     }
@@ -2950,7 +2641,6 @@ varying vec3 vExtWorldPos;`,
       toDist: clampedDist,
     };
   };
-
   const stepTween = (delta) => {
     if (!tween) return;
     tween.t = Math.min(1, tween.t + delta / TWEEN_SEC);
@@ -2965,7 +2655,6 @@ varying vec3 vExtWorldPos;`,
     camera.lookAt(controls.target);
     if (tween.t >= 1) tween = null;
   };
-
   /** 半径 r の球が画面に収まる距離（縦長画面も考慮） */
   const fitDistance = (halfH, halfW) => {
     const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -2973,8 +2662,6 @@ varying vec3 vExtWorldPos;`,
     const tanH = tanV * camera.aspect;
     return Math.max(halfH / tanV, halfW / tanH);
   };
-
-  // ----- ボトムシート＆上部詳細カード連動 View Offset（強制リフローゼロ：ResizeObserver でキャッシュした高さのみを参照） -----
   let cachedUiEl = null;
   let cachedToastEl = null;
   let cachedScModalEl = null;
@@ -3002,7 +2689,6 @@ varying vec3 vExtWorldPos;`,
           }
         })
       : null;
-
   const ensureUiBoxObserved = () => {
     if (!cachedUiEl) cachedUiEl = document.getElementById('ui-root');
     if (!cachedUiEl) return;
@@ -3024,13 +2710,9 @@ varying vec3 vExtWorldPos;`,
       uiBoxObserver?.observe(cachedLegendEl);
     }
   };
-
-  // 一体型物理分離レイアウト対応: 3Dステージ(#stage)上にシートや右レールを一切重ねず、
-  // containerの実寸(clientWidth × clientHeight)100%中央に全身・対象部位を美しくフレーミングする
   const readTopUiClearPx = () => 0;
   const readRightRailClearPx = () => 0;
   const readSheetVis = () => 0;
-
   let smoothSheetVis = 0;
   let lastOffsetX = 0;
   let lastOffsetY = 0;
@@ -3039,11 +2721,8 @@ varying vec3 vExtWorldPos;`,
   let isHomeFullBodyFraming = true;
   let homeZoomSettling = false;
   const homeZoomDirTmp = new THREE.Vector3();
-
   const clearViewportFrac = (_fallbackVis = 0, _exactVis = false) => 0.87;
-
   const clearHorizFrac = () => 0.90;
-
   const fitClearDistance = (halfH, halfW, fallbackVis = 0, exactVis = false) => {
     const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
     const tanV = Math.tan(vHalf);
@@ -3052,7 +2731,6 @@ varying vec3 vExtWorldPos;`,
     const effTanH = tanH * clearHorizFrac();
     return Math.max(halfH / Math.max(effTanV, 0.08), halfW / Math.max(effTanH, 0.06));
   };
-
   const syncCameraViewOffset = (force = false) => {
     const { w, h } = size();
     if (!w || !h) return;
@@ -3064,11 +2742,9 @@ varying vec3 vExtWorldPos;`,
       lastViewH = h;
     }
   };
-
   const homeTarget = () => new THREE.Vector3(BODY_CENTER.x, BODY_CENTER.y, BODY_CENTER.z);
   const homeDistance = () =>
     fitClearDistance(BODY_HALF_HEIGHT * 1.09, BODY_HALF_WIDTH * 1.14, 0, true) + 0.32;
-
   const stepSheetViewOffset = (delta) => {
     syncCameraViewOffset(false);
     if (isHomeFullBodyFraming && !tween && !xrayMode) {
@@ -3090,11 +2766,9 @@ varying vec3 vExtWorldPos;`,
       homeZoomSettling = false;
     }
   };
-
   let currentView = 'front';
   let lastNotifiedView = 'front';
   const viewChangeCbs = [];
-
   const detectCameraView = () => {
     const dx = camera.position.x - controls.target.x;
     const dz = camera.position.z - controls.target.z;
@@ -3104,7 +2778,6 @@ varying vec3 vExtWorldPos;`,
     if (Math.abs(nx) >= 0.94 && Math.abs(nz) <= 0.34) return 'side';
     return Math.abs(nz) >= Math.abs(nx) ? (nz >= 0 ? 'front' : 'back') : (nx >= 0 ? 'left' : 'right');
   };
-
   const checkViewChange = (forcedView) => {
     const rawView = forcedView && VIEW_DIRS[forcedView] ? forcedView : detectCameraView();
     const nextView = VIEW_BADGE_MAP[rawView] || rawView;
@@ -3119,23 +2792,18 @@ varying vec3 vExtWorldPos;`,
       }
     }
   };
-
   syncCameraViewOffset(true);
   flyTo(homeTarget(), VIEW_DIRS.front, homeDistance(), true);
-
   controls.addEventListener('start', () => {
     tween = null; // ユーザー操作が入ったら補間を中断
     isHomeFullBodyFraming = false;
     homeZoomSettling = false;
   });
-
-  // ----- タップ選択（ドラッグと区別） ---------------------------------------
   const pickCbs = [];
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const activePointers = new Map();
   let tapCandidate = null; // { id, x, y, time }
-
   const pickRestA = new THREE.Vector3();
   const pickRestB = new THREE.Vector3();
   const pickRestC = new THREE.Vector3();
@@ -3143,14 +2811,12 @@ varying vec3 vExtWorldPos;`,
   const pickBestPt = new THREE.Vector3();
   const pickBoxTmp = new THREE.Box3();
   const pickCornerTmp = new THREE.Vector3();
-
   /** 指定候補メッシュ群に対して姿勢変形後の三角形交差判定を実行し、最近傍ヒットを返す */
   const raycastDeformedCandidates = (ray, candidates) => {
     if (!candidates.length) return null;
     let bestMesh = null;
     let bestSide = 'both';
     let bestDistSq = Infinity;
-
     for (const mesh of candidates) {
       const geo = mesh.geometry;
       const pos = geo?.attributes?.position;
@@ -3158,8 +2824,6 @@ varying vec3 vExtWorldPos;`,
       const rigRole = mesh.userData.rigRole;
       mesh.updateWorldMatrix(true, false);
       const mw = mesh.matrixWorld;
-
-      // 1. 姿勢変形後の8頂点AABBで高速ブロードフェーズ判定
       if (geo.boundingBox) {
         pickBoxTmp.makeEmpty();
         const { min, max } = geo.boundingBox;
@@ -3176,23 +2840,18 @@ varying vec3 vExtWorldPos;`,
         pickBoxTmp.expandByScalar(0.05);
         if (!ray.intersectsBox(pickBoxTmp)) continue;
       }
-
-      // 2. 姿勢変形後の三角形とレイの厳密な交差判定
       const idxAttr = geo.index;
       const triCount = idxAttr ? idxAttr.count / 3 : pos.count / 3;
       for (let t = 0; t < triCount; t++) {
         const i0 = idxAttr ? idxAttr.getX(t * 3) : t * 3;
         const i1 = idxAttr ? idxAttr.getX(t * 3 + 1) : t * 3 + 1;
         const i2 = idxAttr ? idxAttr.getX(t * 3 + 2) : t * 3 + 2;
-
         pickRestA.fromBufferAttribute(pos, i0).applyMatrix4(mw);
         pickRestB.fromBufferAttribute(pos, i1).applyMatrix4(mw);
         pickRestC.fromBufferAttribute(pos, i2).applyMatrix4(mw);
-
         const defA = deformPoint(pickRestA, rigRole, false);
         const defB = deformPoint(pickRestB, rigRole, false);
         const defC = deformPoint(pickRestC, rigRole, false);
-
         const hit = ray.intersectTriangle(defA, defB, defC, false, pickHitTmp);
         if (hit) {
           const dSq = ray.origin.distanceToSquared(pickHitTmp);
@@ -3206,7 +2865,6 @@ varying vec3 vExtWorldPos;`,
         }
       }
     }
-
     if (bestMesh) {
       return {
         id: bestMesh.userData.structureId,
@@ -3217,8 +2875,6 @@ varying vec3 vExtWorldPos;`,
         distSq: bestDistSq,
       };
     }
-
-    // フォールバック（静止状態の高速判定）
     const hits = raycaster.intersectObjects(candidates, false);
     if (!hits.length) return null;
     const hit0 = hits[0];
@@ -3232,7 +2888,6 @@ varying vec3 vExtWorldPos;`,
       distSq: hit0.distance * hit0.distance,
     };
   };
-
   /**
    * 姿勢変形と2層レイヤーモード（'see-through' | 'surface' | 'deep'）に完全対応した高精度レイピッキング。
    * - 'deep' モード: 表層（surface）筋を完全にスキップし、奥の深層（deep）筋に直接ヒットさせる
@@ -3244,7 +2899,6 @@ varying vec3 vExtWorldPos;`,
     ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const ray = raycaster.ray;
-
     if (unifiedLayerMode === 'fascia') {
       const fasciaPickCandidates = allMeshes.filter(
         (m) => m.userData.kind === 'muscle' && !hidden.has(m.userData.structureId),
@@ -3255,7 +2909,6 @@ varying vec3 vExtWorldPos;`,
       const boneHit = raycastDeformedCandidates(ray, boneCandidates);
       return boneHit ? { id: boneHit.id, side: boneHit.side, point: boneHit.point } : null;
     }
-
     if (fasciaLayerMode === 'deep') {
       const deepCandidates = allMeshes.filter(
         (m) =>
@@ -3271,7 +2924,6 @@ varying vec3 vExtWorldPos;`,
       const hit = raycastDeformedCandidates(ray, deepCandidates);
       return hit ? { id: hit.id, side: hit.side, point: hit.point } : null;
     }
-
     if (fasciaLayerMode === 'surface') {
       const solidSurface = allMeshes.filter(
         (m) =>
@@ -3296,7 +2948,6 @@ varying vec3 vExtWorldPos;`,
       if (primary && primary.kind === 'muscle') {
         return { id: primary.id, side: primary.side, point: primary.point };
       }
-      // 動作選択中（ghostOthers適用中）でも他の表層筋を直接タップして連鎖を切り替えられるようにする
       if (keep !== null && !xrayMode && layer.muscle === 'on') {
         const ghostedSurfaceMuscles = allMeshes.filter(
           (m) =>
@@ -3312,11 +2963,8 @@ varying vec3 vExtWorldPos;`,
       }
       return primary ? { id: primary.id, side: primary.side, point: primary.point } : null;
     }
-
-    // 'see-through'（重ね透視）モード
     const solidCandidates = allMeshes.filter((m) => m.visible && !m.userData.ghost);
     const primary = raycastDeformedCandidates(ray, solidCandidates);
-
     if (headSculptLoaded && !xrayMode && layer.muscle === 'on') {
       const headMuscleMeshes = allMeshes.filter(
         (m) =>
@@ -3329,13 +2977,9 @@ varying vec3 vExtWorldPos;`,
         return { id: headHit.id, side: headHit.side, point: headHit.point };
       }
     }
-
-    // ソリッドな筋肉（透けて見えているアクティブ深層筋など）に当たったら最優先で採用
     if (primary && primary.kind === 'muscle') {
       return { id: primary.id, side: primary.side, point: primary.point };
     }
-
-    // 奥にソリッドな深層筋がなかった場所（骨に当たった or 空間）では、コラーゲンベール化中の表層筋にもタップできるようにする
     if ((activeDeepSet.size > 0 || keep !== null) && !xrayMode && layer.muscle === 'on') {
       const veilMuscles = allMeshes.filter(
         (m) => m.visible && m.userData.ghost && m.userData.kind === 'muscle',
@@ -3345,10 +2989,8 @@ varying vec3 vExtWorldPos;`,
         return { id: veilHit.id, side: veilHit.side, point: veilHit.point };
       }
     }
-
     return primary ? { id: primary.id, side: primary.side, point: primary.point } : null;
   };
-
   canvas.addEventListener('pointerdown', (e) => {
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.size === 1 && e.button === 0) {
@@ -3385,8 +3027,6 @@ varying vec3 vExtWorldPos;`,
   canvas.addEventListener('pointerleave', (e) => {
     if (e.pointerType === 'mouse') activePointers.delete(e.pointerId);
   });
-
-  // ----- リサイズ ---------------------------------------------------------
   const resize = (entry = null) => {
     refreshCachedStageSize(entry);
     const { w, h } = size();
@@ -3408,8 +3048,6 @@ varying vec3 vExtWorldPos;`,
   window.addEventListener('resize', onWinResize);
   window.addEventListener('orientationchange', onOrientationChange);
   resize(null);
-
-  // ----- スマート省電力描画ループ ＆ WebGL コンテキストロスト自動復旧 ----------
   const frameCbs = [];
   const clock = new THREE.Clock();
   let elapsed = 0;
@@ -3421,7 +3059,6 @@ varying vec3 vExtWorldPos;`,
   let wasExternalBusy = false;
   const lastCamPos = camera.position.clone();
   const lastCamTarget = controls.target.clone();
-
   const wakeRenderLoop = () => {
     const now = performance.now();
     if (now - lastActivityMs >= IDLE_TIMEOUT_MS) {
@@ -3430,8 +3067,6 @@ varying vec3 vExtWorldPos;`,
     lastActivityMs = now;
     lastRenderedMs = 0; // 待ち時間0msで即座に次フレームから60fpsフルアニメーションへ復帰
   };
-
-  // 公式HPの <iframe> 埋め込み時等に画面外へスクロールアウトしている間は描画を完全スキップ（GPU負荷0%）
   const stageIntersectionObserver =
     typeof IntersectionObserver !== 'undefined'
       ? new IntersectionObserver(
@@ -3449,15 +3084,12 @@ varying vec3 vExtWorldPos;`,
         )
       : null;
   stageIntersectionObserver?.observe(container);
-
-  // UIパネル側の stopPropagation に邪魔されず 0ms で 60fps 復帰するため capture フェーズで監視
   const WAKE_EVENTS = ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'keydown', 'input', 'click'];
   for (const ev of WAKE_EVENTS) {
     window.addEventListener(ev, wakeRenderLoop, { capture: true, passive: true });
   }
   controls.addEventListener('start', wakeRenderLoop);
   controls.addEventListener('change', wakeRenderLoop);
-
   const onVisibilityChange = () => {
     if (!document.hidden) {
       clock.getDelta(); // 非表示中の経過時間を破棄して復帰ジャンプを防ぐ
@@ -3465,10 +3097,8 @@ varying vec3 vExtWorldPos;`,
     }
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
-
   const renderTick = () => {
     if (document.hidden || contextLost || !isStageVisible) return;
-
     const nowMs = performance.now();
     ensureUiBoxObserved();
     const xraySettling = Math.abs(styleUniforms.uXRay.value - xrayTarget) > 1e-3;
@@ -3478,24 +3108,19 @@ varying vec3 vExtWorldPos;`,
     const camMoved =
       camera.position.distanceToSquared(lastCamPos) > 1e-7 ||
       controls.target.distanceToSquared(lastCamTarget) > 1e-7;
-
     if (tween !== null || xraySettling || camMoved || (busyNow && !wasExternalBusy)) {
       lastActivityMs = nowMs;
     }
     wasExternalBusy = busyNow;
-
     if (!busyNow && nowMs - lastActivityMs >= IDLE_TIMEOUT_MS) {
-      // 無操作45秒以上経過時のみ 4fps（250ms間隔）の静かな省電力待機へ移行（触れれば0msで60fps即復帰）
       if (nowMs - lastRenderedMs < IDLE_FRAME_INTERVAL_MS) {
         return;
       }
     }
     lastRenderedMs = nowMs;
-
     const delta = Math.min(clock.getDelta(), 0.1); // タブ復帰・省電力間引き時の大ジャンプを抑える
     elapsed += delta;
     styleUniforms.uPulseTime.value = elapsed;
-    // レントゲン透視（X-Ray Fluoroscope）シェーダー係数を滑らかに補間
     if (Math.abs(styleUniforms.uXRay.value - xrayTarget) > 1e-4) {
       const kX = Math.min(1, delta * 7.5);
       styleUniforms.uXRay.value += (xrayTarget - styleUniforms.uXRay.value) * kX;
@@ -3518,7 +3143,6 @@ varying vec3 vExtWorldPos;`,
     }
     renderer.render(scene, camera);
   };
-
   const onContextLost = (e) => {
     e.preventDefault();
     contextLost = true;
@@ -3537,14 +3161,9 @@ varying vec3 vExtWorldPos;`,
   };
   canvas.addEventListener('webglcontextlost', onContextLost, false);
   canvas.addEventListener('webglcontextrestored', onContextRestored, false);
-
   renderer.setAnimationLoop(renderTick);
-
   report(100, '準備ができました');
-
-  // ----- 公開 API ---------------------------------------------------------
   const idsToSet = (ids) => new Set((ids || []).filter((id) => meshesById.has(id)));
-
   /** 指定 ID 群のワールド AABB（左右 side 指定と目標姿勢変形後の頂点座標を厳密に考慮） */
   const cornerTmp = new THREE.Vector3();
   const boundsOf = (ids, side = 'both') => {
@@ -3576,14 +3195,12 @@ varying vec3 vExtWorldPos;`,
     }
     return box.isEmpty() ? fallbackBox : box;
   };
-
   const api = {
     THREE,
     scene,
     camera,
     renderer,
     controls,
-
     /** @returns {THREE.Mesh[]} */
     getMeshes: (id) => meshesById.get(id) || [],
     getCenter,
@@ -3596,15 +3213,12 @@ varying vec3 vExtWorldPos;`,
     /** 構造の日本語情報（nameJa, groupJa, color, kind） */
     info: (id) => info.get(id) || null,
     kindOf: (id) => info.get(id)?.kind || meshesById.get(id)?.[0]?.userData.kind || null,
-
-    // 旧3Dピン API 互換スタブ（3D付着部ピン・片方向矢印は廃止し、白腱グラデーションと温度グラデーションへ統合）
     showAttachmentPins: () => false,
     focusAttachmentPole: () => false,
     clearAttachmentPins: () => {},
     showPins: () => false,
     clearPins: () => {},
     activePinId: () => null,
-
     /**
      * data.js の MUSCLE_LAYERS ({ [id]: 'surface' | 'deep' }) を設定し全筋メッシュへ反映する
      * @param {Record<string, 'surface'|'deep'> | Map<string, 'surface'|'deep'>} layerObj
@@ -3629,7 +3243,6 @@ varying vec3 vExtWorldPos;`,
       applyState();
     },
     getMuscleLayer: (id) => resolveMuscleLayer(id),
-
     /**
      * アナトミートレイン2層（表層 / 深層）シースルー＆切り替えモードを設定
      * @param {'see-through'|'surface'|'deep'} mode
@@ -3642,7 +3255,6 @@ varying vec3 vExtWorldPos;`,
       applyState();
     },
     getFasciaLayerMode: () => fasciaLayerMode,
-
     /**
      * 現在アクティブな深層筋 ID 配列/Set を通知する（'see-through' モード時の自動コラーゲンベール透視トリガー）
      * @param {Iterable<string>|null|undefined} deepIds
@@ -3659,7 +3271,6 @@ varying vec3 vExtWorldPos;`,
       }
       applyState();
     },
-
     /** 表示スタイル（'illust' = 医学イラスト調 / 'real' = 写実的） */
     setStyle(mode) {
       if (mode !== 'illust' && mode !== 'real') return;
@@ -3669,7 +3280,6 @@ varying vec3 vExtWorldPos;`,
       applyState();
     },
     getStyle: () => style,
-
     /**
      * レントゲン透視（X-Ray Fluoroscope）モードの切り替え
      * @param {boolean} enabled true=レントゲン透視ON / false=通常表示へ滑らかに戻す
@@ -3691,7 +3301,6 @@ varying vec3 vExtWorldPos;`,
       applyState();
     },
     isXRayMode: () => xrayMode,
-
     /** レイヤー（筋/骨）の表示モード（骨格は消去不可とし常時白い骨格 'on' に固定） */
     setLayer(kind, mode) {
       if (!(kind in layer)) return;
@@ -3727,7 +3336,6 @@ varying vec3 vExtWorldPos;`,
       syncCameraViewOffset(true);
       wakeRenderLoop();
     },
-
     /**
      * ライン・クセ・連鎖に関係する筋肉 ID 配列を設定する。
      * 1つ以上ある間は関係のない筋肉を 94% マットな無彩色ダークスレートへ退避させ、空配列で元のサーモンピンクに戻す。
@@ -3743,7 +3351,6 @@ varying vec3 vExtWorldPos;`,
       }
       applyState();
     },
-
     /**
      * 指定 ID を発光させる。ids が空なら発光を全解除。
      * color 省略時はローズクリムゾン（#E11D48）で発光。
@@ -3756,7 +3363,6 @@ varying vec3 vExtWorldPos;`,
       for (const id of idsToSet(ids)) highlights.set(id, c);
       applyState();
     },
-
     /** 指定 ID 以外を半透明（ゴースト）にする。空配列・null で解除。 */
     ghostOthers(ids) {
       wakeRenderLoop();
@@ -3764,7 +3370,6 @@ varying vec3 vExtWorldPos;`,
       keep = set.size ? set : null; // 有効な ID が1つもなければ全身ゴーストにはしない
       applyState();
     },
-
     /**
      * 見た目（ゴースト・役割スレート退避・発光・深層透視コンテキスト）を初期化し、カメラを全身正面へ戻す。
      * @param {{ camera?: boolean }} [opts] camera:false でカメラは動かさない
@@ -3785,7 +3390,6 @@ varying vec3 vExtWorldPos;`,
         checkViewChange('front');
       }
     },
-
     home() {
       wakeRenderLoop();
       isHomeFullBodyFraming = true;
@@ -3793,7 +3397,6 @@ varying vec3 vExtWorldPos;`,
       flyTo(homeTarget(), VIEW_DIRS.front, homeDistance());
       checkViewChange('front');
     },
-
     hide(ids) {
       const list = Array.isArray(ids) ? ids : [ids];
       let changed = false;
@@ -3823,7 +3426,6 @@ varying vec3 vExtWorldPos;`,
     },
     isHidden: (id) => hidden.has(id),
     hiddenIds: () => [...hidden],
-
     /**
      * 今の視点から見えている一番外側の筋肉を一層はがす（「はがす」ボタン用）。
      * 画面全体にレイを格子状に飛ばし、最初に当たった筋肉をまとめて非表示にする。
@@ -3851,7 +3453,6 @@ varying vec3 vExtWorldPos;`,
       applyState();
       return [...found];
     },
-
     /** 一体型アプリの表示レイヤー（'fascia' | 'muscle'）を瞬時に切り替え（カメラ・ポーズ不変） */
     setUnifiedLayerMode(mode) {
       if (mode !== 'fascia' && mode !== 'muscle') return unifiedLayerMode;
@@ -3862,7 +3463,6 @@ varying vec3 vExtWorldPos;`,
       return unifiedLayerMode;
     },
     getUnifiedLayerMode: () => unifiedLayerMode,
-
     /** ライト（#F6F2EA）⇄ ダーク（#0B132B）3D背景＆シェーダー連動 */
     setDarkTheme(dark) {
       const next = Boolean(dark);
@@ -3873,10 +3473,8 @@ varying vec3 vExtWorldPos;`,
       return isDarkTheme;
     },
     getDarkTheme: () => isDarkTheme,
-
     /** 統合3D筋膜シート生成用に解析済みGLBルートを返す（追加通信 0 byte） */
     getRoots: () => ({ muscleRoot, skeletonRoot }),
-
     /**
      * 指定構造が画面に収まるようスムーズに寄る。
      * @param {string[]} ids 空なら全身
@@ -3903,7 +3501,6 @@ varying vec3 vExtWorldPos;`,
       if (box.isEmpty()) return;
       const center = box.getCenter(new THREE.Vector3());
       const sz = box.getSize(new THREE.Vector3());
-      // 頭部・上位頸部が色づいている動作のみ頭頂見切れを防ぐ（下部への強制引き伸ばしは行わない）
       if (!opts.inspectorOpen && !opts.selfCareModal && box.max.y > 2.45 && sz.y < 2.25) {
         const crownPt = deformPoint(
           new THREE.Vector3(0, 3.34, 0.04),
@@ -3936,7 +3533,6 @@ varying vec3 vExtWorldPos;`,
       const dist = THREE.MathUtils.clamp(rawDist, minDist, homeDistance() * 1.12);
       flyTo(center, dir, dist);
     },
-
     /** 視点切り替え（注視点・距離は保ったまま向きだけスムーズに回す） */
     view(name) {
       wakeRenderLoop();
@@ -3962,7 +3558,6 @@ varying vec3 vExtWorldPos;`,
       api.view(name);
     },
     currentView: () => currentView,
-
     /** cb(viewName) — カメラの主方向（'front'|'back'|'left'|'right'）が変化したとき */
     onViewChange(cb) {
       if (typeof cb === 'function') viewChangeCbs.push(cb);
@@ -3971,7 +3566,6 @@ varying vec3 vExtWorldPos;`,
         if (i >= 0) viewChangeCbs.splice(i, 1);
       };
     },
-
     /** cb(id) — ドラッグでない短いタップで、ゴーストでない可視 Mesh に当たったとき */
     onPick(cb) {
       if (typeof cb === 'function') pickCbs.push(cb);
@@ -3980,7 +3574,6 @@ varying vec3 vExtWorldPos;`,
         if (i >= 0) pickCbs.splice(i, 1);
       };
     },
-
     /** cb(time, delta) — 毎フレーム（秒単位） */
     onFrame(cb) {
       if (typeof cb === 'function') frameCbs.push(cb);
@@ -3989,13 +3582,11 @@ varying vec3 vExtWorldPos;`,
         if (i >= 0) frameCbs.splice(i, 1);
       };
     },
-
     /** セルフケア器具やX線スキャン中など、60fps を維持すべき外部アニメーション条件を登録 */
     setKeepAwakePredicate(fn) {
       keepAwakePredicate = typeof fn === 'function' ? fn : null;
     },
     wake: wakeRenderLoop,
-
     dispose() {
       renderer.setAnimationLoop(null);
       for (const ev of WAKE_EVENTS) {
@@ -4028,6 +3619,5 @@ varying vec3 vExtWorldPos;`,
       canvas.remove();
     },
   };
-
   return api;
 }

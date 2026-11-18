@@ -1,19 +1,10 @@
-// =============================================================================
-// main.js — アナトミー筋膜・筋肉 3D（一体型オーケストレーション v=20261118d）
-// ・全45動作 posture.js で「11本連続3D筋膜シート」と「立体3D筋肉」が 0.000mm 同期変形
-// ・［ 筋膜 ｜ 筋肉 ］スイッチでポーズ・カメラ・セルフケア手順を1ミリも崩さず瞬時切替
-// ・?layer=fascia|muscle / ?habit= / ?symptom= / ?motion= / ?line= / ?theme= 完全対応
-// =============================================================================
-
-import * as dataModule from './data.js?v=20261118d';
-import * as anatomyDetails from './anatomy_details.js?v=20261118d';
-import { createFascia } from './fascia.js?v=20261118d';
-import * as posture from './posture.js?v=20261118d';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261118d';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261118d';
-import { createUI } from './ui.js?v=20261118d';
-import { createViewer } from './viewer.js?v=20261118d';
-
+import * as dataModule from './data.js?v=20261118e';
+import { createFascia } from './fascia.js?v=20261118e';
+import * as posture from './posture.js?v=20261118e';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261118e';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261118e';
+import { createUI } from './ui.js?v=20261118e';
+import { createViewer } from './viewer.js?v=20261118e';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -21,7 +12,6 @@ const FEELINGS = dataModule.FEELINGS || [];
 const STORIES = dataModule.STORIES || [];
 const OCCUPATIONS = dataModule.OCCUPATIONS || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
-
 const getMuscleLayer =
   typeof dataModule.getMuscleLayer === 'function'
     ? dataModule.getMuscleLayer
@@ -30,7 +20,6 @@ const computeMyofascialChain =
   typeof dataModule.computeMyofascialChain === 'function'
     ? dataModule.computeMyofascialChain
     : null;
-
 const setPose = typeof posture.setPose === 'function' ? posture.setPose : () => {};
 const setHabitPhasePose = typeof posture.setHabitPhasePose === 'function' ? posture.setHabitPhasePose : () => {};
 const updatePose = typeof posture.update === 'function' ? posture.update : () => {};
@@ -39,13 +28,23 @@ const clearSelfCarePose = typeof posture.clearSelfCarePose === 'function' ? post
 const isPoseAnimating = typeof posture.isPoseAnimating === 'function' ? posture.isPoseAnimating : () => false;
 const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPaused : () => {};
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
-
-const getAnatomyDetail =
-  typeof anatomyDetails.getAnatomyDetail === 'function'
-    ? anatomyDetails.getAnatomyDetail
-    : (id) => anatomyDetails.ANATOMY_DETAILS?.[id] || null;
-
-// ライン選択時に寄る向き
+let cachedAnatomyDetails = null;
+const preloadAnatomyDetails = () =>
+  import('./anatomy_details.js?v=20261118e')
+    .then((m) => {
+      cachedAnatomyDetails = m;
+      return m;
+    })
+    .catch(() => null);
+const getAnatomyDetail = (id) => {
+  if (!cachedAnatomyDetails) {
+    preloadAnatomyDetails();
+    return null;
+  }
+  return typeof cachedAnatomyDetails.getAnatomyDetail === 'function'
+    ? cachedAnatomyDetails.getAnatomyDetail(id)
+    : cachedAnatomyDetails.ANATOMY_DETAILS?.[id] || null;
+};
 const LINE_VIEW = {
   SBL: 'back',
   SFL: 'front',
@@ -59,8 +58,6 @@ const LINE_VIEW = {
   BFL: 'back',
   FFL: 'front',
 };
-
-// 旧 fascia-only.html の ?symptom=<id> ➔ HABITS.id 完全対応マップ（全12症状）
 const SYMPTOM_TO_HABIT_MAP = {
   'hip-outer-tight': 'stand-hip-r',
   'scapula-back-heavy': 'desk-round',
@@ -75,8 +72,6 @@ const SYMPTOM_TO_HABIT_MAP = {
   'foot-arch-calf': 'heels-commute-walk',
   'twist-golf-waist': 'golf-swing-rot',
 };
-
-// 旧 fascia-only.html の ?motion=<presetId> ➔ HABITS.id 完全対応マップ（全26プリセット）
 const MOTION_TO_HABIT_MAP = {
   'right-stance': 'stand-hip-r',
   'left-stance': 'stand-hip-l',
@@ -105,11 +100,9 @@ const MOTION_TO_HABIT_MAP = {
   'morning-sock-reach': 'heavy-lift-dig',
   'stairs-down-knee': 'heels-commute-walk',
 };
-
 const lineById = new Map(LINES.map((l) => [l.id, l]));
 const habitById = new Map(HABITS.map((h) => [h.id, h]));
 const storyById = new Map((STORIES || []).map((s) => [s.id, s]));
-
 const safe = (fn, label) => (...args) => {
   try {
     return fn(...args);
@@ -117,13 +110,11 @@ const safe = (fn, label) => (...args) => {
     console.error(`[main] ${label} でエラー`, err);
   }
 };
-
 const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
-
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261118d');
+    const res = await fetch('models/atlas_metadata.json?v=20261118e');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -134,7 +125,6 @@ async function loadNames() {
     return { meta: null, names: {} };
   }
 }
-
 const HEAD_FACE_JAW_IDS = new Set([
   'masseter',
   'temporalis',
@@ -150,7 +140,6 @@ const HEAD_FACE_JAW_IDS = new Set([
   'frontalis',
   'occipitalis',
 ]);
-
 const UPPER_ARM_SHOULDER_HABIT_IDS = new Set([
   'hair-cut-arm',
   'laundry-reach',
@@ -158,7 +147,6 @@ const UPPER_ARM_SHOULDER_HABIT_IDS = new Set([
   'cook-pan-hold',
   'therapist-press',
 ]);
-
 const BEND_LOWBACK_HABIT_IDS = new Set([
   'phone-neck',
   'laptop-low-screen',
@@ -179,7 +167,6 @@ const BEND_LOWBACK_HABIT_IDS = new Set([
   'sway-back',
   'gym-bench-push',
 ]);
-
 function getSelfCareMuscles(habit) {
   if (!habit) return [];
   const tl = habit.triggerLine || habit.goldenLine;
@@ -204,7 +191,6 @@ function getSelfCareMuscles(habit) {
       ? habit.shorten.filter(Boolean)
       : [];
 }
-
 function viewForHabit(habit, lines) {
   if (!habit) return 'front';
   if (habit.id === 'volleyball-smash' || habit.id === 'tennis-baseball-arm') return 'right';
@@ -226,7 +212,6 @@ function viewForHabit(habit, lines) {
   if (view === 'left' || view === 'right') view = habit.side === 'R' ? 'right' : 'left';
   return view;
 }
-
 async function start() {
   let ui = null;
   try {
@@ -235,12 +220,8 @@ async function start() {
       String(searchParams.get('theme') || '').toLowerCase() === 'dark' ? 'dark' : 'light';
     const initialLayer =
       String(searchParams.get('layer') || '').toLowerCase() === 'muscle' ? 'muscle' : 'fascia';
-
-    // ファーストペイント前にテーマ属性を反映（チラつき防止）
     document.documentElement.setAttribute('data-theme', initialTheme);
-
     const { meta, names } = await loadNames();
-
     for (const occ of OCCUPATIONS) {
       for (const hItem of occ?.habits || occ?.actions || []) {
         if (hItem && typeof hItem === 'object' && hItem.id && !habitById.has(hItem.id)) {
@@ -248,7 +229,6 @@ async function start() {
         }
       }
     }
-
     ui = createUI({
       lines: LINES,
       triggerLines: TRIGGER_LINES,
@@ -262,33 +242,26 @@ async function start() {
     ui.setTheme(initialTheme);
     ui.setUnifiedLayer(initialLayer);
     ui.setLoading(2, '3D人体モデルを準備しています…');
-
     const stage = document.getElementById('stage') || document.body;
     const viewer = await createViewer(stage, {
       metadata: meta || undefined,
       onProgress: (pct, text) => ui.setLoading(pct, text),
     });
-
     const fascia = createFascia({
       THREE: viewer.THREE,
       scene: viewer.scene,
       getMeshes: viewer.getMeshes,
       getCenter: viewer.getCenter,
     });
-
-    // 全11本アナトミートレイン連続3Dコラーゲン筋膜シート ＋ 42箇所骨ピン留めステーションを統合
     const unifiedSheets = createUnifiedFasciaSheets({
       scene: viewer.scene,
       ...viewer.getRoots(),
     });
-
     viewer.setMuscleLayers?.(MUSCLE_LAYERS);
     viewer.setFasciaLayerMode?.('see-through');
     viewer.setLayer?.('bone', 'on');
     fascia.setLayerFilter?.('see-through', MUSCLE_LAYERS);
-
     let currentUnifiedLayer = initialLayer;
-
     /** ［ 筋膜 ｜ 筋肉 ］を1ミリもポーズ・カメラ・手順を崩さず瞬時に切り替え */
     const applyUnifiedLayer = (nextMode) => {
       const resolved = nextMode === 'muscle' ? 'muscle' : 'fascia';
@@ -301,7 +274,6 @@ async function start() {
       viewer.wake?.();
       return resolved;
     };
-
     const applyTheme = (themeMode) => {
       const isDark = themeMode === 'dark';
       viewer.setDarkTheme?.(isDark);
@@ -309,21 +281,18 @@ async function start() {
       ui.setTheme?.(isDark ? 'dark' : 'light');
       viewer.wake?.();
     };
-
     applyTheme(initialTheme);
     applyUnifiedLayer(initialLayer);
-
+    setTimeout(preloadAnatomyDetails, 1200);
     viewer.setKeepAwakePredicate?.(() => {
       if (isPosePaused()) return false;
       return Boolean(fascia.isBusy?.() || isPoseAnimating());
     });
-
     viewer.onFrame((time, delta) => {
       updatePose(time, delta);
       fascia.update(time, delta);
       unifiedSheets.update(time, delta, viewer.camera?.quaternion || null);
     });
-
     const syncDeepContext = (ids = []) => {
       const cleanIds = [...new Set((ids || []).filter(Boolean))];
       viewer.setActiveRoleIds?.(cleanIds);
@@ -333,14 +302,11 @@ async function start() {
       }
       viewer.setActiveDeepContext?.(deepIds);
     };
-
-    // ----- 状態 -----------------------------------------------------------
     let mode = null; // 'line' | 'habit' | 'story' | 'part' | null
     let currentHabit = null;
     let currentStory = null;
     let currentStepIdx = -1;
     let lastPart = null;
-
     const clearAll = ({ camera = true } = {}) => {
       setPose(null, 0);
       clearSelfCarePose();
@@ -358,8 +324,6 @@ async function start() {
       currentStepIdx = -1;
       lastPart = null;
     };
-
-    // ----- 全身11本筋膜ライン図鑑 -----------------------------------------
     const selectLine = (id) => {
       const line = lineById.get(typeof id === 'object' ? id?.id : id);
       if (!line) return;
@@ -382,8 +346,6 @@ async function start() {
       currentStepIdx = -1;
       lastPart = null;
     };
-
-    // ----- 45動作（原因と動き） -------------------------------------------
     const ACTION_BODY_CONTEXT_IDS = [
       'deltoid',
       'biceps-brachii',
@@ -406,7 +368,6 @@ async function start() {
       'gastrocnemius',
       'tibialis-anterior',
     ];
-
     const getHabitColoredRoleIds = (habit) => {
       if (!habit) return [];
       const tl = habit.triggerLine || habit.goldenLine;
@@ -424,7 +385,6 @@ async function start() {
       const lLink = habit.lengthenLinked?.length ? habit.lengthenLinked : tl?.lengthenLinked || [];
       return [...new Set([...sCore, ...sLink, ...lAnt, ...lLink].filter(Boolean))];
     };
-
     const getHabitActiveRoleIds = (habit) => {
       if (!habit) return [];
       const tl = habit.triggerLine || habit.goldenLine;
@@ -437,7 +397,6 @@ async function start() {
         ]),
       ];
     };
-
     const buildHabitKeepIds = (habit) => {
       if (!habit) return new Set();
       const lines = (habit.lines || []).map((lid) => lineById.get(lid)).filter(Boolean);
@@ -449,7 +408,6 @@ async function start() {
         ...(habit.chain || []),
       ]);
     };
-
     const getHabitFocusIds = (habit) => {
       if (!habit) return [];
       const colored = getHabitColoredRoleIds(habit);
@@ -501,7 +459,6 @@ async function start() {
       }
       return [...new Set(base)];
     };
-
     const focusSideForHabit = (habit) => {
       if (!habit) return 'both';
       if (
@@ -515,9 +472,7 @@ async function start() {
       }
       return habit.side || 'both';
     };
-
     const DEFAULT_HABIT_PROGRESS = 0.68;
-
     const selectHabit = (id) => {
       const habit = typeof id === 'object' && id ? id : habitById.get(id);
       if (!habit) return;
@@ -547,7 +502,6 @@ async function start() {
       mode = 'habit';
       lastPart = null;
     };
-
     const returnToTriggerLine = (habit = currentHabit) => {
       clearSelfCarePose();
       fascia.clearReleaseTool?.();
@@ -573,14 +527,11 @@ async function start() {
         side: focusSideForHabit(habit),
       });
     };
-
-    // ----- セルフケア器具＆カメラ解決 -------------------------------------
     const resolveReleaseConfig = (habit, muscleId, payload = null) => {
       const pObj = payload && typeof payload === 'object' ? payload : {};
       const tl = habit?.triggerLine || habit?.goldenLine;
       const tpList = tl?.triggerPoints || habit?.triggerPoints || habit?.selfCare?.triggerPoints || [];
       const tpEntry = tpList.find((tp) => (typeof tp === 'object' ? (tp.id || tp.muscleId) === muscleId : false)) || {};
-
       let strokeTarget = pObj.strokeTarget || tpEntry.strokeTarget || null;
       if (!strokeTarget && habit) {
         const pathSeq = tl?.fasciaChain || tl?.arrowPath || getSelfCareMuscles(habit) || habit.chain || [];
@@ -591,7 +542,6 @@ async function start() {
           strokeTarget = pathSeq[idx - 1];
         }
       }
-
       const requestedTool = String(pObj.tool || tpEntry.tool || '').toLowerCase();
       const profile = resolveCareProfile(muscleId, requestedTool || null);
       const tool = profile.tool;
@@ -599,7 +549,6 @@ async function start() {
         (pObj.toolSwitchOnly ? null : pObj.motion || tpEntry.motion) ||
         profile.motion ||
         (tool === 'hand' ? 'stroke' : 'roll');
-
       const speed = Number.isFinite(Number(pObj.speed ?? tpEntry.speed)) ? Number(pObj.speed ?? tpEntry.speed) : 1.0;
       const scale = Number.isFinite(Number(pObj.scale ?? tpEntry.scale))
         ? Number(pObj.scale ?? tpEntry.scale)
@@ -607,7 +556,6 @@ async function start() {
       const strokeSpan = Number.isFinite(Number(pObj.strokeSpan ?? tpEntry.strokeSpan))
         ? Number(pObj.strokeSpan ?? tpEntry.strokeSpan)
         : 1.0;
-
       return {
         muscleId,
         strokeTarget,
@@ -622,7 +570,6 @@ async function start() {
         strokeSpan,
       };
     };
-
     const viewForReleaseTarget = (muscleId, habit = currentHabit, relCfg = null) => {
       if (relCfg?.view) return relCfg.view;
       const id = muscleId || '';
@@ -676,7 +623,6 @@ async function start() {
       const lines = (habit?.lines || []).map((lid) => lineById.get(lid)).filter(Boolean);
       return viewForHabit(habit, lines);
     };
-
     const syncSelfCareHabitBase = (habit) => {
       if (!habit || currentHabit === habit) return;
       currentHabit = habit;
@@ -690,7 +636,6 @@ async function start() {
       fascia.setProgress(DEFAULT_HABIT_PROGRESS);
       unifiedSheets.showHabit(habit);
     };
-
     const focusTriggerPoint = (muscleId, habit = currentHabit, releaseCfg = null) => {
       if (!muscleId) {
         returnToTriggerLine(habit);
@@ -716,7 +661,6 @@ async function start() {
       viewer.focus([muscleId], { view, side: focusSide, inspectorOpen: true });
       lastPart = muscleId;
     };
-
     const focusSelfCareView = (muscleId, habit = currentHabit, releaseCfg = null) => {
       if (!muscleId) {
         returnToTriggerLine(habit);
@@ -741,7 +685,6 @@ async function start() {
       const focusSide = targetSide === 'both' ? 'R' : targetSide;
       fascia.showTriggerPoint?.(muscleId, focusSide);
       viewer.highlight([muscleId], '#BF6450', { side: focusSide });
-
       const baseFocusIds = [muscleId, strokeTarget].filter(Boolean);
       let landmarkIds;
       let closeSelfCare = false;
@@ -821,7 +764,6 @@ async function start() {
       viewer.focus(focusIds, { view, side: focusBoxSide, selfCareModal: true, closeSelfCare });
       lastPart = muscleId;
     };
-
     const resolveTriggerPointPayload = (payload, defaultFirst = false) => {
       if (payload === null) return { habit: currentHabit, muscleId: null };
       if (typeof payload === 'string') {
@@ -861,8 +803,6 @@ async function start() {
       }
       return { habit: currentHabit, muscleId: null };
     };
-
-    // ----- 4ステップ連動ストーリー ---------------------------------------
     const applyStep = (story, index) => {
       if (!story || !Array.isArray(story.steps) || !story.steps.length) return;
       const idx = Math.max(0, Math.min(story.steps.length - 1, Number(index) || 0));
@@ -902,7 +842,6 @@ async function start() {
         view: step.view || (line && LINE_VIEW[line.id]) || 'front',
       });
     };
-
     const selectStory = (id) => {
       const story = storyById.get(typeof id === 'object' ? id?.id : id);
       if (!story) return;
@@ -917,8 +856,6 @@ async function start() {
       ui.showStory(story, 0);
       applyStep(story, 0);
     };
-
-    // ----- 3D筋肉タップ・単体連鎖調査 ------------------------------------
     const hasMuscleInList = (list, targetId) =>
       Array.isArray(list) &&
       list.some((item) =>
@@ -926,7 +863,6 @@ async function start() {
           ? item === targetId
           : Boolean(item && (item.id === targetId || item.muscleId === targetId || item.muscle === targetId)),
       );
-
     const findBestHabitForMuscle = (muscleId) => {
       if (!muscleId) return null;
       const candidates = [...habitById.values()];
@@ -942,7 +878,6 @@ async function start() {
       }
       return null;
     };
-
     const inspectStructure = (id, { focusCamera = false, side = null, preserveHabitOverlay = false } = {}) => {
       if (!id) return;
       const lines = LINES.filter((l) => (l.track || []).includes(id));
@@ -954,9 +889,7 @@ async function start() {
       const resolvedSide = side === 'L' || side === 'R' ? side : currentHabit?.side || 'both';
       const chainData =
         kind === 'muscle' && computeMyofascialChain ? computeMyofascialChain(id, { side: resolvedSide }) : null;
-
       lastPart = id;
-
       if (!preserveHabitOverlay) {
         ui.showPart({
           id,
@@ -966,7 +899,6 @@ async function start() {
           relatedHabit: bestHabit ? { id: bestHabit.id, label: bestHabit.label } : null,
         });
       }
-
       if (kind === 'muscle' && chainData && !preserveHabitOverlay) {
         const involvedLines = (chainData.involvedLineIds || []).map((lid) => lineById.get(lid)).filter(Boolean);
         const allChainIds = [
@@ -1018,7 +950,6 @@ async function start() {
         }
       }
     };
-
     viewer.onPick(
       safe((id, picked) => {
         inspectStructure(id, {
@@ -1028,8 +959,6 @@ async function start() {
         });
       }, '部位タップ連鎖'),
     );
-
-    // ----- UI イベント結線 ------------------------------------------------
     ui.on('theme', safe(applyTheme, 'テーマ切替'));
     ui.on('unified-layer', safe(applyUnifiedLayer, '筋膜・筋肉レイヤー切替'));
     ui.on(
@@ -1040,7 +969,6 @@ async function start() {
         viewer.wake?.();
       }, '一時停止・再生切替'),
     );
-
     ui.on('line', safe(selectLine, 'ライン選択'));
     ui.on(
       'all-lines',
@@ -1063,7 +991,6 @@ async function start() {
         if (currentStory) applyStep(currentStory, index);
       }, 'ストーリーステップ切替'),
     );
-
     ui.on(
       'trigger-point',
       safe((payload) => {
@@ -1081,7 +1008,6 @@ async function start() {
         focusTriggerPoint(muscleId, targetHabit, relCfg);
       }, '部位スポットライト'),
     );
-
     ui.on(
       'trigger-line',
       safe((payload) => {
@@ -1090,7 +1016,6 @@ async function start() {
         returnToTriggerLine(habit);
       }, '全体アニメーションへ戻す'),
     );
-
     const handleSelfCareStep = (payload, defaultFirst = false) => {
       const { habit, muscleId } = resolveTriggerPointPayload(payload, defaultFirst);
       const targetHabit = habit || currentHabit;
@@ -1108,7 +1033,6 @@ async function start() {
       const relCfg = rawRelCfg ? { ...rawRelCfg, side: effSide } : null;
       const xrayAlpha = Number(targetHabit?.triggerLine?.xrayOpacity ?? targetHabit?.goldenLine?.xrayOpacity) || 0.22;
       viewer.setXRayMode?.(true, { skinOpacity: xrayAlpha });
-
       if (muscleId && relCfg) {
         setSelfCarePose(
           {
@@ -1129,10 +1053,8 @@ async function start() {
         fascia.clearReleaseTool?.();
       }
     };
-
     ui.on('selfcare', safe((payload) => handleSelfCareStep(payload, true), 'セルフケア開始'));
     ui.on('selfcare-step', safe((payload) => handleSelfCareStep(payload, false), 'セルフケア手順切替'));
-
     ui.on(
       'selfcare-close',
       safe(() => {
@@ -1144,7 +1066,6 @@ async function start() {
         }
       }, 'セルフケア終了'),
     );
-
     ui.on(
       'part-close',
       safe(() => {
@@ -1156,7 +1077,6 @@ async function start() {
         }
       }, '部位バナーを閉じる'),
     );
-
     ui.on(
       'reset',
       safe(() => {
@@ -1165,21 +1085,16 @@ async function start() {
         ui.resetHome?.();
       }, 'ホームリセット'),
     );
-
     ui.hideLoading();
-
-    // ----- URLディープリンク処理（100%後方互換） -------------------------
     const habitParam = String(searchParams.get('habit') || '').trim();
     const symptomParam = String(searchParams.get('symptom') || '').trim();
     const motionParam = String(searchParams.get('motion') || '').trim();
     const lineParam = String(searchParams.get('line') || '').trim().toUpperCase();
-
     const resolvedHabitId =
       (habitParam && habitById.has(habitParam) && habitParam) ||
       (symptomParam && (SYMPTOM_TO_HABIT_MAP[symptomParam] || (habitById.has(symptomParam) ? symptomParam : ''))) ||
       (motionParam && (MOTION_TO_HABIT_MAP[motionParam] || (habitById.has(motionParam) ? motionParam : ''))) ||
       '';
-
     if (resolvedHabitId && habitById.has(resolvedHabitId)) {
       selectHabit(resolvedHabitId);
     } else if (lineParam && lineById.has(lineParam)) {
@@ -1188,8 +1103,6 @@ async function start() {
       setPose(null, 0, { immediate: true });
       unifiedSheets.showAllLines();
     }
-
-    // ローカル開発・検証ブリッジ
     const isLocalDev = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
     if (isLocalDev) {
       window.__studioBridge = {
@@ -1251,5 +1164,4 @@ async function start() {
     document.body.appendChild(box);
   }
 }
-
 start();

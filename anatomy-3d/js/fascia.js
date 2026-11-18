@@ -1,44 +1,9 @@
-// =============================================================================
-// fascia.js — 筋膜シート（面）と腱膜ブリッジによる「縮み横じわ・伸び縦スジ」の可視化
-// 担当: シェーダー / 3D筋膜シート生成 / アニメーション
-//
-// 公開 API（CONTRACT.md 準拠）
-//   createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) => {
-//     showLine(line, { side = 'both' } = {}),
-//     showHabit(habit, lines),
-//     showStep(step, lines),
-//     showMuscleChain(chainSpec),
-//     addFasciaSheetBridge(bridges, sideMode, opts),
-//     showTriggerPoint(muscleId, side = 'both'),
-//     clearTriggerPoint(),
-//     showReleaseTool(config),
-//     clearReleaseTool(),
-//     triggerXRayScan(opts),
-//     setProgress(p),
-//     clear(),
-//     update(time, delta),
-//     dispose(),
-//   }
-//
-// 座標系: Y 上向き / 正面 +Z / 身体の左 = +X・右 = -X。すべてワールド座標で扱う。
-//
-// 実装方針
-//   - 細い線・ワイヤー・チューブは一切使わず、筋肉表面を包む半透明筋膜シース（OVERLAY）と、
-//     隣接する筋肉同士が骨駅をまたいで連続する幅広3D筋膜・腱膜シート（SHEET: 幅 4.8cm〜13.6cm）の「面」で表現する。
-//   - 全身の筋膜シート図鑑（line）等の非動作時は、揺れ・赤⇄青色変化ゼロの1色静止解剖図シートとしてピタッと表示する。
-//   - 動作・クセ（habit）およびセルフケア時は実際の動きに合わせて伸縮・リリース器具をアニメーションする。
-//   - 短縮（縮み）＝ 寄るアコーディオン横じわ（深紅ルビー Role1 ／ ローズクリムゾン Role2）
-//   - 伸張（伸び）＝ ピンと張る縦コラーゲンスジ（ロイヤルコバルト Role3 ／ セルリアンスカイ Role4）
-//   - 黄色・アンバー発光ゼロ。全シェーダーで厳密な Premultiplied Alpha（clamp(col,0,1)*alpha）を出力し骨の白飛びを防止。
-// =============================================================================
-
-import * as posture from './posture.js?v=20261118d';
+import * as posture from './posture.js?v=20261118e';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261118d';
-
+} from './selfcare_guide3d.js?v=20261118e';
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
     ? posture.POSE_GLSL
@@ -49,7 +14,6 @@ const POSE_GLSL =
 const poseUniforms = posture.poseUniforms && typeof posture.poseUniforms === 'object' ? posture.poseUniforms : {};
 const getRigRole = typeof posture.getRigRole === 'function' ? posture.getRigRole : null;
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
-
 /** 駅ノードの最大数（インスタンス数） */
 const MAX_NODES = 160;
 /** 筋膜シートジオメトリキャッシュの上限（超えたら古いものから dispose） */
@@ -57,10 +21,8 @@ const GEO_CACHE_LIMIT = 96;
 /** 3D筋膜シートの横方向・縦方向分割数（幅 4.8cm〜13.6cm の滑らかな曲面リボン） */
 const SHEET_NU = 9;
 const SHEET_NV = 13;
-
 /** デフォルトの深層筋 ID 集合（setLayerFilter で MUSCLE_LAYERS が渡される前のフォールバック） */
 const DEFAULT_DEEP_MUSCLE_IDS = new Set([
-  // DFL（ディープ・フロント・ライン）
   'tibialis-posterior',
   'flexor-hallucis-longus',
   'flexor-digitorum-longus',
@@ -95,7 +57,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'digastric',
   'medial-pterygoid',
   'lateral-pterygoid',
-  // DFAL / DBAL（ディープ・アーム・ライン）
   'pectoralis-minor',
   'subclavius',
   'coracobrachialis',
@@ -110,7 +71,6 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'infraspinatus',
   'teres-minor',
   'subscapularis',
-  // 体幹・殿部・背部の深層安定筋群
   'piriformis',
   'gluteus-minimus',
   'gemellus-superior',
@@ -133,24 +93,17 @@ const DEFAULT_DEEP_MUSCLE_IDS = new Set([
   'soleus',
   'plantaris',
 ]);
-
-// 進行（setProgress）の区間: 縮みしわ(0.0〜0.35) → 斜めスパイラルねじれ(0.35〜0.75) → ねじれロック固定(0.62〜0.98)
 const PHASE = {
   wrinkle: [0.0, 0.35],
   twist: [0.35, 0.75],
   lock: [0.62, 0.98],
 };
-
-// -----------------------------------------------------------------------------
-// GLSL 共通部品
-// -----------------------------------------------------------------------------
 const GLSL_NOISE = /* glsl */ `
   float fxHash(vec3 p3) {
     p3 = fract(p3 * 0.1031);
     p3 += dot(p3, p3.zyx + 31.32);
     return fract((p3.x + p3.y) * p3.z);
   }
-  // 3D バリューノイズ（軽量）
   float fxNoise(vec3 p) {
     vec3 i = floor(p);
     vec3 f = fract(p);
@@ -162,15 +115,6 @@ const GLSL_NOISE = /* glsl */ `
     return mix(mix(a, b, f.y), mix(c, d, f.y), f.z);
   }
 `;
-
-// -----------------------------------------------------------------------------
-// ① 筋膜シースオーバーレイ（面による4段階ロール表現 ＋ 筋膜シート図鑑の1色静止解剖図シート）
-//    - Role 1: 🔴 shortenCore（深紅ルビー #6B0F1A〜#DC2626 / 寄る深い横じわ）
-//    - Role 2: 🌹 shortenLinked（鮮やかなローズクリムゾン #9F1239〜#F43F5E / 寄る横じわ）
-//    - Role 3: 🔵 lengthenAntagonist（ロイヤルコバルト #1E3A8A〜#1D4ED8 / ピンと張る縦スジ）
-//    - Role 4: 🩵 lengthenLinked（セルリアンスカイ #075985〜#0284C7 / ピンと張る縦スジ）
-//    - Role 0: 筋膜シート単体表示（uColor ベースの落ち着いた1色半透明解剖図シート・完全静止）
-// -----------------------------------------------------------------------------
 const OVERLAY_VS = /* glsl */ `
   uniform float uInflate;
   uniform float uSize;
@@ -194,7 +138,6 @@ const OVERLAY_VS = /* glsl */ `
     vec3 n = normalize((vec4(normalMatrix * normal, 0.0) * viewMatrix).xyz);
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vWPos = wp.xyz + n * uInflate;
-
     float isL = step(0.0, wp.x);
     float chirV = mix(-1.0, 1.0, isL);
     float sideW = mix(uSide.y, uSide.x, smoothstep(-0.012, 0.012, wp.x));
@@ -203,15 +146,10 @@ const OVERLAY_VS = /* glsl */ `
     float s = dot(wp.xyz - ctr, axis);
     float sNorm = clamp(s / max(uSize * 0.68, 0.14), -1.0, 1.0);
     float belly = max(0.0, 1.0 - sNorm * sNorm);
-
-    // 姿勢反復サイクル（uContractCycle）と同期した伸縮変位（静止モード時は 0 で完全静止）
     float cyc = clamp(uContractCycle, 0.0, 1.0);
     float coreBoost = (uRole > 0.5 && uRole < 1.5) ? 1.0 : 0.72;
-
     float effWrinkle = uWrinkle;
     float effStretch = uStretch;
-
-    // 短縮筋: 両端(±1)から筋腹中央(0)へ対称に引き込み ＋ 横アコーディオン膨隆
     vec3 radVec = (wp.xyz - ctr) - axis * s;
     vec3 swirlTangent = cross(axis, radVec);
     vec3 twistShift = swirlTangent * (sNorm * belly * 0.11 * uTwistVis * coreBoost * chirV * sideW);
@@ -222,9 +160,7 @@ const OVERLAY_VS = /* glsl */ `
       + accordionRipple
       - 0.0024 * effStretch * belly * (0.35 + 0.65 * cyc)
     ) * sideW;
-    // 伸張筋: 中央から両端へ対称にピンと引き伸ばされる変位
     vec3 stretchShift = axis * (sNorm * 0.013 * effStretch * (0.35 + 0.65 * cyc) * sideW);
-
     vec3 shiftedRest = wp.xyz + contractShift + twistShift + stretchShift;
     vec3 defN = poseDeformNormal(shiftedRest, n);
     vec3 defP = poseDeform(shiftedRest) + defN * bulge;
@@ -232,7 +168,6 @@ const OVERLAY_VS = /* glsl */ `
     gl_Position = projectionMatrix * viewMatrix * vec4(defP, 1.0);
   }
 `;
-
 const OVERLAY_FS = /* glsl */ `
   uniform float uTime;
   uniform float uFade;
@@ -255,7 +190,6 @@ const OVERLAY_FS = /* glsl */ `
   uniform float uHasSpot;
   uniform float uContractCycle;
   uniform vec3 uColor;
-  // 黄色・アンバー完全ゼロの4段階レッド／ブルー筋膜パレット（Linear sRGB）
   uniform vec3 uCoreDark;        // #6B0F1A 深いボルドールビー陰影
   uniform vec3 uCoreMid;         // #B91C1C 深紅ルビー
   uniform vec3 uCoreHot;         // #DC2626 コアクリムゾンレッド
@@ -280,15 +214,12 @@ const OVERLAY_FS = /* glsl */ `
   uniform vec2 uSide;
   varying vec3 vWPos;
   varying vec3 vWNormal;
-
   ${GLSL_NOISE}
-
   float fxLine(float x, float w) {
     float d = abs(fract(x + 0.5) - 0.5);
     float fw = max(fwidth(x), 1e-4);
     return 1.0 - smoothstep(w, w + fw * 1.5, d);
   }
-
   vec3 fxPerturb(vec3 pos, vec3 n, float h) {
     vec3 dpx = dFdx(pos);
     vec3 dpy = dFdy(pos);
@@ -300,19 +231,15 @@ const OVERLAY_FS = /* glsl */ `
     vec3 grad = sign(det) * (dhx * r1 + dhy * r2);
     return normalize(abs(det) * n - grad);
   }
-
   void main() {
     if (uLayerAlpha <= 0.001) discard;
-
     float isL = step(0.0, vWPos.x);
     float sideW = max(mix(uSide.y, uSide.x, smoothstep(-0.012, 0.012, vWPos.x)), step(0.5, uSelected));
     float chir = mix(-1.0, 1.0, isL);
-
     vec3 axis = normalize(mix(uAxisR, uAxisL, isL));
     vec3 ctr = mix(uCenterR, uCenterL, isL);
     vec3 N = normalize(vWNormal);
     vec3 V = normalize(cameraPosition - vWPos);
-
     vec3 r = vWPos - ctr;
     float s = dot(r, axis);
     vec3 up = abs(axis.y) < 0.95 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -323,25 +250,18 @@ const OVERLAY_FS = /* glsl */ `
     float wA = pow(abs(dot(N, b2)), 2.0) + 1e-3;
     float wB = pow(abs(dot(N, b1)), 2.0) + 1e-3;
     float tc = (c1 * wA + c2 * wB) / (wA + wB);
-
     float n1 = fxNoise(vWPos * 5.0);
     float facing = clamp(dot(N, V), 0.0, 1.0);
     float rim = pow(1.0 - facing, 2.20);
     vec3 L = normalize(V * 0.7 + vec3(0.2, 0.75, 0.3));
     float dif0 = max(dot(N, L), 0.0);
-
     float relAmt = clamp(uRelease, 0.0, 1.0);
     float prog = clamp(uProgress, 0.0, 1.0);
-
     float cyc = clamp(uContractCycle, 0.0, 1.0);
-
-    // 筋の長軸方向正規化座標: 0 = 筋腹中央、±1 = 両端の腱・骨付着部
     float sNorm = clamp(s / max(uSize * 0.68, 0.14), -1.0, 1.0);
     float absS = abs(sNorm);
     float bellyFocus = clamp(1.0 - (0.32 + 0.22 * cyc) * absS * absS, 0.0, 1.0);
-    // 両端は3D筋膜シート（SHEET）へ滑らかに溶け込むフェザーマスク
     float endBellyMask = 1.0 - 0.38 * smoothstep(0.82, 1.0, absS);
-
     float lockAmt = 0.0;
     float lockAge = 0.0;
     if (uLockMax > 0.001) {
@@ -352,18 +272,13 @@ const OVERLAY_FS = /* glsl */ `
       lockAmt = smoothstep(front + 0.04, front - 0.04, d) * uLockMax * (1.0 - 0.78 * relAmt);
       lockAge = clamp((front - d) / max(0.35 * (nf.y - nf.x), 0.06), 0.0, 1.0);
     }
-
     vec3 col = vec3(0.0);
     float rawAlpha = 0.0;
     float tierW = clamp(uTierWeight, 0.0, 1.0);
     float fiberLong = fxLine(tc * 36.0 + n1 * 0.12, 0.16);
-
-    // Proposal A: 人工ストライプ（横じわ・縦スジ）0%、和紙に滲む水彩ハニーアンバー＆水彩テラコッタ表現
     float paperGrain = (fxNoise(vWPos * 11.0) - 0.5) * 0.10 + (n1 - 0.5) * 0.08;
     float washLight = clamp(0.36 + 0.44 * bellyFocus + 0.24 * dif0 + paperGrain, 0.0, 1.0);
     vec3 reliefSage = mix(vec3(0.42, 0.56, 0.44), vec3(0.76, 0.84, 0.74), clamp(0.45 + 0.35 * dif0 + 0.20 * bellyFocus, 0.0, 1.0));
-
-    // ---- Role 0: 全身の筋膜シート図鑑（line モード等）の水彩1色解剖シート ----
     if (uRole < 0.5) {
       float nonSpotSheet = (uHasSpot > 0.5 && uSelected < 0.5) ? 0.28 : 1.0;
       float sheetMask = uFiber * nonSpotSheet;
@@ -377,25 +292,19 @@ const OVERLAY_FS = /* glsl */ `
         rawAlpha = sheetMask * (0.66 + 0.14 * bellyFocus + 0.14 * rim) * endBellyMask;
       }
     }
-
-    // ---- Role 1: 🍯 shortenCore（1番縮んで固い中心の筋膜：濃い水彩ハニーアンバー）----
     else if (uRole < 1.5) {
       float wStr = max(uWrinkle, tierW * 0.94);
       float coreWash = clamp(0.46 * bellyFocus + 0.28 * dif0 + 0.16 * cyc + 0.14 * lockAge + paperGrain, 0.0, 1.0);
       vec3 wCol = mix(uCoreDark, uCoreMid, smoothstep(0.08, 0.58, coreWash));
       wCol = mix(wCol, uCoreHot, smoothstep(0.35, 0.88, coreWash));
       wCol = mix(wCol, uCoreRose, clamp(0.28 * bellyFocus * dif0, 0.0, 0.42));
-      // 水彩絵の具のフチ溜まり（エッジの繊細な琥珀輪郭）
       wCol = mix(wCol, uCoreDark * 0.78, rim * 0.38);
-
       if (relAmt > 0.001) {
         wCol = mix(wCol, reliefSage, clamp(relAmt * 0.82, 0.0, 0.85));
       }
       col = wCol;
       rawAlpha = clamp(wStr * (0.76 + 0.10 * bellyFocus + 0.12 * rim) * endBellyMask, 0.0, 0.88);
     }
-
-    // ---- Role 2: 🌼 shortenLinked（連動して縮む周辺の筋膜：明るい水彩アンバー）----
     else if (uRole < 2.5) {
       float lStr = max(max(uWrinkle, uYore), tierW * 0.88);
       float ambMix = clamp(0.44 * bellyFocus + 0.32 * dif0 + 0.16 * cyc + paperGrain, 0.0, 1.0);
@@ -403,39 +312,30 @@ const OVERLAY_FS = /* glsl */ `
       rCol = mix(rCol, uLinkRedBright, smoothstep(0.38, 0.90, ambMix));
       rCol = mix(rCol, uLinkRedRidge, clamp(0.22 * bellyFocus * dif0, 0.0, 0.34));
       rCol = mix(rCol, uLinkRedDark * 0.82, rim * 0.34);
-
       if (relAmt > 0.001) {
         rCol = mix(rCol, reliefSage, clamp(relAmt * 0.78, 0.0, 0.82));
       }
       col = rCol;
       rawAlpha = clamp(lStr * (0.64 + 0.10 * bellyFocus + 0.12 * rim) * endBellyMask, 0.0, 0.78);
     }
-
-    // ---- Role 3: 🏺 lengthenAntagonist（反対側で引き伸ばされる筋膜：水彩テラコッタコーラル）----
     else if (uRole < 3.5) {
       float sStr = max(uStretch, tierW * 0.92);
       float terraMix = clamp(0.42 * bellyFocus + 0.36 * dif0 + 0.14 * cyc + paperGrain, 0.0, 1.0);
       vec3 bCol = mix(uAntagBlueDark, uAntagBlueMid, smoothstep(0.08, 0.68, terraMix));
       bCol = mix(bCol, uAntagBlueRidge, clamp(0.30 * dif0 + 0.16 * bellyFocus, 0.0, 0.46));
       bCol = mix(bCol, uAntagBlueDark * 0.80, rim * 0.36);
-
       col = bCol;
       rawAlpha = clamp(sStr * (0.70 + 0.10 * bellyFocus + 0.12 * rim) * endBellyMask, 0.0, 0.84);
     }
-
-    // ---- Role 4: 🌸 lengthenLinked（シート延長で張る筋膜：淡い水彩コーラルローズ）----
     else {
       float cStr = max(uStretch, tierW * 0.86);
       float coralMix = clamp(0.40 * bellyFocus + 0.38 * dif0 + paperGrain, 0.0, 1.0);
       vec3 iCol = mix(uLinkBlueDark, uLinkBlueMid, smoothstep(0.08, 0.70, coralMix));
       iCol = mix(iCol, uLinkBlueRidge, clamp(0.28 * dif0 + 0.14 * bellyFocus, 0.0, 0.42));
       iCol = mix(iCol, uLinkBlueDark * 0.82, rim * 0.32);
-
       col = iCol;
       rawAlpha = clamp(cStr * (0.56 + 0.10 * bellyFocus + 0.12 * rim) * endBellyMask, 0.0, 0.72);
     }
-
-    // 選択・スポットライト強調（水彩ゴールドアンバーの柔らかな輪郭ハイライト）
     if (uSelected > 0.5) {
       float selRim = pow(1.0 - facing, 1.85);
       vec3 targetRim = (uRole < 0.5)
@@ -447,7 +347,6 @@ const OVERLAY_FS = /* glsl */ `
       col = mix(col, targetRim, clamp(0.20 + 0.38 * selRim, 0.0, 0.68));
       rawAlpha = max(rawAlpha, clamp(0.64 + 0.24 * selRim, 0.0, 0.88));
     }
-
     float nonSelDim = (uHasSpot > 0.5 && uSelected < 0.5) ? 0.84 : 1.0;
     vec3 clampedCol = clamp(col, 0.0, 1.0);
     float alpha = clamp(rawAlpha * 1.16 * sideW * uFade * nonSelDim * uLayerAlpha, 0.0, 0.94);
@@ -456,12 +355,6 @@ const OVERLAY_FS = /* glsl */ `
     gl_FragColor.rgb *= gl_FragColor.a;
   }
 `;
-
-// -----------------------------------------------------------------------------
-// ② 骨駅をまたぐ3D筋膜・腱膜シート（Fascia Sheet Bridge: 幅 4.8cm〜13.6cm の曲面膜）
-//    線・ワイヤー表現を全廃し、筋肉Aの筋膜シースから筋肉Bの筋膜シースへ「面」のまま連続接続する。
-//    uModeA / uModeB: -1 = 短縮（寄る横じわ） / +1 = 伸張（ピンと張る縦スジ） / 0 = 中立膜
-// -----------------------------------------------------------------------------
 const SHEET_VS = /* glsl */ `
   uniform float uTime;
   uniform float uContractCycle;
@@ -475,25 +368,20 @@ const SHEET_VS = /* glsl */ `
     vUv = uv;
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vec3 n = normalize(mat3(modelMatrix) * normal);
-
     float cyc = clamp(uContractCycle, 0.0, 1.0);
     float mLocal = mix(uModeA, uModeB, smoothstep(0.15, 0.85, uv.y));
     float shortW = clamp(-mLocal, 0.0, 1.0);
     float longW  = clamp(mLocal, 0.0, 1.0);
     float spanEnv = sin(uv.y * 3.14159265);
-
-    // 短縮シートは横方向のアコーディオン波ひだで立体的にたわみ、伸張シートはピンと張る
     float wavePleat = 0.0;
     float tautPull  = -0.0005 * longW * spanEnv;
     vec3 restP = wp.xyz + n * (wavePleat + tautPull);
-
     vWNormal = poseDeformNormal(restP, n);
     vec3 defP = poseDeform(restP);
     vWPos = defP;
     gl_Position = projectionMatrix * viewMatrix * vec4(defP, 1.0);
   }
 `;
-
 const SHEET_FS = /* glsl */ `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
@@ -510,15 +398,12 @@ const SHEET_FS = /* glsl */ `
   varying vec2 vUv;
   varying vec3 vWPos;
   varying vec3 vWNormal;
-
   ${GLSL_NOISE}
-
   float fxSheetLine(float x, float w) {
     float d = abs(fract(x + 0.5) - 0.5);
     float fw = max(fwidth(x), 1e-4);
     return 1.0 - smoothstep(w, w + fw * 1.5, d);
   }
-
   vec3 fxSheetPerturb(vec3 pos, vec3 n, float h) {
     vec3 dpx = dFdx(pos);
     vec3 dpy = dFdy(pos);
@@ -530,37 +415,28 @@ const SHEET_FS = /* glsl */ `
     vec3 grad = sign(det) * (dhx * r1 + dhy * r2);
     return normalize(abs(det) * n - grad);
   }
-
   void main() {
     if (uLayerAlpha <= 0.001) discard;
-
-    // シート両側端 15% と両筋肉へのオーバーラップ端 14% を滑らかにフェザー透過し、筋肉シースと一体に見せる
     float edgeU = smoothstep(0.0, 0.15, vUv.x) * smoothstep(0.0, 0.15, 1.0 - vUv.x);
     float edgeV = smoothstep(0.0, 0.14, vUv.y) * smoothstep(0.0, 0.14, 1.0 - vUv.y);
     if (edgeU * edgeV <= 0.002) discard;
-
     vec3 N = normalize(vWNormal);
     if (!gl_FrontFacing) N = -N;
     vec3 V = normalize(cameraPosition - vWPos);
     float facing = clamp(abs(dot(N, V)), 0.0, 1.0);
     float rim = pow(1.0 - facing, 2.0);
     vec3 L = normalize(V * 0.7 + vec3(0.2, 0.75, 0.3));
-
     float cyc = clamp(uContractCycle, 0.0, 1.0);
-
     float tV = smoothstep(0.12, 0.88, vUv.y);
     vec3 baseCol = mix(uColorA, uColorB, tV);
     vec3 ridgeCol = mix(uRidgeA, uRidgeB, tV);
-
     float n1 = fxNoise(vWPos * 7.5);
     float dif = max(dot(N, L), 0.0);
     float centerBand = sin(vUv.x * 3.14159265);
     float wash = clamp(0.38 + 0.38 * dif + 0.18 * centerBand + (n1 - 0.5) * 0.10, 0.0, 1.0);
-
     vec3 col = mix(baseCol * 0.78, baseCol * 1.04, wash);
     col = mix(col, ridgeCol, clamp(0.24 * dif * centerBand, 0.0, 0.36));
     col = mix(col, baseCol * 0.58, rim * 0.34);
-
     float texAlpha = 0.62 + 0.14 * centerBand + 0.14 * rim;
     vec3 clampedCol = clamp(col, 0.0, 1.0);
     float alpha = clamp(texAlpha * edgeU * edgeV * uAlpha * uLayerAlpha * uFade, 0.0, 0.84);
@@ -569,10 +445,6 @@ const SHEET_FS = /* glsl */ `
     gl_FragColor.rgb *= gl_FragColor.a;
   }
 `;
-
-// -----------------------------------------------------------------------------
-// ③ トリガーポイント核マーカー（オンデマンド1点スポットライト時のみ表示・黄色ゼロの深紅クリムゾン）
-// -----------------------------------------------------------------------------
 const NODE_VS = /* glsl */ `
   attribute vec3 aOffset;
   attribute vec3 aColor;
@@ -596,7 +468,6 @@ const NODE_VS = /* glsl */ `
     gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   }
 `;
-
 const NODE_FS = /* glsl */ `
   uniform float uHalo;
   uniform float uFade;
@@ -614,12 +485,10 @@ const NODE_FS = /* glsl */ `
     float ang = atan(vViewN.y, vViewN.x);
     float spiral = 0.5 + 0.5 * sin(ang * 3.0 - rad * 10.5);
     float spiralSharp = smoothstep(0.24, 0.86, spiral);
-
     vec3 deepRuby   = vec3(0.42, 0.14, 0.10);
     vec3 crimson    = vec3(0.73, 0.35, 0.28);
     vec3 roseCrest  = vec3(0.90, 0.65, 0.59);
     vec3 softPearl  = vec3(0.99, 0.95, 0.92);
-
     vec3 col;
     float a;
     if (uHalo > 0.5) {
@@ -640,10 +509,6 @@ const NODE_FS = /* glsl */ `
     gl_FragColor.rgb *= gl_FragColor.a;
   }
 `;
-
-// -----------------------------------------------------------------------------
-// 小物
-// -----------------------------------------------------------------------------
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const smooth = (a, b, x) => {
   const t = clamp01((x - a) / (b - a || 1e-6));
@@ -651,42 +516,32 @@ const smooth = (a, b, x) => {
 };
 const opp = (s) => (s === 'L' ? 'R' : 'L');
 const noRaycast = () => {};
-
-// =============================================================================
 export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
   const root = new THREE.Group();
   root.name = 'fascia-fx';
   root.raycast = noRaycast;
   scene.add(root);
-
-  // ---- 全マテリアル共有 uniform（水彩テラコッタレッド＝縮み × 水彩ミネラルブルー＝伸び）----
   const shared = {
     uTime: { value: 0 },
     uFade: { value: 0 },
     uLockG: { value: 0 },
     uProgress: { value: 0 },
     uHasSpot: { value: 0 },
-    // 1. 🔴 shortenCore（主役・1番縮んで硬い中心の筋肉・筋膜：水彩テラコッタレッド）
     uCoreDark: { value: new THREE.Color('#752C1E') },
     uCoreMid: { value: new THREE.Color('#B95C48') },
     uCoreHot: { value: new THREE.Color('#CC6F5B') },
     uCoreRose: { value: new THREE.Color('#E5A898') },
-    // 2. 🌸 shortenLinked（連動して一緒に縮む周辺の筋肉・筋膜：水彩コーラルレッド）
     uLinkRedDark: { value: new THREE.Color('#8F3E2E') },
     uLinkRedMid: { value: new THREE.Color('#CA7562') },
     uLinkRedBright: { value: new THREE.Color('#D88977') },
     uLinkRedRidge: { value: new THREE.Color('#EBB7A9') },
-    // 3. 🔵 lengthenAntagonist（反対側で引き伸ばされる筋肉・筋膜：水彩ミネラルブルー）
     uAntagBlueDark: { value: new THREE.Color('#264C69') },
     uAntagBlueMid: { value: new THREE.Color('#4F84AA') },
     uAntagBlueRidge: { value: new THREE.Color('#9DC1DB') },
-    // 4. 💧 lengthenLinked（連動して張る周辺の筋肉・筋膜：水彩ソフトブルー）
     uLinkBlueDark: { value: new THREE.Color('#355D7B') },
     uLinkBlueMid: { value: new THREE.Color('#6A99BA') },
     uLinkBlueRidge: { value: new THREE.Color('#B4D0E4') },
   };
-
-  // 厳密な Premultiplied Alpha 合成（clampedCol * alpha 出力により骨上の加算白飛びを 0% に抑える）
   const PREMUL = {
     transparent: true,
     depthWrite: false,
@@ -696,10 +551,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     blendDst: THREE.OneMinusSrcAlphaFactor,
     toneMapped: false,
   };
-
-  // ---------------------------------------------------------------------------
-  // 状態 ＆ 2層（surface / deep）フィルタ管理
-  // ---------------------------------------------------------------------------
   const state = {
     mode: null, // 'line' | 'habit' | 'step' | 'chain' | null
     line: null,
@@ -719,21 +570,15 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     paused: false,
   };
   const activeGeos = new Set();
-
   const resolveMuscleLayer = (id) => {
     const custom = state.customMuscleLayers.get(id);
     if (custom === 'surface' || custom === 'deep') return custom;
     if (DEFAULT_DEEP_MUSCLE_IDS.has(id)) return 'deep';
     return 'surface';
   };
-
-  // ---------------------------------------------------------------------------
-  // 解析キャッシュ: 筋の左右別 重心・主軸(PCA)・両端付着部ポール（ワールド座標）
-  // ---------------------------------------------------------------------------
   const analysisCache = new Map();
   const poleCache = new Map();
   const tmpV = new THREE.Vector3();
-
   const safeMeshes = (id) => {
     try {
       const list = getMeshes(id);
@@ -742,7 +587,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       return [];
     }
   };
-
   /** center / axis / radius から setLockGeometry 用の軽量サンプル点列を作る */
   function synthSamples(center, axis, radius) {
     const arr = new Float32Array(21);
@@ -756,7 +600,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     return arr;
   }
-
   /** viewer から渡された getBasis または mesh.userData.atlasBasis を左右別解析データへ正規化 */
   function normalizeBasis(id, raw, meshes) {
     if (!raw || typeof raw !== 'object') return null;
@@ -798,7 +641,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     return null;
   }
-
   function pca(arr) {
     const n = arr.length / 3;
     if (n < 6) return null;
@@ -830,7 +672,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     return { center, axis, radius: Math.sqrt(rad), samples: Float32Array.from(arr) };
   }
-
   function mirrorStats(st) {
     const s = st.samples.slice();
     for (let i = 0; i < s.length; i += 3) s[i] = -s[i];
@@ -841,11 +682,9 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       samples: s,
     };
   }
-
   function analyze(id) {
     if (analysisCache.has(id)) return analysisCache.get(id);
     const meshes = safeMeshes(id);
-
     let extBasis = null;
     if (typeof getBasis === 'function') {
       try {
@@ -862,7 +701,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       analysisCache.set(id, normalized);
       return normalized;
     }
-
     const L = [], R = [];
     for (const mesh of meshes) {
       const pos = mesh.geometry.attributes.position;
@@ -883,7 +721,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     analysisCache.set(id, res);
     return res;
   }
-
   /** 経路用の中心点（viewer の getCenter を優先、null はスキップ） */
   function centerOf(id, side) {
     let c = null;
@@ -895,7 +732,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     if (c && Number.isFinite(c.x) && Number.isFinite(c.y) && Number.isFinite(c.z)) return c.clone();
     return null;
   }
-
   /**
    * 指定した筋肉・体側の両端（腱・骨付着部ポール）のレストポーズ3D座標を算出・キャッシュする
    */
@@ -903,7 +739,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const s = side === 'R' ? 'R' : 'L';
     const key = `${id}|${s}`;
     if (poleCache.has(key)) return poleCache.get(key);
-
     const an = analyze(id);
     if (!an) {
       poleCache.set(key, null);
@@ -913,7 +748,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const axis = st.axis;
     const ctr = st.center;
     const meshes = safeMeshes(id);
-
     const pts = [];
     const pTmp = new THREE.Vector3();
     for (const mesh of meshes) {
@@ -938,7 +772,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         }
       }
     }
-
     let poleA = null;
     let poleB = null;
     if (pts.length >= 4) {
@@ -969,26 +802,18 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       if (cntA > 0) poleA = sumA.divideScalar(cntA);
       if (cntB > 0) poleB = sumB.divideScalar(cntB);
     }
-
     if (!poleA) poleA = ctr.clone().addScaledVector(axis, -st.radius * 0.78);
     if (!poleB) poleB = ctr.clone().addScaledVector(axis, st.radius * 0.78);
-
     const sampleStride = Math.max(1, Math.floor(pts.length / 72));
     const samples = pts.length
       ? pts.filter((_, idx) => idx % sampleStride === 0)
       : [poleA.clone(), poleB.clone()];
-
     const out = { poleA, poleB, center: ctr.clone(), samples };
     poleCache.set(key, out);
     return out;
   }
-
-  // ---------------------------------------------------------------------------
-  // ジオメトリキャッシュ ＆ 3D筋膜・腱膜シート生成（buildFasciaSheetGeometry）
-  // ---------------------------------------------------------------------------
   const geoCache = new Map();
   const sideVertCache = new Map();
-
   function cacheGet(key) {
     const v = geoCache.get(key);
     if (v) {
@@ -1007,19 +832,16 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       geoCache.delete(k);
     }
   }
-
   /** 指定した筋肉・体側のワールド座標頂点群（最大約420点）と重心をキャッシュして返す */
   function getMuscleSideVerts(id, side = 'L') {
     const s = side === 'R' ? 'R' : 'L';
     const key = `${id}|${s}`;
     if (sideVertCache.has(key)) return sideVertCache.get(key);
-
     const meshes = safeMeshes(id);
     if (!meshes.length) {
       sideVertCache.set(key, null);
       return null;
     }
-
     const pts = [];
     const pTmp = new THREE.Vector3();
     for (const mesh of meshes) {
@@ -1048,16 +870,13 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       sideVertCache.set(key, null);
       return null;
     }
-
     const center = new THREE.Vector3();
     for (const p of pts) center.add(p);
     center.divideScalar(pts.length);
-
     const out = { pts, center };
     sideVertCache.set(key, out);
     return out;
   }
-
   /** 筋肉Aと筋肉Bをつなぐ骨駅位置における解剖学的な体表外向き単位法線を求める */
   function computeOutwardNormal(idA, idB, mid) {
     const pairStr = `${idA}|${idB}`;
@@ -1077,7 +896,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const isPosterior =
       mid.z < -0.016 ||
       /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|latissimus|longissimus|iliocostalis|multifidus|spinalis|semispinalis|splenius|trapezius|rhomboid|levator-scapulae|infraspinatus|teres|triceps|erector/.test(pairStr);
-
     const sx = Math.sign(mid.x) || 1;
     if (isLateral && Math.abs(mid.x) > 0.14) {
       return new THREE.Vector3(
@@ -1099,14 +917,12 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       Math.max(mid.z, 0.68),
     ).normalize();
   }
-
   /** 筋肉Aと筋肉Bの関節またぎを滑らかに追従させる統合ボーンリグ役割ベクトル */
   function bridgeRigRole(idA, idB) {
     if (!getRigRole) return new THREE.Vector4(-1, -1, -1, -1);
     const rA = getRigRole(idA, 'muscle');
     const rB = getRigRole(idB, 'muscle');
     if (!rA || !rB) return new THREE.Vector4(-1, -1, -1, -1);
-
     const hipMode = rA.x === 0 && rB.x === 0 ? 0 : (rA.x === 1 && rB.x === 1 ? 1 : 2);
     const kneeMode = rA.y === 0 && rB.y === 0 ? 0 : (rA.y === 1 && rB.y === 1 ? 1 : 2);
     const armMode =
@@ -1132,7 +948,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
                 : 2;
     return new THREE.Vector4(hipMode, kneeMode, armMode, forearmMode);
   }
-
   /**
    * 隣接する筋肉Aと筋肉Bの対向する付着境界頂点クラスタ（上位18%）を解析し、
    * 骨や関節の表層を包む幅広の3D筋膜・腱膜シート（幅 4.8cm〜13.6cm = halfW 0.024〜0.068）を生成する
@@ -1141,18 +956,15 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const ck = `sheet|${idA}|${idB}|${sA}|${sB}|${maxDist.toFixed(3)}`;
     const hit = cacheGet(ck);
     if (hit) return hit;
-
     const cloudA = getMuscleSideVerts(idA, sA);
     const cloudB = getMuscleSideVerts(idB, sB);
     if (!cloudA || !cloudB) return null;
-
     const ptsA = cloudA.pts;
     const ptsB = cloudB.pts;
     const minDistA = new Float32Array(ptsA.length);
     const minDistB = new Float32Array(ptsB.length);
     minDistB.fill(Infinity);
     let bestDistSq = Infinity;
-
     for (let ia = 0; ia < ptsA.length; ia++) {
       const va = ptsA[ia];
       let dMinA = Infinity;
@@ -1164,10 +976,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
       minDistA[ia] = dMinA;
     }
-
     const bestDist = Math.sqrt(bestDistSq);
     if (!Number.isFinite(bestDist) || bestDist > maxDist) return null;
-
     const pickTopCluster = (pts, distSqArr) => {
       const idx = pts.map((_, i) => i).sort((i, j) => distSqArr[i] - distSqArr[j]);
       const k = Math.min(48, Math.max(6, Math.ceil(pts.length * 0.18)));
@@ -1180,54 +990,44 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
       return { cluster, centroid: sum.divideScalar(Math.max(1, cluster.length)) };
     };
-
     const { cluster: boundA, centroid: pA0 } = pickTopCluster(ptsA, minDistA);
     const { cluster: boundB, centroid: pB0 } = pickTopCluster(ptsB, minDistB);
     const mid0 = pA0.clone().lerp(pB0, 0.5);
     const outN = computeOutwardNormal(idA, idB, mid0);
-
-    // 境界頂点群の筋外膜（表層）側82パーセンタイル位置へアンカーを持ち上げ、骨や腱深部へのめり込みをゼロにする
     const outerSurfaceOffset = (cluster, refPt) => {
       const projs = cluster.map((p) => pTmpProj(p, refPt, outN)).sort((a, b) => a - b);
       const qIdx = Math.min(projs.length - 1, Math.floor(projs.length * 0.82));
       return Math.min(0.030, Math.max(0.0, projs[qIdx] || 0));
     };
     const pTmpProj = (p, ref, n) => (p.x - ref.x) * n.x + (p.y - ref.y) * n.y + (p.z - ref.z) * n.z;
-
     const pA = pA0.clone().addScaledVector(outN, outerSurfaceOffset(boundA, pA0));
     const pB = pB0.clone().addScaledVector(outN, outerSurfaceOffset(boundB, pB0));
-
     const macroDir = cloudB.center.clone().sub(cloudA.center);
     macroDir.addScaledVector(outN, -macroDir.dot(outN));
     if (macroDir.lengthSq() < 1e-6) macroDir.set(0, 1, 0);
     else macroDir.normalize();
-
     const chord = pB.clone().sub(pA);
     const tanChord = chord.clone().addScaledVector(outN, -chord.dot(outN));
     const dirAB = new THREE.Vector3();
     if (tanChord.length() < 0.026 || tanChord.dot(macroDir) < 0) {
       dirAB.copy(macroDir);
-      // 同一骨稜で付着点が重なる場合もシートがねじれないよう各筋腹側へわずかに広げる
       pA.addScaledVector(dirAB, -0.020);
       pB.addScaledVector(dirAB, 0.020);
     } else {
       dirAB.copy(tanChord).normalize();
     }
-
     const rawSpan = Math.max(0.036, pA.distanceTo(pB));
     const overlap = Math.min(0.028, Math.max(0.014, rawSpan * 0.16));
     const startA = pA.clone().addScaledVector(dirAB, -overlap);
     const endB = pB.clone().addScaledVector(dirAB, overlap);
     const midS = startA.clone().lerp(endB, 0.5);
     const totalSpan = Math.max(0.05, startA.distanceTo(endB));
-
     const latAxis = new THREE.Vector3().crossVectors(dirAB, outN);
     if (latAxis.lengthSq() < 1e-6) {
       latAxis.set(1, 0, 0).addScaledVector(outN, -outN.x);
     }
     if (latAxis.lengthSq() < 1e-6) latAxis.set(0, 0, 1);
     latAxis.normalize();
-
     const measureHalfWidth = (cluster, refPt) => {
       const coords = cluster.map((p) => (p.x - refPt.x) * latAxis.x + (p.y - refPt.y) * latAxis.y + (p.z - refPt.z) * latAxis.z).sort((a, b) => a - b);
       if (coords.length < 2) return 0.034;
@@ -1236,29 +1036,22 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       const halfSpread = (hi - lo) * 0.58;
       return Math.min(0.068, Math.max(0.024, halfSpread));
     };
-
     const halfWA = measureHalfWidth(boundA, pA0);
     const halfWB = measureHalfWidth(boundB, pB0);
-
     const vCount = SHEET_NU * SHEET_NV;
     const positions = new Float32Array(vCount * 3);
     const uvs = new Float32Array(vCount * 2);
     const indices = [];
-
     const spinePt = new THREE.Vector3();
     const archPeak = 0.0052 + Math.min(0.0075, totalSpan * 0.038);
-
     for (let iv = 0; iv < SHEET_NV; iv++) {
       const v = iv / (SHEET_NV - 1);
       const sv = v * v * (3 - 2 * v);
       const arch = 0.0030 + archPeak * Math.sin(v * Math.PI);
       spinePt.copy(startA).lerp(endB, v);
-      // 中間制御点で自然な関節包の丸みを付与
       spinePt.y += (midS.y - spinePt.y) * 0.08 * Math.sin(v * Math.PI);
       spinePt.addScaledVector(outN, arch);
-
       const hw = (halfWA + (halfWB - halfWA) * sv) * (1.0 - 0.05 * Math.sin(v * Math.PI));
-
       for (let iu = 0; iu < SHEET_NU; iu++) {
         const u = iu / (SHEET_NU - 1);
         const s = u * 2.0 - 1.0; // -1 .. +1
@@ -1274,7 +1067,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         uvs[idx * 2 + 1] = v;
       }
     }
-
     for (let iv = 0; iv < SHEET_NV - 1; iv++) {
       for (let iu = 0; iu < SHEET_NU - 1; iu++) {
         const a = iv * SHEET_NU + iu;
@@ -1284,25 +1076,18 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         indices.push(a, c, b, b, c, d);
       }
     }
-
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
     geo.setIndex(indices);
     geo.computeVertexNormals();
     geo.computeBoundingSphere();
-
     const item = { geo, halfWA, halfWB, span: totalSpan };
     cacheSet(ck, item);
     return item;
   }
-
-  // ---------------------------------------------------------------------------
-  // 3D筋膜シート用マテリアル・Mesh プール
-  // ---------------------------------------------------------------------------
   const sheetMatPool = [];
   const sheetMeshPool = [];
-
   function makeSheetMaterial() {
     const u = {
       ...poseUniforms,
@@ -1333,7 +1118,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       polygonOffsetUnits: -3,
     });
   }
-
   function acquireSheetMesh(geo, mat, renderOrder = 5) {
     let m = sheetMeshPool.pop();
     if (!m) {
@@ -1350,13 +1134,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     activeGeos.add(geo);
     return m;
   }
-
-  // ---------------------------------------------------------------------------
-  // 急所コアマーカー（オンデマンド1点スポットライト時のみ使用）
-  // ---------------------------------------------------------------------------
   let nodeGeo = null, nodeCore = null, nodeHalo = null;
   let aOffset = null, aColor = null, aD = null;
-
   function ensureNodes() {
     if (nodeGeo) return;
     const base = new THREE.IcosahedronGeometry(1, 2);
@@ -1394,7 +1173,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       root.add(m);
     }
   }
-
   function pushNode(p, color, d = 0, rigRole = null) {
     if (!p || state.targetNodes.length >= MAX_NODES) return;
     const colObj =
@@ -1408,7 +1186,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       rigRole,
     });
   }
-
   function updateNodes() {
     if (!nodeGeo || !state.targetNodes.length) return;
     const count = Math.min(MAX_NODES, state.targetNodes.length);
@@ -1419,7 +1196,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     aOffset.needsUpdate = true;
   }
-
   function commitNodes() {
     const count = Math.min(MAX_NODES, state.targetNodes.length);
     state.nodeCount = count;
@@ -1443,13 +1219,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     nodeCore.visible = showNodes;
     nodeHalo.visible = showNodes;
   }
-
-  // ---------------------------------------------------------------------------
-  // 筋膜シースオーバーレイ（マテリアル・Mesh はプール）
-  // ---------------------------------------------------------------------------
   const ovMatPool = [];
   const ovMeshPool = [];
-
   function makeOverlayMaterial() {
     const V3 = THREE.Vector3;
     const u = {
@@ -1511,7 +1282,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       polygonOffsetUnits: -2,
     });
   }
-
   function resetOverlayUniforms(u) {
     if (u.uRigRole && u.uRigRole.value) u.uRigRole.value.set(-1, -1, -1, -1);
     u.uRole.value = 0;
@@ -1531,7 +1301,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     u.uInflate.value = 0.0024;
     u.uSide.value.set(1, 1);
   }
-
   /** 筋 1 つ分のエントリを作る（同じ ID は 1 つにまとめる） */
   function addMuscle(id) {
     if (state.muscles.has(id)) return state.muscles.get(id);
@@ -1596,13 +1365,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     state.muscles.set(id, entry);
     return entry;
   }
-
   /** 祖先まで含めて表示中か */
   const isShown = (o) => {
     for (let x = o; x; x = x.parent) if (!x.visible) return false;
     return true;
   };
-
   /** 静止モード（isBusy=false）でも即座に表示・ワールド行列が一致するよう同期 */
   function syncMeshVisibility() {
     const showOv = state.muscleOverlayVisible;
@@ -1624,7 +1391,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       nodeHalo.visible = showNodes;
     }
   }
-
   /**
    * 現在の layerMode ('see-through' | 'surface' | 'deep') に応じて各筋膜シースと3D筋膜シートの透明度を更新
    */
@@ -1638,7 +1404,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         hasActiveDeep = true;
       }
     }
-
     for (const e of state.muscles.values()) {
       let layerAlpha = 1.0;
       if (state.layerMode === 'surface') {
@@ -1646,12 +1411,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       } else if (state.layerMode === 'deep') {
         layerAlpha = e.fasciaLayer === 'surface' ? 0.14 : 1.0;
       } else {
-        // 'see-through': 深層筋がアクティブな時は表層オーバーレイを半透明ベールに抑え、奥の深層筋を鮮明に透視させる
         layerAlpha = hasActiveDeep && e.fasciaLayer === 'surface' ? 0.56 : 1.0;
       }
       e.u.uLayerAlpha.value = layerAlpha;
     }
-
     for (const sh of state.sheets) {
       const lA = sh.fromId ? resolveMuscleLayer(sh.fromId) : 'surface';
       const lB = sh.toId ? resolveMuscleLayer(sh.toId) : 'surface';
@@ -1670,7 +1433,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     syncMeshVisibility();
   }
-
   /**
    * 2層シースルー＆切り替えモードを fascia オーバーレイへ同期する公開 API
    * @param {'see-through'|'surface'|'deep'} mode
@@ -1694,16 +1456,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     applyLayerFilter();
   }
-
-  // ---------------------------------------------------------------------------
-  // 筋肉エントリの役割に応じた3D筋膜シート色・尾根色・縮み/伸びモード
-  // ---------------------------------------------------------------------------
   const PURE_WHITE = new THREE.Color(1, 1, 1);
   const tmpLineColA = new THREE.Color();
   const tmpLineColB = new THREE.Color();
   const tmpLineRidgeA = new THREE.Color();
   const tmpLineRidgeB = new THREE.Color();
-
   function roleSheetStyle(entry) {
     if (!entry) {
       return {
@@ -1753,7 +1510,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       alpha: 0.80,
     };
   }
-
   /** 現在の各筋肉の role（または line モードの1色解剖図カラー）に合わせて全3D筋膜シートを同期 */
   function syncSheetUniforms() {
     if (state.mode === 'line') {
@@ -1765,12 +1521,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         else tmpLineColA.set(fallbackHex);
         if (eB?.u?.uColor?.value) tmpLineColB.copy(eB.u.uColor.value);
         else tmpLineColB.set(fallbackHex);
-
         tmpLineRidgeA.copy(tmpLineColA).lerp(PURE_WHITE, 0.38);
         tmpLineRidgeB.copy(tmpLineColB).lerp(PURE_WHITE, 0.38);
         tmpLineColA.multiplyScalar(0.86);
         tmpLineColB.multiplyScalar(0.86);
-
         sh.u.uColorA.value.copy(tmpLineColA);
         sh.u.uColorB.value.copy(tmpLineColB);
         sh.u.uRidgeA.value.copy(tmpLineRidgeA);
@@ -1795,7 +1549,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       sh.u.uAlpha.value = (stA.alpha + stB.alpha) * 0.5;
     }
   }
-
   /**
    * 同一ライン上の隣接アクティブ筋ペア、または解剖学的に隣接する付着部ペアから
    * 3D筋膜シート接続仕様 [{ from, to, crossSide }] を自動抽出する
@@ -1809,7 +1562,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const activeSet = new Set(activeIds);
     const seen = new Set();
     const out = [];
-
     const pushBridge = (from, to, crossSide = false) => {
       if (!from || !to || from === to) return;
       const pairKey = from < to ? `${from}|${to}|${crossSide ? 1 : 0}` : `${to}|${from}|${crossSide ? 1 : 0}`;
@@ -1827,7 +1579,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       seen.add(pairKey);
       out.push({ from, to, crossSide: Boolean(crossSide) });
     };
-
     for (const line of linesList || []) {
       if (!line || !Array.isArray(line.track)) continue;
       const seq = line.track;
@@ -1851,7 +1602,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         }
       }
     }
-
     if (out.length === 0) {
       for (let i = 0; i < activeIds.length; i++) {
         const idA = activeIds[i];
@@ -1878,10 +1628,8 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         }
       }
     }
-
     return out;
   }
-
   /**
    * 隣接する筋肉Aと筋肉Bが骨駅をまたぐ区間に、細い線ではなく幅広の3D筋膜・腱膜シート（幅 4.8cm〜13.6cm）を張り、
    * 筋肉表面の筋膜シースと連続した1枚の膜として可視化する
@@ -1894,23 +1642,19 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const sides = sideMode === 'L' || sideMode === 'R' ? [sideMode] : ['L', 'R'];
     const maxDist = Number.isFinite(opts?.maxDist) ? opts.maxDist : 0.28;
     const lineId = opts?.lineId || '';
-
     for (const br of bridges) {
       if (!br || !br.from || !br.to || br.from === br.to) continue;
       const fromEntry = state.muscles.get(br.from) || addMuscle(br.from);
       const toEntry = state.muscles.get(br.to) || addMuscle(br.to);
       if (!fromEntry || !toEntry) continue;
-
       const stA = roleSheetStyle(fromEntry);
       const stB = roleSheetStyle(toEntry);
       const rigRole = bridgeRigRole(br.from, br.to);
-
       for (const sA of sides) {
         const isCross = Boolean(br.crossSide || br.crossSides);
         const sB = isCross ? opp(sA) : sA;
         const built = buildFasciaSheetGeometry(br.from, br.to, sA, sB, maxDist);
         if (!built) continue;
-
         const mat = sheetMatPool.pop() || makeSheetMaterial();
         const u = mat.uniforms;
         u.uRigRole.value.copy(rigRole);
@@ -1922,12 +1666,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         u.uModeB.value = stB.mode;
         u.uAlpha.value = (stA.alpha + stB.alpha) * 0.5;
         u.uLayerAlpha.value = 1.0;
-
         const lA = resolveMuscleLayer(br.from);
         const lB = resolveMuscleLayer(br.to);
         const renderOrder = lA === 'deep' && lB === 'deep' ? 4 : 5;
         const mesh = acquireSheetMesh(built.geo, mat, renderOrder);
-
         state.sheets.push({
           mesh,
           mat,
@@ -1944,10 +1686,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // 公開 API
-  // ---------------------------------------------------------------------------
   /**
    * ライン 1 本の連続筋膜経線を「面（筋肉シース＋駅間3D筋膜シート）」で表示し、
    * 揺れ・色変化ゼロの落ち着いた1色解剖図シートとしてピタッと静止表示する
@@ -1961,12 +1699,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const pathSides = side === 'L' || side === 'R' ? [side] : ['L', 'R'];
     const cross = line.side === 'cross';
     const crossAt = Array.isArray(line.crossAt) ? new Set(line.crossAt) : null;
-
     const sideOf = new Map();
     const ratioOf = new Map();
     const bridgeSeen = new Set();
     const lineBridges = [];
-
     const registerSequence = (seq) => {
       if (!Array.isArray(seq) || seq.length < 1) return;
       const denom = Math.max(1, seq.length - 1);
@@ -1983,7 +1719,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           if (!ratioOf.has(id)) ratioOf.set(id, i / denom);
           if (cross && !crossAt) curSide = opp(curSide);
         }
-
         if (startSide === pathSides[0]) {
           for (let i = 0; i < seq.length - 1; i++) {
             const from = seq[i];
@@ -2004,12 +1739,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         }
       }
     };
-
     registerSequence(line.track);
     if (Array.isArray(line.path) && line.path.length >= 2) {
       registerSequence(line.path);
     }
-
     for (const id of new Set([...(line.track || []), ...(line.path || [])])) {
       const e = addMuscle(id);
       if (!e) continue;
@@ -2020,14 +1753,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       const s = sideOf.get(id) || { L: side !== 'R' ? 1 : 0, R: side !== 'L' ? 1 : 0 };
       e.u.uSide.value.set(s.L, s.R);
     }
-
     addFasciaSheetBridge(lineBridges, side, { maxDist: 0.30, lineId: line.id || '' });
-
     shared.uFade.value = 1.0;
     applyLayerFilter();
     apply();
   }
-
   /** habit.lines に対応するライン object を取り出す */
   function resolveLines(habit, lines) {
     let pool = [];
@@ -2037,7 +1767,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const out = (habit?.lines || []).map((id) => byId.get(id)).filter(Boolean);
     return out.length ? out : pool;
   }
-
   /**
    * 4段階レッド／ブルー役割割り当てヘルパー
    * 明示指定（shortenCore / shortenLinked / lengthenAntagonist / lengthenLinked）と従来指定（shorten / yore / lengthen）の両方に対応
@@ -2047,13 +1776,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       ? spec.shortenCore
       : (spec.shorten || []);
     const coreSet = new Set(coreIds);
-
     const rawLinkedShort = Array.isArray(spec.shortenLinked)
       ? spec.shortenLinked
       : [...(spec.yore || []), ...(spec.chain || [])];
     const linkedShortIds = rawLinkedShort.filter((id) => id && !coreSet.has(id) && !(spec.lengthen || []).includes(id));
     const linkedShortSet = new Set(linkedShortIds);
-
     let antagIds = [];
     let linkedLongIds = [];
     if (Array.isArray(spec.lengthenAntagonist) && spec.lengthenAntagonist.length) {
@@ -2091,7 +1818,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         linkedLongIds = [...extraCool].slice(0, 2);
       }
     }
-
     const setup = (id, role, weight) => {
       const e = addMuscle(id);
       if (!e) return null;
@@ -2103,7 +1829,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
       return e;
     };
-
     for (const id of coreIds) {
       setup(id, 1, id === spec.seedId ? 1.0 : 0.96);
     }
@@ -2118,7 +1843,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     return { coreIds, linkedShortIds, antagIds, linkedLongIds, setup };
   }
-
   /** 姿勢のクセによる4段階筋膜シース（縮み横じわ・伸び縦スジ）＆ 駅間3D筋膜シートの可視化 */
   function showHabit(habit, lines) {
     clear();
@@ -2131,9 +1855,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const ls = resolveLines(habit, lines);
     const mainLine = ls[0] || null;
     const lineColor = new THREE.Color(mainLine?.color || '#CFA058');
-
     const { setup } = assignFourTierRoles(habit, sideVec, lineColor, ls);
-
     const chain = (habit.chain || []).map((id) => setup(id, 0, 0)).filter(Boolean);
     const n = chain.length;
     const [l0, l1] = PHASE.lock;
@@ -2144,7 +1866,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       e.lockMax = e.role === 1 ? 0.96 : 0.72;
       setLockGeometry(e, e.role === 1 ? null : (i > 0 ? chain[i - 1] : null), e.role === 1);
     });
-
     for (const e of state.muscles.values()) {
       if (e.role === 1) {
         e.lockStart = e.lockStart != null ? Math.min(e.lockStart, 0.60) : 0.60;
@@ -2158,7 +1879,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         setLockGeometry(e, null, true);
       }
     }
-
     const bridges =
       Array.isArray(habit.stationBridges) && habit.stationBridges.length
         ? habit.stationBridges
@@ -2166,12 +1886,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           ? habit.bridges
           : autoExtractBridges(ls);
     addFasciaSheetBridge(bridges, hs);
-
     shared.uFade.value = 0;
     applyLayerFilter();
     apply();
   }
-
   /** ストーリー1ステップ表示（4段階筋膜シース＋駅間3D筋膜シート） */
   function showStep(step, lines) {
     clear();
@@ -2188,13 +1906,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const lineColor = new THREE.Color(lineObj?.color || '#CFA058');
     const sideVec = new THREE.Vector2(1, 1);
     const ls = lineObj ? [lineObj] : [];
-
     const { setup } = assignFourTierRoles(step, sideVec, lineColor, ls);
     for (const id of step.focus || []) {
       const e = setup(id, 0, 0);
       if (e) e.focus = true;
     }
-
     const bridges =
       Array.isArray(step.stationBridges) && step.stationBridges.length
         ? step.stationBridges
@@ -2202,12 +1918,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           ? step.bridges
           : autoExtractBridges(ls);
     addFasciaSheetBridge(bridges, 'both');
-
     shared.uFade.value = 1.0;
     applyLayerFilter();
     apply();
   }
-
   /**
    * 筋肉タップ連動：4段階レッド／ブルー筋膜シース ＋ 駅間3D筋膜シートを即座に点灯する公開 API
    */
@@ -2218,21 +1932,18 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     state.chainSpec = chainSpec;
     state.chainSeedId = chainSpec.seedId || chainSpec.shortenCore?.[0] || null;
     state.twist = 0.52;
-
     const side = chainSpec.side === 'L' || chainSpec.side === 'R' ? chainSpec.side : 'both';
     const sideVec = new THREE.Vector2(side === 'R' ? 0 : 1, side === 'L' ? 0 : 1);
     const lineColor = new THREE.Color('#CC6F5B');
     const coreList = Array.isArray(chainSpec.shortenCore) && chainSpec.shortenCore.length
       ? chainSpec.shortenCore
       : (chainSpec.seedId ? [chainSpec.seedId] : (chainSpec.shorten || []));
-
     assignFourTierRoles(
       { ...chainSpec, shortenCore: coreList },
       sideVec,
       lineColor,
       Array.isArray(chainSpec.lines) ? chainSpec.lines : [],
     );
-
     for (const e of state.muscles.values()) {
       if (e.role === 1) {
         e.lockMax = e.id === state.chainSeedId ? 0.90 : 0.74;
@@ -2240,7 +1951,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         setLockGeometry(e, null, true);
       }
     }
-
     const bridges =
       Array.isArray(chainSpec.bridges) && chainSpec.bridges.length
         ? chainSpec.bridges
@@ -2248,12 +1958,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           ? chainSpec.stationBridges
           : autoExtractBridges(Array.isArray(chainSpec.lines) ? chainSpec.lines : []);
     addFasciaSheetBridge(bridges, side);
-
     shared.uFade.value = 1.0;
     applyLayerFilter();
     apply();
   }
-
   /**
    * オンデマンド1点集中スポットライト API（黄色・アンバー完全排除の深紅クリムゾン核）
    */
@@ -2265,7 +1973,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     state.targetNodes = [];
     state.nodeCount = 0;
     state.spotMuscleId = muscleId;
-
     let e = state.muscles.get(muscleId);
     if (!e) {
       e = addMuscle(muscleId);
@@ -2304,7 +2011,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       e.u.uSelected.value = 1.0;
       e.u.uSide.value.set(1, 1);
     }
-
     const rigRole = getRigRole ? getRigRole(muscleId, 'muscle') : null;
     const effectiveSide =
       side === 'L' || side === 'R'
@@ -2312,7 +2018,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         : state.habit && (state.habit.side === 'L' || state.habit.side === 'R')
           ? state.habit.side
           : 'both';
-
     if (effectiveSide === 'L' || effectiveSide === 'R') {
       const pos = centerOf(muscleId, effectiveSide) || e?.an?.[effectiveSide]?.center || centerOf(muscleId, 'both');
       if (pos) pushNode(pos, '#CC6F5B', 0, rigRole);
@@ -2333,7 +2038,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     commitNodes();
   }
-
   function clearTriggerPoint() {
     state.spotMuscleId = null;
     state.targetNodes = [];
@@ -2344,10 +2048,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       apply();
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // ⑤ レントゲン・スキャンプレーン（X-Ray Scan Sweep: 1.2秒で通過する青い透視スキャン光）
-  // ---------------------------------------------------------------------------
   let scanGroup = null;
   let scanRingMesh = null;
   let scanGlowMesh = null;
@@ -2362,14 +2062,12 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     z: 0,
     scale: 1.0,
   };
-
   function ensureXRayScan() {
     if (scanGroup) return;
     scanGroup = new THREE.Group();
     scanGroup.name = 'xray-scan-sweep';
     scanGroup.raycast = noRaycast;
     scanGroup.visible = false;
-
     const ringGeo = new THREE.TorusGeometry(0.54, 0.0048, 12, 64);
     ringGeo.rotateX(Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({
@@ -2385,7 +2083,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     scanRingMesh.raycast = noRaycast;
     scanRingMesh.frustumCulled = false;
     scanRingMesh.renderOrder = 29;
-
     const glowGeo = new THREE.TorusGeometry(0.545, 0.016, 12, 64);
     glowGeo.rotateX(Math.PI / 2);
     const glowMat = new THREE.MeshBasicMaterial({
@@ -2401,7 +2098,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     scanGlowMesh.raycast = noRaycast;
     scanGlowMesh.frustumCulled = false;
     scanGlowMesh.renderOrder = 28;
-
     const discGeo = new THREE.RingGeometry(0.08, 0.54, 48);
     discGeo.rotateX(-Math.PI / 2);
     const discMat = new THREE.MeshBasicMaterial({
@@ -2418,11 +2114,9 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     scanDiscMesh.raycast = noRaycast;
     scanDiscMesh.frustumCulled = false;
     scanDiscMesh.renderOrder = 27;
-
     scanGroup.add(scanDiscMesh, scanGlowMesh, scanRingMesh);
     root.add(scanGroup);
   }
-
   /**
    * 頭から足先へ（または対象部位の上下を）青いレントゲンスキャン光のリングが1.2秒かけて通過する演出
    */
@@ -2439,7 +2133,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     scanGroup.visible = true;
     updateXRayScan(0);
   }
-
   function updateXRayScan(dt) {
     if (!scanState.active || !scanGroup) return;
     scanState.elapsed += dt;
@@ -2460,12 +2153,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     if (scanGlowMesh) scanGlowMesh.material.opacity = 0.42 * env;
     if (scanDiscMesh) scanDiscMesh.material.opacity = 0.16 * env;
   }
-
-  // ---------------------------------------------------------------------------
-  // ⑥ 3Dセルフケア・マッサージエンジン統合（サロン3Dハンド / ボール / ローラー / 支持面パネル / Raycaster表面吸着）
-  // ---------------------------------------------------------------------------
   let selfCareGuide = null;
-
   const releaseState = {
     active: false,
     muscleId: null,
@@ -2476,7 +2164,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     elapsed: 0,
     rigRole: null,
   };
-
   const TRUNK_SURFACE_ENVELOPE_IDS = [
     'pectoralis-major',
     'latissimus-dorsi',
@@ -2489,7 +2176,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     'temporalis',
     'splenius-capitis',
   ];
-
   const LEG_SURFACE_ENVELOPE_IDS = [
     'gluteus-maximus',
     'gluteus-medius',
@@ -2510,7 +2196,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     'abductor-hallucis',
     'abductor-digiti-minimi-foot',
   ];
-
   const ARM_SURFACE_ENVELOPE_IDS = [
     'deltoid',
     'biceps-brachii',
@@ -2525,13 +2210,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     'pronator-teres',
     'abductor-pollicis-brevis',
   ];
-
   function ensureReleaseTools() {
     if (!selfCareGuide) {
       selfCareGuide = createSelfCareGuide3D({ parent: root });
     }
   }
-
   /**
    * 対象筋（muscleId）の解剖学的位置に応じて、THREE.Raycaster でレスト体表外殻の7点曲線と法線を取得する
    */
@@ -2543,18 +2226,15 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         : state.habit && (state.habit.side === 'L' || state.habit.side === 'R')
           ? state.habit.side
           : 'R';
-
     const cStart =
       centerOf(muscleId, effSide) ||
       an?.[effSide]?.center?.clone() ||
       centerOf(muscleId, 'both') ||
       new THREE.Vector3(0, 0.5, 0.12);
-
     const sx = effSide === 'L' ? 1 : -1;
     const rigRole = getRigRole ? getRigRole(muscleId, 'muscle') : null;
     const isArmTarget = Boolean(rigRole && rigRole.z > 0.5);
     const isLegTarget = Boolean(rigRole && rigRole.x > 0.5 && rigRole.x < 2.5);
-
     const isPlantarFoot =
       /^(plantar|flexor-digitorum-brevis|abductor-hallucis|abductor-digiti-minimi-foot|quadratus-plantae|flexor-hallucis-brevis)/.test(
         muscleId,
@@ -2575,11 +2255,9 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|rectus-capitis-posterior|obliquus-capitis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
         muscleId,
       );
-
     const outDirRest = new THREE.Vector3(0, 0, 1);
     const strokeDirRest = new THREE.Vector3(0, 1, 0);
     let spanLen = Math.min(0.48, Math.max(0.24, (an?.size || 0.32) * 0.82)) * strokeSpan;
-
     if (isPlantarFoot) {
       outDirRest.set(0, -1, 0);
       strokeDirRest.set(0, 0, 1);
@@ -2640,8 +2318,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       const ax = (an?.[effSide]?.axis || new THREE.Vector3(0, 1, 0)).clone().normalize();
       strokeDirRest.copy(ax);
     }
-
-    // 候補メッシュの収集（体幹・下肢ケア時にレストの垂れた腕メッシュに誤ヒットするのを完全排除！）
     const candidateIdSet = new Set([muscleId]);
     if (strokeTarget && !isArmTarget) {
       const targetRig = getRigRole ? getRigRole(strokeTarget, 'muscle') : null;
@@ -2674,14 +2350,12 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     } else {
       for (const id of TRUNK_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
     }
-
     const candidateMeshes = [];
     for (const cid of candidateIdSet) {
       for (const m of safeMeshes(cid)) {
         candidateMeshes.push(m);
       }
     }
-
     const raySample = sampleSurfaceStrokeByRaycaster({
       centerRest: cStart,
       strokeDirRest,
@@ -2693,7 +2367,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       fallbackOffset: 0.085,
       surfaceClearance: tool === 'hand' ? 0.022 : 0.010,
     });
-
     return {
       effSide,
       rigRole,
@@ -2701,9 +2374,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       normalsRest: raySample.normalsRest,
     };
   }
-
   const _normProbeRest = new THREE.Vector3();
-
   /**
    * 3Dセルフケアガイド（🤲サロン3Dハンド・🎾テニスボール・🛞フォームローラー＋半透明支持面パネル）を表示し、
    * 対象部位の体表曲面にピタッと吸着したアニメーションを開始する
@@ -2724,9 +2395,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       state.habit?.shorten?.[0] ||
       null;
     if (!muscleId) return;
-
     ensureReleaseTools();
-
     const side = cfg.side || state.habit?.side || state.chainSpec?.side || 'both';
     const profile = resolveCareProfile(muscleId, cfg.tool);
     const tool = profile.tool;
@@ -2740,13 +2409,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const strokeSpan = Number.isFinite(Number(cfg.strokeSpan))
       ? Number(cfg.strokeSpan) * profile.strokeSpan
       : profile.strokeSpan;
-
     if (state.spotMuscleId !== muscleId) {
       showTriggerPoint(muscleId, side);
     }
-
     const kin = computeReleaseKinematics(muscleId, cfg.strokeTarget, side, strokeSpan, tool);
-
     releaseState.active = true;
     releaseState.muscleId = muscleId;
     releaseState.strokeTarget = cfg.strokeTarget || null;
@@ -2755,7 +2421,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     releaseState.motion = motion;
     releaseState.elapsed = 0;
     releaseState.rigRole = kin.rigRole;
-
     const rigRole = kin.rigRole;
     selfCareGuide.show({
       targetId: muscleId,
@@ -2779,15 +2444,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         else outNorm.normalize();
       },
     });
-
     if (nodeCore) nodeCore.visible = false;
     if (nodeHalo) nodeHalo.visible = false;
-
-
-
     updateReleaseTool(shared.uTime.value, 0);
   }
-
   /**
    * 3Dリリース器具と緩和グロウを消去して通常状態へ戻す
    */
@@ -2805,13 +2465,10 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       if (e.u.uRelease) e.u.uRelease.value = 0;
     }
   }
-
   function updateReleaseTool(t, dt) {
     if (!releaseState.active || !selfCareGuide) return;
     releaseState.elapsed += dt;
     selfCareGuide.update(t, dt);
-
-    // 対象筋肉（muscleId ＆ strokeTarget）の赤い緊張に対して穏やかな緩和グロウ（uRelease）を反映
     const relaxProgress = clamp01(releaseState.elapsed / 3.2) * (0.72 + 0.24 * (0.5 + 0.5 * Math.sin(t * 1.8)));
     const entryMain = state.muscles.get(releaseState.muscleId);
     if (entryMain && entryMain.u.uRelease) {
@@ -2824,7 +2481,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
     }
   }
-
   /** 固まりの広がり始め（前の chain 筋の中心）と、到達距離の範囲を求める */
   function setLockGeometry(e, prev, fromCenter = false) {
     const u = e.u;
@@ -2849,13 +2505,11 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     });
     u.uLockRange.value.set(range[0], range[1], range[2], range[3]);
   }
-
   /** 0..1 の進行と 4段階レッド／ブルー役割（role 0..4）および line 1色静止解剖図シートを uniform に反映 */
   function apply() {
     const p = state.progress;
     shared.uProgress.value = p;
     shared.uHasSpot.value = state.spotMuscleId ? 1.0 : 0.0;
-
     if (state.mode === 'habit') {
       const tw = Math.max(0.45, state.twist);
       const W = smooth(PHASE.wrinkle[0], PHASE.wrinkle[1], p); // 0.0〜0.35: アコーディオン収縮しわ立ち上がり
@@ -2863,7 +2517,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       const LG = smooth(PHASE.lock[0], PHASE.lock[1], p);      // 0.62〜0.98: ガチガチのねじれロック固定
       const S = smooth(0.0, 0.88, p);                          // 0.0〜0.88: 拮抗・連動筋膜の縦ピン張り伸張増加
       shared.uLockG.value = LG;
-
       for (const e of state.muscles.values()) {
         const u = e.u;
         const isSpot = e.id === state.spotMuscleId;
@@ -2871,9 +2524,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         u.uRole.value = role;
         u.uLineWave.value = 0;
         u.uSelected.value = isSpot ? 1.0 : 0.0;
-
         if (role === 1) {
-          // 1. 🔴 shortenCore（主役・1番縮んで硬い核の筋肉: 深紅ルビー＋深いアコーディオン横じわ）
           u.uInflate.value = 0.0028;
           u.uTierWeight.value = clamp01(Math.max(e.tierWeight || 0.95, 0.90 + 0.10 * W));
           u.uWrinkle.value = isSpot ? 0.98 : 0.56 + 0.44 * W;
@@ -2885,7 +2536,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           u.uTwistAmt.value = (0.30 + 0.70 * T) * tw;
           u.uFiber.value = 0;
         } else if (role === 2) {
-          // 2. 🌹 shortenLinked（連動して縮む第2段階の赤い筋肉: ローズクリムゾン＋横じわ）
           u.uInflate.value = 0.0024;
           u.uTierWeight.value = clamp01(0.56 + 0.28 * Math.max(0.40, 0.65 * W + 0.35 * T));
           u.uWrinkle.value = 0.42 + 0.38 * W;
@@ -2895,7 +2545,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           u.uTwistAmt.value = (0.20 + 0.56 * T) * tw;
           u.uFiber.value = 0;
         } else if (role === 3) {
-          // 3. 🔵 lengthenAntagonist（反対側でピンと張る主伸張筋: ロイヤルコバルト＋縦スジ）
           u.uInflate.value = 0.0018;
           u.uTierWeight.value = clamp01(Math.max(e.tierWeight || 0.90, 0.85 + 0.15 * S));
           u.uWrinkle.value = 0;
@@ -2905,7 +2554,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           u.uTwistAmt.value = (0.08 + 0.24 * T) * tw;
           u.uFiber.value = 0;
         } else if (role === 4) {
-          // 4. 🩵 lengthenLinked（連動して張る第2段階の青い筋肉: セルリアンスカイ＋縦スジ）
           u.uInflate.value = 0.0018;
           u.uTierWeight.value = clamp01(0.48 + 0.24 * Math.max(0.38, S));
           u.uWrinkle.value = 0;
@@ -2924,7 +2572,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
           u.uTwistAmt.value = 0;
           u.uFiber.value = e.onLine ? 0.62 * (1 - 0.35 * LG) : 0;
         }
-
         const rawLock = e.lockStart != null ? smooth(e.lockStart, e.lockEnd, p) : 0;
         e.lockNow = isSpot && role <= 2 ? Math.max(rawLock, 0.76) : rawLock;
         u.uLock.value = e.lockNow;
@@ -2935,7 +2582,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       const isChain = state.mode === 'chain';
       shared.uLockG.value = isChain ? 0.56 : 0.45;
       shared.uProgress.value = isChain ? 0.78 : 0.72;
-
       for (const e of state.muscles.values()) {
         const u = e.u;
         const isSpot = e.id === state.spotMuscleId;
@@ -2944,7 +2590,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         u.uRole.value = role;
         u.uLineWave.value = 0;
         u.uSelected.value = isSpot ? 1.0 : 0.0;
-
         if (role === 1) {
           u.uInflate.value = 0.0028;
           u.uTierWeight.value = isSeed ? 1.0 : clamp01(e.tierWeight || 0.94);
@@ -3034,16 +2679,13 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     syncMeshVisibility();
     updateNodes();
   }
-
   /** 0..1 癖を続けた時間（しわ → ねじれ → 固まり） */
   function setProgress(p) {
     state.progress = clamp01(Number(p) || 0);
     apply();
   }
-
   /** 追加筋膜シース・駅間3D筋膜シート・マーカーを完全に元へ戻す */
   const EMPTY_POOL_GEO = new THREE.BufferGeometry();
-
   function clear() {
     for (const sh of state.sheets) {
       root.remove(sh.mesh);
@@ -3084,7 +2726,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     shared.uProgress.value = 0;
     shared.uHasSpot.value = 0;
   }
-
   /** 毎フレーム（main.js → viewer.onFrame から） */
   function update(time, delta) {
     const rawDt = Math.min(0.1, Math.max(0, Number.isFinite(delta) ? delta : 1 / 60));
@@ -3095,25 +2736,19 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     const t = shared.uTime.value;
     updateXRayScan(dt);
     updateReleaseTool(t, dt);
-    if (!state.mode) return;
-
+    if (!state.mode || !state.muscleOverlayVisible) return;
     shared.uFade.value = Math.min(1, shared.uFade.value + rawDt / 0.65);
-
-    syncMeshVisibility();
-
-    // 急所ターゲットマーカーを現在の姿勢変形（deformPoint）に追従させて更新
-    updateNodes();
+    if (state.nodeCount > 0 && !releaseState.active) {
+      updateNodes();
+    }
   }
-
   function setMuscleOverlayVisible(visible) {
     state.muscleOverlayVisible = Boolean(visible);
     syncMeshVisibility();
   }
-
   function setPaused(paused) {
     state.paused = Boolean(paused);
   }
-
   /** 完全破棄（任意） */
   function dispose() {
     clear();
@@ -3145,7 +2780,6 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     poleCache.clear();
     scene.remove(root);
   }
-
   return {
     showLine,
     showHabit,
