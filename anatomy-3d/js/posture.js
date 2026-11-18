@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-export const POSTURE_VERSION = '20261118e';
+export const POSTURE_VERSION = '20261119a';
 const POSE_KEYS = [
   'trunkFlex',   // -0.5..1   背中が丸まる（胸椎・腰椎屈曲）
   'headForward', // 0..1      頭が前に出る（スマホ首・ストレートネック）
@@ -33,6 +33,8 @@ const POSE_KEYS = [
   'legAdductR',  // 0..1.1    右股関節の内転・足組み交差
   'lieSide',     // 0..1.05   横向き寝・寝転びロール（身体左を下にして水平に横たわる）
   'floorSit',    // 0..1.05   床での横座り・お姉さん座り・ぺたんこ座り
+  'ankleFlexL',  // -0.95..0.85 左足首（距腿関節）の背屈(+つま先上げ) / 底屈(-ペダル踏み・つま先立ち)
+  'ankleFlexR',  // -0.95..0.85 右足首（距腿関節）の背屈(+つま先上げ) / 底屈(-ペダル踏み・つま先立ち)
 ];
 export const poseUniforms = {
   uPoseA: { value: new THREE.Vector4(0, 0, 0, 0) },
@@ -43,6 +45,7 @@ export const poseUniforms = {
   uPoseF: { value: new THREE.Vector4(0, 0, 0, 0) },
   uPoseG: { value: new THREE.Vector4(0, 0, 0, 0) },
   uPoseH: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uPoseI: { value: new THREE.Vector4(0, 0, 0, 0) },
   uRigRole: { value: new THREE.Vector4(-1, -1, -1, -1) },
   uContractCycle: { value: 0.0 },
 };
@@ -50,9 +53,11 @@ const BONE_FEMUR_PATELLA = new Set([
   'right-femur', 'left-femur',
   'right-patella', 'left-patella',
 ]);
-const BONE_LOWER_LEG_FOOT = new Set([
+const BONE_SHANK = new Set([
   'right-tibia', 'left-tibia',
   'right-fibula', 'left-fibula',
+]);
+const BONE_FOOT = new Set([
   'right-talus', 'left-talus',
   'right-calcaneus', 'left-calcaneus',
   'right-navicular', 'left-navicular',
@@ -147,11 +152,13 @@ const MUSCLE_KNEE_SPAN = new Set([
   'sartorius', 'gracilis', 'biceps-femoris', 'semitendinosus', 'semimembranosus',
   'tensor-fasciae-latae', 'gastrocnemius', 'plantaris', 'popliteus',
 ]);
-const MUSCLE_KNEE_RIGID = new Set([
+const MUSCLE_ANKLE_SPAN = new Set([
   'soleus', 'calcaneal-tendon',
   'tibialis-anterior', 'extensor-hallucis-longus', 'extensor-digitorum-longus', 'fibularis-tertius',
   'fibularis-longus', 'fibularis-brevis',
   'flexor-digitorum-longus', 'flexor-hallucis-longus', 'tibialis-posterior',
+]);
+const MUSCLE_FOOT_INTRINSIC = new Set([
   'extensor-digitorum-brevis', 'extensor-hallucis-brevis',
   'abductor-hallucis', 'flexor-digitorum-brevis', 'abductor-digiti-minimi-foot',
   'quadratus-plantae', 'lumbricals-foot', 'flexor-hallucis-brevis', 'adductor-hallucis',
@@ -267,7 +274,8 @@ export function getRigRole(id, kind = 'muscle') {
     kind === 'bone' ||
     id.startsWith('bone:') ||
     BONE_FEMUR_PATELLA.has(cleanId) ||
-    BONE_LOWER_LEG_FOOT.has(cleanId) ||
+    BONE_SHANK.has(cleanId) ||
+    BONE_FOOT.has(cleanId) ||
     BONE_HUMERUS.has(cleanId) ||
     BONE_ULNA.has(cleanId) ||
     BONE_RADIUS.has(cleanId) ||
@@ -279,11 +287,17 @@ export function getRigRole(id, kind = 'muscle') {
       hipMode = 1.0;
       kneeMode = 0.0;
     } else if (
-      BONE_LOWER_LEG_FOOT.has(cleanId) ||
-      /-(tibia|fibula|talus|calcaneus|navicular|cuboid|.*cuneiform|.*metatarsal-bone|.*-toe-.*|sesamoid-bones-of-the-foot)$/.test(cleanId)
+      BONE_SHANK.has(cleanId) ||
+      /-(tibia|fibula)$/.test(cleanId)
     ) {
       hipMode = 1.0;
       kneeMode = 1.0;
+    } else if (
+      BONE_FOOT.has(cleanId) ||
+      /-(talus|calcaneus|navicular|cuboid|.*cuneiform|.*metatarsal-bone|.*-toe-.*|sesamoid-bones-of-the-foot)$/.test(cleanId)
+    ) {
+      hipMode = 1.0;
+      kneeMode = 3.0;
     } else if (BONE_HUMERUS.has(cleanId) || /-humerus$/.test(cleanId)) {
       armMode = 1.0;
       forearmMode = 0.0;
@@ -306,10 +320,12 @@ export function getRigRole(id, kind = 'muscle') {
     } else if (MUSCLE_HIP_RIGID.has(cleanId)) {
       hipMode = 1.0;
     }
-    if (MUSCLE_KNEE_SPAN.has(cleanId)) {
+    if (MUSCLE_FOOT_INTRINSIC.has(cleanId)) {
+      kneeMode = 3.0;
+    } else if (MUSCLE_ANKLE_SPAN.has(cleanId)) {
+      kneeMode = 1.5;
+    } else if (MUSCLE_KNEE_SPAN.has(cleanId)) {
       kneeMode = 2.0;
-    } else if (MUSCLE_KNEE_RIGID.has(cleanId)) {
-      kneeMode = 1.0;
     }
     if (MUSCLE_SHOULDER_SPAN.has(cleanId)) {
       armMode = 2.0;
@@ -389,6 +405,12 @@ function syncUniformsFromCurrent() {
     currentPose.lieSide,
     currentPose.floorSit,
   );
+  poseUniforms.uPoseI.value.set(
+    currentPose.ankleFlexL,
+    currentPose.ankleFlexR,
+    0,
+    0,
+  );
 }
 /** 外部から poseUniforms が直接書き換えられたかどうかを判定 */
 function isUniformModifiedExternally() {
@@ -400,6 +422,7 @@ function isUniformModifiedExternally() {
   const f = poseUniforms.uPoseF.value;
   const g = poseUniforms.uPoseG.value;
   const h = poseUniforms.uPoseH.value;
+  const i = poseUniforms.uPoseI.value;
   return (
     Math.abs(a.x - currentPose.trunkFlex) > 1e-6 ||
     Math.abs(a.y - currentPose.headForward) > 1e-6 ||
@@ -432,7 +455,9 @@ function isUniformModifiedExternally() {
     Math.abs(h.x - currentPose.legAdductL) > 1e-6 ||
     Math.abs(h.y - currentPose.legAdductR) > 1e-6 ||
     Math.abs(h.z - currentPose.lieSide) > 1e-6 ||
-    Math.abs(h.w - currentPose.floorSit) > 1e-6
+    Math.abs(h.w - currentPose.floorSit) > 1e-6 ||
+    Math.abs(i.x - currentPose.ankleFlexL) > 1e-6 ||
+    Math.abs(i.y - currentPose.ankleFlexR) > 1e-6
   );
 }
 export const POSE_GLSL = /* glsl */ `
@@ -444,6 +469,7 @@ uniform vec4 uPoseE; // x:armSpreadL, y:armSpreadR, z:elFlexL, w:elFlexR
 uniform vec4 uPoseF; // x:foreYawL, y:foreYawR, z:legSwingL, w:legSwingR
 uniform vec4 uPoseG; // x:pronateL, y:pronateR, z:wristExtL, w:wristExtR
 uniform vec4 uPoseH; // x:legAdductL, y:legAdductR, z:lieSide, w:floorSit
+uniform vec4 uPoseI; // x:ankleFlexL, y:ankleFlexR, z:0, w:0
 uniform vec4 uRigRole; // x:hipMode, y:kneeMode, z:armMode, w:forearmMode (-1 = 座標ベースフォールバック)
 vec3 posePitchFwd(vec3 p, vec3 piv, float a) {
   float c = cos(a);
@@ -517,6 +543,8 @@ vec3 poseDeform(vec3 wp) {
   float legAdductR  = uPoseH.y;
   float lieSide     = uPoseH.z;
   float floorSit    = uPoseH.w;
+  float ankleFlexL  = uPoseI.x;
+  float ankleFlexR  = uPoseI.y;
   float act = abs(trunkFlex) + abs(headForward) + abs(shoulderIn)
             + abs(pelvisTilt) + abs(trunkRotate) + abs(sideBend)
             + abs(hipShift) + abs(armsFold) + abs(sit) + abs(prone)
@@ -526,7 +554,8 @@ vec3 poseDeform(vec3 wp) {
             + abs(elFlexL) + abs(elFlexR) + abs(foreYawL) + abs(foreYawR)
             + abs(legSwingL) + abs(legSwingR)
             + abs(pronateL) + abs(pronateR) + abs(wristExtL) + abs(wristExtR)
-            + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit);
+            + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit)
+            + abs(ankleFlexL) + abs(ankleFlexR);
   if (act < 1e-5) return wp;
   vec3 p0 = wp;
   vec3 p = wp;
@@ -731,18 +760,26 @@ vec3 poseDeform(vec3 wp) {
     p = poseRollLeft(p, vec3(0.0, 0.05, -0.05), -0.10 * hipShift * wHipRoll);
   }
   float gluteGuard = (1.0 - smoothstep(-0.18, -0.04, p0.z)) * smoothstep(-0.32, -0.02, p0.y);
+  float ankleMask = hasRig
+    ? (uRigRole.y > 2.5 ? 1.0 : (uRigRole.y > 1.2 ? (1.0 - smoothstep(-3.16, -2.86, p0.y)) : 0.0))
+    : (1.0 - smoothstep(-3.14, -2.90, p0.y)) * legMask;
   float kneeMask = hasRig
-    ? (uRigRole.y < 0.5 ? 0.0 : (uRigRole.y < 1.5 ? 1.0 : (1.0 - smoothstep(-1.72, -1.42, p0.y))))
+    ? (uRigRole.y < 0.5 ? 0.0 : ((uRigRole.y > 1.8 && uRigRole.y < 2.5) ? (1.0 - smoothstep(-1.72, -1.42, p0.y)) : 1.0))
     : (1.0 - smoothstep(-1.78, -1.45, p0.y)) * legMask;
   float hipMask = hasRig
     ? ((uRigRole.x < 0.5 || isRigidHead) ? 0.0 : (uRigRole.x < 1.5 ? 1.0 : (1.0 - smoothstep(-0.24, 0.14, p0.y)) * (1.0 - 0.55 * gluteGuard)))
     : (1.0 - smoothstep(-0.22, 0.12, p0.y)) * (1.0 - 0.65 * gluteGuard) * legMask;
-  vec3 pivKneeSide = vec3(s * 0.185, -1.62, 0.02);
-  vec3 pivHipSide  = vec3(s * 0.185, -0.02, -0.03);
-  float legSwing   = mix(legSwingR, legSwingL, isL);
-  float legAdduct  = mix(legAdductR, legAdductL, isL);
-  float standRatio = clamp(1.0 - clamp(sit, 0.0, 1.0) - clamp(floorSit, 0.0, 1.0) - clamp(prone, 0.0, 1.0), 0.0, 1.0);
+  vec3 pivAnkleSide = vec3(s * 0.31, -3.03, -0.13);
+  vec3 pivKneeSide  = vec3(s * 0.185, -1.62, 0.02);
+  vec3 pivHipSide   = vec3(s * 0.185, -0.02, -0.03);
+  float ankleFlex   = mix(ankleFlexR, ankleFlexL, isL);
+  float legSwing    = mix(legSwingR, legSwingL, isL);
+  float legAdduct   = mix(legAdductR, legAdductL, isL);
+  float standRatio  = clamp(1.0 - clamp(sit, 0.0, 1.0) - clamp(floorSit, 0.0, 1.0) - clamp(prone, 0.0, 1.0), 0.0, 1.0);
   float hingeLegAng = isRigidLeg ? (0.1375 * hipHinge * standRatio) : 0.0;
+  if (abs(ankleFlex) > 1e-4 && ankleMask > 1e-5) {
+    p = posePitchFwd(p, pivAnkleSide, -0.78 * ankleFlex * ankleMask);
+  }
   float autoSwingKnee = max(0.0, -legSwing * 0.72) + max(0.0, legSwing * 0.12);
   float sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0.0, 1.2)) * sit;
   float totalKneePitch = sitKnee
@@ -824,7 +861,8 @@ vec3 poseDeformNormal(vec3 wp, vec3 n) {
             + abs(uPoseE.x) + abs(uPoseE.y) + abs(uPoseE.z) + abs(uPoseE.w)
             + abs(uPoseF.x) + abs(uPoseF.y) + abs(uPoseF.z) + abs(uPoseF.w)
             + abs(uPoseG.x) + abs(uPoseG.y) + abs(uPoseG.z) + abs(uPoseG.w)
-            + abs(uPoseH.x) + abs(uPoseH.y) + abs(uPoseH.z) + abs(uPoseH.w);
+            + abs(uPoseH.x) + abs(uPoseH.y) + abs(uPoseH.z) + abs(uPoseH.w)
+            + abs(uPoseI.x) + abs(uPoseI.y);
   vec3 n0 = normalize(n);
   if (act < 1e-5) return n0;
   vec3 up = abs(n0.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -1011,6 +1049,8 @@ function evalDeform(v3, poseObj, rigRole = null) {
   const legAdductR  = poseObj.legAdductR  || 0;
   const lieSide     = poseObj.lieSide     || 0;
   const floorSit    = poseObj.floorSit    || 0;
+  const ankleFlexL  = poseObj.ankleFlexL  || 0;
+  const ankleFlexR  = poseObj.ankleFlexR  || 0;
   const act =
     Math.abs(trunkFlex) +
     Math.abs(headForward) +
@@ -1043,7 +1083,9 @@ function evalDeform(v3, poseObj, rigRole = null) {
     Math.abs(legAdductL) +
     Math.abs(legAdductR) +
     Math.abs(lieSide) +
-    Math.abs(floorSit);
+    Math.abs(floorSit) +
+    Math.abs(ankleFlexL) +
+    Math.abs(ankleFlexR);
   if (act < 1e-5) return p;
   const x0 = v3.x;
   const y0 = v3.y;
@@ -1281,12 +1323,19 @@ function evalDeform(v3, poseObj, rigRole = null) {
     rollLeftJS(p, 0.0, 0.05, -0.05, -0.10 * hipShift * wHipRoll);
   }
   const gluteGuard = (1.0 - smoothstep(-0.18, -0.04, v3.z)) * smoothstep(-0.32, -0.02, y0);
+  const ankleMask = hasRig
+    ? role.y > 2.5
+      ? 1.0
+      : role.y > 1.2
+        ? 1.0 - smoothstep(-3.16, -2.86, y0)
+        : 0.0
+    : (1.0 - smoothstep(-3.14, -2.90, y0)) * legMask;
   const kneeMask = hasRig
     ? role.y < 0.5
       ? 0.0
-      : role.y < 1.5
-        ? 1.0
-        : 1.0 - smoothstep(-1.72, -1.42, y0)
+      : role.y > 1.8 && role.y < 2.5
+        ? 1.0 - smoothstep(-1.72, -1.42, y0)
+        : 1.0
     : (1.0 - smoothstep(-1.78, -1.45, y0)) * legMask;
   const hipMask = hasRig
     ? role.x < 0.5 || isRigidHead
@@ -1295,12 +1344,16 @@ function evalDeform(v3, poseObj, rigRole = null) {
         ? 1.0
         : (1.0 - smoothstep(-0.24, 0.14, y0)) * (1.0 - 0.55 * gluteGuard)
     : (1.0 - smoothstep(-0.22, 0.12, y0)) * (1.0 - 0.65 * gluteGuard) * legMask;
+  const pivAnkleSideX = s * 0.31;
+  const pivAnkleSideY = -3.03;
+  const pivAnkleSideZ = -0.13;
   const pivKneeSideX = s * 0.185;
   const pivKneeSideY = -1.62;
   const pivKneeSideZ = 0.02;
   const pivHipSideX = s * 0.185;
   const pivHipSideY = -0.02;
   const pivHipSideZ = -0.03;
+  const ankleFlex = mix(ankleFlexR, ankleFlexL, isL);
   const legSwing = mix(legSwingR, legSwingL, isL);
   const legAdduct = mix(legAdductR, legAdductL, isL);
   const standRatio = clamp(
@@ -1309,6 +1362,9 @@ function evalDeform(v3, poseObj, rigRole = null) {
     1.0,
   );
   const hingeLegAng = isRigidLeg ? 0.1375 * hipHinge * standRatio : 0.0;
+  if (Math.abs(ankleFlex) > 1e-4 && ankleMask > 1e-5) {
+    pitchFwdJS(p, pivAnkleSideX, pivAnkleSideY, pivAnkleSideZ, -0.78 * ankleFlex * ankleMask);
+  }
   const autoSwingKnee = Math.max(0.0, -legSwing * 0.72) + Math.max(0.0, legSwing * 0.12);
   const sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0.0, 1.2)) * sit;
   const totalKneePitch =
@@ -1406,6 +1462,7 @@ export function deformPoint(wp, rigRole, useTarget = true) {
       const f = poseUniforms.uPoseF.value;
       const g = poseUniforms.uPoseG.value;
       const h = poseUniforms.uPoseH.value;
+      const i = poseUniforms.uPoseI.value;
       return evalDeform(
         wp,
         {
@@ -1441,6 +1498,8 @@ export function deformPoint(wp, rigRole, useTarget = true) {
           legAdductR: h.y,
           lieSide: h.z,
           floorSit: h.w,
+          ankleFlexL: i.x,
+          ankleFlexR: i.y,
         },
         rigRole,
       );
@@ -1562,42 +1621,47 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
   out.legAdductR  = (raw.legAdductR  || 0) * k;
   out.lieSide     = (raw.lieSide     || 0) * k;
   out.floorSit    = (raw.floorSit    || 0) * k;
+  out.ankleFlexL  = (raw.ankleFlexL  || 0) * k;
+  out.ankleFlexR  = (raw.ankleFlexR  || 0) * k;
   switch (habitId) {
     case 'hair-shampoo-bend': {
       out.armsFold    = 0;
-      out.pelvisTilt  = mix(0.02, 0.18, e) * kFull;
-      out.hipHinge    = mix(0.24, 0.88, e) * kFull;
-      out.trunkFlex   = mix(0.14, 0.62, e) * kFull;
-      out.kneeBend    = mix(0.08, 0.36, e) * kFull;
-      out.headForward = mix(0.28, 0.64, e) * kFull;
-      out.shoulderIn  = mix(0.34, 0.72, e) * kFull;
-      out.trunkRotate = (-0.10 + 0.22 * e) * kFull;
-      out.armRaiseL   = (mix(0.42, 0.84, e) + 0.06 * sub) * kFull;
-      out.armRaiseR   = (mix(0.42, 0.84, e) - 0.06 * sub) * kFull;
-      out.armSpreadL  = mix(0.24, 0.14, e) * kFull;
-      out.armSpreadR  = mix(0.24, 0.14, e) * kFull;
-      out.elFlexL     = (mix(1.08, 0.62, e) + 0.10 * sub) * kFull;
-      out.elFlexR     = (mix(1.08, 0.62, e) - 0.10 * sub) * kFull;
-      out.foreYawL    = (mix(0.28, 0.54, e) + 0.12 * sub) * kFull;
-      out.foreYawR    = (mix(0.28, 0.54, e) - 0.12 * sub) * kFull;
+      out.pelvisTilt  = mix(0.0, 0.12, e) * kFull;
+      out.hipHinge    = mix(0.10, 0.48, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.24, e) * kFull;
+      out.kneeBend    = mix(0.06, 0.28, e) * kFull;
+      out.ankleFlexL  = mix(0.04, 0.18, e) * kFull;
+      out.ankleFlexR  = mix(0.04, 0.18, e) * kFull;
+      out.headForward = mix(0.20, 0.48, e) * kFull;
+      out.shoulderIn  = mix(0.28, 0.62, e) * kFull;
+      out.trunkRotate = (-0.08 + 0.18 * e) * kFull;
+      out.armRaiseL   = (mix(0.44, 0.80, e) + 0.06 * sub) * kFull;
+      out.armRaiseR   = (mix(0.44, 0.80, e) - 0.06 * sub) * kFull;
+      out.armSpreadL  = mix(0.22, 0.14, e) * kFull;
+      out.armSpreadR  = mix(0.22, 0.14, e) * kFull;
+      out.elFlexL     = (mix(1.04, 0.66, e) + 0.10 * sub) * kFull;
+      out.elFlexR     = (mix(1.04, 0.66, e) - 0.10 * sub) * kFull;
+      out.foreYawL    = (mix(0.28, 0.52, e) + 0.12 * sub) * kFull;
+      out.foreYawR    = (mix(0.28, 0.52, e) - 0.12 * sub) * kFull;
       out.pronateL    = 0.82 * kFull;
       out.pronateR    = 0.82 * kFull;
-      out.wristExtL   = mix(0.10, 0.26, e) * kFull;
-      out.wristExtR   = mix(0.10, 0.26, e) * kFull;
+      out.wristExtL   = mix(0.10, 0.24, e) * kFull;
+      out.wristExtR   = mix(0.10, 0.24, e) * kFull;
       break;
     }
     case 'hair-cut-arm': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(-0.02, 0.22, e) * kFull;
-      out.trunkFlex   = mix(-0.04, 0.28, e) * kFull;
-      out.headForward = mix(0.18, 0.58, e) * kFull;
-      out.shoulderIn  = mix(0.26, 0.68, e) * kFull;
-      out.trunkRotate = mix(-0.10, 0.18, e) * kFull;
-      out.sideBend    = mix(0.04, -0.18, e) * kFull;
-      out.armSpreadL  = mix(0.22, 0.66, e) * kFull;
-      out.armSpreadR  = mix(0.28, 0.90, e) * kFull;
-      out.armRaiseL   = mix(0.44, 0.82, e) * kFull;
-      out.armRaiseR   = mix(0.48, 1.02, e) * kFull;
+      out.hipHinge    = mix(0.0, 0.03, e) * kFull;
+      out.trunkFlex   = mix(0.02, 0.08, e) * kFull;
+      out.headForward = mix(0.16, 0.42, e) * kFull;
+      out.headPitch   = mix(0.04, 0.16, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.58, e) * kFull;
+      out.trunkRotate = mix(-0.08, 0.14, e) * kFull;
+      out.sideBend    = mix(0.02, -0.12, e) * kFull;
+      out.armSpreadL  = mix(0.24, 0.68, e) * kFull;
+      out.armSpreadR  = mix(0.28, 0.92, e) * kFull;
+      out.armRaiseL   = mix(0.46, 0.88, e) * kFull;
+      out.armRaiseR   = mix(0.50, 1.08, e) * kFull;
       out.elFlexL     = mix(0.92, 1.18, e) * kFull;
       out.elFlexR     = (mix(0.94, 1.30, e) + 0.08 * sub) * kFull;
       out.foreYawL    = mix(0.30, 0.52, e) * kFull;
@@ -1610,59 +1674,63 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'stand-hip-r': {
       out.armsFold    = 0;
-      out.hipShift    = mix(-0.10, -0.86, e) * kFull;
-      out.sideBend    = mix(0.03, 0.36, e) * kFull;
-      out.trunkRotate = mix(0.0, -0.18, e) * kFull;
-      out.pelvisTilt  = mix(-0.06, -0.32, e) * kFull;
-      out.trunkFlex   = mix(0.0, -0.08, e) * kFull;
-      out.legSwingL   = mix(0.02, 0.36, e) * kFull;
-      out.armSpreadR  = mix(0.08, 0.30, e) * kFull;
+      out.hipHinge    = 0;
+      out.hipShift    = mix(-0.10, -0.84, e) * kFull;
+      out.sideBend    = mix(0.03, 0.34, e) * kFull;
+      out.trunkRotate = mix(0.0, -0.16, e) * kFull;
+      out.pelvisTilt  = mix(-0.04, -0.26, e) * kFull;
+      out.trunkFlex   = mix(0.0, -0.04, e) * kFull;
+      out.legSwingL   = mix(0.02, 0.32, e) * kFull;
+      out.ankleFlexL  = mix(0.0, -0.22, e) * kFull;
+      out.armSpreadR  = mix(0.08, 0.28, e) * kFull;
       out.armRaiseR   = mix(0.04, 0.12, e) * kFull;
-      out.elFlexR     = mix(0.22, 0.80, e) * kFull;
-      out.foreYawR    = mix(0.10, 0.42, e) * kFull;
-      out.pronateR    = mix(0.58, 0.88, e) * kFull;
-      out.wristExtR   = mix(0.06, 0.32, e) * kFull;
-      out.armRaiseL   = mix(0.02, 0.16, e) * kFull;
-      out.elFlexL     = mix(0.14, 0.32, e) * kFull;
+      out.elFlexR     = mix(0.22, 0.78, e) * kFull;
+      out.foreYawR    = mix(0.10, 0.40, e) * kFull;
+      out.pronateR    = mix(0.58, 0.86, e) * kFull;
+      out.wristExtR   = mix(0.06, 0.30, e) * kFull;
+      out.armRaiseL   = mix(0.02, 0.14, e) * kFull;
+      out.elFlexL     = mix(0.14, 0.30, e) * kFull;
       out.pronateL    = 0.54 * kFull;
       break;
     }
     case 'stand-hip-l': {
       out.armsFold    = 0;
-      out.hipShift    = mix(0.10, 0.86, e) * kFull;
-      out.sideBend    = mix(-0.03, -0.36, e) * kFull;
-      out.trunkRotate = mix(0.0, 0.18, e) * kFull;
-      out.pelvisTilt  = mix(-0.06, -0.32, e) * kFull;
-      out.trunkFlex   = mix(0.0, -0.08, e) * kFull;
-      out.legSwingR   = mix(0.02, 0.36, e) * kFull;
-      out.armSpreadL  = mix(0.08, 0.30, e) * kFull;
+      out.hipHinge    = 0;
+      out.hipShift    = mix(0.10, 0.84, e) * kFull;
+      out.sideBend    = mix(-0.03, -0.34, e) * kFull;
+      out.trunkRotate = mix(0.0, 0.16, e) * kFull;
+      out.pelvisTilt  = mix(-0.04, -0.26, e) * kFull;
+      out.trunkFlex   = mix(0.0, -0.04, e) * kFull;
+      out.legSwingR   = mix(0.02, 0.32, e) * kFull;
+      out.ankleFlexR  = mix(0.0, -0.22, e) * kFull;
+      out.armSpreadL  = mix(0.08, 0.28, e) * kFull;
       out.armRaiseL   = mix(0.04, 0.12, e) * kFull;
-      out.elFlexL     = mix(0.22, 0.80, e) * kFull;
-      out.foreYawL    = mix(0.10, 0.42, e) * kFull;
-      out.pronateL    = mix(0.58, 0.88, e) * kFull;
-      out.wristExtL   = mix(0.06, 0.32, e) * kFull;
-      out.armRaiseR   = mix(0.02, 0.16, e) * kFull;
-      out.elFlexR     = mix(0.14, 0.32, e) * kFull;
+      out.elFlexL     = mix(0.22, 0.78, e) * kFull;
+      out.foreYawL    = mix(0.10, 0.40, e) * kFull;
+      out.pronateL    = mix(0.58, 0.86, e) * kFull;
+      out.wristExtL   = mix(0.06, 0.30, e) * kFull;
+      out.armRaiseR   = mix(0.02, 0.14, e) * kFull;
+      out.elFlexR     = mix(0.14, 0.30, e) * kFull;
       out.pronateR    = 0.54 * kFull;
       break;
     }
     case 'nail-eye-fine': {
       out.armsFold    = 0;
       out.sit         = 1.0 * kFull;
-      out.hipHinge    = mix(0.06, 0.48, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.68, e) * kFull;
-      out.headForward = mix(0.24, 0.96, e) * kFull;
-      out.headPitch   = mix(0.04, 0.24, e) * kFull;
-      out.shoulderIn  = mix(0.28, 0.78, e) * kFull;
-      out.pelvisTilt  = mix(0.10, 0.42, e) * kFull;
-      out.armRaiseL   = mix(0.38, 0.58, e) * kFull;
-      out.armRaiseR   = (mix(0.40, 0.64, e) + 0.04 * sub) * kFull;
-      out.armSpreadL  = mix(0.04, -0.10, e) * kFull;
-      out.armSpreadR  = mix(0.06, -0.08, e) * kFull;
-      out.elFlexL     = mix(0.92, 1.24, e) * kFull;
-      out.elFlexR     = (mix(0.94, 1.28, e) + 0.06 * sub) * kFull;
-      out.foreYawL    = mix(0.38, 0.56, e) * kFull;
-      out.foreYawR    = (mix(0.36, 0.60, e) + 0.10 * sub) * kFull;
+      out.hipHinge    = mix(0.02, 0.10, e) * kFull;
+      out.trunkFlex   = mix(0.08, 0.34, e) * kFull;
+      out.headForward = mix(0.20, 0.82, e) * kFull;
+      out.headPitch   = mix(0.08, 0.36, e) * kFull;
+      out.shoulderIn  = mix(0.24, 0.68, e) * kFull;
+      out.pelvisTilt  = mix(0.10, 0.36, e) * kFull;
+      out.armRaiseL   = mix(0.38, 0.56, e) * kFull;
+      out.armRaiseR   = (mix(0.40, 0.60, e) + 0.04 * sub) * kFull;
+      out.armSpreadL  = mix(0.06, -0.06, e) * kFull;
+      out.armSpreadR  = mix(0.08, -0.04, e) * kFull;
+      out.elFlexL     = mix(0.92, 1.22, e) * kFull;
+      out.elFlexR     = (mix(0.94, 1.26, e) + 0.06 * sub) * kFull;
+      out.foreYawL    = mix(0.38, 0.54, e) * kFull;
+      out.foreYawR    = (mix(0.36, 0.58, e) + 0.10 * sub) * kFull;
       out.pronateL    = 0.78 * kFull;
       out.pronateR    = 0.84 * kFull;
       out.wristExtL   = mix(0.14, 0.26, e) * kFull;
@@ -1672,37 +1740,38 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'desk-round': {
       out.armsFold    = 0;
       out.sit         = 1.0 * kFull;
-      out.hipHinge    = mix(0.0, 0.24, e) * kFull;
-      out.trunkFlex   = mix(0.08, 0.58, e) * kFull;
-      out.headForward = mix(0.18, 0.88, e) * kFull;
-      out.shoulderIn  = mix(0.22, 0.84, e) * kFull;
-      out.pelvisTilt  = mix(0.08, 0.48, e) * kFull;
-      out.armSpreadL  = mix(0.08, 0.28, e) * kFull;
-      out.armSpreadR  = mix(0.12, 0.44, e) * kFull;
-      out.armRaiseL   = mix(0.24, 0.44, e) * kFull;
-      out.armRaiseR   = mix(0.24, 0.52, e) * kFull;
-      out.elFlexL     = mix(0.92, 0.80, e) * kFull;
-      out.elFlexR     = mix(0.92, 0.68, e) * kFull;
+      out.hipHinge    = mix(-0.02, 0.04, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.36, e) * kFull;
+      out.headForward = mix(0.16, 0.78, e) * kFull;
+      out.headPitch   = mix(0.0, 0.08, e) * kFull;
+      out.shoulderIn  = mix(0.20, 0.78, e) * kFull;
+      out.pelvisTilt  = mix(0.10, 0.48, e) * kFull;
+      out.armSpreadL  = mix(0.08, 0.26, e) * kFull;
+      out.armSpreadR  = mix(0.12, 0.42, e) * kFull;
+      out.armRaiseL   = mix(0.24, 0.42, e) * kFull;
+      out.armRaiseR   = mix(0.24, 0.48, e) * kFull;
+      out.elFlexL     = mix(0.92, 0.82, e) * kFull;
+      out.elFlexR     = mix(0.92, 0.70, e) * kFull;
       out.foreYawL    = mix(0.30, 0.40, e) * kFull;
       out.foreYawR    = mix(0.26, -0.08, e) * kFull;
       out.pronateL    = 1.0 * kFull;
       out.pronateR    = 1.0 * kFull;
-      out.wristExtL   = mix(0.14, 0.34, e) * kFull;
-      out.wristExtR   = mix(0.16, 0.46, e) * kFull;
+      out.wristExtL   = mix(0.14, 0.32, e) * kFull;
+      out.wristExtR   = mix(0.16, 0.44, e) * kFull;
       break;
     }
     case 'phone-neck': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(-0.02, 0.22, e) * kFull;
-      out.trunkFlex   = mix(0.04, 0.58, e) * kFull;
-      out.headForward = mix(0.14, 0.98, e) * kFull;
-      out.headPitch   = mix(-0.02, 0.34, e) * kFull;
-      out.shoulderIn  = mix(0.18, 0.66, e) * kFull;
-      out.pelvisTilt  = mix(0.0, 0.22, e) * kFull;
-      out.armRaiseL   = mix(0.46, 0.30, e) * kFull;
-      out.armRaiseR   = mix(0.68, 0.34, e) * kFull;
-      out.elFlexL     = mix(1.10, 0.94, e) * kFull;
-      out.elFlexR     = (mix(1.28, 1.04, e) + 0.06 * sub) * kFull;
+      out.hipHinge    = 0;
+      out.trunkFlex   = mix(0.02, 0.12, e) * kFull;
+      out.headForward = mix(0.12, 0.90, e) * kFull;
+      out.headPitch   = mix(0.02, 0.48, e) * kFull;
+      out.shoulderIn  = mix(0.16, 0.52, e) * kFull;
+      out.pelvisTilt  = mix(0.0, 0.08, e) * kFull;
+      out.armRaiseL   = mix(0.52, 0.34, e) * kFull;
+      out.armRaiseR   = mix(0.72, 0.38, e) * kFull;
+      out.elFlexL     = mix(1.12, 1.00, e) * kFull;
+      out.elFlexR     = (mix(1.28, 1.12, e) + 0.06 * sub) * kFull;
       out.foreYawL    = 0.54 * kFull;
       out.foreYawR    = (0.56 + 0.08 * sub) * kFull;
       out.pronateL    = 0.46 * kFull;
@@ -1714,79 +1783,83 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
       out.sit         = 1.0 * kFull;
       out.legAdductR  = mix(0.96, 1.05, e) * kFull;
       out.legSwingR   = mix(0.02, 0.06, e) * kFull;
-      out.pelvisTilt  = mix(0.12, 0.58, e) * kFull;
-      out.trunkFlex   = mix(0.06, 0.54, e) * kFull;
-      out.hipHinge    = mix(-0.04, 0.34, e) * kFull;
-      out.headForward = mix(0.14, 0.70, e) * kFull;
-      out.headPitch   = mix(0.0, 0.18, e) * kFull;
-      out.shoulderIn  = mix(0.22, 0.60, e) * kFull;
-      out.trunkRotate = mix(0.08, 0.34, e) * kFull;
-      out.sideBend    = mix(-0.06, -0.24, e) * kFull;
+      out.ankleFlexR  = mix(-0.14, -0.28, e) * kFull;
+      out.hipHinge    = mix(-0.04, -0.02, e) * kFull;
+      out.pelvisTilt  = mix(0.12, 0.46, e) * kFull;
+      out.trunkFlex   = mix(0.05, 0.22, e) * kFull;
+      out.headForward = mix(0.12, 0.44, e) * kFull;
+      out.headPitch   = mix(0.0, 0.08, e) * kFull;
+      out.shoulderIn  = mix(0.20, 0.48, e) * kFull;
+      out.trunkRotate = mix(0.08, 0.30, e) * kFull;
+      out.sideBend    = mix(-0.06, -0.22, e) * kFull;
       out.hipShift    = mix(0.14, 0.28, e) * kFull;
-      out.armRaiseL   = mix(0.32, 0.54, e) * kFull;
-      out.armRaiseR   = mix(0.38, 0.58, e) * kFull;
-      out.elFlexL     = mix(0.72, 0.98, e) * kFull;
-      out.elFlexR     = mix(0.76, 1.04, e) * kFull;
-      out.foreYawL    = mix(0.34, 0.48, e) * kFull;
-      out.foreYawR    = mix(0.42, 0.54, e) * kFull;
+      out.armRaiseL   = mix(0.28, 0.36, e) * kFull;
+      out.armRaiseR   = mix(0.32, 0.42, e) * kFull;
+      out.elFlexL     = mix(0.72, 0.86, e) * kFull;
+      out.elFlexR     = mix(0.76, 0.92, e) * kFull;
+      out.foreYawL    = mix(0.34, 0.44, e) * kFull;
+      out.foreYawR    = mix(0.40, 0.50, e) * kFull;
       out.pronateL    = 0.86 * kFull;
       out.pronateR    = 0.86 * kFull;
-      out.wristExtL   = 0.16 * kFull;
-      out.wristExtR   = 0.16 * kFull;
+      out.wristExtL   = 0.14 * kFull;
+      out.wristExtR   = 0.14 * kFull;
       break;
     }
     case 'laptop-low-screen': {
       out.armsFold    = 0;
       out.sit         = 1.0 * kFull;
-      out.hipHinge    = mix(0.04, 0.36, e) * kFull;
-      out.trunkFlex   = mix(0.08, 0.68, e) * kFull;
-      out.headForward = mix(0.18, 0.98, e) * kFull;
-      out.headPitch   = mix(0.0, 0.24, e) * kFull;
-      out.shoulderIn  = mix(0.24, 0.76, e) * kFull;
-      out.pelvisTilt  = mix(0.10, 0.52, e) * kFull;
-      out.armRaiseL   = (mix(0.28, 0.46, e) + 0.03 * sub) * kFull;
-      out.armRaiseR   = (mix(0.28, 0.46, e) - 0.03 * sub) * kFull;
-      out.elFlexL     = mix(0.82, 1.02, e) * kFull;
-      out.elFlexR     = mix(0.82, 1.02, e) * kFull;
-      out.foreYawL    = mix(0.34, 0.46, e) * kFull;
-      out.foreYawR    = mix(0.34, 0.46, e) * kFull;
+      out.hipHinge    = mix(-0.02, 0.06, e) * kFull;
+      out.trunkFlex   = mix(0.08, 0.38, e) * kFull;
+      out.headForward = mix(0.18, 0.88, e) * kFull;
+      out.headPitch   = mix(0.04, 0.32, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.70, e) * kFull;
+      out.pelvisTilt  = mix(0.12, 0.48, e) * kFull;
+      out.armRaiseL   = (mix(0.28, 0.42, e) + 0.03 * sub) * kFull;
+      out.armRaiseR   = (mix(0.28, 0.42, e) - 0.03 * sub) * kFull;
+      out.elFlexL     = mix(0.84, 0.98, e) * kFull;
+      out.elFlexR     = mix(0.84, 0.98, e) * kFull;
+      out.foreYawL    = mix(0.34, 0.44, e) * kFull;
+      out.foreYawR    = mix(0.34, 0.44, e) * kFull;
       out.pronateL    = 1.0 * kFull;
       out.pronateR    = 1.0 * kFull;
-      out.wristExtL   = mix(0.16, 0.36, e) * kFull;
-      out.wristExtR   = mix(0.18, 0.38, e) * kFull;
+      out.wristExtL   = mix(0.16, 0.34, e) * kFull;
+      out.wristExtR   = mix(0.18, 0.36, e) * kFull;
       break;
     }
     case 'mouse-wrist-strain': {
       out.armsFold    = 0;
       out.sit         = 1.0 * kFull;
-      out.hipHinge    = mix(0.0, 0.18, e) * kFull;
-      out.trunkFlex   = mix(0.10, 0.40, e) * kFull;
-      out.headForward = mix(0.22, 0.66, e) * kFull;
-      out.shoulderIn  = mix(0.26, 0.64, e) * kFull;
-      out.trunkRotate = mix(-0.04, 0.14, e) * kFull;
-      out.armRaiseL   = mix(0.24, 0.34, e) * kFull;
+      out.hipHinge    = mix(0.0, 0.04, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.16, e) * kFull;
+      out.headForward = mix(0.18, 0.42, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.54, e) * kFull;
+      out.pelvisTilt  = mix(0.08, 0.24, e) * kFull;
+      out.trunkRotate = mix(-0.02, 0.10, e) * kFull;
+      out.armRaiseL   = mix(0.24, 0.30, e) * kFull;
       out.armSpreadL  = 0.06 * kFull;
-      out.elFlexL     = mix(0.90, 0.82, e) * kFull;
+      out.elFlexL     = mix(0.90, 0.84, e) * kFull;
       out.foreYawL    = 0.30 * kFull;
       out.pronateL    = 1.0 * kFull;
-      out.wristExtL   = mix(0.14, 0.38, e) * kFull;
-      out.armRaiseR   = mix(0.22, 0.48, e) * kFull;
+      out.wristExtL   = mix(0.14, 0.34, e) * kFull;
+      out.armRaiseR   = mix(0.24, 0.48, e) * kFull;
       out.armSpreadR  = mix(0.08, 0.36, e) * kFull;
       out.elFlexR     = mix(0.94, 0.62, e) * kFull;
-      out.foreYawR    = mix(0.26, -0.30, e) * kFull;
+      out.foreYawR    = mix(0.24, -0.32, e) * kFull;
       out.pronateR    = 1.0 * kFull;
-      out.wristExtR   = mix(0.14, 0.58, e) * kFull;
+      out.wristExtR   = mix(0.18, 0.72, e) * kFull;
       break;
     }
     case 'therapist-press': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.20, 0.78, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.52, e) * kFull;
-      out.kneeBend    = mix(0.08, 0.48, e) * kFull;
-      out.headForward = mix(0.26, 0.58, e) * kFull;
-      out.shoulderIn  = mix(0.38, 0.82, e) * kFull;
-      out.armRaiseL   = mix(0.44, 0.76, e) * kFull;
-      out.armRaiseR   = mix(0.44, 0.76, e) * kFull;
+      out.hipHinge    = mix(0.12, 0.42, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.20, e) * kFull;
+      out.kneeBend    = mix(0.08, 0.36, e) * kFull;
+      out.ankleFlexL  = mix(0.04, 0.22, e) * kFull;
+      out.ankleFlexR  = mix(0.04, 0.22, e) * kFull;
+      out.headForward = mix(0.20, 0.44, e) * kFull;
+      out.shoulderIn  = mix(0.34, 0.76, e) * kFull;
+      out.armRaiseL   = mix(0.44, 0.74, e) * kFull;
+      out.armRaiseR   = mix(0.44, 0.74, e) * kFull;
       out.elFlexL     = mix(0.76, 0.14, e) * kFull;
       out.elFlexR     = mix(0.76, 0.14, e) * kFull;
       out.foreYawL    = mix(0.38, 0.48, e) * kFull;
@@ -1799,53 +1872,59 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'care-lift-bend': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.88, -0.08, e) * kFull;
-      out.trunkFlex   = mix(0.58, -0.14, e) * kFull;
-      out.pelvisTilt  = mix(0.16, -0.28, e) * kFull;
-      out.kneeBend    = mix(0.70, 0.10, e) * kFull;
-      out.headForward = mix(0.46, 0.16, e) * kFull;
-      out.headPitch   = mix(0.14, -0.12, e) * kFull;
-      out.shoulderIn  = mix(0.48, 0.68, e) * kFull;
-      out.trunkRotate = mix(0.26, -0.08, e) * kFull;
-      out.armRaiseL   = mix(0.54, 0.88, e) * kFull;
-      out.armRaiseR   = mix(0.54, 0.88, e) * kFull;
-      out.armSpreadL  = mix(0.28, 0.12, e) * kFull;
-      out.armSpreadR  = mix(0.28, 0.12, e) * kFull;
-      out.elFlexL     = mix(0.52, 1.20, e) * kFull;
-      out.elFlexR     = mix(0.52, 1.20, e) * kFull;
-      out.foreYawL    = mix(0.26, 0.58, e) * kFull;
-      out.foreYawR    = mix(0.26, 0.58, e) * kFull;
+      out.hipHinge    = mix(0.46, -0.06, e) * kFull;
+      out.trunkFlex   = mix(0.22, -0.08, e) * kFull;
+      out.pelvisTilt  = mix(0.08, -0.22, e) * kFull;
+      out.kneeBend    = mix(0.56, 0.08, e) * kFull;
+      out.ankleFlexL  = mix(0.28, 0.02, e) * kFull;
+      out.ankleFlexR  = mix(0.28, 0.02, e) * kFull;
+      out.headForward = mix(0.32, 0.14, e) * kFull;
+      out.headPitch   = mix(0.08, -0.08, e) * kFull;
+      out.shoulderIn  = mix(0.44, 0.64, e) * kFull;
+      out.trunkRotate = mix(0.22, -0.06, e) * kFull;
+      out.armRaiseL   = mix(0.52, 0.86, e) * kFull;
+      out.armRaiseR   = mix(0.52, 0.86, e) * kFull;
+      out.armSpreadL  = mix(0.26, 0.12, e) * kFull;
+      out.armSpreadR  = mix(0.26, 0.12, e) * kFull;
+      out.elFlexL     = mix(0.52, 1.18, e) * kFull;
+      out.elFlexR     = mix(0.52, 1.18, e) * kFull;
+      out.foreYawL    = mix(0.26, 0.56, e) * kFull;
+      out.foreYawR    = mix(0.26, 0.56, e) * kFull;
       out.pronateL    = 0.22 * kFull;
       out.pronateR    = 0.22 * kFull;
       break;
     }
     case 'nurse-ward-walk': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.10, 0.26, e) * kFull;
-      out.trunkFlex   = mix(0.10, 0.24, e) * kFull;
-      out.headForward = mix(0.18, 0.36, e) * kFull;
-      out.trunkRotate = 0.24 * sw * kFull;
-      out.hipShift    = 0.16 * sw * kFull;
-      out.kneeBend    = (0.08 + 0.14 * co) * kFull;
-      out.legSwingL   = 0.62 * sw * kFull;
-      out.legSwingR   = -0.62 * sw * kFull;
-      out.armRaiseL   = (0.22 - 0.38 * sw) * kFull;
-      out.armRaiseR   = (0.24 + 0.40 * sw) * kFull;
-      out.elFlexL     = 0.68 * kFull;
-      out.elFlexR     = mix(0.64, 0.84, e) * kFull;
+      out.hipHinge    = mix(0.04, 0.08, e) * kFull;
+      out.trunkFlex   = mix(0.03, 0.07, e) * kFull;
+      out.headForward = mix(0.14, 0.22, e) * kFull;
+      out.trunkRotate = 0.22 * sw * kFull;
+      out.hipShift    = 0.14 * sw * kFull;
+      out.kneeBend    = (0.06 + 0.12 * co) * kFull;
+      out.legSwingL   = 0.58 * sw * kFull;
+      out.legSwingR   = -0.58 * sw * kFull;
+      out.ankleFlexL  = 0.34 * sw * kFull;
+      out.ankleFlexR  = -0.34 * sw * kFull;
+      out.armRaiseL   = (0.20 - 0.36 * sw) * kFull;
+      out.armRaiseR   = (0.26 + 0.34 * sw) * kFull;
+      out.elFlexL     = 0.64 * kFull;
+      out.elFlexR     = mix(0.68, 0.86, e) * kFull;
       out.pronateL    = 0.58 * kFull;
       out.pronateR    = 0.58 * kFull;
       break;
     }
     case 'childcare-hip-l': {
       out.armsFold    = 0;
+      out.hipHinge    = mix(0.0, -0.05, e) * kFull;
       out.hipShift    = mix(0.14, 0.84, e) * kFull;
-      out.sideBend    = mix(-0.04, -0.38, e) * kFull;
-      out.pelvisTilt  = mix(-0.08, -0.44, e) * kFull;
-      out.trunkFlex   = mix(0.08, -0.18, e) * kFull;
-      out.trunkRotate = mix(0.04, -0.24, e) * kFull;
-      out.kneeBend    = mix(0.04, 0.18, e) * kFull;
-      out.legSwingR   = mix(0.02, 0.26, e) * kFull;
+      out.sideBend    = mix(-0.04, -0.36, e) * kFull;
+      out.pelvisTilt  = mix(-0.06, -0.40, e) * kFull;
+      out.trunkFlex   = mix(0.04, -0.12, e) * kFull;
+      out.trunkRotate = mix(0.04, -0.22, e) * kFull;
+      out.kneeBend    = mix(0.04, 0.14, e) * kFull;
+      out.legSwingR   = mix(0.02, 0.24, e) * kFull;
+      out.ankleFlexR  = mix(0.0, -0.20, e) * kFull;
       out.shoulderIn  = 0.38 * kFull;
       out.armRaiseL   = mix(0.38, 0.54, e) * kFull;
       out.armSpreadL  = mix(0.16, 0.32, e) * kFull;
@@ -1860,15 +1939,17 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'laundry-reach': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.38, -0.16, e) * kFull;
-      out.trunkFlex   = mix(0.28, -0.30, e) * kFull;
-      out.pelvisTilt  = mix(0.10, -0.50, e) * kFull;
-      out.kneeBend    = mix(0.26, 0.0, e) * kFull;
-      out.headForward = mix(0.32, 0.0, e) * kFull;
-      out.headPitch   = mix(0.24, -0.60, e) * kFull;
-      out.shoulderIn  = mix(0.46, 0.26, e) * kFull;
-      out.armRaiseL   = mix(0.50, 2.38, e) * kFull;
-      out.armRaiseR   = mix(0.54, 2.46, e) * kFull;
+      out.hipHinge    = mix(0.06, -0.12, e) * kFull;
+      out.trunkFlex   = mix(0.06, -0.26, e) * kFull;
+      out.pelvisTilt  = mix(0.02, -0.46, e) * kFull;
+      out.kneeBend    = mix(0.08, 0.0, e) * kFull;
+      out.ankleFlexL  = mix(0.0, -0.28, e) * kFull;
+      out.ankleFlexR  = mix(0.0, -0.28, e) * kFull;
+      out.headForward = mix(0.18, 0.0, e) * kFull;
+      out.headPitch   = mix(0.08, -0.56, e) * kFull;
+      out.shoulderIn  = mix(0.40, 0.24, e) * kFull;
+      out.armRaiseL   = mix(0.52, 2.38, e) * kFull;
+      out.armRaiseR   = mix(0.56, 2.46, e) * kFull;
       out.armSpreadL  = mix(0.18, 0.14, e) * kFull;
       out.armSpreadR  = mix(0.18, 0.14, e) * kFull;
       out.elFlexL     = mix(0.96, 0.14, e) * kFull;
@@ -1883,19 +1964,22 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'vacuum-dish-bend': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.22, 0.80, e) * kFull;
-      out.trunkFlex   = mix(0.18, 0.56, e) * kFull;
-      out.kneeBend    = mix(0.10, 0.36, e) * kFull;
-      out.headForward = mix(0.34, 0.62, e) * kFull;
-      out.shoulderIn  = mix(0.38, 0.64, e) * kFull;
-      out.trunkRotate = mix(-0.16, 0.36, e) * kFull;
-      out.legSwingR   = mix(-0.14, 0.32, e) * kFull;
-      out.armRaiseL   = mix(0.42, 0.64, e) * kFull;
-      out.armRaiseR   = mix(0.26, 1.06, e) * kFull;
-      out.elFlexL     = mix(0.96, 0.78, e) * kFull;
-      out.elFlexR     = mix(1.08, 0.22, e) * kFull;
-      out.foreYawL    = 0.38 * kFull;
-      out.foreYawR    = mix(0.38, 0.12, e) * kFull;
+      out.hipHinge    = mix(0.08, 0.28, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.18, e) * kFull;
+      out.kneeBend    = mix(0.04, 0.18, e) * kFull;
+      out.ankleFlexL  = mix(0.0, 0.14, e) * kFull;
+      out.ankleFlexR  = mix(-0.08, 0.18, e) * kFull;
+      out.headForward = mix(0.22, 0.46, e) * kFull;
+      out.headPitch   = mix(0.08, 0.18, e) * kFull;
+      out.shoulderIn  = mix(0.32, 0.56, e) * kFull;
+      out.trunkRotate = mix(-0.12, 0.28, e) * kFull;
+      out.legSwingR   = mix(-0.10, 0.28, e) * kFull;
+      out.armRaiseL   = mix(0.36, 0.52, e) * kFull;
+      out.armRaiseR   = mix(0.26, 0.96, e) * kFull;
+      out.elFlexL     = mix(0.94, 0.80, e) * kFull;
+      out.elFlexR     = mix(1.04, 0.24, e) * kFull;
+      out.foreYawL    = 0.36 * kFull;
+      out.foreYawR    = mix(0.36, 0.12, e) * kFull;
       out.pronateL    = 0.78 * kFull;
       out.pronateR    = 0.86 * kFull;
       out.wristExtR   = mix(0.08, 0.22, e) * kFull;
@@ -1904,78 +1988,86 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'sofa-slouch': {
       out.armsFold    = 0;
       out.sit         = 1.0 * kFull;
+      out.hipHinge    = mix(-0.04, -0.46, e) * kFull;
       out.pelvisTilt  = mix(0.14, 0.96, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.88, e) * kFull;
-      out.headForward = mix(0.18, 0.88, e) * kFull;
-      out.shoulderIn  = mix(0.24, 0.66, e) * kFull;
-      out.legSwingL   = mix(0.02, 0.34, e) * kFull;
-      out.legSwingR   = mix(0.04, 0.38, e) * kFull;
-      out.armRaiseL   = mix(0.24, 0.36, e) * kFull;
-      out.armRaiseR   = mix(0.28, 0.46, e) * kFull;
-      out.elFlexL     = mix(0.74, 0.96, e) * kFull;
-      out.elFlexR     = (mix(0.78, 1.12, e) + 0.06 * sub) * kFull;
-      out.foreYawL    = mix(0.34, 0.50, e) * kFull;
-      out.foreYawR    = mix(0.36, 0.56, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.36, e) * kFull;
+      out.headForward = mix(0.14, 0.78, e) * kFull;
+      out.headPitch   = mix(0.02, 0.24, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.64, e) * kFull;
+      out.legSwingL   = mix(0.04, 0.34, e) * kFull;
+      out.legSwingR   = mix(0.06, 0.38, e) * kFull;
+      out.ankleFlexL  = mix(0.0, -0.26, e) * kFull;
+      out.ankleFlexR  = mix(0.0, -0.26, e) * kFull;
+      out.armRaiseL   = mix(0.20, 0.28, e) * kFull;
+      out.armRaiseR   = mix(0.22, 0.34, e) * kFull;
+      out.elFlexL     = mix(0.74, 0.86, e) * kFull;
+      out.elFlexR     = (mix(0.76, 0.98, e) + 0.05 * sub) * kFull;
+      out.foreYawL    = mix(0.34, 0.48, e) * kFull;
+      out.foreYawR    = mix(0.36, 0.54, e) * kFull;
       out.pronateL    = 0.58 * kFull;
       out.pronateR    = 0.46 * kFull;
       break;
     }
     case 'kitchen-knife-chop': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.14, 0.50, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.46, e) * kFull;
-      out.headForward = mix(0.28, 0.72, e) * kFull;
-      out.headPitch   = mix(0.04, 0.24, e) * kFull;
-      out.shoulderIn  = mix(0.36, 0.64, e) * kFull;
-      out.armRaiseL   = mix(0.42, 0.52, e) * kFull;
-      out.elFlexL     = 0.94 * kFull;
+      out.hipHinge    = mix(0.03, 0.07, e) * kFull;
+      out.trunkFlex   = mix(0.05, 0.12, e) * kFull;
+      out.headForward = mix(0.22, 0.42, e) * kFull;
+      out.headPitch   = mix(0.14, 0.28, e) * kFull;
+      out.shoulderIn  = mix(0.28, 0.48, e) * kFull;
+      out.armRaiseL   = mix(0.40, 0.44, e) * kFull;
+      out.elFlexL     = 0.96 * kFull;
       out.foreYawL    = 0.42 * kFull;
       out.pronateL    = 0.96 * kFull;
       out.wristExtL   = 0.22 * kFull;
-      out.armRaiseR   = mix(0.72, 0.38, e) * kFull;
-      out.armSpreadR  = mix(0.22, 0.12, e) * kFull;
-      out.elFlexR     = mix(1.16, 0.54, e) * kFull;
-      out.foreYawR    = 0.30 * kFull;
+      out.armRaiseR   = mix(0.62, 0.36, e) * kFull;
+      out.armSpreadR  = mix(0.18, 0.10, e) * kFull;
+      out.elFlexR     = mix(1.16, 0.62, e) * kFull;
+      out.foreYawR    = 0.28 * kFull;
       out.pronateR    = 0.78 * kFull;
-      out.wristExtR   = mix(0.24, -0.24, e) * kFull;
+      out.wristExtR   = mix(0.24, -0.22, e) * kFull;
       break;
     }
     case 'stroller-cart-push': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.12, 0.46, e) * kFull;
-      out.trunkFlex   = mix(0.10, 0.36, e) * kFull;
-      out.headForward = mix(0.18, 0.44, e) * kFull;
-      out.shoulderIn  = mix(0.34, 0.58, e) * kFull;
-      out.trunkRotate = 0.12 * sw * kFull;
-      out.kneeBend    = mix(0.06, 0.24, e) * kFull;
-      out.legSwingL   = 0.52 * sw * kFull;
-      out.legSwingR   = -0.52 * sw * kFull;
-      out.armRaiseL   = mix(0.50, 0.80, e) * kFull;
-      out.armRaiseR   = mix(0.50, 0.80, e) * kFull;
-      out.elFlexL     = mix(0.86, 0.38, e) * kFull;
-      out.elFlexR     = mix(0.86, 0.38, e) * kFull;
+      out.hipHinge    = mix(0.04, 0.08, e) * kFull;
+      out.trunkFlex   = mix(0.04, 0.08, e) * kFull;
+      out.headForward = mix(0.12, 0.20, e) * kFull;
+      out.shoulderIn  = mix(0.26, 0.38, e) * kFull;
+      out.trunkRotate = 0.10 * sw * kFull;
+      out.kneeBend    = (0.05 + 0.10 * co) * kFull;
+      out.legSwingL   = 0.50 * sw * kFull;
+      out.legSwingR   = -0.50 * sw * kFull;
+      out.ankleFlexL  = 0.32 * sw * kFull;
+      out.ankleFlexR  = -0.32 * sw * kFull;
+      out.armRaiseL   = mix(0.46, 0.54, e) * kFull;
+      out.armRaiseR   = mix(0.46, 0.54, e) * kFull;
+      out.elFlexL     = mix(0.84, 0.72, e) * kFull;
+      out.elFlexR     = mix(0.84, 0.72, e) * kFull;
       out.foreYawL    = 0.26 * kFull;
       out.foreYawR    = 0.26 * kFull;
       out.pronateL    = 0.96 * kFull;
       out.pronateR    = 0.96 * kFull;
-      out.wristExtL   = mix(0.14, 0.30, e) * kFull;
-      out.wristExtR   = mix(0.14, 0.30, e) * kFull;
+      out.wristExtL   = 0.18 * kFull;
+      out.wristExtR   = 0.18 * kFull;
       break;
     }
     case 'heavy-lift-dig': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.86, 0.08, e) * kFull;
-      out.trunkFlex   = mix(0.56, -0.16, e) * kFull;
-      out.pelvisTilt  = mix(0.14, -0.30, e) * kFull;
-      out.kneeBend    = mix(0.66, 0.14, e) * kFull;
-      out.headForward = mix(0.44, 0.18, e) * kFull;
-      out.shoulderIn  = 0.54 * kFull;
-      out.trunkRotate = mix(-0.30, 0.60, e) * kFull;
-      out.sideBend    = mix(0.18, -0.22, e) * kFull;
-      out.armRaiseL   = mix(0.54, 1.06, e) * kFull;
-      out.armRaiseR   = mix(0.42, 0.96, e) * kFull;
+      out.hipHinge    = mix(0.46, 0.04, e) * kFull;
+      out.trunkFlex   = mix(0.22, -0.10, e) * kFull;
+      out.pelvisTilt  = mix(0.08, -0.24, e) * kFull;
+      out.kneeBend    = mix(0.56, 0.12, e) * kFull;
+      out.ankleFlexL  = mix(0.26, 0.04, e) * kFull;
+      out.ankleFlexR  = mix(0.26, -0.18, e) * kFull;
+      out.headForward = mix(0.30, 0.14, e) * kFull;
+      out.shoulderIn  = 0.50 * kFull;
+      out.trunkRotate = mix(-0.26, 0.56, e) * kFull;
+      out.sideBend    = mix(0.16, -0.20, e) * kFull;
+      out.armRaiseL   = mix(0.54, 1.04, e) * kFull;
+      out.armRaiseR   = mix(0.42, 0.94, e) * kFull;
       out.elFlexL     = mix(0.48, 0.92, e) * kFull;
-      out.elFlexR     = mix(0.72, 1.10, e) * kFull;
+      out.elFlexR     = mix(0.72, 1.08, e) * kFull;
       out.foreYawL    = 0.42 * kFull;
       out.foreYawR    = 0.36 * kFull;
       out.pronateL    = 0.68 * kFull;
@@ -1984,12 +2076,14 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'overhead-tool': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.16, -0.18, e) * kFull;
-      out.trunkFlex   = mix(0.16, -0.34, e) * kFull;
-      out.pelvisTilt  = mix(0.04, -0.54, e) * kFull;
-      out.headForward = mix(0.28, 0.0, e) * kFull;
-      out.headPitch   = mix(0.18, -0.64, e) * kFull;
-      out.shoulderIn  = mix(0.46, 0.28, e) * kFull;
+      out.hipHinge    = mix(0.04, -0.14, e) * kFull;
+      out.trunkFlex   = mix(0.04, -0.28, e) * kFull;
+      out.pelvisTilt  = mix(0.0, -0.48, e) * kFull;
+      out.ankleFlexL  = mix(0.0, -0.18, e) * kFull;
+      out.ankleFlexR  = mix(0.0, -0.18, e) * kFull;
+      out.headForward = mix(0.18, 0.0, e) * kFull;
+      out.headPitch   = mix(0.08, -0.60, e) * kFull;
+      out.shoulderIn  = mix(0.42, 0.26, e) * kFull;
       out.armRaiseL   = mix(0.56, 2.26, e) * kFull;
       out.armRaiseR   = mix(0.64, 2.54, e) * kFull;
       out.armSpreadL  = mix(0.18, 0.14, e) * kFull;
@@ -2006,112 +2100,126 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'drive-long': {
       const steer = -sw; // u=0 -> +1, u=1 -> -1
       out.armsFold    = 0;
-      out.sit         = 1.0 * kFull;
-      out.pelvisTilt  = mix(0.40, 0.76, e) * kFull;
-      out.trunkFlex   = mix(0.24, 0.54, e) * kFull;
-      out.headForward = mix(0.34, 0.74, e) * kFull;
-      out.shoulderIn  = mix(0.46, 0.68, e) * kFull;
-      out.trunkRotate = -0.14 * sw * kFull;
-      out.armRaiseL   = (0.70 - 0.18 * steer) * kFull;
-      out.armRaiseR   = (0.70 + 0.18 * steer) * kFull;
-      out.armSpreadL  = 0.14 * kFull;
-      out.armSpreadR  = 0.14 * kFull;
-      out.elFlexL     = (0.64 + 0.14 * steer) * kFull;
-      out.elFlexR     = (0.64 - 0.14 * steer) * kFull;
-      out.foreYawL    = (0.32 + 0.16 * steer) * kFull;
-      out.foreYawR    = (0.32 - 0.16 * steer) * kFull;
-      out.pronateL    = (0.72 + 0.14 * steer) * kFull;
-      out.pronateR    = (0.72 - 0.14 * steer) * kFull;
-      out.wristExtL   = 0.16 * kFull;
-      out.wristExtR   = 0.16 * kFull;
-      out.legSwingR   = mix(0.08, 0.56, e) * kFull;
+      out.sit         = 0.95 * kFull;
+      out.hipHinge    = -0.10 * kFull;
+      out.pelvisTilt  = mix(0.24, 0.34, e) * kFull;
+      out.trunkFlex   = mix(0.12, 0.18, e) * kFull;
+      out.headForward = mix(0.22, 0.32, e) * kFull;
+      out.headPitch   = -0.03 * kFull;
+      out.shoulderIn  = mix(0.34, 0.44, e) * kFull;
+      out.trunkRotate = -0.05 * sw * kFull;
+      out.armRaiseL   = (0.54 - 0.06 * steer) * kFull;
+      out.armRaiseR   = (0.54 + 0.06 * steer) * kFull;
+      out.armSpreadL  = 0.12 * kFull;
+      out.armSpreadR  = 0.12 * kFull;
+      out.elFlexL     = (0.82 + 0.06 * steer) * kFull;
+      out.elFlexR     = (0.82 - 0.06 * steer) * kFull;
+      out.foreYawL    = (0.30 + 0.06 * steer) * kFull;
+      out.foreYawR    = (0.30 - 0.06 * steer) * kFull;
+      out.pronateL    = 0.68 * kFull;
+      out.pronateR    = 0.68 * kFull;
+      out.wristExtL   = 0.12 * kFull;
+      out.wristExtR   = 0.12 * kFull;
+      out.legSwingL   = 0.22 * kFull;
+      out.legSwingR   = mix(0.32, 0.25, e) * kFull;
+      out.ankleFlexL  = 0.10 * kFull;
+      out.ankleFlexR  = mix(0.46, -0.72, e) * kFull;
       break;
     }
     case 'delivery-carry-box': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.72, -0.06, e) * kFull;
-      out.trunkFlex   = mix(0.48, -0.10, e) * kFull;
-      out.pelvisTilt  = mix(0.12, -0.26, e) * kFull;
-      out.kneeBend    = mix(0.58, 0.10, e) * kFull;
-      out.headForward = mix(0.38, 0.18, e) * kFull;
-      out.shoulderIn  = 0.56 * kFull;
-      out.trunkRotate = 0.14 * sw * kFull;
-      out.legSwingL   = 0.36 * sw * kFull;
-      out.legSwingR   = -0.36 * sw * kFull;
-      out.armRaiseL   = mix(0.48, 0.78, e) * kFull;
-      out.armRaiseR   = mix(0.48, 0.78, e) * kFull;
+      out.hipHinge    = mix(0.38, -0.05, e) * kFull;
+      out.trunkFlex   = mix(0.18, 0.02, e) * kFull;
+      out.pelvisTilt  = mix(0.06, -0.18, e) * kFull;
+      out.kneeBend    = mix(0.50, 0.06, e) * kFull;
+      out.ankleFlexL  = mix(0.24, 0.08 * sw, e) * kFull;
+      out.ankleFlexR  = mix(0.24, -0.08 * sw, e) * kFull;
+      out.headForward = mix(0.26, 0.14, e) * kFull;
+      out.shoulderIn  = 0.48 * kFull;
+      out.trunkRotate = 0.10 * sw * kFull;
+      out.legSwingL   = mix(0.0, 0.30, e) * sw * kFull;
+      out.legSwingR   = mix(0.0, -0.30, e) * sw * kFull;
+      out.armRaiseL   = mix(0.48, 0.72, e) * kFull;
+      out.armRaiseR   = mix(0.48, 0.72, e) * kFull;
       out.armSpreadL  = mix(0.24, 0.16, e) * kFull;
       out.armSpreadR  = mix(0.24, 0.16, e) * kFull;
-      out.elFlexL     = mix(0.58, 1.20, e) * kFull;
-      out.elFlexR     = mix(0.58, 1.20, e) * kFull;
+      out.elFlexL     = mix(0.58, 1.18, e) * kFull;
+      out.elFlexR     = mix(0.58, 1.18, e) * kFull;
       out.foreYawL    = mix(0.32, 0.46, e) * kFull;
       out.foreYawR    = mix(0.32, 0.46, e) * kFull;
-      out.pronateL    = 0.34 * kFull;
-      out.pronateR    = 0.34 * kFull;
+      out.pronateL    = 0.32 * kFull;
+      out.pronateR    = 0.32 * kFull;
       break;
     }
     case 'cook-pan-hold': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.28, 0.04, e) * kFull;
-      out.trunkFlex   = mix(0.24, -0.10, e) * kFull;
-      out.pelvisTilt  = mix(0.0, -0.28, e) * kFull;
-      out.headForward = mix(0.44, 0.24, e) * kFull;
-      out.shoulderIn  = 0.54 * kFull;
-      out.trunkRotate = mix(0.04, 0.28, e) * kFull;
-      out.armRaiseL   = mix(0.36, 0.88, e) * kFull;
-      out.elFlexL     = mix(1.08, 0.64, e) * kFull;
+      out.hipHinge    = mix(0.04, -0.02, e) * kFull;
+      out.trunkFlex   = mix(0.06, -0.04, e) * kFull;
+      out.pelvisTilt  = mix(0.0, -0.18, e) * kFull;
+      out.headForward = mix(0.28, 0.22, e) * kFull;
+      out.headPitch   = mix(0.16, 0.08, e) * kFull;
+      out.shoulderIn  = 0.46 * kFull;
+      out.trunkRotate = mix(0.02, 0.22, e) * kFull;
+      out.armRaiseL   = mix(0.38, 0.80, e) * kFull;
+      out.elFlexL     = mix(1.06, 0.68, e) * kFull;
       out.foreYawL    = 0.24 * kFull;
       out.pronateL    = 0.74 * kFull;
-      out.wristExtL   = mix(0.06, 0.30, e) * kFull;
-      out.armRaiseR   = mix(0.40, 0.74, e) * kFull;
-      out.elFlexR     = mix(1.02, 0.68, e) * kFull;
-      out.foreYawR    = mix(0.54, 0.14, e) * kFull;
+      out.wristExtL   = mix(0.06, 0.28, e) * kFull;
+      out.armRaiseR   = mix(0.42, 0.68, e) * kFull;
+      out.elFlexR     = mix(1.02, 0.72, e) * kFull;
+      out.foreYawR    = mix(0.52, 0.16, e) * kFull;
       out.pronateR    = 0.74 * kFull;
       break;
     }
     case 'sway-back': {
       out.armsFold    = 0;
-      out.pelvisTilt  = mix(-0.12, -0.94, e) * kFull;
-      out.trunkFlex   = mix(0.02, -0.30, e) * kFull;
-      out.hipHinge    = mix(0.0, -0.12, e) * kFull;
-      out.headForward = mix(0.08, 0.44, e) * kFull;
-      out.hipShift    = mix(0.0, -0.30, e) * kFull;
-      out.sideBend    = mix(0.0, 0.14, e) * kFull;
-      out.armRaiseL   = mix(0.06, -0.14, e) * kFull;
-      out.armRaiseR   = mix(0.06, -0.14, e) * kFull;
-      out.elFlexL     = mix(0.22, 0.44, e) * kFull;
-      out.elFlexR     = mix(0.22, 0.44, e) * kFull;
-      out.foreYawL    = 0.28 * kFull;
-      out.foreYawR    = 0.28 * kFull;
+      out.pelvisTilt  = mix(-0.12, -0.88, e) * kFull;
+      out.trunkFlex   = mix(0.0, -0.24, e) * kFull;
+      out.hipHinge    = mix(0.0, -0.08, e) * kFull;
+      out.ankleFlexL  = mix(-0.06, -0.42, e) * kFull;
+      out.ankleFlexR  = mix(-0.06, -0.42, e) * kFull;
+      out.headForward = mix(0.08, 0.38, e) * kFull;
+      out.hipShift    = mix(0.0, -0.26, e) * kFull;
+      out.sideBend    = mix(0.0, 0.12, e) * kFull;
+      out.armRaiseL   = mix(0.04, -0.12, e) * kFull;
+      out.armRaiseR   = mix(0.04, -0.12, e) * kFull;
+      out.elFlexL     = mix(0.20, 0.40, e) * kFull;
+      out.elFlexR     = mix(0.20, 0.40, e) * kFull;
+      out.foreYawL    = 0.26 * kFull;
+      out.foreYawR    = 0.26 * kFull;
       out.pronateL    = 0.58 * kFull;
       out.pronateR    = 0.58 * kFull;
       break;
     }
     case 'arms-fold': {
       out.armsFold    = mix(0.06, 1.00, e) * kFull;
-      out.trunkFlex   = mix(-0.02, 0.24, e) * kFull;
-      out.pelvisTilt  = mix(-0.04, 0.28, e) * kFull;
-      out.headForward = mix(0.08, 0.34, e) * kFull;
-      out.shoulderIn  = mix(0.12, 0.74, e) * kFull;
-      out.trunkRotate = mix(0.0, 0.22, e) * kFull;
-      out.hipShift    = mix(0.0, -0.32, e) * kFull;
+      out.hipHinge    = mix(0.0, -0.06, e) * kFull;
+      out.trunkFlex   = mix(0.0, 0.08, e) * kFull;
+      out.pelvisTilt  = mix(-0.02, 0.22, e) * kFull;
+      out.headForward = mix(0.06, 0.24, e) * kFull;
+      out.shoulderIn  = mix(0.12, 0.68, e) * kFull;
+      out.trunkRotate = mix(0.0, 0.18, e) * kFull;
+      out.hipShift    = mix(0.0, -0.30, e) * kFull;
       out.sideBend    = mix(0.0, 0.12, e) * kFull;
       break;
     }
     case 'register-stand-long': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.12, 0.38, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.32, e) * kFull;
-      out.headForward = mix(0.24, 0.48, e) * kFull;
-      out.pelvisTilt  = -0.32 * kFull;
-      out.trunkRotate = mix(-0.28, 0.32, e) * kFull;
-      out.hipShift    = mix(-0.22, 0.22, e) * kFull;
-      out.armRaiseL   = mix(0.32, 0.72, e) * kFull;
-      out.armRaiseR   = mix(0.72, 0.44, e) * kFull;
-      out.elFlexL     = mix(0.94, 0.58, e) * kFull;
-      out.elFlexR     = mix(0.56, 0.96, e) * kFull;
-      out.foreYawL    = mix(0.46, 0.04, e) * kFull;
-      out.foreYawR    = mix(0.04, 0.48, e) * kFull;
+      out.hipHinge    = mix(0.02, 0.06, e) * kFull;
+      out.trunkFlex   = mix(0.03, 0.08, e) * kFull;
+      out.headForward = mix(0.18, 0.30, e) * kFull;
+      out.headPitch   = mix(0.08, 0.16, e) * kFull;
+      out.pelvisTilt  = -0.22 * kFull;
+      out.trunkRotate = mix(-0.24, 0.26, e) * kFull;
+      out.hipShift    = mix(-0.24, 0.24, e) * kFull;
+      out.ankleFlexL  = mix(-0.10, 0.06, e) * kFull;
+      out.ankleFlexR  = mix(0.06, -0.10, e) * kFull;
+      out.armRaiseL   = mix(0.32, 0.62, e) * kFull;
+      out.armRaiseR   = mix(0.62, 0.38, e) * kFull;
+      out.elFlexL     = mix(0.94, 0.64, e) * kFull;
+      out.elFlexR     = mix(0.62, 0.96, e) * kFull;
+      out.foreYawL    = mix(0.44, 0.08, e) * kFull;
+      out.foreYawR    = mix(0.08, 0.46, e) * kFull;
       out.pronateL    = 0.90 * kFull;
       out.pronateR    = 0.90 * kFull;
       out.wristExtL   = 0.18 * kFull;
@@ -2120,20 +2228,23 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'bag-shoulder-r': {
       out.armsFold    = 0;
-      out.sideBend    = mix(0.08, 0.40, e) * kFull;
-      out.hipShift    = mix(-0.14, -0.64, e) * kFull;
-      out.shoulderIn  = mix(0.24, 0.52, e) * kFull;
-      out.trunkFlex   = mix(0.04, 0.18, e) * kFull;
-      out.trunkRotate = (-0.08 + 0.22 * sw) * kFull;
-      out.legSwingL   = 0.42 * sw * kFull;
-      out.legSwingR   = -0.42 * sw * kFull;
+      out.hipHinge    = 0;
+      out.sideBend    = mix(0.08, 0.38, e) * kFull;
+      out.hipShift    = mix(-0.14, -0.60, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.48, e) * kFull;
+      out.trunkFlex   = mix(0.02, 0.06, e) * kFull;
+      out.trunkRotate = (-0.08 + 0.20 * sw) * kFull;
+      out.legSwingL   = 0.40 * sw * kFull;
+      out.legSwingR   = -0.40 * sw * kFull;
+      out.ankleFlexL  = 0.24 * sw * kFull;
+      out.ankleFlexR  = -0.24 * sw * kFull;
       out.armRaiseR   = mix(0.10, 0.18, e) * kFull;
       out.armSpreadR  = mix(0.12, 0.16, e) * kFull;
       out.elFlexR     = mix(2.18, 2.32, e) * kFull;
       out.foreYawR    = mix(0.30, 0.38, e) * kFull;
       out.pronateR    = 0.22 * kFull;
       out.wristExtR   = -0.10 * kFull;
-      out.armRaiseL   = -0.28 * sw * kFull;
+      out.armRaiseL   = -0.26 * sw * kFull;
       out.elFlexL     = 0.28 * kFull;
       out.pronateL    = 0.56 * kFull;
       break;
@@ -2141,18 +2252,20 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'sleep-side-curl': {
       out.armsFold    = 0;
       out.lieSide     = mix(1.06, 1.13, e) * kFull;
-      out.sit         = mix(0.48, 0.98, e) * kFull;
-      out.kneeBend    = mix(0.10, 0.54, e) * kFull;
-      out.trunkFlex   = mix(0.12, 0.74, e) * kFull;
-      out.headForward = mix(0.14, 0.64, e) * kFull;
-      out.shoulderIn  = mix(0.34, 0.92, e) * kFull;
-      out.sideBend    = mix(-0.12, -0.44, e) * kFull;
-      out.pelvisTilt  = mix(0.12, 0.50, e) * kFull;
-      out.legSwingR   = mix(0.04, 0.30, e) * kFull;
-      out.armRaiseL   = mix(0.46, 0.88, e) * kFull;
-      out.armRaiseR   = mix(0.44, 0.86, e) * kFull;
-      out.elFlexL     = mix(0.76, 1.30, e) * kFull;
-      out.elFlexR     = mix(0.74, 1.28, e) * kFull;
+      out.sit         = mix(0.48, 0.96, e) * kFull;
+      out.kneeBend    = mix(0.10, 0.52, e) * kFull;
+      out.ankleFlexL  = mix(-0.10, -0.22, e) * kFull;
+      out.ankleFlexR  = mix(-0.10, -0.22, e) * kFull;
+      out.trunkFlex   = mix(0.12, 0.64, e) * kFull;
+      out.headForward = mix(0.14, 0.62, e) * kFull;
+      out.shoulderIn  = mix(0.34, 0.90, e) * kFull;
+      out.sideBend    = mix(-0.12, -0.42, e) * kFull;
+      out.pelvisTilt  = mix(0.12, 0.48, e) * kFull;
+      out.legSwingR   = mix(0.04, 0.28, e) * kFull;
+      out.armRaiseL   = mix(0.46, 0.86, e) * kFull;
+      out.armRaiseR   = mix(0.44, 0.84, e) * kFull;
+      out.elFlexL     = mix(0.76, 1.28, e) * kFull;
+      out.elFlexR     = mix(0.74, 1.26, e) * kFull;
       out.foreYawL    = mix(0.34, 0.54, e) * kFull;
       out.foreYawR    = mix(0.38, 0.58, e) * kFull;
       out.pronateL    = 0.56 * kFull;
@@ -2162,13 +2275,15 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'phone-bed-side': {
       out.armsFold    = 0;
       out.lieSide     = mix(0.94, 0.99, e) * kFull;
-      out.sit         = mix(0.44, 0.70, e) * kFull;
-      out.kneeBend    = mix(0.12, 0.32, e) * kFull;
-      out.legSwingR   = mix(0.08, 0.30, e) * kFull;
-      out.trunkFlex   = mix(0.14, 0.50, e) * kFull;
-      out.headForward = mix(0.20, 0.74, e) * kFull;
-      out.shoulderIn  = mix(0.36, 0.70, e) * kFull;
-      out.sideBend    = mix(-0.16, -0.50, e) * kFull;
+      out.sit         = mix(0.44, 0.68, e) * kFull;
+      out.kneeBend    = mix(0.12, 0.30, e) * kFull;
+      out.ankleFlexL  = -0.16 * kFull;
+      out.ankleFlexR  = -0.16 * kFull;
+      out.legSwingR   = mix(0.08, 0.28, e) * kFull;
+      out.trunkFlex   = mix(0.12, 0.42, e) * kFull;
+      out.headForward = mix(0.20, 0.72, e) * kFull;
+      out.shoulderIn  = mix(0.36, 0.68, e) * kFull;
+      out.sideBend    = mix(-0.16, -0.48, e) * kFull;
       out.armSpreadL  = mix(0.40, 0.54, e) * kFull;
       out.armRaiseL   = mix(0.36, 0.46, e) * kFull;
       out.elFlexL     = mix(0.86, 1.04, e) * kFull;
@@ -2183,65 +2298,71 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'teeth-clench-night':
     case 'neck-jaw-clench': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.0, 0.14, e) * kFull;
-      out.trunkFlex   = mix(0.04, 0.44, e) * kFull;
-      out.headForward = mix(0.14, 0.90, e) * kFull;
-      out.headPitch   = mix(-0.02, 0.24, e) * kFull;
-      out.shoulderIn  = mix(0.16, 0.90, e) * kFull;
-      out.armRaiseL   = mix(0.08, 0.42, e) * kFull;
-      out.armRaiseR   = mix(0.08, 0.42, e) * kFull;
-      out.elFlexL     = mix(0.32, 1.18, e) * kFull;
-      out.elFlexR     = mix(0.32, 1.18, e) * kFull;
-      out.foreYawL    = mix(0.24, 0.52, e) * kFull;
-      out.foreYawR    = mix(0.24, 0.52, e) * kFull;
-      out.pronateL    = 0.72 * kFull;
-      out.pronateR    = 0.72 * kFull;
-      out.wristExtL   = mix(0.0, 0.22, e) * kFull;
-      out.wristExtR   = mix(0.0, 0.22, e) * kFull;
+      out.hipHinge    = 0;
+      out.trunkFlex   = mix(0.02, 0.08, e) * kFull;
+      out.headForward = mix(0.12, 0.54, e) * kFull;
+      out.headPitch   = mix(0.0, 0.16, e) * kFull;
+      out.shoulderIn  = mix(0.14, 0.80, e) * kFull;
+      out.armRaiseL   = mix(0.04, 0.24, e) * kFull;
+      out.armRaiseR   = mix(0.04, 0.24, e) * kFull;
+      out.armSpreadL  = mix(0.04, 0.14, e) * kFull;
+      out.armSpreadR  = mix(0.04, 0.14, e) * kFull;
+      out.elFlexL     = mix(0.24, 0.96, e) * kFull;
+      out.elFlexR     = mix(0.24, 0.96, e) * kFull;
+      out.foreYawL    = mix(0.20, 0.46, e) * kFull;
+      out.foreYawR    = mix(0.20, 0.46, e) * kFull;
+      out.pronateL    = 0.68 * kFull;
+      out.pronateR    = 0.68 * kFull;
+      out.wristExtL   = mix(0.0, 0.20, e) * kFull;
+      out.wristExtR   = mix(0.0, 0.20, e) * kFull;
       break;
     }
     case 'floor-sit-cross': {
       out.armsFold    = 0;
       out.sit         = 0;
       out.floorSit    = 0.96 * kFull;
-      out.pelvisTilt  = mix(0.04, 0.64, e) * kFull;
-      out.trunkFlex   = mix(0.02, 0.60, e) * kFull;
-      out.hipHinge    = mix(-0.04, 0.38, e) * kFull;
-      out.headForward = mix(0.10, 0.74, e) * kFull;
-      out.headPitch   = mix(-0.04, 0.22, e) * kFull;
-      out.shoulderIn  = mix(0.16, 0.60, e) * kFull;
-      out.trunkRotate = mix(0.02, 0.18, e) * kFull;
-      out.sideBend    = mix(-0.02, -0.18, e) * kFull;
-      out.hipShift    = mix(0.0, -0.08, e) * kFull;
-      out.armRaiseL   = mix(0.26, 0.52, e) * kFull;
-      out.armSpreadL  = mix(0.24, 0.10, e) * kFull;
-      out.elFlexL     = mix(0.56, 0.90, e) * kFull;
-      out.foreYawL    = mix(0.18, 0.44, e) * kFull;
+      out.hipHinge    = mix(-0.04, -0.16, e) * kFull;
+      out.pelvisTilt  = mix(0.04, 0.78, e) * kFull;
+      out.trunkFlex   = mix(0.02, 0.46, e) * kFull;
+      out.headForward = mix(0.08, 0.56, e) * kFull;
+      out.headPitch   = mix(-0.02, 0.16, e) * kFull;
+      out.shoulderIn  = mix(0.14, 0.54, e) * kFull;
+      out.trunkRotate = mix(0.02, 0.14, e) * kFull;
+      out.sideBend    = mix(-0.02, -0.14, e) * kFull;
+      out.hipShift    = mix(0.0, -0.06, e) * kFull;
+      out.ankleFlexL  = -0.20 * kFull;
+      out.ankleFlexR  = -0.20 * kFull;
+      out.armRaiseL   = mix(0.26, 0.34, e) * kFull;
+      out.armSpreadL  = mix(0.24, 0.16, e) * kFull;
+      out.elFlexL     = mix(0.56, 0.72, e) * kFull;
+      out.foreYawL    = mix(0.18, 0.34, e) * kFull;
       out.pronateL    = 0.88 * kFull;
-      out.armRaiseR   = mix(0.26, 0.38, e) * kFull;
-      out.armSpreadR  = mix(0.24, 0.28, e) * kFull;
-      out.elFlexR     = mix(0.56, 0.32, e) * kFull;
-      out.foreYawR    = mix(0.18, 0.08, e) * kFull;
-      out.pronateR    = mix(0.88, 0.98, e) * kFull;
-      out.wristExtR   = mix(0.16, 0.48, e) * kFull;
+      out.armRaiseR   = mix(0.26, 0.34, e) * kFull;
+      out.armSpreadR  = mix(0.24, 0.16, e) * kFull;
+      out.elFlexR     = mix(0.56, 0.72, e) * kFull;
+      out.foreYawR    = mix(0.18, 0.34, e) * kFull;
+      out.pronateR    = 0.88 * kFull;
+      out.wristExtR   = 0.14 * kFull;
       break;
     }
     case 'heels-commute-walk': {
       out.armsFold    = 0;
-      out.pelvisTilt  = mix(-0.38, -0.64, e) * kFull;
-      out.hipHinge    = mix(0.04, 0.26, e) * kFull;
-      out.trunkFlex   = mix(-0.10, 0.16, e) * kFull;
-      out.headForward = mix(0.16, 0.34, e) * kFull;
-      out.trunkRotate = -0.18 * sw * kFull;
-      out.hipShift    = -0.18 * sw * kFull;
-      out.kneeBend    = mix(0.06, 0.28, e) * kFull;
-      out.legSwingL   = -0.52 * sw * kFull;
-      out.legSwingR   = 0.62 * sw * kFull;
-      out.armRaiseL   = 0.36 * sw * kFull;
-      out.elFlexL     = 0.46 * kFull;
+      out.pelvisTilt  = mix(-0.42, -0.58, e) * kFull;
+      out.hipHinge    = mix(0.0, 0.04, e) * kFull;
+      out.trunkFlex   = mix(-0.10, -0.04, e) * kFull;
+      out.headForward = mix(0.12, 0.22, e) * kFull;
+      out.trunkRotate = -0.16 * sw * kFull;
+      out.hipShift    = -0.16 * sw * kFull;
+      out.kneeBend    = (0.04 + 0.10 * co) * kFull;
+      out.legSwingL   = -0.46 * sw * kFull;
+      out.legSwingR   = 0.46 * sw * kFull;
+      out.ankleFlexL  = (-0.44 - 0.16 * sw) * kFull;
+      out.ankleFlexR  = (-0.44 + 0.16 * sw) * kFull;
+      out.armRaiseL   = 0.32 * sw * kFull;
+      out.elFlexL     = 0.42 * kFull;
       out.pronateL    = 0.58 * kFull;
-      out.armRaiseR   = mix(0.30, 0.44, e) * kFull;
-      out.elFlexR     = mix(0.90, 1.06, e) * kFull;
+      out.armRaiseR   = mix(0.28, 0.38, e) * kFull;
+      out.elFlexR     = mix(0.92, 1.04, e) * kFull;
       out.foreYawR    = 0.32 * kFull;
       out.pronateR    = 0.62 * kFull;
       break;
@@ -2249,14 +2370,16 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'golf-swing-rot': {
       const sN = -sw;
       out.armsFold    = 0;
-      out.hipHinge    = (0.42 - 0.24 * Math.max(0, sw) - 0.08 * e) * kFull;
-      out.trunkFlex   = mix(0.20, -0.18, e) * kFull;
-      out.pelvisTilt  = mix(-0.18, -0.42, e) * kFull;
-      out.kneeBend    = mix(0.28, 0.10, e) * kFull;
+      out.hipHinge    = (0.28 - 0.18 * Math.max(0, sw) - 0.06 * e) * kFull;
+      out.trunkFlex   = mix(0.08, -0.16, e) * kFull;
+      out.pelvisTilt  = mix(-0.18, -0.38, e) * kFull;
+      out.kneeBend    = mix(0.24, 0.08, e) * kFull;
+      out.ankleFlexL  = mix(0.14, 0.0, e) * kFull;
+      out.ankleFlexR  = mix(0.10, -0.48, e) * kFull;
       out.trunkRotate = (0.12 + 0.84 * sw) * kFull;
-      out.sideBend    = -0.22 * sw * kFull;
+      out.sideBend    = -0.20 * sw * kFull;
       out.hipShift    = (0.10 + 0.28 * sw) * kFull;
-      out.shoulderIn  = 0.62 * kFull;
+      out.shoulderIn  = 0.58 * kFull;
       out.armSpreadL  = (-0.28 + 0.22 * sw + 0.05 * sw * sw) * kFull;
       out.armSpreadR  = (-0.28 + 0.22 * sN + 0.05 * sN * sN) * kFull;
       out.armRaiseL   = (0.54 + 0.54 * Math.abs(sw) - 0.16 * sw) * kFull;
@@ -2273,18 +2396,20 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'tennis-baseball-arm': {
       out.armsFold    = 0;
-      out.trunkFlex   = mix(-0.34, 0.38, e) * kFull;
-      out.hipHinge    = mix(-0.16, 0.46, e) * kFull;
-      out.pelvisTilt  = mix(-0.46, 0.18, e) * kFull;
-      out.headForward = mix(0.0, 0.26, e) * kFull;
-      out.headPitch   = mix(-0.52, 0.22, e) * kFull;
+      out.trunkFlex   = mix(-0.30, 0.20, e) * kFull;
+      out.hipHinge    = mix(-0.14, 0.24, e) * kFull;
+      out.pelvisTilt  = mix(-0.42, 0.12, e) * kFull;
+      out.headForward = mix(0.0, 0.20, e) * kFull;
+      out.headPitch   = mix(-0.50, 0.14, e) * kFull;
       out.trunkRotate = mix(-0.44, 0.70, e) * kFull;
-      out.sideBend    = mix(0.20, -0.20, e) * kFull;
+      out.sideBend    = mix(0.20, -0.18, e) * kFull;
       out.hipShift    = mix(-0.14, 0.24, e) * kFull;
-      out.kneeBend    = (mix(0.10, 0.34, e) - 0.06 * co) * kFull;
-      out.legSwingL   = mix(-0.16, 0.36, e) * kFull;
-      out.legSwingR   = mix(-0.22, -0.30, e) * kFull;
-      out.shoulderIn  = mix(0.24, 0.68, e) * kFull;
+      out.kneeBend    = (mix(0.10, 0.28, e) - 0.06 * co) * kFull;
+      out.legSwingL   = mix(-0.14, 0.34, e) * kFull;
+      out.legSwingR   = mix(-0.20, -0.32, e) * kFull;
+      out.ankleFlexL  = mix(-0.22, 0.16, e) * kFull;
+      out.ankleFlexR  = mix(-0.26, -0.46, e) * kFull;
+      out.shoulderIn  = mix(0.24, 0.64, e) * kFull;
       out.armRaiseR   = (mix(2.70, 0.36, e) + 0.14 * co) * kFull;
       out.armSpreadR  = (mix(0.08, -0.28, e) + 0.18 * co) * kFull;
       out.elFlexR     = (mix(0.03, 0.64, e) + 0.14 * co) * kFull;
@@ -2300,18 +2425,20 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'volleyball-smash': {
       out.armsFold    = 0;
-      out.trunkFlex   = mix(-0.38, 0.44, e) * kFull;
-      out.hipHinge    = mix(-0.20, 0.50, e) * kFull;
-      out.pelvisTilt  = mix(-0.50, 0.24, e) * kFull;
-      out.headForward = mix(0.0, 0.28, e) * kFull;
-      out.headPitch   = mix(-0.54, 0.28, e) * kFull;
-      out.trunkRotate = mix(-0.38, 0.58, e) * kFull;
+      out.trunkFlex   = mix(-0.36, 0.24, e) * kFull;
+      out.hipHinge    = mix(-0.18, 0.26, e) * kFull;
+      out.pelvisTilt  = mix(-0.46, 0.16, e) * kFull;
+      out.headForward = mix(0.0, 0.22, e) * kFull;
+      out.headPitch   = mix(-0.52, 0.18, e) * kFull;
+      out.trunkRotate = mix(-0.38, 0.56, e) * kFull;
       out.sideBend    = mix(0.18, -0.16, e) * kFull;
       out.hipShift    = mix(-0.10, 0.18, e) * kFull;
-      out.kneeBend    = mix(0.12, 0.38, e) * kFull;
-      out.legSwingL   = mix(-0.38, 0.26, e) * kFull;
-      out.legSwingR   = mix(-0.46, 0.18, e) * kFull;
-      out.shoulderIn  = mix(0.22, 0.66, e) * kFull;
+      out.kneeBend    = mix(0.12, 0.28, e) * kFull;
+      out.legSwingL   = mix(-0.36, 0.24, e) * kFull;
+      out.legSwingR   = mix(-0.44, 0.16, e) * kFull;
+      out.ankleFlexL  = mix(-0.38, 0.14, e) * kFull;
+      out.ankleFlexR  = mix(-0.42, 0.10, e) * kFull;
+      out.shoulderIn  = mix(0.22, 0.64, e) * kFull;
       out.armRaiseR   = (mix(2.72, 0.30, e) + 0.12 * co) * kFull;
       out.armSpreadR  = (mix(0.10, -0.20, e) + 0.16 * co) * kFull;
       out.elFlexR     = (mix(0.04, 0.48, e) + 0.16 * co) * kFull;
@@ -2327,14 +2454,16 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'running-strike': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.16, 0.30, e) * kFull;
-      out.trunkFlex   = mix(0.10, 0.22, e) * kFull;
-      out.pelvisTilt  = -0.22 * kFull;
+      out.hipHinge    = mix(0.08, 0.14, e) * kFull;
+      out.trunkFlex   = mix(0.04, 0.08, e) * kFull;
+      out.pelvisTilt  = -0.18 * kFull;
       out.trunkRotate = 0.28 * sw * kFull;
-      out.hipShift    = 0.16 * sw * kFull;
-      out.kneeBend    = mix(0.10, 0.36, e) * kFull;
-      out.legSwingL   = 0.74 * sw * kFull;
-      out.legSwingR   = -0.74 * sw * kFull;
+      out.hipShift    = 0.14 * sw * kFull;
+      out.kneeBend    = mix(0.10, 0.30, e) * kFull;
+      out.legSwingL   = 0.72 * sw * kFull;
+      out.legSwingR   = -0.72 * sw * kFull;
+      out.ankleFlexL  = 0.38 * sw * kFull;
+      out.ankleFlexR  = -0.38 * sw * kFull;
       out.armRaiseL   = (0.26 - 0.58 * sw) * kFull;
       out.armRaiseR   = (0.26 + 0.58 * sw) * kFull;
       out.elFlexL     = 1.18 * kFull;
@@ -2347,18 +2476,18 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'cycling-aero': {
       out.armsFold    = 0;
-      out.sit         = mix(0.66, 0.74, e) * kFull;
-      out.hipHinge    = mix(0.46, 0.76, e) * kFull;
-      out.trunkFlex   = mix(0.42, 0.70, e) * kFull;
-      out.headForward = mix(0.32, 0.48, e) * kFull;
-      out.headPitch   = mix(-0.18, -0.40, e) * kFull;
-      out.shoulderIn  = mix(0.46, 0.66, e) * kFull;
-      out.pelvisTilt  = 0.38 * kFull;
-      out.sideBend    = 0.10 * sw * kFull;
-      out.armRaiseL   = mix(0.72, 0.86, e) * kFull;
-      out.armRaiseR   = mix(0.72, 0.86, e) * kFull;
-      out.elFlexL     = mix(0.36, 0.70, e) * kFull;
-      out.elFlexR     = mix(0.36, 0.70, e) * kFull;
+      out.sit         = mix(0.68, 0.74, e) * kFull;
+      out.hipHinge    = mix(0.32, 0.48, e) * kFull;
+      out.trunkFlex   = mix(0.24, 0.40, e) * kFull;
+      out.headForward = mix(0.26, 0.38, e) * kFull;
+      out.headPitch   = mix(-0.18, -0.34, e) * kFull;
+      out.shoulderIn  = mix(0.44, 0.60, e) * kFull;
+      out.pelvisTilt  = 0.34 * kFull;
+      out.sideBend    = 0.08 * sw * kFull;
+      out.armRaiseL   = mix(0.72, 0.84, e) * kFull;
+      out.armRaiseR   = mix(0.72, 0.84, e) * kFull;
+      out.elFlexL     = mix(0.38, 0.66, e) * kFull;
+      out.elFlexR     = mix(0.38, 0.66, e) * kFull;
       out.foreYawL    = 0.25 * kFull;
       out.foreYawR    = 0.25 * kFull;
       out.pronateL    = 0.72 * kFull;
@@ -2367,25 +2496,29 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
       out.wristExtR   = 0.20 * kFull;
       out.legSwingL   = (0.14 + 0.46 * sw) * kFull;
       out.legSwingR   = (0.14 - 0.46 * sw) * kFull;
+      out.ankleFlexL  = (-0.06 + 0.30 * sw) * kFull;
+      out.ankleFlexR  = (-0.06 - 0.30 * sw) * kFull;
       break;
     }
     case 'soccer-kick': {
       out.armsFold    = 0;
-      out.trunkFlex   = mix(-0.26, 0.30, e) * kFull;
-      out.hipHinge    = mix(-0.16, 0.22, e) * kFull;
-      out.pelvisTilt  = mix(-0.48, 0.22, e) * kFull;
-      out.headPitch   = mix(-0.14, 0.16, e) * kFull;
+      out.trunkFlex   = mix(-0.18, 0.14, e) * kFull;
+      out.hipHinge    = mix(0.08, -0.08, e) * kFull;
+      out.pelvisTilt  = mix(-0.42, 0.16, e) * kFull;
+      out.headPitch   = mix(-0.08, 0.10, e) * kFull;
       out.trunkRotate = mix(-0.38, 0.62, e) * kFull;
-      out.sideBend    = mix(0.06, 0.30, e) * kFull;
-      out.hipShift    = mix(-0.22, -0.34, e) * kFull;
-      out.kneeBend    = mix(0.16, 0.18, e) * kFull;
-      out.legSwingR   = mix(-0.86, 1.24, e) * kFull;
-      out.legSwingL   = mix(0.22, -0.20, e) * kFull;
-      out.armRaiseL   = mix(1.02, -0.28, e) * kFull;
-      out.armSpreadL  = mix(0.52, 0.30, e) * kFull;
+      out.sideBend    = mix(0.06, 0.28, e) * kFull;
+      out.hipShift    = mix(-0.20, -0.32, e) * kFull;
+      out.kneeBend    = mix(0.16, 0.16, e) * kFull;
+      out.legSwingR   = mix(-0.84, 1.22, e) * kFull;
+      out.legSwingL   = mix(0.22, -0.18, e) * kFull;
+      out.ankleFlexR  = mix(-0.38, -0.56, e) * kFull;
+      out.ankleFlexL  = mix(0.20, -0.12, e) * kFull;
+      out.armRaiseL   = mix(1.00, -0.26, e) * kFull;
+      out.armSpreadL  = mix(0.50, 0.28, e) * kFull;
       out.elFlexL     = 0.62 * kFull;
       out.pronateL    = 0.62 * kFull;
-      out.armRaiseR   = mix(-0.48, 0.78, e) * kFull;
+      out.armRaiseR   = mix(-0.46, 0.74, e) * kFull;
       out.armSpreadR  = 0.28 * kFull;
       out.elFlexR     = 0.66 * kFull;
       out.pronateR    = 0.62 * kFull;
@@ -2393,40 +2526,44 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'hiking-mountain-walk': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.22, 0.46, e) * kFull;
-      out.trunkFlex   = mix(0.16, 0.34, e) * kFull;
-      out.headForward = mix(0.20, 0.36, e) * kFull;
-      out.trunkRotate = -0.22 * sw * kFull;
-      out.kneeBend    = mix(0.16, 0.38, e) * kFull;
-      out.legSwingL   = (0.14 - 0.60 * sw) * kFull;
-      out.legSwingR   = (0.14 + 0.60 * sw) * kFull;
-      out.armRaiseL   = (0.34 + 0.42 * sw) * kFull;
-      out.armRaiseR   = (0.34 - 0.42 * sw) * kFull;
-      out.elFlexL     = 0.90 * kFull;
-      out.elFlexR     = 0.90 * kFull;
+      out.hipHinge    = mix(0.12, 0.22, e) * kFull;
+      out.trunkFlex   = mix(0.06, 0.12, e) * kFull;
+      out.headForward = mix(0.16, 0.26, e) * kFull;
+      out.trunkRotate = -0.20 * sw * kFull;
+      out.kneeBend    = mix(0.14, 0.32, e) * kFull;
+      out.legSwingL   = (0.14 - 0.58 * sw) * kFull;
+      out.legSwingR   = (0.14 + 0.58 * sw) * kFull;
+      out.ankleFlexL  = (-0.06 - 0.36 * sw) * kFull;
+      out.ankleFlexR  = (-0.06 + 0.36 * sw) * kFull;
+      out.armRaiseL   = (0.34 + 0.40 * sw) * kFull;
+      out.armRaiseR   = (0.34 - 0.40 * sw) * kFull;
+      out.elFlexL     = 0.88 * kFull;
+      out.elFlexR     = 0.88 * kFull;
       out.pronateL    = 0.58 * kFull;
       out.pronateR    = 0.58 * kFull;
       break;
     }
     case 'court-step-jump': {
       out.armsFold    = 0;
-      out.hipHinge    = mix(0.48, -0.14, e) * kFull;
-      out.trunkFlex   = mix(0.32, -0.24, e) * kFull;
-      out.pelvisTilt  = mix(-0.30, -0.38, e) * kFull;
-      out.headPitch   = mix(-0.08, -0.40, e) * kFull;
-      out.kneeBend    = mix(0.76, 0.04, e) * kFull;
+      out.hipHinge    = mix(0.24, -0.10, e) * kFull;
+      out.trunkFlex   = mix(0.10, -0.20, e) * kFull;
+      out.pelvisTilt  = mix(-0.26, -0.34, e) * kFull;
+      out.headPitch   = mix(-0.08, -0.36, e) * kFull;
+      out.kneeBend    = mix(0.68, 0.04, e) * kFull;
+      out.ankleFlexL  = mix(0.34, -0.44, e) * kFull;
+      out.ankleFlexR  = mix(0.34, -0.44, e) * kFull;
       out.legSpread   = mix(0.40, 0.18, e) * kFull;
-      out.hipShift    = mix(-0.52, 0.38, e) * kFull;
-      out.sideBend    = mix(0.24, -0.18, e) * kFull;
-      out.trunkRotate = mix(-0.32, 0.30, e) * kFull;
-      out.legSwingL   = mix(-0.28, 0.26, e) * kFull;
-      out.legSwingR   = mix(0.28, -0.26, e) * kFull;
-      out.armRaiseL   = mix(0.28, 2.30, e) * kFull;
-      out.armRaiseR   = mix(0.28, 2.38, e) * kFull;
-      out.armSpreadL  = mix(0.48, 0.18, e) * kFull;
-      out.armSpreadR  = mix(0.48, 0.18, e) * kFull;
-      out.elFlexL     = mix(0.96, 0.16, e) * kFull;
-      out.elFlexR     = mix(0.96, 0.14, e) * kFull;
+      out.hipShift    = mix(-0.50, 0.36, e) * kFull;
+      out.sideBend    = mix(0.22, -0.16, e) * kFull;
+      out.trunkRotate = mix(-0.30, 0.28, e) * kFull;
+      out.legSwingL   = mix(-0.26, 0.24, e) * kFull;
+      out.legSwingR   = mix(0.26, -0.24, e) * kFull;
+      out.armRaiseL   = mix(0.30, 2.30, e) * kFull;
+      out.armRaiseR   = mix(0.30, 2.38, e) * kFull;
+      out.armSpreadL  = mix(0.46, 0.18, e) * kFull;
+      out.armSpreadR  = mix(0.46, 0.18, e) * kFull;
+      out.elFlexL     = mix(0.94, 0.16, e) * kFull;
+      out.elFlexR     = mix(0.94, 0.14, e) * kFull;
       out.pronateL    = 0.72 * kFull;
       out.pronateR    = 0.72 * kFull;
       break;
@@ -2434,8 +2571,10 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'gym-bench-push': {
       out.armsFold    = 0;
       out.prone       = mix(0.84, 0.74, e) * kFull;
-      out.trunkFlex   = mix(-0.08, 0.12, e) * kFull;
+      out.trunkFlex   = mix(-0.08, 0.10, e) * kFull;
       out.headPitch   = -0.26 * kFull;
+      out.ankleFlexL  = 0.46 * kFull;
+      out.ankleFlexR  = 0.46 * kFull;
       out.shoulderIn  = mix(0.16, 0.80, e) * kFull;
       out.armSpreadL  = mix(0.68, 0.16, e) * kFull;
       out.armSpreadR  = mix(0.68, 0.16, e) * kFull;
@@ -2454,18 +2593,20 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     case 'gym-squat-lift': {
       out.armsFold    = 0;
       out.sit         = 0;
-      out.kneeBend    = mix(0.04, 0.98, e) * kFull;
+      out.kneeBend    = mix(0.04, 0.88, e) * kFull;
+      out.ankleFlexL  = mix(0.0, 0.38, e) * kFull;
+      out.ankleFlexR  = mix(0.0, 0.38, e) * kFull;
       out.legSpread   = mix(0.24, 0.44, e) * kFull;
-      out.hipHinge    = mix(0.0, 0.78, e) * kFull;
-      out.trunkFlex   = mix(-0.08, 0.28, e) * kFull;
-      out.pelvisTilt  = mix(-0.14, -0.46, e) * kFull;
-      out.headPitch   = mix(0.0, -0.24, e) * kFull;
-      out.armRaiseL   = mix(0.20, 0.98, e) * kFull;
-      out.armRaiseR   = mix(0.20, 0.98, e) * kFull;
+      out.hipHinge    = mix(0.02, 0.50, e) * kFull;
+      out.trunkFlex   = mix(-0.06, 0.08, e) * kFull;
+      out.pelvisTilt  = mix(-0.12, -0.36, e) * kFull;
+      out.headPitch   = mix(0.0, -0.18, e) * kFull;
+      out.armRaiseL   = mix(0.20, 0.94, e) * kFull;
+      out.armRaiseR   = mix(0.20, 0.94, e) * kFull;
       out.armSpreadL  = 0.14 * kFull;
       out.armSpreadR  = 0.14 * kFull;
-      out.elFlexL     = mix(0.94, 0.36, e) * kFull;
-      out.elFlexR     = mix(0.94, 0.36, e) * kFull;
+      out.elFlexL     = mix(0.92, 0.34, e) * kFull;
+      out.elFlexR     = mix(0.92, 0.34, e) * kFull;
       out.foreYawL    = 0.24 * kFull;
       out.foreYawR    = 0.24 * kFull;
       out.pronateL    = 0.92 * kFull;
@@ -2474,10 +2615,10 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
     }
     case 'swim-crawl-yoga': {
       out.armsFold    = 0;
-      out.trunkFlex   = -0.18 * kFull;
-      out.pelvisTilt  = -0.30 * kFull;
-      out.headPitch   = -0.22 * kFull;
-      out.shoulderIn  = 0.38 * kFull;
+      out.trunkFlex   = -0.16 * kFull;
+      out.pelvisTilt  = -0.28 * kFull;
+      out.headPitch   = -0.20 * kFull;
+      out.shoulderIn  = 0.36 * kFull;
       out.trunkRotate = 0.46 * sw * kFull;
       out.sideBend    = -0.16 * sw * kFull;
       out.armRaiseL   = mix(-0.46, 2.54, e) * kFull;
@@ -2488,20 +2629,24 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
       out.elFlexR     = (mix(0.10, 0.44, e) + 0.32 * co) * kFull;
       out.pronateL    = 0.86 * kFull;
       out.pronateR    = 0.86 * kFull;
-      out.legSwingL   = -0.36 * sw * kFull;
-      out.legSwingR   = 0.36 * sw * kFull;
+      out.legSwingL   = -0.34 * sw * kFull;
+      out.legSwingR   = 0.34 * sw * kFull;
+      out.ankleFlexL  = -0.42 * kFull;
+      out.ankleFlexR  = -0.42 * kFull;
       break;
     }
     case 'yoga-pilates-open': {
       out.armsFold    = 0;
       out.sit         = 0;
-      out.legSpread   = mix(1.30, 1.48, e) * kFull;
-      out.kneeBend    = mix(0.66, 0.36, e) * kFull;
-      out.hipHinge    = mix(0.16, -0.12, e) * kFull;
-      out.trunkFlex   = mix(0.10, -0.26, e) * kFull;
-      out.pelvisTilt  = mix(-0.12, -0.32, e) * kFull;
-      out.headPitch   = mix(0.06, -0.38, e) * kFull;
-      out.sideBend    = mix(-0.06, 0.18, e) * kFull;
+      out.legSpread   = mix(1.28, 1.46, e) * kFull;
+      out.kneeBend    = mix(0.62, 0.34, e) * kFull;
+      out.ankleFlexL  = mix(0.24, 0.10, e) * kFull;
+      out.ankleFlexR  = mix(0.24, 0.10, e) * kFull;
+      out.hipHinge    = mix(0.06, -0.10, e) * kFull;
+      out.trunkFlex   = mix(0.02, -0.22, e) * kFull;
+      out.pelvisTilt  = mix(-0.12, -0.30, e) * kFull;
+      out.headPitch   = mix(0.02, -0.34, e) * kFull;
+      out.sideBend    = mix(-0.04, 0.16, e) * kFull;
       out.armRaiseL   = mix(0.50, 2.28, e) * kFull;
       out.armRaiseR   = mix(0.50, 2.28, e) * kFull;
       out.armSpreadL  = mix(0.22, 0.42, e) * kFull;
@@ -2524,8 +2669,8 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
       out.sideBend    = clamp(out.sideBend    * flexScale, -1, 1);
       out.hipShift    = clamp(out.hipShift    * flexScale, -1, 1);
       if (raw.trunkFlex >= 0.45 && !raw.sit && !raw.hipHinge) {
-        out.hipHinge  = (raw.trunkFlex * 0.75 * flexScale) * k;
-        out.kneeBend  = (raw.trunkFlex * 0.28 * flexScale) * k;
+        out.hipHinge  = (raw.trunkFlex * 0.55 * flexScale) * k;
+        out.kneeBend  = (raw.trunkFlex * 0.24 * flexScale) * k;
       }
       if (raw.armsFold > 0.15 && raw.armsFold < 0.85 && !raw.armRaiseL && !raw.armRaiseR) {
         out.armsFold  = 0;
@@ -2575,6 +2720,8 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
   out.legAdductR  = clamp(out.legAdductR,   0.0,  1.2);
   out.lieSide     = clamp(out.lieSide,      0.0,  1.15);
   out.floorSit    = clamp(out.floorSit,     0.0,  1.10);
+  out.ankleFlexL  = clamp(out.ankleFlexL,  -0.95, 0.85);
+  out.ankleFlexR  = clamp(out.ankleFlexR,  -0.95, 0.85);
 }
 let playbackPaused = false;
 let pausedFreezeActive = false;

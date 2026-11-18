@@ -1,9 +1,9 @@
-import * as posture from './posture.js?v=20261118e';
+import * as posture from './posture.js?v=20261119a';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261118e';
+} from './selfcare_guide3d.js?v=20261119a';
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
     ? posture.POSE_GLSL
@@ -877,7 +877,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     sideVertCache.set(key, out);
     return out;
   }
-  /** 筋肉Aと筋肉Bをつなぐ骨駅位置における解剖学的な体表外向き単位法線を求める */
+  /** 筋肉Aと筋肉Bをつなぐピン留め部における解剖学的な体表外向き単位法線を求める */
   function computeOutwardNormal(idA, idB, mid) {
     const pairStr = `${idA}|${idB}`;
     const isPlantar = /plantar|flexor-digitorum-brevis|abductor-hallucis|quadratus-plantae|flexor-hallucis-brevis|adductor-hallucis/.test(pairStr);
@@ -1631,7 +1631,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     return out;
   }
   /**
-   * 隣接する筋肉Aと筋肉Bが骨駅をまたぐ区間に、細い線ではなく幅広の3D筋膜・腱膜シート（幅 4.8cm〜13.6cm）を張り、
+   * 隣接する筋肉Aと筋肉Bがピン留め部をまたぐ区間に、細い線ではなく幅広の3D筋膜・腱膜シート（幅 4.8cm〜13.6cm）を張り、
    * 筋肉表面の筋膜シースと連続した1枚の膜として可視化する
    * @param {Array<{ from: string, to: string, crossSide?: boolean, ratioA?: number, ratioB?: number }>} bridges
    * @param {'L'|'R'|'both'} [sideMode='both']

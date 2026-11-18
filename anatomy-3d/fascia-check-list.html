@@ -9,7 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="description" content="全45種類の日常姿勢・仕事・スポーツアニメーションについて、最初（0%）と最後（100%）の動き・筋膜と筋肉の切り替え・3Dライブ再生を一覧で確認し、番号付きで修正指示をコピーできる確認ページ。" />
   <title>全45アニメーション 最初・最後 一覧チェック表 — アナトミー筋膜・筋肉 3D</title>
-  <link rel="stylesheet" href="css/fascia_check_list.css?v=20261118j" />
+  <link rel="stylesheet" href="css/fascia_check_list.css?v=20261119a" />
   <script type="importmap">
     {
       "imports": {
@@ -67,6 +67,12 @@
         <button type="button" class="filter-tab is-active" data-filter="all" role="tab" aria-selected="true">
           すべて（45件）
         </button>
+        <button type="button" class="filter-tab filter-tab-warn" data-filter="needs-edit" role="tab" aria-selected="false">
+          要修正メモ（0件）
+        </button>
+        <button type="button" class="filter-tab filter-tab-ok" data-filter="ok-checked" role="tab" aria-selected="false">
+          OK済み（0件）
+        </button>
         <button type="button" class="filter-tab" data-filter="desk" role="tab" aria-selected="false">
           デスク・手作業
         </button>
@@ -82,10 +88,11 @@
       </div>
 
       <div class="selection-bar">
-        <span id="selected-count-label" class="selected-count-label">修正・確認チェック中：0 件</span>
+        <span id="selected-count-label" class="selected-count-label">OK確認済み：0 件 ／ 要修正メモ：0 件</span>
         <div class="selection-actions">
-          <button type="button" id="btn-copy-selected" class="sel-action-btn" disabled>チェックした番号リストをコピー</button>
-          <button type="button" id="btn-clear-selected" class="sel-action-btn sel-action-sub" hidden>全解除</button>
+          <button type="button" id="btn-copy-edits" class="sel-action-btn sel-action-warn" disabled>修正指示・編集内容をまとめてコピー</button>
+          <button type="button" id="btn-copy-selected" class="sel-action-btn" disabled>OK確認済みをコピー</button>
+          <button type="button" id="btn-clear-selected" class="sel-action-btn sel-action-sub" hidden>OK全解除</button>
         </div>
       </div>
 
@@ -140,6 +147,6 @@
   <!-- オフスクリーンスナップショット撮影ステージ（ライブドック未使用時のみ保持） -->
   <div id="offscreen-bake-host" style="position:fixed;left:-9999px;top:0;width:440px;height:484px;pointer-events:none;opacity:0;" aria-hidden="true"></div>
 
-  <script type="module" src="js/fascia_check_list.js?v=20261118i"></script>
+  <script type="module" src="js/fascia_check_list.js?v=20261119a"></script>
 </body>
 </html>

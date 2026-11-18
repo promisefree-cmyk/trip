@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261118e';
-import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261118e';
+import * as posture from './posture.js?v=20261119a';
+import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261119a';
 export { FASCIA_LINE_DEFS };
 const SEG_COUNT = 32;
 function clamp(x, min, max) {
@@ -84,8 +84,8 @@ function getBodyChainSkin(side, y, region = 'auto') {
   if (region === 'foot') {
     return makeWeights([[B_FOOT, 1]]);
   }
-  if (y < -2.94) {
-    const t = smoothstep(-3.14, -2.94, y);
+  if (y < -2.86) {
+    const t = smoothstep(-3.16, -2.86, y);
     return makeWeights([
       [B_FOOT, 1 - t],
       [B_SHANK, t],
@@ -171,44 +171,47 @@ function getArmChainSkin(isRight, y, radialWeight = 0.5) {
 function boneToRigTraits(boneIdx) {
   switch (boneIdx) {
     case BONE.HEAD:
-      return { hip: 0, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 1, side: 0 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 1, side: 0 };
     case BONE.FEMUR_R:
-      return { hip: 1, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
+      return { hip: 1, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.FEMUR_L:
-      return { hip: 1, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
+      return { hip: 1, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
     case BONE.SHANK_R:
+      return { hip: 1, knee: 1, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.FOOT_R:
-      return { hip: 1, knee: 1, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
+      return { hip: 1, knee: 1, ankle: 1, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.SHANK_L:
+      return { hip: 1, knee: 1, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
     case BONE.FOOT_L:
-      return { hip: 1, knee: 1, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
+      return { hip: 1, knee: 1, ankle: 1, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
     case BONE.HUMERUS_R:
-      return { hip: 0, knee: 0, arm: 1, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.HUMERUS_L:
-      return { hip: 0, knee: 0, arm: 1, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
     case BONE.ULNA_R:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 0, wrist: 0, head: 0, side: -1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.ULNA_L:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 0, wrist: 0, head: 0, side: +1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 0, wrist: 0, head: 0, side: +1 };
     case BONE.RADIUS_R:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 1, wrist: 0, head: 0, side: -1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 1, wrist: 0, head: 0, side: -1 };
     case BONE.RADIUS_L:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 1, wrist: 0, head: 0, side: +1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 1, wrist: 0, head: 0, side: +1 };
     case BONE.HAND_R:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 1, wrist: 1, head: 0, side: -1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 1, wrist: 1, head: 0, side: -1 };
     case BONE.HAND_L:
-      return { hip: 0, knee: 0, arm: 1, elbow: 1, pron: 1, wrist: 1, head: 0, side: +1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 1, elbow: 1, pron: 1, wrist: 1, head: 0, side: +1 };
     case BONE.GIRDLE_R:
-      return { hip: 0, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: -1 };
     case BONE.GIRDLE_L:
-      return { hip: 0, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: +1 };
     default:
-      return { hip: 0, knee: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: 0 };
+      return { hip: 0, knee: 0, ankle: 0, arm: 0, elbow: 0, pron: 0, wrist: 0, head: 0, side: 0 };
   }
 }
 function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
   let wHip = 0;
   let wKnee = 0;
+  let wAnkle = 0;
   let wArm = 0;
   let wElbow = 0;
   let wPron = 0;
@@ -221,6 +224,7 @@ function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
     const tr = boneToRigTraits(skin.idx[i]);
     wHip += tr.hip * bw;
     wKnee += tr.knee * bw;
+    wAnkle += tr.ankle * bw;
     wArm += tr.arm * bw;
     wElbow += tr.elbow * bw;
     wPron += tr.pron * bw;
@@ -239,6 +243,7 @@ function skinToContinuousRig(skin, restPos, explicitSideSign = 0) {
   return {
     rigA: [wHip, wKnee, wArm, wElbow],
     rigB: [wPron, wWrist, wHead, limbSide],
+    ankleW: wAnkle,
   };
 }
 const POSE_SHEET_GLSL = /* glsl */ `
@@ -250,6 +255,7 @@ uniform vec4 uPoseE;
 uniform vec4 uPoseF;
 uniform vec4 uPoseG;
 uniform vec4 uPoseH;
+uniform vec4 uPoseI;
 vec3 sheetPitchFwd(vec3 p, vec3 piv, float a) {
   float c = cos(a);
   float s = sin(a);
@@ -277,7 +283,7 @@ vec3 sheetRotateAxis(vec3 p, vec3 piv, vec3 axis, float a) {
   vec3 v = p - piv;
   return piv + v * c + cross(axis, v) * sn + axis * dot(axis, v) * (1.0 - c);
 }
-vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
+vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB, float ankleW) {
   float trunkFlex   = uPoseA.x;
   float headForward = uPoseA.y;
   float shoulderIn  = uPoseA.z;
@@ -310,6 +316,8 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   float legAdductR  = uPoseH.y;
   float lieSide     = uPoseH.z;
   float floorSit    = uPoseH.w;
+  float ankleFlexL  = uPoseI.x;
+  float ankleFlexR  = uPoseI.y;
   float act = abs(trunkFlex) + abs(headForward) + abs(shoulderIn)
             + abs(pelvisTilt) + abs(trunkRotate) + abs(sideBend)
             + abs(hipShift) + abs(armsFold) + abs(sit) + abs(prone)
@@ -319,12 +327,14 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
             + abs(elFlexL) + abs(elFlexR) + abs(foreYawL) + abs(foreYawR)
             + abs(legSwingL) + abs(legSwingR)
             + abs(pronateL) + abs(pronateR) + abs(wristExtL) + abs(wristExtR)
-            + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit);
+            + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit)
+            + abs(ankleFlexL) + abs(ankleFlexR);
   if (act < 1e-5) return wp;
   vec3 p0 = wp;
   vec3 p = wp;
   float hipWeight   = clamp(rigA.x, 0.0, 1.0);
   float kneeWeight  = clamp(rigA.y, 0.0, 1.0);
+  float ankleWeight = clamp(ankleW, 0.0, 1.0);
   float armMask     = clamp(rigA.z, 0.0, 1.0);
   float elMask      = clamp(rigA.w, 0.0, 1.0);
   float pronWeight  = clamp(rigB.x, 0.0, 1.0);
@@ -461,12 +471,17 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
     float wHipRoll = smoothstep(-0.35, 0.05, yEff) * (1.0 - smoothstep(0.30, 1.00, yEff));
     p = sheetRollLeft(p, vec3(0.0, 0.05, -0.05), -0.10 * hipShift * wHipRoll * trunkRatio);
   }
-  vec3 pivKneeSide = vec3(s * 0.185, -1.62, 0.02);
-  vec3 pivHipSide  = vec3(s * 0.185, -0.02, -0.03);
-  float legSwing   = mix(legSwingR, legSwingL, isL);
-  float legAdduct  = mix(legAdductR, legAdductL, isL);
-  float standRatio = clamp(1.0 - clamp(sit, 0.0, 1.0) - clamp(floorSit, 0.0, 1.0) - clamp(prone, 0.0, 1.0), 0.0, 1.0);
+  vec3 pivAnkleSide = vec3(s * 0.31, -3.03, -0.13);
+  vec3 pivKneeSide  = vec3(s * 0.185, -1.62, 0.02);
+  vec3 pivHipSide   = vec3(s * 0.185, -0.02, -0.03);
+  float ankleFlex   = mix(ankleFlexR, ankleFlexL, isL);
+  float legSwing    = mix(legSwingR, legSwingL, isL);
+  float legAdduct   = mix(legAdductR, legAdductL, isL);
+  float standRatio  = clamp(1.0 - clamp(sit, 0.0, 1.0) - clamp(floorSit, 0.0, 1.0) - clamp(prone, 0.0, 1.0), 0.0, 1.0);
   float hingeLegAng = 0.1375 * hipHinge * standRatio * hipWeight;
+  if (abs(ankleFlex) > 1e-4 && ankleWeight > 1e-5) {
+    p = sheetPitchFwd(p, pivAnkleSide, -0.78 * ankleFlex * ankleWeight);
+  }
   float autoSwingKnee = max(0.0, -legSwing * 0.72) + max(0.0, legSwing * 0.12);
   float sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0.0, 1.2)) * sit;
   float totalKneePitch = sitKnee
@@ -540,15 +555,15 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB) {
   }
   return p;
 }
-vec3 poseDeformSheetNormal(vec3 wp, vec3 n, vec4 rigA, vec4 rigB) {
+vec3 poseDeformSheetNormal(vec3 wp, vec3 n, vec4 rigA, vec4 rigB, float ankleW) {
   vec3 n0 = normalize(n);
   vec3 up = abs(n0.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
   vec3 t1 = normalize(cross(up, n0));
   vec3 t2 = cross(n0, t1);
   const float eps = 0.01;
-  vec3 p0 = poseDeformSheet(wp, rigA, rigB);
-  vec3 d1 = poseDeformSheet(wp + t1 * eps, rigA, rigB) - p0;
-  vec3 d2 = poseDeformSheet(wp + t2 * eps, rigA, rigB) - p0;
+  vec3 p0 = poseDeformSheet(wp, rigA, rigB, ankleW);
+  vec3 d1 = poseDeformSheet(wp + t1 * eps, rigA, rigB, ankleW) - p0;
+  vec3 d2 = poseDeformSheet(wp + t2 * eps, rigA, rigB, ankleW) - p0;
   vec3 wn = cross(d1, d2);
   float len = length(wn);
   return len > 1e-8 ? wn / len : n0;
@@ -593,7 +608,7 @@ function rotateAxisJS(p, pivX, pivY, pivZ, axX, axY, axZ, a) {
   p.y = pivY + vy * c + cy * sn + axY * dot * omc;
   p.z = pivZ + vz * c + cz * sn + axZ * dot * omc;
 }
-function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
+function evalDeformSheetJS(restPos, rigA, rigB, ankleW, poseObj, out) {
   out.set(restPos.x, restPos.y, restPos.z);
   const trunkFlex   = poseObj.trunkFlex   || 0;
   const headForward = poseObj.headForward || 0;
@@ -627,6 +642,8 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
   const legAdductR  = poseObj.legAdductR  || 0;
   const lieSide     = poseObj.lieSide     || 0;
   const floorSit    = poseObj.floorSit    || 0;
+  const ankleFlexL  = poseObj.ankleFlexL  || 0;
+  const ankleFlexR  = poseObj.ankleFlexR  || 0;
   const act =
     Math.abs(trunkFlex) + Math.abs(headForward) + Math.abs(shoulderIn) +
     Math.abs(pelvisTilt) + Math.abs(trunkRotate) + Math.abs(sideBend) +
@@ -636,12 +653,13 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     Math.abs(elFlexL) + Math.abs(elFlexR) + Math.abs(foreYawL) + Math.abs(foreYawR) +
     Math.abs(legSwingL) + Math.abs(legSwingR) + Math.abs(pronateL) + Math.abs(pronateR) +
     Math.abs(wristExtL) + Math.abs(wristExtR) + Math.abs(legAdductL) + Math.abs(legAdductR) +
-    Math.abs(lieSide) + Math.abs(floorSit);
+    Math.abs(lieSide) + Math.abs(floorSit) + Math.abs(ankleFlexL) + Math.abs(ankleFlexR);
   if (act < 1e-5) return out;
   const x0 = restPos.x;
   const y0 = restPos.y;
   const hipWeight   = clamp(rigA[0], 0, 1);
   const kneeWeight  = clamp(rigA[1], 0, 1);
+  const ankleWeight = clamp(ankleW || 0, 0, 1);
   const armMask     = clamp(rigA[2], 0, 1);
   const elMask      = clamp(rigA[3], 0, 1);
   const pronWeight  = clamp(rigB[0], 0, 1);
@@ -784,12 +802,17 @@ function evalDeformSheetJS(restPos, rigA, rigB, poseObj, out) {
     const wHipRoll = smoothstep(-0.35, 0.05, yEff) * (1 - smoothstep(0.30, 1.00, yEff));
     rollLeftJS(out, 0, 0.05, -0.05, -0.10 * hipShift * wHipRoll * trunkRatio);
   }
-  const pivKneeX = s * 0.185, pivKneeY = -1.62, pivKneeZ = 0.02;
-  const pivHipX  = s * 0.185, pivHipY  = -0.02, pivHipZ  = -0.03;
+  const pivAnkleX = s * 0.31, pivAnkleY = -3.03, pivAnkleZ = -0.13;
+  const pivKneeX  = s * 0.185, pivKneeY = -1.62, pivKneeZ = 0.02;
+  const pivHipX   = s * 0.185, pivHipY  = -0.02, pivHipZ  = -0.03;
+  const ankleFlex = mix(ankleFlexR, ankleFlexL, isL);
   const legSwing  = mix(legSwingR, legSwingL, isL);
   const legAdduct = mix(legAdductR, legAdductL, isL);
   const standRatio = clamp(1 - clamp(sit, 0, 1) - clamp(floorSit, 0, 1) - clamp(prone, 0, 1), 0, 1);
   const hingeLegAng = 0.1375 * hipHinge * standRatio * hipWeight;
+  if (Math.abs(ankleFlex) > 1e-4 && ankleWeight > 1e-5) {
+    pitchFwdJS(out, pivAnkleX, pivAnkleY, pivAnkleZ, -0.78 * ankleFlex * ankleWeight);
+  }
   const autoSwingKnee = Math.max(0, -legSwing * 0.72) + Math.max(0, legSwing * 0.12);
   const sitKnee = (1.36 - 0.18 * clamp(legAdduct, 0, 1.2)) * sit;
   const totalKneePitch =
@@ -861,6 +884,7 @@ const UNIFIED_FASCIA_VS = /* glsl */ `
   ${POSE_SHEET_GLSL}
   attribute vec4 aRigA;
   attribute vec4 aRigB;
+  attribute float aAnkleW;
   attribute vec4 aFasciaMeta;
   uniform float uSegStrain[${SEG_COUNT}];
   uniform float uTime;
@@ -883,8 +907,8 @@ const UNIFIED_FASCIA_VS = /* glsl */ `
     vStrain = strain;
     vec3 wp0 = (modelMatrix * vec4(position, 1.0)).xyz;
     vec3 wn0 = normalize(mat3(modelMatrix) * normal);
-    vec3 wp = poseDeformSheet(wp0, aRigA, aRigB);
-    vec3 wn = poseDeformSheetNormal(wp0, wn0, aRigA, aRigB);
+    vec3 wp = poseDeformSheet(wp0, aRigA, aRigB, aAnkleW);
+    vec3 wn = poseDeformSheetNormal(wp0, wn0, aRigA, aRigB, aAnkleW);
     float shortAmt = clamp((-strain - 0.012) / 0.14, 0.0, 1.35);
     if (shortAmt > 0.001) {
       float edgeGuard = sin(clamp(uv.x, 0.0, 1.0) * 3.14159265);
@@ -1056,6 +1080,7 @@ function buildUnifiedSheetMesh({
   const uvs = new Float32Array(vertCount * 2);
   const rigAArr = new Float32Array(vertCount * 4);
   const rigBArr = new Float32Array(vertCount * 4);
+  const ankleArr = new Float32Array(vertCount);
   const metaArr = new Float32Array(vertCount * 4);
   const explicitSideSign = sideTag === 'R' ? -1 : sideTag === 'L' ? +1 : 0;
   const sampleUs = [-0.50, 0.0, +0.50];
@@ -1081,6 +1106,7 @@ function buildUnifiedSheetMesh({
       rigBArr[k * 4 + 1] = rig.rigB[1];
       rigBArr[k * 4 + 2] = rig.rigB[2];
       rigBArr[k * 4 + 3] = rig.rigB[3];
+      ankleArr[k] = rig.ankleW || 0;
       metaArr[k * 4] = res.fiberType || 0;
       metaArr[k * 4 + 1] = res.yBranch || 0;
       metaArr[k * 4 + 2] = res.retinaculum || 0;
@@ -1094,6 +1120,7 @@ function buildUnifiedSheetMesh({
         curPos: sRes.pos.clone(),
         rigA: sRig.rigA,
         rigB: sRig.rigB,
+        ankleW: sRig.ankleW || 0,
       });
     }
   }
@@ -1112,6 +1139,7 @@ function buildUnifiedSheetMesh({
   geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geom.setAttribute('aRigA', new THREE.BufferAttribute(rigAArr, 4));
   geom.setAttribute('aRigB', new THREE.BufferAttribute(rigBArr, 4));
+  geom.setAttribute('aAnkleW', new THREE.BufferAttribute(ankleArr, 1));
   geom.setAttribute('aFasciaMeta', new THREE.BufferAttribute(metaArr, 4));
   geom.setIndex(indices);
   geom.computeVertexNormals();
@@ -1153,6 +1181,7 @@ function buildUnifiedSheetMesh({
       uPoseF: posture.poseUniforms.uPoseF,
       uPoseG: posture.poseUniforms.uPoseG,
       uPoseH: posture.poseUniforms.uPoseH,
+      uPoseI: posture.poseUniforms.uPoseI,
       uDarkTheme: sharedUniforms.uDarkTheme,
       uTime: sharedUniforms.uTime,
       uBaseOpacity: { value: lineDef ? lineDef.baseOpacity : 0.9 },
@@ -1175,7 +1204,7 @@ function buildUnifiedSheetMesh({
       const pts = fiberSamples[su];
       for (let iv = 0; iv <= nv; iv++) {
         const p = pts[iv];
-        evalDeformSheetJS(p.restPos, p.rigA, p.rigB, poseObj, p.curPos);
+        evalDeformSheetJS(p.restPos, p.rigA, p.rigB, p.ankleW, poseObj, p.curPos);
       }
     }
     for (let iv = 0; iv < nv; iv++) {
@@ -2168,6 +2197,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       worldPos: restPos.clone(),
       rigA: rig.rigA,
       rigB: rig.rigB,
+      ankleW: rig.ankleW || 0,
     };
   });
   group.add(stationsGroup);
@@ -2284,6 +2314,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
     const uF = posture.poseUniforms.uPoseF.value;
     const uG = posture.poseUniforms.uPoseG.value;
     const uH = posture.poseUniforms.uPoseH.value;
+    const uI = posture.poseUniforms.uPoseI.value;
     const rawCyc = clamp(posture.poseUniforms.uContractCycle.value || 0, 0, 1);
     const poseHash =
       uA.x * 1.1 + uA.y * 1.3 + uA.z * 1.7 + uA.w * 1.9 +
@@ -2294,6 +2325,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       uF.x * 9.7 + uF.y * 10.1 + uF.z * 10.3 + uF.w * 10.7 +
       uG.x * 10.9 + uG.y * 11.3 + uG.z * 12.7 + uG.w * 13.1 +
       uH.x * 13.7 + uH.y * 13.9 + uH.z * 14.9 + uH.w * 15.1 +
+      uI.x * 15.7 + uI.y * 16.3 +
       rawCyc * 17.3;
     const poseChanged = !(Math.abs(poseHash - lastStrainHash) < 1e-6);
     const camHash = cameraQuat
@@ -2316,7 +2348,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       if (showStations && activeStationNodes.length > 0) {
         for (let i = 0; i < activeStationNodes.length; i++) {
           const node = activeStationNodes[i];
-          evalDeformSheetJS(node.restPos, node.rigA, node.rigB, poseObj, node.worldPos);
+          evalDeformSheetJS(node.restPos, node.rigA, node.rigB, node.ankleW, poseObj, node.worldPos);
           _instMat.compose(node.worldPos, _instQuatId, _instScaleOne);
           coreInst.setMatrixAt(i, _instMat);
         }

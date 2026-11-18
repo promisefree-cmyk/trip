@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import * as posture from './posture.js?v=20261118e';
+import * as posture from './posture.js?v=20261119a';
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
 const getRigRole =
@@ -11,7 +11,7 @@ const getRigRole =
     ? posture.getRigRole
     : () => new THREE.Vector4(-1, -1, -1, -1);
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261118e';
+const ASSET_QUERY = '?v=20261119a';
 const IDLE_TIMEOUT_MS = 1800; // アニメーション停止中・静止閲覧時に1.8秒カメラ静止で省電力スリープへ移行（触れれば0msで60fps即復帰）
 const IDLE_FRAME_INTERVAL_MS = 1000; // 静止待機中は描画をほぼ停止しスマホの発熱・電池消費を最小化
 const FALLBACK_BYTES = {
@@ -2309,12 +2309,8 @@ varying vec3 vExtWorldPos;`,
     const handRigR =
       meshesById.get('right-third-metacarpal-bone')?.[0]?.userData?.rigRole ||
       getRigRole('right-third-metacarpal-bone', 'bone');
-    const footRigL =
-      meshesById.get('left-calcaneus')?.[0]?.userData?.rigRole ||
-      getRigRole('left-calcaneus', 'bone');
-    const footRigR =
-      meshesById.get('right-calcaneus')?.[0]?.userData?.rigRole ||
-      getRigRole('right-calcaneus', 'bone');
+    const footRigL = new THREE.Vector4(1.0, 1.5, 0.0, 0.0);
+    const footRigR = new THREE.Vector4(1.0, 1.5, 0.0, 0.0);
     buildSingleExtremityVeil(true, true, handRigL);
     buildSingleExtremityVeil(true, false, handRigR);
     buildSingleExtremityVeil(false, true, footRigL);
@@ -3534,12 +3530,21 @@ varying vec3 vExtWorldPos;`,
       const dist = THREE.MathUtils.clamp(rawDist, minDist, homeDistance() * 1.12);
       flyTo(center, dir, dist);
     },
-    /** 視点切り替え（注視点・距離は保ったまま向きだけスムーズに回す） */
-    view(name) {
+    /** 視点切り替え（注視点・距離は保ったまま向きだけスムーズに回す。opts.immediate=true で即時反映、opts.resetFraming=true で全身中央に戻す） */
+    view(name, opts = {}) {
       wakeRenderLoop();
       const dir = VIEW_DIRS[name];
       if (!dir) return;
-      const baseTarget = tween ? tween.toTarget.clone() : controls.target.clone();
+      if (opts && opts.resetFraming) {
+        isHomeFullBodyFraming = true;
+        homeZoomSettling = false;
+      }
+      const baseTarget =
+        opts && opts.resetFraming
+          ? homeTarget()
+          : tween
+            ? tween.toTarget.clone()
+            : controls.target.clone();
       if (baseTarget.distanceTo(BODY_CENTER) < 0.25) {
         isHomeFullBodyFraming = true;
         homeZoomSettling = false;
@@ -3552,7 +3557,7 @@ varying vec3 vExtWorldPos;`,
       if (name === 'side' && !isHomeFullBodyFraming) {
         dist = Math.max(dist, 6.8);
       }
-      flyTo(baseTarget, dir, dist);
+      flyTo(baseTarget, dir, dist, Boolean(opts && opts.immediate));
       checkViewChange(name);
     },
     setView(name) {
