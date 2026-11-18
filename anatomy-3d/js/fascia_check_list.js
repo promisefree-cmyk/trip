@@ -2,7 +2,7 @@ import * as dataModule from './data.js?v=20261118e';
 import { createFascia } from './fascia.js?v=20261118e';
 import * as posture from './posture.js?v=20261118e';
 import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261118e';
-import { createViewer } from './viewer.js?v=20261118e';
+import { createViewer } from './viewer.js?v=20261118h';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
@@ -252,10 +252,14 @@ async function initCheckListPage() {
     const pickBtn = card.querySelector('.pick-btn');
     const liveBtn = card.querySelector('.live-open-btn');
     const liveSlot = card.querySelector('.live-slot');
+    const stage0 = card.querySelector('[data-stage="0"]');
+    const stage100 = card.querySelector('[data-stage="100"]');
     const img0 = card.querySelector('[data-stage="0"] .snap-img');
     const ph0 = card.querySelector('[data-stage="0"] .snap-placeholder');
     const img100 = card.querySelector('[data-stage="100"] .snap-img');
     const ph100 = card.querySelector('[data-stage="100"] .snap-placeholder');
+    if (stage0) stage0.style.cursor = 'pointer';
+    if (stage100) stage100.style.cursor = 'pointer';
     pickBtn.addEventListener('click', () => {
       if (selectedSet.has(hb.id)) selectedSet.delete(hb.id);
       else selectedSet.add(hb.id);
@@ -271,6 +275,8 @@ async function initCheckListPage() {
       pickBtn,
       liveBtn,
       liveSlot,
+      stage0,
+      stage100,
       img0,
       ph0,
       img100,
@@ -338,7 +344,9 @@ async function initCheckListPage() {
   let activeLiveId = null;
   let livePlaying = true;
   let liveScrub01 = null;
-  viewer.setKeepAwakePredicate?.(() => Boolean(activeLiveId && livePlaying && liveScrub01 === null));
+  let liveCycleRad = 0.55;
+  let didInitialAutoOpen = false;
+  viewer.setKeepAwakePredicate?.(() => Boolean(activeLiveId));
   viewer.onFrame((time, delta) => {
     if (!activeLiveId) return;
     const entry = cardMap.get(activeLiveId);
@@ -346,8 +354,11 @@ async function initCheckListPage() {
     if (liveScrub01 !== null) {
       posture.setHabitPhasePose(entry.habit.id, entry.habit.pose || null, liveScrub01);
     } else if (livePlaying) {
-      posture.updatePose(time, delta);
-      const cyc = Math.round((posture.poseUniforms.uContractCycle.value || 0) * 100);
+      const dt = Math.min(Math.max(delta || 0.016, 0.001), 0.06);
+      liveCycleRad += dt * 1.85;
+      const wave01 = 0.5 - 0.5 * Math.cos(liveCycleRad);
+      posture.setHabitPhasePose(entry.habit.id, entry.habit.pose || null, wave01);
+      const cyc = Math.round(wave01 * 100);
       liveSlider.value = String(cyc);
       liveReadout.textContent = `${cyc}%`;
     }
@@ -425,6 +436,15 @@ async function initCheckListPage() {
         bakingActive = false;
         if (bakeQueue.length > 0 && activeLiveId === null) {
           pumpBakeQueue();
+        } else if (!didInitialAutoOpen && bakeQueue.length === 0 && activeLiveId === null) {
+          didInitialAutoOpen = true;
+          const firstVisible = HABITS.find((h) => {
+            const e = cardMap.get(h.id);
+            return e && !e.cardEl.hidden;
+          });
+          if (firstVisible) {
+            openLiveDock(firstVisible.id);
+          }
         }
       }
     });
@@ -440,6 +460,9 @@ async function initCheckListPage() {
           enqueueBake(id);
         } else {
           visibleIds.delete(id);
+          if (activeLiveId === id) {
+            closeLiveDock();
+          }
         }
       }
     },
@@ -481,6 +504,7 @@ async function initCheckListPage() {
     activeLiveId = habitId;
     livePlaying = true;
     liveScrub01 = null;
+    liveCycleRad = 0.55;
     btnLivePlay.textContent = '一時停止';
     entry.liveSlot.appendChild(liveDock);
     liveDock.hidden = false;
@@ -489,16 +513,29 @@ async function initCheckListPage() {
     const w = Math.max(280, Math.round(rect.width) || 440);
     const h = Math.max(260, Math.round(rect.height) || 340);
     viewer.renderer.setSize(w, h, false);
+    viewer.renderer.domElement.style.width = '100%';
+    viewer.renderer.domElement.style.height = '100%';
     viewer.camera.aspect = w / h;
     viewer.camera.updateProjectionMatrix();
     entry.liveBtn.classList.add('is-active');
     entry.liveBtn.textContent = '× 3Dライブ再生を閉じる';
     applyHabitToScene(entry.habit, true);
-    posture.setPose(entry.habit.pose || null, 1.0, { habitId: entry.habit.id, immediate: true });
+    posture.setPaused?.(false);
+    posture.setPose(entry.habit.pose || null, 1.0, {
+      habitId: entry.habit.id,
+      immediate: true,
+      cyclic: true,
+    });
     viewer.wake?.();
   };
   for (const [id, entry] of cardMap) {
     entry.liveBtn.addEventListener('click', () => openLiveDock(id));
+    entry.stage0?.addEventListener('click', () => {
+      if (activeLiveId !== id) openLiveDock(id);
+    });
+    entry.stage100?.addEventListener('click', () => {
+      if (activeLiveId !== id) openLiveDock(id);
+    });
   }
   btnLiveZero.addEventListener('click', () => {
     liveScrub01 = 0.0;
@@ -518,12 +555,14 @@ async function initCheckListPage() {
   });
   btnLivePlay.addEventListener('click', () => {
     if (!activeLiveId) return;
-    const entry = cardMap.get(activeLiveId);
     if (liveScrub01 !== null || !livePlaying) {
+      if (liveScrub01 !== null) {
+        const clamped = Math.min(1, Math.max(0, liveScrub01));
+        liveCycleRad = Math.acos(1 - 2 * clamped);
+      }
       liveScrub01 = null;
       livePlaying = true;
       btnLivePlay.textContent = '一時停止';
-      if (entry) posture.setPose(entry.habit.pose || null, 1.0, { habitId: entry.habit.id });
     } else {
       livePlaying = false;
       btnLivePlay.textContent = '▶ 連続再生';

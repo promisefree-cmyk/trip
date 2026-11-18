@@ -3098,12 +3098,13 @@ varying vec3 vExtWorldPos;`,
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
   const renderTick = () => {
-    if (document.hidden || contextLost || !isStageVisible) return;
+    if (document.hidden || contextLost) return;
+    const externalBusy = typeof keepAwakePredicate === 'function' ? Boolean(keepAwakePredicate()) : false;
+    if (!isStageVisible && !externalBusy) return;
     const nowMs = performance.now();
     ensureUiBoxObserved();
     const xraySettling = Math.abs(styleUniforms.uXRay.value - xrayTarget) > 1e-3;
     const scModalOpen = Boolean(cachedScModalEl && !cachedScModalEl.hidden);
-    const externalBusy = typeof keepAwakePredicate === 'function' ? Boolean(keepAwakePredicate()) : false;
     const busyNow = externalBusy || scModalOpen;
     const camMoved =
       camera.position.distanceToSquared(lastCamPos) > 1e-7 ||

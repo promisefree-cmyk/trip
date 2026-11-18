@@ -541,6 +541,11 @@ height: 340px;
 background: radial-gradient(circle at 50% 45%, var(--bg-stage-inner) 0%, var(--bg-stage-outer) 100%);
 position: relative;
 }
+.live-stage-wrap canvas {
+width: 100% !important;
+height: 100% !important;
+display: block;
+}
 .live-controls {
 padding: 12px 14px;
 border-top: 1px solid var(--border-subtle);
