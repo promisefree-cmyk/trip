@@ -32,12 +32,12 @@
 //   - 黄色・アンバー発光ゼロ。全シェーダーで厳密な Premultiplied Alpha（clamp(col,0,1)*alpha）を出力し骨の白飛びを防止。
 // =============================================================================
 
-import * as posture from './posture.js?v=20261118a';
+import * as posture from './posture.js?v=20261118b';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261118a';
+} from './selfcare_guide3d.js?v=20261118b';
 
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')

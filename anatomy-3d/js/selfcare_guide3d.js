@@ -15,7 +15,7 @@
 
 import * as THREE from 'three';
 
-export const SELFCARE_GUIDE_VERSION = '20261118a';
+export const SELFCARE_GUIDE_VERSION = '20261118b';
 
 export const R_BALL = 0.105;
 export const R_ROLLER = 0.12;
@@ -148,7 +148,7 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
   // P1: 前腕・親指の付け根・手首
   if (matchesAny(id, HAND_WRIST_FOREARM_PATTERNS)) {
     handPose = 'thumb';
-    scale = /pollicis|thumb-wrist/.test(id) ? 0.78 : 0.84;
+    scale = /pollicis|thumb-wrist/.test(id) ? 0.90 : 0.95;
     strokeSpan = /pollicis|thumb-wrist/.test(id) ? 0.65 : 0.82;
     if (tool === 'hand') {
       motion = 'glide';
@@ -405,66 +405,297 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
 }
 
 // -----------------------------------------------------------------------------
-// 2. 幾何ヘルパー（滑らかなテーパーチューブ・角丸パネル・サロン彫刻3Dハンド生成）
+// 2. 幾何ヘルパー（継ぎ目ゼロ1メッシュ・シンプル3Dハンドアイコン＆角丸パネル生成）
 // -----------------------------------------------------------------------------
 
-function createTaperedLimbGeometry(points, radii, tubularSegments = 24, radialSegments = 14) {
-  const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5);
-  const frames = curve.computeFrenetFrames(tubularSegments, false);
-  const posArr = [];
-  const normArr = [];
-  const uvArr = [];
-  const indices = [];
+function sminCubic(a, b, k) {
+  if (k <= 1e-6) return Math.min(a, b);
+  const h = Math.max(k - Math.abs(a - b), 0.0) / k;
+  return Math.min(a, b) - h * h * h * k * (1.0 / 6.0);
+}
 
-  const vTmp = new THREE.Vector3();
-  const nTmp = new THREE.Vector3();
+function clampVal(v, lo, hi) {
+  return v < lo ? lo : v > hi ? hi : v;
+}
 
-  const sampleRadius = (u) => {
-    const f = u * (radii.length - 1);
-    const i0 = Math.min(radii.length - 1, Math.max(0, Math.floor(f)));
-    const i1 = Math.min(radii.length - 1, i0 + 1);
-    const t = f - i0;
-    return radii[i0] + (radii[i1] - radii[i0]) * (t * t * (3 - 2 * t));
-  };
+function sdCapsule2D(px, py, ax, ay, bx, by, rA, rB) {
+  const bax = bx - ax;
+  const bay = by - ay;
+  const pax = px - ax;
+  const pay = py - ay;
+  const lenSq = bax * bax + bay * bay || 1e-8;
+  const h = clampVal((pax * bax + pay * bay) / lenSq, 0.0, 1.0);
+  const dx = pax - bax * h;
+  const dy = pay - bay * h;
+  const r = rA + (rB - rA) * h;
+  return Math.sqrt(dx * dx + dy * dy) - r;
+}
 
-  for (let i = 0; i <= tubularSegments; i++) {
-    const u = i / tubularSegments;
-    const p = curve.getPointAt(u);
-    const N = frames.normals[i];
-    const B = frames.binormals[i];
-    const r = sampleRadius(u);
+function sdRoundBox2D(px, py, cx, cy, hx, hy, rad) {
+  const dx = Math.abs(px - cx) - hx;
+  const dy = Math.abs(py - cy) - hy;
+  const ox = Math.max(dx, 0.0);
+  const oy = Math.max(dy, 0.0);
+  return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(dx, dy), 0.0) - rad;
+}
 
-    for (let j = 0; j <= radialSegments; j++) {
-      const v = j / radialSegments;
-      const theta = v * Math.PI * 2;
-      const sin = Math.sin(theta);
-      const cos = -Math.cos(theta);
+/**
+ * 2DシルエットSDFから「パーツの継ぎ目ゼロ・単一閉曲面」の滑らかな3Dピローアイコンメッシュを生成
+ * Dual Surface Nets ＋ 固定長TypedArray版Taubin体積保存スムージングにより高速・完全一体成形を実現
+ */
+function buildSeamlessPillowedHandGeometry({
+  sdf2D,
+  archZFn,
+  rEdge = 0.0094,
+  domeAmp = 0.0054,
+  bounds,
+  nx = 56,
+  ny = 66,
+  nz = 28,
+  smoothPasses = 6,
+}) {
+  const [minX, maxX, minY, maxY, minZ, maxZ] = bounds;
+  const dx = (maxX - minX) / nx;
+  const dy = (maxY - minY) / ny;
+  const dz = (maxZ - minZ) / nz;
 
-      nTmp.set(cos * N.x + sin * B.x, cos * N.y + sin * B.y, cos * N.z + sin * B.z).normalize();
-      // 指腹側をわずかにフラットな楕円断面にして自然な指の丸みを出す
-      vTmp.copy(p).addScaledVector(nTmp, r);
+  const sx = nx + 1;
+  const sy = ny + 1;
+  const sz = nz + 1;
+  const strideY = sx;
+  const strideZ = sx * sy;
+  const n2D = sx * sy;
 
-      posArr.push(vTmp.x, vTmp.y, vTmp.z);
-      normArr.push(nTmp.x, nTmp.y, nTmp.z);
-      uvArr.push(u, v);
+  // 1) 2Dシルエット距離場とアーチ高さを事前計算
+  const d2Grid = new Float32Array(n2D);
+  const zMidGrid = new Float32Array(n2D);
+  const rLocGrid = new Float32Array(n2D);
+
+  for (let iy = 0; iy <= ny; iy++) {
+    const y = minY + iy * dy;
+    const rowOff = iy * sx;
+    for (let ix = 0; ix <= nx; ix++) {
+      const x = minX + ix * dx;
+      const idx2 = rowOff + ix;
+      const d2 = sdf2D(x, y);
+      d2Grid[idx2] = d2;
+      zMidGrid[idx2] = archZFn(x, y);
+      const inward = Math.max(0.0, -d2);
+      rLocGrid[idx2] = rEdge + domeAmp * (1.0 - Math.exp(-inward / 0.022));
     }
   }
 
-  const stride = radialSegments + 1;
-  for (let i = 0; i < tubularSegments; i++) {
-    for (let j = 0; j < radialSegments; j++) {
-      const a = i * stride + j;
-      const b = (i + 1) * stride + j;
-      const c = (i + 1) * stride + (j + 1);
-      const d = i * stride + (j + 1);
-      indices.push(a, b, d, b, c, d);
+  // 2) 3Dスカラー場を構築
+  const vals = new Float32Array(n2D * sz);
+  for (let iz = 0; iz <= nz; iz++) {
+    const z = minZ + iz * dz;
+    const zOff = iz * strideZ;
+    for (let i2 = 0; i2 < n2D; i2++) {
+      const ox = Math.max(d2Grid[i2], 0.0);
+      const zRel = Math.abs(z - zMidGrid[i2]);
+      vals[zOff + i2] = Math.sqrt(ox * ox + zRel * zRel) - rLocGrid[i2];
     }
+  }
+
+  // 3) Dual Surface Nets で単一ウェルディング済み頂点＆インデックス抽出
+  const cellVert = new Int32Array(nx * ny * nz).fill(-1);
+  const cStrideY = nx;
+  const cStrideZ = nx * ny;
+  const vertPos = [];
+
+  const cOffX = [0, 1, 0, 1, 0, 1, 0, 1];
+  const cOffY = [0, 0, 1, 1, 0, 0, 1, 1];
+  const cOffZ = [0, 0, 0, 0, 1, 1, 1, 1];
+  const eA = [0, 2, 4, 6, 0, 1, 4, 5, 0, 1, 2, 3];
+  const eB = [1, 3, 5, 7, 2, 3, 6, 7, 4, 5, 6, 7];
+
+  const cVal = new Float32Array(8);
+  const cX = new Float32Array(8);
+  const cY = new Float32Array(8);
+  const cZ = new Float32Array(8);
+
+  for (let iz = 0; iz < nz; iz++) {
+    for (let iy = 0; iy < ny; iy++) {
+      for (let ix = 0; ix < nx; ix++) {
+        let mask = 0;
+        const base = ix + iy * strideY + iz * strideZ;
+        for (let c = 0; c < 8; c++) {
+          const v = vals[base + cOffX[c] + cOffY[c] * strideY + cOffZ[c] * strideZ];
+          cVal[c] = v;
+          if (v < 0) mask |= 1 << c;
+          cX[c] = minX + (ix + cOffX[c]) * dx;
+          cY[c] = minY + (iy + cOffY[c]) * dy;
+          cZ[c] = minZ + (iz + cOffZ[c]) * dz;
+        }
+        if (mask === 0 || mask === 255) continue;
+
+        let sumX = 0;
+        let sumY = 0;
+        let sumZ = 0;
+        let cnt = 0;
+        for (let e = 0; e < 12; e++) {
+          const a = eA[e];
+          const b = eB[e];
+          const va = cVal[a];
+          const vb = cVal[b];
+          if (va < 0 !== vb < 0) {
+            const t = va / (va - vb);
+            sumX += cX[a] + (cX[b] - cX[a]) * t;
+            sumY += cY[a] + (cY[b] - cY[a]) * t;
+            sumZ += cZ[a] + (cZ[b] - cZ[a]) * t;
+            cnt++;
+          }
+        }
+        cellVert[ix + iy * cStrideY + iz * cStrideZ] = vertPos.length / 3;
+        vertPos.push(sumX / cnt, sumY / cnt, sumZ / cnt);
+      }
+    }
+  }
+
+  const indices = [];
+  const emitQuad = (c0, c1, c2, c3, flip) => {
+    if (c0 < 0 || c1 < 0 || c2 < 0 || c3 < 0) return;
+    if (flip) indices.push(c0, c1, c2, c0, c2, c3);
+    else indices.push(c0, c2, c1, c0, c3, c2);
+  };
+
+  for (let iz = 1; iz < nz; iz++) {
+    for (let iy = 1; iy < ny; iy++) {
+      for (let ix = 0; ix < nx; ix++) {
+        const v0 = vals[ix + iy * strideY + iz * strideZ];
+        const v1 = vals[ix + 1 + iy * strideY + iz * strideZ];
+        if (v0 < 0 !== v1 < 0) {
+          emitQuad(
+            cellVert[ix + (iy - 1) * cStrideY + (iz - 1) * cStrideZ],
+            cellVert[ix + iy * cStrideY + (iz - 1) * cStrideZ],
+            cellVert[ix + iy * cStrideY + iz * cStrideZ],
+            cellVert[ix + (iy - 1) * cStrideY + iz * cStrideZ],
+            v0 < 0,
+          );
+        }
+      }
+    }
+  }
+  for (let iz = 1; iz < nz; iz++) {
+    for (let iy = 0; iy < ny; iy++) {
+      for (let ix = 1; ix < nx; ix++) {
+        const v0 = vals[ix + iy * strideY + iz * strideZ];
+        const v1 = vals[ix + (iy + 1) * strideY + iz * strideZ];
+        if (v0 < 0 !== v1 < 0) {
+          emitQuad(
+            cellVert[ix - 1 + iy * cStrideY + (iz - 1) * cStrideZ],
+            cellVert[ix - 1 + iy * cStrideY + iz * cStrideZ],
+            cellVert[ix + iy * cStrideY + iz * cStrideZ],
+            cellVert[ix + iy * cStrideY + (iz - 1) * cStrideZ],
+            v0 < 0,
+          );
+        }
+      }
+    }
+  }
+  for (let iz = 0; iz < nz; iz++) {
+    for (let iy = 1; iy < ny; iy++) {
+      for (let ix = 1; ix < nx; ix++) {
+        const v0 = vals[ix + iy * strideY + iz * strideZ];
+        const v1 = vals[ix + iy * strideY + (iz + 1) * strideZ];
+        if (v0 < 0 !== v1 < 0) {
+          emitQuad(
+            cellVert[ix - 1 + (iy - 1) * cStrideY + iz * cStrideZ],
+            cellVert[ix + (iy - 1) * cStrideY + iz * cStrideZ],
+            cellVert[ix + iy * cStrideY + iz * cStrideZ],
+            cellVert[ix - 1 + iy * cStrideY + iz * cStrideZ],
+            v0 < 0,
+          );
+        }
+      }
+    }
+  }
+
+  // 4) 固定スロット隣接テーブルによる高速 Taubin (λ/μ) 陶器スムージング
+  const vCount = vertPos.length / 3;
+  const MAX_NB = 12;
+  const nbTable = new Int32Array(vCount * MAX_NB);
+  const nbCount = new Uint8Array(vCount);
+
+  const linkVerts = (a, b) => {
+    const ca = nbCount[a];
+    if (ca < MAX_NB) {
+      const baseA = a * MAX_NB;
+      let dup = false;
+      for (let k = 0; k < ca; k++) {
+        if (nbTable[baseA + k] === b) {
+          dup = true;
+          break;
+        }
+      }
+      if (!dup) {
+        nbTable[baseA + ca] = b;
+        nbCount[a] = ca + 1;
+      }
+    }
+    const cb = nbCount[b];
+    if (cb < MAX_NB) {
+      const baseB = b * MAX_NB;
+      let dup = false;
+      for (let k = 0; k < cb; k++) {
+        if (nbTable[baseB + k] === a) {
+          dup = true;
+          break;
+        }
+      }
+      if (!dup) {
+        nbTable[baseB + cb] = a;
+        nbCount[b] = cb + 1;
+      }
+    }
+  };
+
+  for (let i = 0; i < indices.length; i += 3) {
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
+    linkVerts(i0, i1);
+    linkVerts(i1, i2);
+    linkVerts(i2, i0);
+  }
+
+  const posA = new Float32Array(vertPos);
+  const posB = new Float32Array(vertPos.length);
+
+  const relaxStep = (src, dst, w) => {
+    for (let v = 0; v < vCount; v++) {
+      const n = nbCount[v];
+      const v3 = v * 3;
+      if (!n) {
+        dst[v3] = src[v3];
+        dst[v3 + 1] = src[v3 + 1];
+        dst[v3 + 2] = src[v3 + 2];
+        continue;
+      }
+      const base = v * MAX_NB;
+      let ax = 0;
+      let ay = 0;
+      let az = 0;
+      for (let k = 0; k < n; k++) {
+        const u3 = nbTable[base + k] * 3;
+        ax += src[u3];
+        ay += src[u3 + 1];
+        az += src[u3 + 2];
+      }
+      const inv = 1.0 / n;
+      dst[v3] = src[v3] + w * (ax * inv - src[v3]);
+      dst[v3 + 1] = src[v3 + 1] + w * (ay * inv - src[v3 + 1]);
+      dst[v3 + 2] = src[v3 + 2] + w * (az * inv - src[v3 + 2]);
+    }
+  };
+
+  for (let p = 0; p < smoothPasses; p++) {
+    relaxStep(posA, posB, 0.50);
+    relaxStep(posB, posA, -0.52);
   }
 
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normArr, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2));
+  geo.setAttribute('position', new THREE.BufferAttribute(posA, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
@@ -513,238 +744,154 @@ function cloneGroupMirroredX(srcGroup) {
 }
 
 /**
- * サロン彫刻3Dハンドモデル：'thumb'（親指の腹押し）と 'fingers'（4本指の腹さすり）を構築
+ * シンプル一体成形 3Dハンドアイコン：
+ *   - 'thumb'（👆 1点ピンポイント押しアイコン：継ぎ目ゼロ単一メッシュ）
+ *   - 'fingers'（🤚 指の腹さすり・円ほぐしアイコン：継ぎ目ゼロ単一メッシュ）
  * ローカル座標: (0,0,0) = 体表接触点, +Z = 外向き法線, +Y = ストローク進行方向, +X = 横軸
  */
 function buildSculptedHands() {
-  const skinMatMain = new THREE.MeshStandardMaterial({
-    color: 0xdba084,
-    emissive: 0x994a30,
-    emissiveIntensity: 0.22,
-    roughness: 0.36,
-    metalness: 0.02,
-    transparent: true,
-    opacity: 0.93,
-    depthTest: true,
-    depthWrite: true,
-  });
-
-  const skinMatMidCuff = new THREE.MeshStandardMaterial({
-    color: 0xd69678,
-    emissive: 0x91442b,
-    emissiveIntensity: 0.18,
-    roughness: 0.42,
-    metalness: 0.01,
-    transparent: true,
-    opacity: 0.62,
-    depthTest: true,
-    depthWrite: false,
-  });
-
-  const skinMatOuterCuff = new THREE.MeshStandardMaterial({
-    color: 0xd08d6e,
-    emissive: 0x873e26,
-    emissiveIntensity: 0.14,
-    roughness: 0.48,
+  // マットな温もりアプリコットクレイ質感（opacity:1.0 完全不透明・内部パーツ透けゼロ、かつ renderOrder:52 で半透明皮膚ヴェールより手前にくっきり描画）
+  const velvetHandMat = new THREE.MeshStandardMaterial({
+    color: 0xf4cba4,
+    emissive: 0x854d2b,
+    emissiveIntensity: 0.16,
+    roughness: 0.80,
     metalness: 0.0,
     transparent: true,
-    opacity: 0.28,
-    depthTest: true,
-    depthWrite: false,
-  });
-
-  const nailMat = new THREE.MeshStandardMaterial({
-    color: 0xfff5ee,
-    emissive: 0xd9b39c,
-    emissiveIntensity: 0.20,
-    roughness: 0.24,
-    metalness: 0.03,
-    transparent: true,
-    opacity: 0.96,
+    opacity: 1.0,
     depthTest: true,
     depthWrite: true,
   });
 
-  const decorateMesh = (mesh, order = 52) => {
-    mesh.renderOrder = order;
-    mesh.raycast = noRaycast;
-    mesh.frustumCulled = false;
-    return mesh;
+  velvetHandMat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vHandLocalPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHandLocalPos = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vHandLocalPos;')
+      .replace(
+        '#include <dithering_fragment>',
+        `
+        float tipDist = length(vHandLocalPos - vec3(0.0, 0.010, 0.024));
+        float tipGlow = smoothstep(0.115, 0.014, tipDist);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.95, 0.48, 0.36), tipGlow * 0.42);
+        float ndv = abs(dot(normalize(vNormal), normalize(vViewPosition)));
+        float rimEdge = smoothstep(0.38, 0.04, ndv);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * 0.68 + vec3(0.15, 0.08, 0.04), rimEdge * 0.36);
+        #include <dithering_fragment>
+        `,
+      );
   };
 
+  // 白い骨格や明るい背景の上でも手の輪郭が一目でくっきり分かる外周シルエットライン（単一閉曲面なので手のひら内部には一切線が出ない）
+  const outlineHandMat = new THREE.MeshBasicMaterial({
+    color: 0x523624,
+    side: THREE.BackSide,
+    transparent: true,
+    opacity: 1.0,
+    depthTest: true,
+    depthWrite: true,
+    toneMapped: false,
+  });
+  outlineHandMat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      '#include <begin_vertex>\ntransformed += normalize(normal) * 0.0046;',
+    );
+  };
+
+  const addHandWithOutline = (group, geo) => {
+    const outlineMesh = new THREE.Mesh(geo, outlineHandMat);
+    outlineMesh.renderOrder = 51;
+    outlineMesh.raycast = noRaycast;
+    outlineMesh.frustumCulled = false;
+
+    const bodyMesh = new THREE.Mesh(geo, velvetHandMat);
+    bodyMesh.renderOrder = 52;
+    bodyMesh.raycast = noRaycast;
+    bodyMesh.frustumCulled = false;
+
+    group.add(outlineMesh, bodyMesh);
+  };
+
+  const HAND_SCALE = 1.92;
+
   // =========================================================================
-  // A. 'thumb' — 親指の腹押しモデル（原点 (0,0,0) に親指末節腹がピタッと接地）
+  // A. 'thumb' — シンプル1点押しアイコン（👆 原点 (0,0,0) をピンポイントで押さえる単一メッシュ）
   // =========================================================================
   const thumbPoseGroup = new THREE.Group();
   thumbPoseGroup.name = 'hand-pose-thumb';
 
-  // 1) 親指先端のぷっくりした指腹パッド（接触点 z=0.013）
-  const thumbPadGeo = new THREE.SphereGeometry(0.024, 24, 18);
-  thumbPadGeo.scale(1.06, 1.32, 0.58);
-  const thumbPadMesh = decorateMesh(new THREE.Mesh(thumbPadGeo, skinMatMain), 52);
-  thumbPadMesh.position.set(0, 0.004, 0.014);
-  thumbPadMesh.rotation.x = -0.10;
-  thumbPoseGroup.add(thumbPadMesh);
+  const geoPointPress = buildSeamlessPillowedHandGeometry({
+    rEdge: 0.0096,
+    domeAmp: 0.0058,
+    bounds: [-0.072, 0.064, -0.142, 0.036, -0.005, 0.102],
+    nx: 54,
+    ny: 68,
+    nz: 28,
+    smoothPasses: 6,
+    sdf2D: (x, y) => {
+      // 半円ボトムのすっきり一体型パーム（手首の段差・別パーツ感ゼロ）
+      let dPalm = sdRoundBox2D(x, y, 0.006, -0.092, 0.012, 0.006, 0.025);
+      const kMid = sdCapsule2D(x, y, 0.007, -0.076, 0.007, -0.056, 0.0024, 0.0018);
+      const kRing = sdCapsule2D(x, y, 0.024, -0.080, 0.024, -0.062, 0.0020, 0.0015);
+      const kPinky = sdCapsule2D(x, y, 0.038, -0.085, 0.038, -0.069, 0.0015, 0.0011);
+      dPalm = sminCubic(dPalm, Math.min(kMid, kRing, kPinky), 0.008);
 
-  // 2) 親指の爪プレート（背側 +Z に繊細なカーブで乗る）
-  const thumbNailGeo = new THREE.SphereGeometry(0.016, 18, 12);
-  thumbNailGeo.scale(0.95, 1.18, 0.22);
-  const thumbNailMesh = decorateMesh(new THREE.Mesh(thumbNailGeo, nailMat), 53);
-  thumbNailMesh.position.set(-0.002, 0.012, 0.027);
-  thumbNailMesh.rotation.set(-0.18, 0.08, 0);
-  thumbPoseGroup.add(thumbNailMesh);
+      // (0, 0, 0) をくっきり分かりやすく押さえる1本指パッド（視認性の高い長さ）
+      const dPress = sdCapsule2D(x, y, -0.011, -0.068, 0.0, 0.010, 0.0036, 0.0028);
+      let d = sminCubic(dPalm, dPress, 0.009);
 
-  // 3) 親指 末節〜基節〜母指球〜手首基部への滑らかなアーチ
-  const thumbChainPts = [
-    new THREE.Vector3(0.0, 0.006, 0.015),
-    new THREE.Vector3(0.012, -0.026, 0.030),
-    new THREE.Vector3(0.034, -0.062, 0.058),
-    new THREE.Vector3(0.062, -0.098, 0.098),
-    new THREE.Vector3(0.084, -0.132, 0.142),
-  ];
-  const thumbChainGeo = createTaperedLimbGeometry(thumbChainPts, [0.019, 0.020, 0.023, 0.030, 0.032], 24, 14);
-  thumbPoseGroup.add(decorateMesh(new THREE.Mesh(thumbChainGeo, skinMatMain), 52));
-
-  // 4) 手のひら・手背ドーム（親指の視線を遮らない斜め外側上方）
-  const palmThumbGeo = new THREE.SphereGeometry(0.048, 24, 18);
-  palmThumbGeo.scale(1.12, 1.28, 0.62);
-  const palmThumbMesh = decorateMesh(new THREE.Mesh(palmThumbGeo, skinMatMain), 52);
-  palmThumbMesh.position.set(0.086, -0.086, 0.132);
-  palmThumbMesh.rotation.set(0.45, -0.36, -0.25);
-  thumbPoseGroup.add(palmThumbMesh);
-
-  // 5) 軽く握り添えた残り4本指（視界を開け、体表 z>0.075 の安全な高さにカール）
-  for (let fi = 0; fi < 4; fi++) {
-    const spread = fi * 0.021;
-    const lenScale = fi === 1 ? 1.04 : fi === 2 ? 0.98 : fi === 0 ? 0.96 : 0.84;
-    const curlPts = [
-      new THREE.Vector3(0.068 + spread * 0.65, -0.052 - spread * 0.35, 0.136 - fi * 0.004),
-      new THREE.Vector3(0.058 + spread * 0.72, -0.014 - spread * 0.30, 0.128 - fi * 0.005),
-      new THREE.Vector3(0.064 + spread * 0.75, -0.004 - spread * 0.32, 0.102 - fi * 0.004),
-      new THREE.Vector3(0.078 + spread * 0.72, -0.026 - spread * 0.34, 0.086 - fi * 0.003),
-    ].map((v) => v.multiplyScalar(0.98 + 0.02 * lenScale));
-    const rBase = 0.0135 * (1 - fi * 0.05);
-    const curlGeo = createTaperedLimbGeometry(curlPts, [rBase * 1.15, rBase, rBase * 0.90, rBase * 0.78], 18, 12);
-    thumbPoseGroup.add(decorateMesh(new THREE.Mesh(curlGeo, skinMatMain), 52));
-  }
-
-  // 6) 上品にフェードアウトする手首カフ（2段階透過グラデーションで自然な抜け感）
-  const wristMidGeo = createTaperedLimbGeometry(
-    [
-      new THREE.Vector3(0.088, -0.126, 0.146),
-      new THREE.Vector3(0.104, -0.168, 0.184),
-    ],
-    [0.038, 0.041],
-    10,
-    16,
-  );
-  thumbPoseGroup.add(decorateMesh(new THREE.Mesh(wristMidGeo, skinMatMidCuff), 51));
-
-  const wristOuterGeo = createTaperedLimbGeometry(
-    [
-      new THREE.Vector3(0.102, -0.162, 0.178),
-      new THREE.Vector3(0.120, -0.210, 0.222),
-    ],
-    [0.040, 0.043],
-    10,
-    16,
-  );
-  thumbPoseGroup.add(decorateMesh(new THREE.Mesh(wristOuterGeo, skinMatOuterCuff), 50));
+      // 横に添えた親指シルエット（一目で「手」と直感できるアイコン形状）
+      const dThumb = sdCapsule2D(x, y, -0.022, -0.098, -0.048, -0.062, 0.0034, 0.0022);
+      d = sminCubic(d, dThumb, 0.011);
+      return d;
+    },
+    archZFn: (x, y) => {
+      const back = Math.max(0.0, 0.006 - y);
+      return 0.012 + 0.62 * back - 1.35 * x * x;
+    },
+  });
+  geoPointPress.scale(HAND_SCALE, HAND_SCALE, HAND_SCALE);
+  addHandWithOutline(thumbPoseGroup, geoPointPress);
 
   // =========================================================================
-  // B. 'fingers' — 4本指の腹さすりモデル（4本指が揃って (0,0,0) に優しく接地）
+  // B. 'fingers' — シンプルさすり手アイコン（🤚 面でやさしくなでる単一メッシュ）
   // =========================================================================
   const fingersPoseGroup = new THREE.Group();
   fingersPoseGroup.name = 'hand-pose-fingers';
 
-  // 人差し指・中指・薬指・小指の4本（自然な指先アークと約22°の優美な関節屈曲）
-  const fingerSpecs = [
-    { xTip: -0.041, xMcp: -0.044, yTip: -0.006, r: 0.0128, nailW: 0.010 }, // 人差し指
-    { xTip: -0.014, xMcp: -0.015, yTip: +0.005, r: 0.0134, nailW: 0.0106 }, // 中指
-    { xTip: +0.014, xMcp: +0.015, yTip: -0.002, r: 0.0126, nailW: 0.0098 }, // 薬指
-    { xTip: +0.039, xMcp: +0.043, yTip: -0.016, r: 0.0110, nailW: 0.0086 }, // 小指
-  ];
+  const geoOpenHand = buildSeamlessPillowedHandGeometry({
+    rEdge: 0.0092,
+    domeAmp: 0.0052,
+    bounds: [-0.086, 0.058, -0.138, 0.030, -0.005, 0.088],
+    nx: 58,
+    ny: 68,
+    nz: 28,
+    smoothPasses: 6,
+    sdf2D: (x, y) => {
+      // 半円ボトムの滑らかな一体型手のひら（別パーツの楕円や手首リング一切なし）
+      const dPalm = sdRoundBox2D(x, y, 0.0, -0.084, 0.012, 0.008, 0.026);
 
-  for (const fs of fingerSpecs) {
-    // 指先の柔らかい腹パッド
-    const tipPadGeo = new THREE.SphereGeometry(fs.r * 1.18, 18, 14);
-    tipPadGeo.scale(1.0, 1.35, 0.62);
-    const tipPad = decorateMesh(new THREE.Mesh(tipPadGeo, skinMatMain), 52);
-    tipPad.position.set(fs.xTip, fs.yTip, 0.011);
-    tipPad.rotation.x = -0.12;
-    fingersPoseGroup.add(tipPad);
+      // 4本の丸みのあるシンプルな指シルエット
+      const f1 = sdCapsule2D(x, y, -0.033, -0.062, -0.032, -0.002, 0.0018, 0.0012);
+      const f2 = sdCapsule2D(x, y, -0.011, -0.062, -0.011, 0.010, 0.0022, 0.0015);
+      const f3 = sdCapsule2D(x, y, 0.011, -0.062, 0.011, 0.002, 0.0018, 0.0012);
+      const f4 = sdCapsule2D(x, y, 0.033, -0.065, 0.033, -0.014, 0.0012, 0.0008);
+      let d = sminCubic(dPalm, Math.min(f1, f2, f3, f4), 0.008);
 
-    // 爪プレート
-    const fNailGeo = new THREE.SphereGeometry(fs.nailW, 14, 10);
-    fNailGeo.scale(0.92, 1.24, 0.22);
-    const fNail = decorateMesh(new THREE.Mesh(fNailGeo, nailMat), 53);
-    fNail.position.set(fs.xTip, fs.yTip + 0.005, 0.020);
-    fNail.rotation.x = -0.16;
-    fingersPoseGroup.add(fNail);
-
-    // 指の3節カーブ（末節 -> 中節 -> 基節 -> MCP中手骨頭）
-    const fPts = [
-      new THREE.Vector3(fs.xTip, fs.yTip, 0.012),
-      new THREE.Vector3((fs.xTip + fs.xMcp) * 0.5, fs.yTip - 0.034, 0.022),
-      new THREE.Vector3(fs.xMcp * 0.96, fs.yTip - 0.072, 0.044),
-      new THREE.Vector3(fs.xMcp, -0.112, 0.068),
-    ];
-    const fGeo = createTaperedLimbGeometry(fPts, [fs.r * 0.96, fs.r * 1.05, fs.r * 1.14, fs.r * 1.22], 20, 12);
-    fingersPoseGroup.add(decorateMesh(new THREE.Mesh(fGeo, skinMatMain), 52));
-  }
-
-  // 手のひら〜中手部（約28°の浅く優美な角度で体表に沿う）
-  const palmFlatGeo = new THREE.SphereGeometry(0.056, 26, 18);
-  palmFlatGeo.scale(1.08, 1.26, 0.42);
-  const palmFlatMesh = decorateMesh(new THREE.Mesh(palmFlatGeo, skinMatMain), 52);
-  palmFlatMesh.position.set(0.0, -0.142, 0.084);
-  palmFlatMesh.rotation.x = 0.46;
-  fingersPoseGroup.add(palmFlatMesh);
-
-  // 横に自然に添えられた親指（0.5秒で「手」とわかるシルエット）
-  const sideThumbPts = [
-    new THREE.Vector3(-0.046, -0.148, 0.078),
-    new THREE.Vector3(-0.068, -0.112, 0.062),
-    new THREE.Vector3(-0.076, -0.076, 0.046),
-    new THREE.Vector3(-0.072, -0.048, 0.036),
-  ];
-  const sideThumbGeo = createTaperedLimbGeometry(sideThumbPts, [0.019, 0.016, 0.014, 0.012], 18, 12);
-  fingersPoseGroup.add(decorateMesh(new THREE.Mesh(sideThumbGeo, skinMatMain), 52));
-
-  // 手首フェードカフ（2段階透過グラデーション）
-  const fWristMidGeo = createTaperedLimbGeometry(
-    [
-      new THREE.Vector3(0.0, -0.178, 0.102),
-      new THREE.Vector3(0.0, -0.225, 0.128),
-    ],
-    [0.041, 0.043],
-    10,
-    16,
-  );
-  fingersPoseGroup.add(decorateMesh(new THREE.Mesh(fWristMidGeo, skinMatMidCuff), 51));
-
-  const fWristOuterGeo = createTaperedLimbGeometry(
-    [
-      new THREE.Vector3(0.0, -0.220, 0.125),
-      new THREE.Vector3(0.0, -0.272, 0.156),
-    ],
-    [0.042, 0.044],
-    10,
-    16,
-  );
-  fingersPoseGroup.add(decorateMesh(new THREE.Mesh(fWristOuterGeo, skinMatOuterCuff), 50));
-
-  // 原点 (0,0,0) の体表接触点を保ったまま 1.38倍 に拡大し、スマホ画面でも指先と手の立体感が0.5秒で伝わるようにする
-  const scaleHandGroupFromContactOrigin = (grp, factor) => {
-    grp.traverse((child) => {
-      if (child.isMesh && child.geometry) {
-        child.geometry.scale(factor, factor, factor);
-        child.position.multiplyScalar(factor);
-      }
-    });
-  };
-  scaleHandGroupFromContactOrigin(thumbPoseGroup, 1.38);
-  scaleHandGroupFromContactOrigin(fingersPoseGroup, 1.38);
+      // 自然に開いた親指シルエット
+      const dThumb = sdCapsule2D(x, y, -0.028, -0.094, -0.062, -0.044, 0.0032, 0.0018);
+      d = sminCubic(d, dThumb, 0.012);
+      return d;
+    },
+    archZFn: (x, y) => {
+      const back = Math.max(0.0, -0.005 - y);
+      return 0.012 + 0.34 * back - 1.25 * x * x;
+    },
+  });
+  geoOpenHand.scale(HAND_SCALE, HAND_SCALE, HAND_SCALE);
+  addHandWithOutline(fingersPoseGroup, geoOpenHand);
 
   const thumbPoseGroupL = cloneGroupMirroredX(thumbPoseGroup);
   const fingersPoseGroupL = cloneGroupMirroredX(fingersPoseGroup);
@@ -844,7 +991,7 @@ function buildSupportSurfacePanel() {
 }
 
 /**
- * モーション方向インジケーター（往復フロー矢印 / 円弧矢印 / 押圧ホールド＋滑走リボン）を生成
+ * モーション方向インジケーター（往復フロー矢印 / 円弧矢印 / 押圧ターゲットリング＋滑走矢印）を生成
  */
 function buildMotionIndicators() {
   const root = new THREE.Group();
@@ -854,8 +1001,8 @@ function buildMotionIndicators() {
   const strokeGroup = new THREE.Group();
   const chevrons = [0, 1, 2].map((ci) => {
     const taper = 1.0 - ci * 0.11;
-    const hw = 0.044 * taper;
-    const tipY = 0.022 * taper;
+    const hw = 0.046 * taper;
+    const tipY = 0.024 * taper;
     const tailY = -0.012 * taper;
     const chevCurve = new THREE.CatmullRomCurve3(
       [
@@ -869,20 +1016,20 @@ function buildMotionIndicators() {
       'centripetal',
       0.5,
     );
-    const rTube = 0.0054 * (1.0 - ci * 0.06);
+    const rTube = 0.0058 * (1.0 - ci * 0.06);
     const chevGeo = new THREE.TubeGeometry(chevCurve, 24, rTube, 8, false);
     const chevMat = new THREE.MeshStandardMaterial({
       color: ci === 1 ? 0xe58e7a : 0xd19c50,
       emissive: ci === 1 ? 0xa34f3c : 0x8f6220,
-      emissiveIntensity: 0.24,
+      emissiveIntensity: 0.28,
       roughness: 0.36,
       transparent: true,
-      opacity: 0.84 - ci * 0.12,
+      opacity: 0.88 - ci * 0.12,
       depthTest: true,
       depthWrite: false,
     });
     const grp = new THREE.Group();
-    const baseY = 0.078 + ci * 0.040;
+    const baseY = 0.078 + ci * 0.042;
     grp.position.set(0, baseY, 0.016 + ci * 0.001);
     grp.userData.baseY = baseY;
     grp.userData.mat = chevMat;
@@ -903,10 +1050,10 @@ function buildMotionIndicators() {
   const arcMat = new THREE.MeshStandardMaterial({
     color: 0xd99452,
     emissive: 0x915822,
-    emissiveIntensity: 0.24,
+    emissiveIntensity: 0.28,
     roughness: 0.36,
     transparent: true,
-    opacity: 0.84,
+    opacity: 0.88,
     depthTest: true,
     depthWrite: false,
   });
@@ -914,20 +1061,19 @@ function buildMotionIndicators() {
     const startA = sideIdx * Math.PI + 0.32;
     const endA = sideIdx * Math.PI + Math.PI - 0.32;
     const arcPts = [];
-    const rArc = 0.072;
+    const rArc = 0.082;
     for (let k = 0; k <= 18; k++) {
       const a = startA + ((endA - startA) * k) / 18;
       arcPts.push(new THREE.Vector3(Math.cos(a) * rArc, Math.sin(a) * rArc, 0.015));
     }
-    const arcGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arcPts), 22, 0.0048, 8, false);
+    const arcGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arcPts), 22, 0.0052, 8, false);
     const arcMesh = new THREE.Mesh(arcGeo, arcMat);
     arcMesh.renderOrder = 54;
     arcMesh.raycast = noRaycast;
     arcMesh.frustumCulled = false;
     circleGroup.add(arcMesh);
 
-    // 矢印先端コーン
-    const coneGeo = new THREE.ConeGeometry(0.012, 0.024, 10);
+    const coneGeo = new THREE.ConeGeometry(0.013, 0.025, 10);
     const coneMesh = new THREE.Mesh(coneGeo, arcMat);
     const tipPt = arcPts[arcPts.length - 1];
     const prevPt = arcPts[arcPts.length - 2];
@@ -941,17 +1087,17 @@ function buildMotionIndicators() {
   }
   root.add(circleGroup);
 
-  // 3) 押圧ホールド＋関節連動グライドリング ('glide')
+  // 3) 押圧ホールドターゲットリング＋手のひらと重ならない前方往復グライド矢印 ('glide' / 'press')
   const glideGroup = new THREE.Group();
   glideGroup.visible = false;
-  const holdRingGeo = new THREE.TorusGeometry(0.048, 0.0052, 12, 44);
+  const holdRingGeo = new THREE.TorusGeometry(0.052, 0.0058, 12, 48);
   const holdRingMat = new THREE.MeshStandardMaterial({
     color: 0xe3856f,
     emissive: 0xa14430,
-    emissiveIntensity: 0.28,
+    emissiveIntensity: 0.30,
     roughness: 0.34,
     transparent: true,
-    opacity: 0.90,
+    opacity: 0.92,
     depthTest: true,
     depthWrite: false,
   });
@@ -962,29 +1108,30 @@ function buildMotionIndicators() {
   holdRingMesh.frustumCulled = false;
   glideGroup.add(holdRingMesh);
 
-  // 前後へ筋膜が滑走することを示す上下ペア矢印
+  // 指先の前方（+Y側・手のひらに隠れない視界オープン領域）に上下往復ペア矢印を配置
   const glideArrows = [-1, 1].map((dirSign) => {
     const gMat = new THREE.MeshStandardMaterial({
       color: 0xd49b4b,
       emissive: 0x8f5e1c,
-      emissiveIntensity: 0.24,
+      emissiveIntensity: 0.28,
       roughness: 0.36,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.88,
       depthTest: true,
       depthWrite: false,
     });
     const gGrp = new THREE.Group();
-    const shaftGeo = new THREE.CylinderGeometry(0.0038, 0.0038, 0.036, 8);
+    const centerY = dirSign > 0 ? 0.134 : 0.088;
+    const shaftGeo = new THREE.CylinderGeometry(0.0040, 0.0040, 0.026, 8);
     const shaft = new THREE.Mesh(shaftGeo, gMat);
-    shaft.position.set(0, dirSign * 0.072, 0.015);
+    shaft.position.set(0, centerY - dirSign * 0.006, 0.016);
     shaft.renderOrder = 54;
     shaft.raycast = noRaycast;
     shaft.frustumCulled = false;
 
-    const headGeo = new THREE.ConeGeometry(0.011, 0.022, 10);
+    const headGeo = new THREE.ConeGeometry(0.012, 0.024, 10);
     const head = new THREE.Mesh(headGeo, gMat);
-    head.position.set(0, dirSign * 0.096, 0.015);
+    head.position.set(0, centerY + dirSign * 0.014, 0.016);
     if (dirSign < 0) head.rotation.z = Math.PI;
     head.renderOrder = 54;
     head.raycast = noRaycast;
@@ -1737,18 +1884,30 @@ export function createSelfCareGuide3D({ parent }) {
           : isLeft
             ? fingersPoseGroupL
             : fingersPoseGroup;
+      activeHand.rotation.order = 'ZXY';
+
+      // 横向きの腕・すね・お尻横などで 1点押しアイコンが真横の薄い断面に見えないよう、接触点(0,0,0)を軸にカメラ側へ手の甲を向ける
+      let camSpinZ = 0;
+      let camLiftX = 0;
+      if (st.handPose === 'thumb') {
+        const sideFactor = smooth01(0.68, 0.22, normOnCurve.z);
+        if (sideFactor > 0.001) {
+          const idealPhi = Math.atan2(bitanOnCurve.z, -tanOnCurve.z);
+          camSpinZ = idealPhi * sideFactor;
+          camLiftX = -0.28 * sideFactor;
+        }
+      }
+
       if (st.motion === 'glide' || st.motion === 'press') {
         const pWave = 0.5 - 0.5 * Math.cos(t * 2.0 * spd);
-        activeHand.rotation.x = pWave * 0.07;
+        activeHand.rotation.set(camLiftX + pWave * 0.07, 0, camSpinZ);
         activeHand.position.z = -pWave * 0.003;
       } else if (st.motion === 'circle') {
         const ang = t * 2.05 * spd;
-        activeHand.rotation.x = Math.sin(ang) * 0.05;
-        activeHand.rotation.y = Math.cos(ang) * 0.05;
+        activeHand.rotation.set(camLiftX + Math.sin(ang) * 0.05, Math.cos(ang) * 0.05, camSpinZ);
         activeHand.position.z = 0;
       } else {
-        activeHand.rotation.x = 0.04 * Math.sin(t * 2.2 * spd);
-        activeHand.rotation.y = 0;
+        activeHand.rotation.set(camLiftX + 0.04 * Math.sin(t * 2.2 * spd), 0, camSpinZ);
         activeHand.position.z = 0;
       }
     }

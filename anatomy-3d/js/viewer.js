@@ -22,7 +22,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 // 姿勢変形（posture.js）: 名前付き import だと export 欠落時にモジュール全体が落ちるので名前空間で受ける
-import * as posture from './posture.js?v=20261118a';
+import * as posture from './posture.js?v=20261118b';
 
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
@@ -35,7 +35,7 @@ const getRigRole =
 // 定数
 // ---------------------------------------------------------------------------
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261118a';
+const ASSET_QUERY = '?v=20261118b';
 const IDLE_TIMEOUT_MS = 45000; // 無操作45秒以上で省電力 4fps 待機モードへ移行（観察中の15fps低下カクつきを完全防止）
 const IDLE_FRAME_INTERVAL_MS = 250; // 約 4fps（250ms間隔）の静かな待機（画面に触れた瞬間0msで60fpsへ即復帰）
 
