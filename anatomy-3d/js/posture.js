@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 
-export const POSTURE_VERSION = '20261118c';
+export const POSTURE_VERSION = '20261118d';
 
 // -----------------------------------------------------------------------------
 // 32の姿勢・動作キネマティクスパラメータ名と初期状態
@@ -2431,20 +2431,23 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
 
     // ================ 7. 姿勢・睡眠・カバン ================
     case 'bag-shoulder-r': {
-      // #20 片方の肩に重いカバンをかける：比較的起きた一歩目(u=0) ➔ カバンの重みで右肩をすくめ左へ傾きながら踏み出す(u=1)
+      // #20 片方の肩に重いカバンをかける：かけた側（右）の肘を深く曲げて手のひらを右肩前のストラップ位置まで持ち上げて保持し、重みで傾きながら歩く
       out.armsFold    = 0;
       out.sideBend    = mix(0.08, 0.40, e) * kFull;
       out.hipShift    = mix(-0.14, -0.64, e) * kFull;
-      out.shoulderIn  = mix(0.26, 0.56, e) * kFull;
-      out.trunkFlex   = mix(0.04, 0.20, e) * kFull;
-      out.trunkRotate = (-0.08 + 0.24 * sw) * kFull;
+      out.shoulderIn  = mix(0.24, 0.52, e) * kFull;
+      out.trunkFlex   = mix(0.04, 0.18, e) * kFull;
+      out.trunkRotate = (-0.08 + 0.22 * sw) * kFull;
       out.legSwingL   = 0.42 * sw * kFull;
       out.legSwingR   = -0.42 * sw * kFull;
-      out.armRaiseR   = mix(0.46, 0.68, e) * kFull;
-      out.armSpreadR  = 0.12 * kFull;
-      out.elFlexR     = mix(1.18, 1.40, e) * kFull;
-      out.foreYawR    = 0.48 * kFull;
-      out.pronateR    = 0.62 * kFull;
+      // カバンをかけている右腕：肘を深く曲げ、手のひらを右肩の前（肩紐をつかむ高さ）までしっかり曲げて保持
+      out.armRaiseR   = mix(0.10, 0.18, e) * kFull;
+      out.armSpreadR  = mix(0.12, 0.16, e) * kFull;
+      out.elFlexR     = mix(2.18, 2.32, e) * kFull;
+      out.foreYawR    = mix(0.30, 0.38, e) * kFull;
+      out.pronateR    = 0.22 * kFull;
+      out.wristExtR   = -0.10 * kFull;
+      // 反対側（左腕）：歩行に合わせて自然に振る
       out.armRaiseL   = -0.28 * sw * kFull;
       out.elFlexL     = 0.28 * kFull;
       out.pronateL    = 0.56 * kFull;
@@ -2925,8 +2928,8 @@ function computeHabitActionPose(phase, raw, out, habitId, k = 1.0, explicitU01 =
   out.armRaiseR   = clamp(out.armRaiseR,   -1.05, 2.95);
   out.armSpreadL  = clamp(out.armSpreadL,  -0.6,  1.5);
   out.armSpreadR  = clamp(out.armSpreadR,  -0.6,  1.5);
-  out.elFlexL     = clamp(out.elFlexL,      0.0,  1.6);
-  out.elFlexR     = clamp(out.elFlexR,      0.0,  1.6);
+  out.elFlexL     = clamp(out.elFlexL,      0.0,  2.45);
+  out.elFlexR     = clamp(out.elFlexR,      0.0,  2.45);
   out.foreYawL    = clamp(out.foreYawL,    -1.5,  1.5);
   out.foreYawR    = clamp(out.foreYawR,    -1.5,  1.5);
   out.legSwingL   = clamp(out.legSwingL,   -1.10, 1.35);
@@ -3024,40 +3027,53 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
 
-  // 2. 手・母指球・前腕・手首（親指で押さえたまま手首をゆっくり背屈⇄掌屈して筋膜を滑らせる glide モーション完全連動！）
+  // 2. 手・母指球・前腕・手首（ケア面を体幹から離して正面・斜め上へ開き、指がマッサージ手へぶつからない背屈ストレッチ連動！）
   if (
     /abductor-pollicis|flexor-pollicis|opponens-pollicis|adductor-pollicis|flexor-carpi|extensor-carpi|brachioradialis|extensor-digitorum$|extensor-indicis|extensor-digiti-minimi|flexor-digitorum-(superficialis|profundus)|pronator|supinator|palmaris|thenar|-hand$/.test(
       mId,
     )
   ) {
     const isDorsalForearm = /extensor|brachioradialis|supinator/.test(mId);
-    const targetPron = isDorsalForearm ? 0.86 : 0.12;
     const isGlide = scMotion === 'glide' || scTool === 'hand';
-    const wristSwing = isGlide ? (0.10 + 0.62 * glideWave) : (0.14 * rollWave);
+    const stretchPulse = 0.5 - 0.5 * Math.cos(t * 2.1);
+    // 手のひら側ケア時は +背屈方向(>=0.06)へ反らせて伸ばし、指が内側へ丸まってマッサージ手と干渉するのを物理的に防止
+    const wristSwing = isGlide
+      ? isDorsalForearm
+        ? -0.06 - 0.36 * stretchPulse
+        : 0.06 + 0.42 * stretchPulse
+      : 0.12 * rollWave;
+    const targetRaise = isDorsalForearm ? 0.24 : 0.14;
+    const targetElFlex = isDorsalForearm ? 0.68 : 0.56;
+    const targetSpread = isDorsalForearm ? 0.22 : 0.26;
+    const targetYaw = isDorsalForearm ? 0.28 : -0.04;
+    const targetPron = isDorsalForearm ? 0.78 : -0.24;
+
     out.sit = 0.92 * k;
-    out.trunkFlex = 0.10 * k;
+    out.trunkFlex = 0.08 * k;
     if (isL) {
-      out.armRaiseL = (0.48 + 0.03 * rollWave) * k;
-      out.elFlexL = (0.96 - 0.04 * rollWave) * k;
-      out.armSpreadL = 0.18 * k;
-      out.foreYawL = 0.20 * k;
+      out.armRaiseL = (targetRaise + 0.02 * rollWave) * k;
+      out.elFlexL = (targetElFlex - 0.03 * rollWave) * k;
+      out.armSpreadL = targetSpread * k;
+      out.foreYawL = targetYaw * k;
       out.pronateL = targetPron * k;
       out.wristExtL = wristSwing * k;
-      out.armRaiseR = 0.24 * k;
-      out.elFlexR = 0.80 * k;
-      out.foreYawR = 0.28 * k;
-      out.pronateR = 0.85 * k;
+      out.armRaiseR = 0.18 * k;
+      out.armSpreadR = 0.16 * k;
+      out.elFlexR = 0.62 * k;
+      out.foreYawR = 0.12 * k;
+      out.pronateR = 0.75 * k;
     } else {
-      out.armRaiseR = (0.48 + 0.03 * rollWave) * k;
-      out.elFlexR = (0.96 - 0.04 * rollWave) * k;
-      out.armSpreadR = 0.18 * k;
-      out.foreYawR = 0.20 * k;
+      out.armRaiseR = (targetRaise + 0.02 * rollWave) * k;
+      out.elFlexR = (targetElFlex - 0.03 * rollWave) * k;
+      out.armSpreadR = targetSpread * k;
+      out.foreYawR = targetYaw * k;
       out.pronateR = targetPron * k;
       out.wristExtR = wristSwing * k;
-      out.armRaiseL = 0.24 * k;
-      out.elFlexL = 0.80 * k;
-      out.foreYawL = 0.28 * k;
-      out.pronateL = 0.85 * k;
+      out.armRaiseL = 0.18 * k;
+      out.armSpreadL = 0.16 * k;
+      out.elFlexL = 0.62 * k;
+      out.foreYawL = 0.12 * k;
+      out.pronateL = 0.75 * k;
     }
     return;
   }

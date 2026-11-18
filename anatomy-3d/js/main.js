@@ -1,18 +1,18 @@
 // =============================================================================
-// main.js — アナトミー筋膜・筋肉 3D（一体型オーケストレーション v=20261118c）
+// main.js — アナトミー筋膜・筋肉 3D（一体型オーケストレーション v=20261118d）
 // ・全45動作 posture.js で「11本連続3D筋膜シート」と「立体3D筋肉」が 0.000mm 同期変形
 // ・［ 筋膜 ｜ 筋肉 ］スイッチでポーズ・カメラ・セルフケア手順を1ミリも崩さず瞬時切替
 // ・?layer=fascia|muscle / ?habit= / ?symptom= / ?motion= / ?line= / ?theme= 完全対応
 // =============================================================================
 
-import * as dataModule from './data.js?v=20261118c';
-import * as anatomyDetails from './anatomy_details.js?v=20261118c';
-import { createFascia } from './fascia.js?v=20261118c';
-import * as posture from './posture.js?v=20261118c';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261118c';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261118c';
-import { createUI } from './ui.js?v=20261118c';
-import { createViewer } from './viewer.js?v=20261118c';
+import * as dataModule from './data.js?v=20261118d';
+import * as anatomyDetails from './anatomy_details.js?v=20261118d';
+import { createFascia } from './fascia.js?v=20261118d';
+import * as posture from './posture.js?v=20261118d';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261118d';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261118d';
+import { createUI } from './ui.js?v=20261118d';
+import { createViewer } from './viewer.js?v=20261118d';
 
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
@@ -123,7 +123,7 @@ const jaMessage = (err) =>
 
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261118c');
+    const res = await fetch('models/atlas_metadata.json?v=20261118d');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};

@@ -32,12 +32,12 @@
 //   - 黄色・アンバー発光ゼロ。全シェーダーで厳密な Premultiplied Alpha（clamp(col,0,1)*alpha）を出力し骨の白飛びを防止。
 // =============================================================================
 
-import * as posture from './posture.js?v=20261118c';
+import * as posture from './posture.js?v=20261118d';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261118c';
+} from './selfcare_guide3d.js?v=20261118d';
 
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
@@ -2535,7 +2535,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
   /**
    * 対象筋（muscleId）の解剖学的位置に応じて、THREE.Raycaster でレスト体表外殻の7点曲線と法線を取得する
    */
-  function computeReleaseKinematics(muscleId, strokeTarget, side, strokeSpan = 1.0) {
+  function computeReleaseKinematics(muscleId, strokeTarget, side, strokeSpan = 1.0, tool = 'ball') {
     const an = analyze(muscleId);
     const effSide =
       side === 'L' || side === 'R'
@@ -2599,7 +2599,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       strokeDirRest.copy(ax);
       spanLen = 0.26 * strokeSpan;
     } else if (isForearmDorsal) {
-      outDirRest.set(sx * 0.56, 0.0, -0.83).normalize();
+      outDirRest.set(sx * 0.72, 0.04, -0.69).normalize();
       const ax = (an?.[effSide]?.axis || new THREE.Vector3(sx * 0.16, -0.97, 0.16)).clone().normalize();
       strokeDirRest.copy(ax);
       spanLen = 0.26 * strokeSpan;
@@ -2660,6 +2660,15 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
     } else if (isArmTarget) {
       for (const id of ARM_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
+      if (isThenarHand) {
+        for (const id of [
+          effSide === 'L' ? 'left-first-metacarpal-bone' : 'right-first-metacarpal-bone',
+          effSide === 'L' ? 'left-first-proximal-phalanx-hand' : 'right-first-proximal-phalanx-hand',
+          effSide === 'L' ? 'left-second-metacarpal-bone' : 'right-second-metacarpal-bone',
+        ]) {
+          candidateIdSet.add(id);
+        }
+      }
     } else if (isLegTarget) {
       for (const id of LEG_SURFACE_ENVELOPE_IDS) candidateIdSet.add(id);
     } else {
@@ -2682,7 +2691,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       effSide,
       sampleCount: 7,
       fallbackOffset: 0.085,
-      surfaceClearance: 0.010,
+      surfaceClearance: tool === 'hand' ? 0.022 : 0.010,
     });
 
     return {
@@ -2736,7 +2745,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       showTriggerPoint(muscleId, side);
     }
 
-    const kin = computeReleaseKinematics(muscleId, cfg.strokeTarget, side, strokeSpan);
+    const kin = computeReleaseKinematics(muscleId, cfg.strokeTarget, side, strokeSpan, tool);
 
     releaseState.active = true;
     releaseState.muscleId = muscleId;

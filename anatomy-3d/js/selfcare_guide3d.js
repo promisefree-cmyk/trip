@@ -15,7 +15,7 @@
 
 import * as THREE from 'three';
 
-export const SELFCARE_GUIDE_VERSION = '20261118c';
+export const SELFCARE_GUIDE_VERSION = '20261118d';
 
 export const R_BALL = 0.105;
 export const R_ROLLER = 0.12;
@@ -702,6 +702,12 @@ function buildSeamlessPillowedHandGeometry({
     relaxStep(posB, posA, -0.52);
   }
 
+  // 体表法線 +Z のマイナス側（身体の内部）へ頂点が1mmも潜り込まないよう下限 z >= 0.002 を物理保証
+  for (let v = 0; v < vCount; v++) {
+    const zIdx = v * 3 + 2;
+    if (posA[zIdx] < 0.002) posA[zIdx] = 0.002;
+  }
+
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(posA, 3));
   geo.setIndex(indices);
@@ -859,10 +865,10 @@ function buildSculptedHands() {
       return sminCubic(dBody, dThumb, 0.014);
     },
     archZFn: (x, y) => {
-      // 親指先端 (0, 0) が体表 z=0.012 にピタッと接地し、横の4本指と手の甲は緩やかな角度で浮いて正面からくっきり見える
+      // 親指先端 (0, 0) のみが体表に優しく触れ、横の4本指と手のひらは法線外向き(+Z)へしっかり浮き上がって身体貫通をゼロにする
       const dx = Math.max(0.0, x);
       const dy = Math.max(0.0, 0.006 - y);
-      return 0.012 + 0.22 * dx + 0.18 * dy;
+      return 0.013 + 0.34 * dx + 0.28 * dy;
     },
   });
   geoThumbPress.scale(HAND_SCALE_THUMB, HAND_SCALE_THUMB, HAND_SCALE_THUMB);
@@ -877,7 +883,7 @@ function buildSculptedHands() {
   const geoOpenHand = buildSeamlessPillowedHandGeometry({
     rEdge: 0.0092,
     domeAmp: 0.0052,
-    bounds: [-0.086, 0.058, -0.138, 0.030, -0.005, 0.088],
+    bounds: [-0.086, 0.058, -0.138, 0.030, -0.005, 0.096],
     nx: 58,
     ny: 68,
     nz: 28,
@@ -899,8 +905,9 @@ function buildSculptedHands() {
       return d;
     },
     archZFn: (x, y) => {
+      // 指先が接地し、手のひらおよび左右端は体表曲面の外側(+Z)へ緩やかに逃がして身体へのめり込みを完全防止
       const back = Math.max(0.0, -0.005 - y);
-      return 0.012 + 0.34 * back - 1.25 * x * x;
+      return 0.013 + 0.32 * back + 0.22 * Math.abs(x);
     },
   });
   geoOpenHand.scale(HAND_SCALE_FINGERS, HAND_SCALE_FINGERS, HAND_SCALE_FINGERS);
@@ -1901,32 +1908,29 @@ export function createSelfCareGuide3D({ parent }) {
             : fingersPoseGroup;
 
       if (st.handPose === 'thumb') {
-        // 親指プレス：接触点(0,0,0)を完全固定したまま、外側から反対の手の親指が自然に入り、手の甲シルエットが常に見やすい角度へ整列
-        const camBias = smooth01(0.86, 0.15, normOnCurve.z);
-        midNormDef.copy(normOnCurve);
-        if (camBias > 0.001) {
-          midTanDef.set(0, 0.08, 0.9968);
-          midNormDef.lerp(midTanDef, 0.72 * camBias).normalize();
+        // 物理貫通ゼロの純粋法線軸スピン：体表法線(+Z = normOnCurve)は一切傾けず、
+        // 接平面内での回転(rotation.z)のみで手のひら・4本指を身体外側の空き空間へ逃がす
+        const outSignX = isLeft ? 1 : -1; // 右半身(x<0)なら画面左側(-X)の外側空間、左半身(x>0)なら右側(+X)の外側空間
+        midTanDef.set(outSignX * 0.82, -0.12, 0.56);
+        midTanDef.addScaledVector(normOnCurve, -midTanDef.dot(normOnCurve));
+        let spinPhi = 0;
+        if (midTanDef.lengthSq() > 1e-6) {
+          midTanDef.normalize();
+          const tx = midTanDef.dot(bitanOnCurve);
+          const ty = midTanDef.dot(tanOnCurve);
+          // thumbPoseGroupL(右半身用)の手のひら重心は (-0.49, -0.87)、thumbPoseGroup(左半身用)は (+0.49, -0.87)
+          const palmRestAng = Math.atan2(-0.873, isLeft ? 0.487 : -0.487);
+          spinPhi = Math.atan2(ty, tx) - palmRestAng;
         }
-        const inwardSign = isLeft ? -1 : 1;
-        midTanDef.set(inwardSign * 0.26, 0.965, 0);
-        midTanDef.addScaledVector(midNormDef, -midTanDef.dot(midNormDef));
-        if (midTanDef.lengthSq() < 1e-6) midTanDef.set(0, 1, 0);
-        else midTanDef.normalize();
-        midBitanDef.crossVectors(midTanDef, midNormDef).normalize();
-        midTanDef.crossVectors(midNormDef, midBitanDef).normalize();
-
-        panelRotMatTmp.makeBasis(midBitanDef, midTanDef, midNormDef);
-        activeHand.quaternion.copy(toolRig.quaternion).invert();
-        handWorldQuatTmp.setFromRotationMatrix(panelRotMatTmp);
-        activeHand.quaternion.multiply(handWorldQuatTmp);
 
         const pWave =
           st.motion === 'glide' || st.motion === 'press'
             ? 0.5 - 0.5 * Math.cos(t * 2.0 * spd)
             : 0.5 + 0.5 * Math.sin(t * 2.05 * spd);
-        activeHand.rotateX(pWave * 0.06);
-        activeHand.position.z = -pWave * 0.003;
+        activeHand.rotation.order = 'ZXY';
+        // 押し込みも表面クリアランス内の微小量にとどめ、身体内部へのめり込みを完全ゼロに保つ
+        activeHand.rotation.set(pWave * 0.035, 0, spinPhi);
+        activeHand.position.z = -pWave * 0.002;
       } else {
         activeHand.rotation.order = 'XYZ';
         if (st.motion === 'circle') {

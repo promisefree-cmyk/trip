@@ -22,7 +22,7 @@ import {
   createBoneMatrixArray,
   computeMotionParams,
   solveRigMatrices,
-} from './fascia_only_biomechanics.js?v=20261118c';
+} from './fascia_only_biomechanics.js?v=20261118d';
 
 const SEG_COUNT = 32;
 

@@ -12,9 +12,9 @@
 // =============================================================================
 
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261118c';
-import { BONE, BONY_STATIONS } from './fascia_only_biomechanics.js?v=20261118c';
-import { buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_only_sheets.js?v=20261118c';
+import * as posture from './posture.js?v=20261118d';
+import { BONE, BONY_STATIONS } from './fascia_only_biomechanics.js?v=20261118d';
+import { buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_only_sheets.js?v=20261118d';
 
 export { FASCIA_LINE_DEFS };
 
