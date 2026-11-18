@@ -22,7 +22,7 @@ import {
   MOTION_PRESETS,
   NEW_CANDIDATE_PRESETS,
   ALL_MOTION_PRESETS,
-} from './fascia_only_clinical_data.js?v=20261118b';
+} from './fascia_only_clinical_data.js?v=20261118c';
 
 import {
   BONE,
@@ -35,13 +35,13 @@ import {
   computeMotionParams,
   solveRigMatrices,
   skinWorldPoint,
-} from './fascia_only_biomechanics.js?v=20261118b';
+} from './fascia_only_biomechanics.js?v=20261118c';
 
 import {
   FASCIA_LINE_DEFS,
   buildBodyEnvelope,
   createFasciaSheetsSystem,
-} from './fascia_only_sheets.js?v=20261118b';
+} from './fascia_only_sheets.js?v=20261118c';
 
 import {
   TOOL_DEFS,
@@ -51,10 +51,10 @@ import {
   sampleSurfaceStrokeByRaycaster,
   buildEnvelopeColliderMeshes,
   createSelfCareGuide3D,
-} from './selfcare_guide3d.js?v=20261118b';
+} from './selfcare_guide3d.js?v=20261118c';
 
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261118b';
+const ASSET_QUERY = '?v=20261118c';
 const FALLBACK_BYTES = {
   'muscles.glb': 1543520,
   'skeleton.glb': 1497840,

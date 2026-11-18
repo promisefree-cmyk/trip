@@ -15,7 +15,7 @@
 
 import * as THREE from 'three';
 
-export const SELFCARE_GUIDE_VERSION = '20261118b';
+export const SELFCARE_GUIDE_VERSION = '20261118c';
 
 export const R_BALL = 0.105;
 export const R_ROLLER = 0.12;
@@ -439,6 +439,14 @@ function sdRoundBox2D(px, py, cx, cy, hx, hy, rad) {
   return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(dx, dy), 0.0) - rad;
 }
 
+function sdOrientedRoundBox2D(px, py, cx, cy, hx, hy, rad, ang) {
+  const c = Math.cos(ang);
+  const s = Math.sin(ang);
+  const rx = (px - cx) * c + (py - cy) * s;
+  const ry = -(px - cx) * s + (py - cy) * c;
+  return sdRoundBox2D(rx, ry, 0.0, 0.0, hx, hy, rad);
+}
+
 /**
  * 2DシルエットSDFから「パーツの継ぎ目ゼロ・単一閉曲面」の滑らかな3Dピローアイコンメッシュを生成
  * Dual Surface Nets ＋ 固定長TypedArray版Taubin体積保存スムージングにより高速・完全一体成形を実現
@@ -814,46 +822,51 @@ function buildSculptedHands() {
     group.add(outlineMesh, bodyMesh);
   };
 
-  const HAND_SCALE = 1.92;
+  const HAND_SCALE_THUMB = 1.76;
+  const HAND_SCALE_FINGERS = 1.92;
 
   // =========================================================================
-  // A. 'thumb' — シンプル1点押しアイコン（👆 原点 (0,0,0) をピンポイントで押さえる単一メッシュ）
+  // A. 'thumb' — シンプル親指プレスアイコン（軽く曲げた4本指を横に添え、太い親指の腹で (0,0,0) を押さえる単一メッシュ）
   // =========================================================================
   const thumbPoseGroup = new THREE.Group();
   thumbPoseGroup.name = 'hand-pose-thumb';
 
-  const geoPointPress = buildSeamlessPillowedHandGeometry({
-    rEdge: 0.0096,
-    domeAmp: 0.0058,
-    bounds: [-0.072, 0.064, -0.142, 0.036, -0.005, 0.102],
-    nx: 54,
-    ny: 68,
-    nz: 28,
+  const geoThumbPress = buildSeamlessPillowedHandGeometry({
+    rEdge: 0.0094,
+    domeAmp: 0.0056,
+    bounds: [-0.034, 0.126, -0.146, 0.038, -0.006, 0.120],
+    nx: 62,
+    ny: 72,
+    nz: 30,
     smoothPasses: 6,
     sdf2D: (x, y) => {
-      // 半円ボトムのすっきり一体型パーム（手首の段差・別パーツ感ゼロ）
-      let dPalm = sdRoundBox2D(x, y, 0.006, -0.092, 0.012, 0.006, 0.025);
-      const kMid = sdCapsule2D(x, y, 0.007, -0.076, 0.007, -0.056, 0.0024, 0.0018);
-      const kRing = sdCapsule2D(x, y, 0.024, -0.080, 0.024, -0.062, 0.0020, 0.0015);
-      const kPinky = sdCapsule2D(x, y, 0.038, -0.085, 0.038, -0.069, 0.0015, 0.0011);
-      dPalm = sminCubic(dPalm, Math.min(kMid, kRing, kPinky), 0.008);
+      // 母指球から半円ボトムまで滑らかにつながる一体型パーム（パーツ分割・段差ゼロ）
+      const dPalm = sdOrientedRoundBox2D(x, y, 0.048, -0.086, 0.018, 0.009, 0.026, -0.34);
 
-      // (0, 0, 0) をくっきり分かりやすく押さえる1本指パッド（視認性の高い長さ）
-      const dPress = sdCapsule2D(x, y, -0.011, -0.068, 0.0, 0.010, 0.0036, 0.0028);
-      let d = sminCubic(dPalm, dPress, 0.009);
+      // 横に軽く曲げた4本指（人差し指〜小指が揃って控えめに丸まり、親指との役割差が一目で分かる）
+      const f1 = sdCapsule2D(x, y, 0.036, -0.056, 0.043, -0.024, 0.0028, 0.0022);
+      const f2 = sdCapsule2D(x, y, 0.055, -0.062, 0.063, -0.026, 0.0030, 0.0023);
+      const f3 = sdCapsule2D(x, y, 0.074, -0.070, 0.082, -0.036, 0.0028, 0.0021);
+      const f4 = sdCapsule2D(x, y, 0.091, -0.081, 0.098, -0.051, 0.0022, 0.0017);
+      const dFingers = sminCubic(sminCubic(f1, f2, 0.004), sminCubic(f3, f4, 0.004), 0.004);
+      const dBody = sminCubic(dPalm, dFingers, 0.009);
 
-      // 横に添えた親指シルエット（一目で「手」と直感できるアイコン形状）
-      const dThumb = sdCapsule2D(x, y, -0.022, -0.098, -0.048, -0.062, 0.0034, 0.0022);
-      d = sminCubic(d, dThumb, 0.011);
-      return d;
+      // 広い水かき（U字カーブ）の反対側で、(0, 0, 0) をしっかり押さえるふっくらした親指
+      const t1 = sdCapsule2D(x, y, 0.020, -0.092, 0.007, -0.042, 0.0115, 0.0066);
+      const t2 = sdCapsule2D(x, y, 0.007, -0.042, 0.0, 0.004, 0.0066, 0.0056);
+      const dThumb = sminCubic(t1, t2, 0.008);
+
+      return sminCubic(dBody, dThumb, 0.014);
     },
     archZFn: (x, y) => {
-      const back = Math.max(0.0, 0.006 - y);
-      return 0.012 + 0.62 * back - 1.35 * x * x;
+      // 親指先端 (0, 0) が体表 z=0.012 にピタッと接地し、横の4本指と手の甲は緩やかな角度で浮いて正面からくっきり見える
+      const dx = Math.max(0.0, x);
+      const dy = Math.max(0.0, 0.006 - y);
+      return 0.012 + 0.22 * dx + 0.18 * dy;
     },
   });
-  geoPointPress.scale(HAND_SCALE, HAND_SCALE, HAND_SCALE);
-  addHandWithOutline(thumbPoseGroup, geoPointPress);
+  geoThumbPress.scale(HAND_SCALE_THUMB, HAND_SCALE_THUMB, HAND_SCALE_THUMB);
+  addHandWithOutline(thumbPoseGroup, geoThumbPress);
 
   // =========================================================================
   // B. 'fingers' — シンプルさすり手アイコン（🤚 面でやさしくなでる単一メッシュ）
@@ -890,7 +903,7 @@ function buildSculptedHands() {
       return 0.012 + 0.34 * back - 1.25 * x * x;
     },
   });
-  geoOpenHand.scale(HAND_SCALE, HAND_SCALE, HAND_SCALE);
+  geoOpenHand.scale(HAND_SCALE_FINGERS, HAND_SCALE_FINGERS, HAND_SCALE_FINGERS);
   addHandWithOutline(fingersPoseGroup, geoOpenHand);
 
   const thumbPoseGroupL = cloneGroupMirroredX(thumbPoseGroup);
@@ -1618,6 +1631,7 @@ export function createSelfCareGuide3D({ parent }) {
   const midBitanDef = new THREE.Vector3();
   const rotMatTmp = new THREE.Matrix4();
   const panelRotMatTmp = new THREE.Matrix4();
+  const handWorldQuatTmp = new THREE.Quaternion();
 
   function sampleNormalAt(u, count, out) {
     if (count <= 1) return out.copy(st.deformedNormals[0]);
@@ -1673,8 +1687,9 @@ export function createSelfCareGuide3D({ parent }) {
 
     if (st.tool === 'hand') {
       const isLeft = st.effSide === 'L';
-      thumbPoseGroup.visible = st.handPose === 'thumb' && !isLeft;
-      thumbPoseGroupL.visible = st.handPose === 'thumb' && isLeft;
+      // 反対側の手の親指で押さえるため、右半身(effSide='R')には左手モデル(thumbPoseGroupL)、左半身には右手モデルを表示
+      thumbPoseGroup.visible = st.handPose === 'thumb' && isLeft;
+      thumbPoseGroupL.visible = st.handPose === 'thumb' && !isLeft;
       fingersPoseGroup.visible = st.handPose !== 'thumb' && !isLeft;
       fingersPoseGroupL.visible = st.handPose !== 'thumb' && isLeft;
     }
@@ -1879,36 +1894,49 @@ export function createSelfCareGuide3D({ parent }) {
       const activeHand =
         st.handPose === 'thumb'
           ? isLeft
-            ? thumbPoseGroupL
-            : thumbPoseGroup
+            ? thumbPoseGroup
+            : thumbPoseGroupL
           : isLeft
             ? fingersPoseGroupL
             : fingersPoseGroup;
-      activeHand.rotation.order = 'ZXY';
 
-      // 横向きの腕・すね・お尻横などで 1点押しアイコンが真横の薄い断面に見えないよう、接触点(0,0,0)を軸にカメラ側へ手の甲を向ける
-      let camSpinZ = 0;
-      let camLiftX = 0;
       if (st.handPose === 'thumb') {
-        const sideFactor = smooth01(0.68, 0.22, normOnCurve.z);
-        if (sideFactor > 0.001) {
-          const idealPhi = Math.atan2(bitanOnCurve.z, -tanOnCurve.z);
-          camSpinZ = idealPhi * sideFactor;
-          camLiftX = -0.28 * sideFactor;
+        // 親指プレス：接触点(0,0,0)を完全固定したまま、外側から反対の手の親指が自然に入り、手の甲シルエットが常に見やすい角度へ整列
+        const camBias = smooth01(0.86, 0.15, normOnCurve.z);
+        midNormDef.copy(normOnCurve);
+        if (camBias > 0.001) {
+          midTanDef.set(0, 0.08, 0.9968);
+          midNormDef.lerp(midTanDef, 0.72 * camBias).normalize();
         }
-      }
+        const inwardSign = isLeft ? -1 : 1;
+        midTanDef.set(inwardSign * 0.26, 0.965, 0);
+        midTanDef.addScaledVector(midNormDef, -midTanDef.dot(midNormDef));
+        if (midTanDef.lengthSq() < 1e-6) midTanDef.set(0, 1, 0);
+        else midTanDef.normalize();
+        midBitanDef.crossVectors(midTanDef, midNormDef).normalize();
+        midTanDef.crossVectors(midNormDef, midBitanDef).normalize();
 
-      if (st.motion === 'glide' || st.motion === 'press') {
-        const pWave = 0.5 - 0.5 * Math.cos(t * 2.0 * spd);
-        activeHand.rotation.set(camLiftX + pWave * 0.07, 0, camSpinZ);
+        panelRotMatTmp.makeBasis(midBitanDef, midTanDef, midNormDef);
+        activeHand.quaternion.copy(toolRig.quaternion).invert();
+        handWorldQuatTmp.setFromRotationMatrix(panelRotMatTmp);
+        activeHand.quaternion.multiply(handWorldQuatTmp);
+
+        const pWave =
+          st.motion === 'glide' || st.motion === 'press'
+            ? 0.5 - 0.5 * Math.cos(t * 2.0 * spd)
+            : 0.5 + 0.5 * Math.sin(t * 2.05 * spd);
+        activeHand.rotateX(pWave * 0.06);
         activeHand.position.z = -pWave * 0.003;
-      } else if (st.motion === 'circle') {
-        const ang = t * 2.05 * spd;
-        activeHand.rotation.set(camLiftX + Math.sin(ang) * 0.05, Math.cos(ang) * 0.05, camSpinZ);
-        activeHand.position.z = 0;
       } else {
-        activeHand.rotation.set(camLiftX + 0.04 * Math.sin(t * 2.2 * spd), 0, camSpinZ);
-        activeHand.position.z = 0;
+        activeHand.rotation.order = 'XYZ';
+        if (st.motion === 'circle') {
+          const ang = t * 2.05 * spd;
+          activeHand.rotation.set(Math.sin(ang) * 0.05, Math.cos(ang) * 0.05, 0);
+          activeHand.position.z = 0;
+        } else {
+          activeHand.rotation.set(0.04 * Math.sin(t * 2.2 * spd), 0, 0);
+          activeHand.position.z = 0;
+        }
       }
     }
 

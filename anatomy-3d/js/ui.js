@@ -1,12 +1,12 @@
 // =============================================================================
-// ui.js — アナトミー筋膜・筋肉 3D（一体型 3ステップ統合UI v=20261118b）
+// ui.js — アナトミー筋膜・筋肉 3D（一体型 3ステップ統合UI v=20261118c）
 // ・トップヘッダー（通常｜ダーク）＆ ステージ直下バー（［筋膜｜筋肉］＋［一時停止］）連携
 // ・常設3ステップ進捗バー：［ ① 選ぶ ］ → ［ ② 原因と動き ］ → ［ ③ ゆるめる順番 ］
 // ・全端末で文字被り 0px・途中省略（…）0箇所・タップ領域 44px 以上
 // =============================================================================
 
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261118b';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261118b';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261118c';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261118c';
 
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||

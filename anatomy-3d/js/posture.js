@@ -19,7 +19,7 @@
 
 import * as THREE from 'three';
 
-export const POSTURE_VERSION = '20261118b';
+export const POSTURE_VERSION = '20261118c';
 
 // -----------------------------------------------------------------------------
 // 32の姿勢・動作キネマティクスパラメータ名と初期状態
@@ -3146,8 +3146,28 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
 
-  // 7. 前もも・大腿直筋・内側広筋・腸腰筋・すね外側（うつ伏せで手のひらをマットにつき、前ももの下にローラーを置く）
+  // 7. 前もも・大腿直筋・内側広筋・腸腰筋・すね外側（指ケア時はイス座り姿勢＋足首連動、ローラー/ボール時はうつ伏せマット姿勢）
   if (/rectus-femoris|vastus-medialis|vastus-intermedius|sartorius|psoas|iliacus|tibialis-anterior|fibularis/.test(mId)) {
+    if (scTool === 'hand') {
+      out.sit = 0.92 * k;
+      out.trunkFlex = 0.10 * k;
+      const isShin = /tibialis|fibularis/.test(mId);
+      const shinAnkle = isShin ? 0.32 * glideWave : 0;
+      if (isL) {
+        out.legSwingL = 0.28 * k;
+        out.ankleFlexL = shinAnkle * k;
+      } else {
+        out.legSwingR = 0.28 * k;
+        out.ankleFlexR = shinAnkle * k;
+      }
+      out.armRaiseL = 0.28 * k;
+      out.armRaiseR = 0.28 * k;
+      out.elFlexL = 0.68 * k;
+      out.elFlexR = 0.68 * k;
+      out.pronateL = 0.80 * k;
+      out.pronateR = 0.80 * k;
+      return;
+    }
     out.prone = 1.0 * k;
     out.trunkFlex = -0.16 * k;
     out.headPitch = -0.18 * k;
