@@ -1,4 +1,4 @@
-const CACHE_NAME = "jarvis-shell-v3";
+const CACHE_NAME = "jarvis-shell-v4";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const SHELL_ASSETS = [
   "./app.js",
   "./manifest.json",
   "./icon.svg",
-  "./boot_voice.mp3"
+  "./boot_voice.mp3?v=jp-concierge-1"
 ];
 
 self.addEventListener("install", (event) => {
@@ -28,8 +28,8 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  // Never cache dynamic API responses or encrypted beacon.json
-  if (url.pathname.includes("/api/") || url.pathname.endsWith("beacon.json")) {
+  // Never cache dynamic API responses, proxied app routes, or encrypted beacon.json
+  if (url.pathname.includes("/api/") || url.pathname.startsWith("/apps/") || url.pathname.endsWith("beacon.json")) {
     return;
   }
 

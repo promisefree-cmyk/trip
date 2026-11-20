@@ -300,19 +300,19 @@
     } catch (_e) {}
   }
 
-  function speakEnglishGreetingFallback() {
+  function speakJapaneseGreetingFallback() {
     if (state.soundMuted) return;
     if (!("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance("Welcome back, Sir. All systems are online.");
-      utter.lang = "en-GB";
-      utter.rate = 0.95;
-      utter.pitch = 0.88;
+      const utter = new SpeechSynthesisUtterance("おかえりなさい、船長。全システム、正常に稼働しています。");
+      utter.lang = "ja-JP";
+      utter.rate = 0.94;
+      utter.pitch = 0.96;
       const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-      const gbVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("en-gb"));
-      const enVoice = gbVoice || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("en"));
-      if (enVoice) utter.voice = enVoice;
+      const jpExact = voices.find((v) => v.lang && v.lang.toLowerCase() === "ja-jp");
+      const jpAny = jpExact || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("ja"));
+      if (jpAny) utter.voice = jpAny;
       state.waveEnergy = 2.6;
       utter.onend = () => {
         state.waveEnergy = 1.0;
@@ -325,7 +325,7 @@
     if (state.soundMuted) return;
     stopBootVoiceGreeting();
     try {
-      const audio = new Audio("./boot_voice.mp3");
+      const audio = new Audio("./boot_voice.mp3?v=jp-concierge-1");
       audio.volume = 0.92;
       state.activeVoiceAudio = audio;
       audio.addEventListener("play", () => {
@@ -337,17 +337,17 @@
       });
       audio.addEventListener("error", () => {
         state.waveEnergy = 1.0;
-        speakEnglishGreetingFallback();
+        speakJapaneseGreetingFallback();
       });
       const p = audio.play();
       if (p && typeof p.catch === "function") {
         p.catch(() => {
           state.waveEnergy = 1.0;
-          speakEnglishGreetingFallback();
+          speakJapaneseGreetingFallback();
         });
       }
     } catch (_e) {
-      speakEnglishGreetingFallback();
+      speakJapaneseGreetingFallback();
     }
   }
 
@@ -658,7 +658,7 @@
     appendBootDiagLine("> INITIALIZING J.A.R.V.I.S. MARK VII CORE...", "gold");
     appendBootDiagLine("> CRYPTO BEACON & OWNER AUTH GATE ... VERIFIED", "ok");
 
-    // Phase 2 (0.85s): British butler greeting + live telemetry stream
+    // Phase 2 (0.85s): Japanese cyber concierge greeting + live telemetry stream
     state.bootTimers.push(
       window.setTimeout(() => {
         playBootVoiceGreeting();
@@ -684,7 +684,7 @@
         if (phaseLabel) phaseLabel.textContent = "03 // WORKSPACE MONITORS ONLINE";
         if (phasePct) phasePct.textContent = "100%";
         if (progFill) progFill.style.width = "100%";
-        appendBootDiagLine("> WELCOME BACK, SIR. ALL SYSTEMS ARE ONLINE.", "gold");
+        appendBootDiagLine("> おかえりなさい、船長。全システム、正常に稼働しています。", "gold");
       }, 2150)
     );
 
