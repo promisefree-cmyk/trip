@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#090C10" />
+  <meta name="theme-color" content="#05080D" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="robots" content="noindex, nofollow" />
@@ -13,17 +13,54 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <!-- 最上部スリムバー（高さ56px・極細光オーディオ波形＋稼働ランプ） -->
+  <!-- ⚡ 重厚アーク・イグニッション起動オーバーレイ（PC / スマホ用、Watchモードでは非表示） -->
+  <section class="boot-overlay" id="boot-overlay" aria-label="J.A.R.V.I.S. 起動画面" hidden>
+    <canvas id="arc-boot-canvas" aria-hidden="true"></canvas>
+    <div class="boot-grid-backdrop" aria-hidden="true"></div>
+
+    <div class="boot-center-core">
+      <div class="boot-mark-badge">STARK-INSPIRED COMMAND OS // MARK VII</div>
+      <div class="boot-logo-text" id="boot-logo-text">J.A.R.V.I.S.</div>
+      <p class="boot-logo-sub">JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+
+      <div class="boot-standby-controls" id="boot-standby-controls">
+        <button type="button" class="boot-trigger-btn" id="boot-trigger-btn">
+          <span class="boot-btn-core" aria-hidden="true"></span>
+          <span>⚡ SYSTEM BOOT</span>
+        </button>
+        <button type="button" class="boot-silent-btn" id="boot-silent-skip-btn">
+          <span>🔇 静かに即起動（無音で開く）</span>
+        </button>
+        <p class="boot-standby-status" id="boot-standby-status">待機中 — システム点検スタンバイ完了</p>
+      </div>
+
+      <div class="boot-sequence-panel" id="boot-sequence-panel" hidden>
+        <div class="boot-phase-row">
+          <span class="boot-phase-label" id="boot-phase-label">ARC CORE IGNITION...</span>
+          <span class="boot-phase-pct" id="boot-phase-pct">0%</span>
+        </div>
+        <div class="boot-progress-track">
+          <div class="boot-progress-fill" id="boot-progress-fill"></div>
+        </div>
+        <div class="boot-diag-log" id="boot-diag-log" aria-live="polite"></div>
+        <button type="button" class="boot-skip-inline" id="boot-skip-inline-btn">
+          タップまたは Esc キーでスキップ ➔
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 最上部スリムHUDバー（高さ56px・ライブ光波形＋稼働ランプ＋リアルタイム時計） -->
   <header class="top-bar" id="top-bar">
     <div class="top-bar-inner">
       <div class="brand-cluster">
         <span class="live-dot" id="header-live-dot" aria-hidden="true"></span>
         <h1 class="brand-title">J.A.R.V.I.S.</h1>
-        <span class="brand-sub">個人統合・総司令室</span>
+        <span class="brand-sub">統合司令センター</span>
       </div>
 
       <div class="wave-holder" aria-hidden="true">
@@ -31,15 +68,22 @@
       </div>
 
       <div class="header-controls">
+        <div class="hud-clock" id="hud-clock" aria-label="現在時刻">--:--:--</div>
         <div class="briefing-pill-desktop" id="briefing-pill-desktop" hidden>
-          <span>朝のまとめ通知：</span>
+          <span>朝通知：</span>
           <strong id="briefing-desktop-text">確認中</strong>
         </div>
-        <button type="button" class="icon-btn" id="pairing-open-btn" hidden title="スマホ・時計の初期接続リンクを表示">
-          <span>📱 端末接続</span>
+        <button type="button" class="icon-btn icon-only-compact" id="sound-toggle-btn" title="効果音・起動音の設定" aria-label="効果音の切り替え">
+          <span id="sound-toggle-icon">🔊</span>
+        </button>
+        <button type="button" class="icon-btn cyan-ghost" id="replay-boot-btn" hidden title="起動アニメーションを再演" aria-label="起動アニメーションを再演">
+          <span aria-hidden="true">⚡</span><span class="hud-label-sm">再演</span>
+        </button>
+        <button type="button" class="icon-btn" id="pairing-open-btn" hidden title="スマホ・時計の初期接続リンクを表示" aria-label="端末接続リンクを表示">
+          <span aria-hidden="true">📱</span><span class="hud-label-sm">端末</span>
         </button>
         <button type="button" class="icon-btn" id="refresh-btn" aria-label="最新の状態に更新">
-          <span>🔄 更新</span>
+          <span aria-hidden="true">🔄</span><span class="hud-label-sm">更新</span>
         </button>
       </div>
     </div>
@@ -76,148 +120,233 @@
       <strong id="briefing-mobile-text">--:--</strong>
     </div>
 
-    <!-- 承認センター（0件時はスリム1行／承認待ち発生時は2択決裁カード） -->
-    <section class="approval-zone" aria-label="承認センター">
-      <div class="approval-empty-bar" id="approval-empty-bar">
-        <span class="approval-empty-text">
-          <span class="approval-check-mark">✓</span>
-          <span>現在、承認待ちの項目はありません — 公開・送信・投資・お金は必ずここで確認します</span>
-        </span>
-        <button type="button" class="subtle-action-btn" id="sample-approval-btn">
-          サンプル承認カードを試す
-        </button>
-      </div>
-      <div class="approval-cards-list" id="approval-cards-list" hidden></div>
-    </section>
-
-    <!-- 非対称2カラム：左＝基幹システム稼働＆リモコン ／ 右＝PC健康＆保守＆高速ワープ -->
-    <div class="main-grid">
-      <div class="panel-group">
-        <section class="panel" aria-labelledby="systems-heading">
-          <div class="panel-head">
-            <h2 class="panel-title" id="systems-heading">稼働システム ＆ 遠隔スイッチ</h2>
-            <span class="panel-note" id="updated-time-label">自動更新中</span>
-          </div>
-          <div class="systems-stack" id="systems-stack"></div>
-        </section>
-
-        <!-- 1タップ高速ワープドック -->
-        <section class="panel" aria-labelledby="warp-heading">
-          <div class="panel-head">
-            <h2 class="panel-title" id="warp-heading">1タップ高速ワープ</h2>
-            <span class="panel-note">制作スタジオ・個人アプリへ直行</span>
-          </div>
-          <div class="warp-grid" id="warp-grid"></div>
-        </section>
-      </div>
-
-      <div class="panel-group">
-        <!-- PC健康状態 ＆ 静音モニター -->
-        <section class="panel" aria-labelledby="health-heading">
-          <div class="panel-head">
-            <h2 class="panel-title" id="health-heading">自宅PCの健康 ＆ 静音モニター</h2>
-          </div>
-
-          <div class="quiet-banner" id="quiet-banner" data-quiet="quiet">
-            <span id="quiet-icon">🟢</span>
-            <span id="quiet-label">静音・省電力で稼働中</span>
-          </div>
-
-          <div class="meters-grid">
-            <div class="meter-box">
-              <span class="meter-label">頭脳の負荷 (CPU)</span>
-              <span class="meter-val" id="cpu-val">--%</span>
-              <span class="meter-sub">ファンの静かさ目安</span>
-              <div class="meter-bar"><div class="meter-fill" id="cpu-bar" style="width: 0%"></div></div>
-            </div>
-            <div class="meter-box">
-              <span class="meter-label">作業メモリ</span>
-              <span class="meter-val" id="mem-val">--%</span>
-              <span class="meter-sub" id="mem-free-sub">空き -- GB</span>
-              <div class="meter-bar"><div class="meter-fill" id="mem-bar" style="width: 0%"></div></div>
-            </div>
-            <div class="meter-box">
-              <span class="meter-label">保存容量の空き</span>
-              <span class="meter-val" id="disk-val">-- GB</span>
-              <span class="meter-sub" id="disk-pct-sub">使用 --%</span>
-              <div class="meter-bar"><div class="meter-fill" id="disk-bar" style="width: 0%"></div></div>
-            </div>
-          </div>
-
-          <div class="briefing-schedule-note">
-            <span id="briefing-detail-label">次回ブリーフィング：計算中</span>
-            <span id="briefing-rule-label">水木金 08:50 ／ 土日 07:00 ／ 月火 08:00</span>
-          </div>
-        </section>
-
-        <!-- ワンタップ保守アクション -->
-        <section class="panel" aria-labelledby="maint-heading">
-          <div class="panel-head">
-            <h2 class="panel-title" id="maint-heading">ワンタップ保守・静音リモコン</h2>
-            <span class="panel-note">1回押すだけで完了</span>
-          </div>
-          <div class="maint-actions">
-            <button type="button" class="cmd-btn" id="btn-maintain">
-              <span>🧹 データ整理・衛生掃除を実行</span>
-            </button>
-            <button type="button" class="cmd-btn gold" id="btn-quiet-mode">
-              <span>🌙 重いアプリを一括オフ（静音モード）</span>
-            </button>
-            <button type="button" class="cmd-btn" id="btn-test-notify">
-              <span>📲 スマホ＆Watchへテスト通知を送る</span>
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- 🎙️ ジャービスへの一言・音声オーダー窓口 -->
-    <section class="order-panel" id="order-panel" aria-labelledby="order-heading">
-      <div class="panel-head">
-        <h2 class="panel-title" id="order-heading">🎙️ ジャービスへの一言・音声オーダー</h2>
-        <span class="panel-note">一言メモ送信、または「🔥 壁打ち」で3問深掘り</span>
-      </div>
-      <form class="order-form" id="order-form">
-        <input
-          type="text"
-          id="order-input"
-          class="order-input"
-          placeholder="例：次のMrボディハック動画のテーマは肩甲骨はがしにしたい"
-          maxlength="500"
-          aria-label="ジャービスへの一言オーダー入力欄"
-        />
-        <button type="button" class="cmd-btn voice-btn" id="voice-btn" aria-label="音声で入力する">
-          <span>🎙️ 音声</span>
-        </button>
-        <button type="button" class="cmd-btn grill-trigger-btn" id="grill-start-btn" aria-label="3問の壁打ちで方針を固める">
-          <span>🔥 壁打ち</span>
-        </button>
-        <button type="submit" class="cmd-btn gold send-order-btn" id="send-order-btn">
-          <span>送信</span>
-        </button>
-      </form>
-
-      <!-- 空欄で「🔥 壁打ち」を押した時に出るワンタップ例題チップ -->
-      <div class="grill-examples-bar" id="grill-examples-bar" hidden>
-        <span class="grill-examples-label">すぐ試せる例題（タップで壁打ち開始）：</span>
-        <div class="grill-examples-chips">
-          <button type="button" class="grill-example-chip" data-topic="Mrボディハックで肩甲骨はがしのショート動画を作りたい">
-            Mrボディハックの肩甲骨ショート動画
+    <!-- 🖥️ サイバー・モニタードック（ワンタップで司令ブリッジ ⇄ 中央作業モニター切替） -->
+    <section class="monitor-dock-panel hud-frame" id="workspace-stage" aria-label="作業モニター切替ドック">
+      <div class="monitor-dock-head">
+        <div class="monitor-dock-title-group">
+          <span class="hud-code-tag">MONITOR BAY // WORKSPACE</span>
+          <span class="monitor-dock-hint">選ぶと下のメインモニターが開きます</span>
+        </div>
+        <div class="monitor-dock-tools">
+          <button type="button" class="icon-btn cyan-ghost" id="split-toggle-btn" title="PC画面で2つのモニターを横に並べて同時作業">
+            <span>◫ 2画面分割</span>
           </button>
-          <button type="button" class="grill-example-chip" data-topic="公式HPに初めての方向けの安心ガイドを追加したい">
-            公式HPに初めての方の安心ガイド追加
-          </button>
-          <button type="button" class="grill-example-chip" data-topic="次の休みに1泊2日で温泉と美味しい夕食を楽しむ旅行計画">
-            1泊2日の温泉・グルメ旅行計画
+          <button type="button" class="icon-btn gold-ghost" id="add-monitor-btn" title="好きなWebページやツールをモニター追加">
+            <span>＋ モニター追加</span>
           </button>
         </div>
       </div>
 
-      <!-- 🔥 壁打ち（Grill-Me）3問インタビュー＆確定カード -->
-      <div class="grill-session-box" id="grill-session-box" aria-live="polite" hidden></div>
+      <div class="monitor-dock-list" id="monitor-dock-list"></div>
 
-      <div class="orders-history" id="orders-history"></div>
+      <!-- 📺 ハイブリッド中央作業モニター枠（通常時は非表示、システム選択時に展開） -->
+      <div class="monitor-bay" id="monitor-bay" hidden>
+        <div class="monitor-bay-grid" id="monitor-bay-grid">
+          <!-- MONITOR 01 (Primary Pane A) -->
+          <section class="monitor-pane" id="monitor-pane-a" aria-label="メイン作業モニター 01">
+            <div class="monitor-scan-sweep" aria-hidden="true"></div>
+            <div class="monitor-pane-bar">
+              <div class="monitor-pane-id">
+                <span class="monitor-slot-tag">MON-01</span>
+                <label class="sr-only" for="monitor-select-a">モニター01の表示切替</label>
+                <select id="monitor-select-a" class="monitor-pane-select"></select>
+              </div>
+              <div class="monitor-pane-actions">
+                <button type="button" class="pane-action-btn" id="pane-a-reload" title="モニターを再読み込み">🔄 再読込</button>
+                <a class="pane-action-btn" id="pane-a-popout" href="#" target="_blank" rel="noopener noreferrer" title="新しいタブで大きく開く">↗ 別タブ</a>
+                <button type="button" class="pane-action-btn close" id="pane-a-close" title="司令ブリッジへ戻る">🏠 戻る</button>
+              </div>
+            </div>
+            <div class="monitor-pane-body" id="pane-a-body"></div>
+          </section>
+
+          <!-- MONITOR 02 (Secondary Pane B — Desktop Split Mode) -->
+          <section class="monitor-pane" id="monitor-pane-b" aria-label="サブ作業モニター 02" hidden>
+            <div class="monitor-scan-sweep" aria-hidden="true"></div>
+            <div class="monitor-pane-bar">
+              <div class="monitor-pane-id">
+                <span class="monitor-slot-tag gold">MON-02</span>
+                <label class="sr-only" for="monitor-select-b">モニター02の表示切替</label>
+                <select id="monitor-select-b" class="monitor-pane-select"></select>
+              </div>
+              <div class="monitor-pane-actions">
+                <button type="button" class="pane-action-btn" id="pane-b-reload" title="モニターを再読み込み">🔄 再読込</button>
+                <a class="pane-action-btn" id="pane-b-popout" href="#" target="_blank" rel="noopener noreferrer" title="新しいタブで大きく開く">↗ 別タブ</a>
+                <button type="button" class="pane-action-btn close" id="pane-b-close" title="2画面分割を閉じる">✕ 閉じる</button>
+              </div>
+            </div>
+            <div class="monitor-pane-body" id="pane-b-body"></div>
+          </section>
+        </div>
+      </div>
     </section>
+
+    <!-- 🛡️ 司令ブリッジ（全体状況・承認・遠隔操作・PC健康・一言オーダー） -->
+    <div class="bridge-view" id="bridge-view">
+      <!-- 承認センター（0件時はスリム1行／承認待ち発生時は2択決裁カード） -->
+      <section class="approval-zone" aria-label="承認センター">
+        <div class="approval-empty-bar hud-frame" id="approval-empty-bar">
+          <span class="approval-empty-text">
+            <span class="approval-check-mark">✓</span>
+            <span>現在、承認待ちの項目はありません — 公開・送信・投資・お金は必ずここで確認します</span>
+          </span>
+          <button type="button" class="subtle-action-btn" id="sample-approval-btn">
+            サンプル承認カードを試す
+          </button>
+        </div>
+        <div class="approval-cards-list" id="approval-cards-list" hidden></div>
+      </section>
+
+      <!-- 非対称2カラム：左＝基幹システム稼働＆リモコン ／ 右＝PC健康＆保守＆高速ワープ -->
+      <div class="main-grid">
+        <div class="panel-group">
+          <section class="panel hud-frame" aria-labelledby="systems-heading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="systems-heading">稼働システム ＆ 遠隔スイッチ</h2>
+              <span class="panel-note" id="updated-time-label">自動更新中</span>
+            </div>
+            <div class="systems-stack" id="systems-stack"></div>
+          </section>
+
+          <!-- 1タップ高速ワープドック -->
+          <section class="panel hud-frame" aria-labelledby="warp-heading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="warp-heading">1タップ高速ワープ</h2>
+              <span class="panel-note">制作スタジオ・個人アプリを即起動</span>
+            </div>
+            <div class="warp-grid" id="warp-grid"></div>
+          </section>
+        </div>
+
+        <div class="panel-group">
+          <!-- PC健康状態 ＆ アーク炉型サイバー計器 -->
+          <section class="panel hud-frame" aria-labelledby="health-heading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="health-heading">自宅PCの健康 ＆ アーク計器</h2>
+              <span class="hud-code-tag subtle">ARC TELEMETRY</span>
+            </div>
+
+            <div class="quiet-banner" id="quiet-banner" data-quiet="quiet">
+              <span id="quiet-icon">🟢</span>
+              <span id="quiet-label">静音・省電力で稼働中</span>
+            </div>
+
+            <div class="meters-grid">
+              <div class="meter-box arc-box">
+                <div class="arc-gauge" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" class="arc-svg">
+                    <circle class="arc-track" cx="40" cy="40" r="32"></circle>
+                    <circle class="arc-fill cyan" id="cpu-ring" cx="40" cy="40" r="32"></circle>
+                  </svg>
+                  <span class="arc-center-val" id="cpu-val">--%</span>
+                </div>
+                <span class="meter-label">頭脳の負荷 (CPU)</span>
+                <span class="meter-sub">ファンの静かさ目安</span>
+                <div class="meter-bar"><div class="meter-fill" id="cpu-bar" style="width: 0%"></div></div>
+              </div>
+
+              <div class="meter-box arc-box">
+                <div class="arc-gauge" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" class="arc-svg">
+                    <circle class="arc-track" cx="40" cy="40" r="32"></circle>
+                    <circle class="arc-fill cyan" id="mem-ring" cx="40" cy="40" r="32"></circle>
+                  </svg>
+                  <span class="arc-center-val" id="mem-val">--%</span>
+                </div>
+                <span class="meter-label">作業メモリ</span>
+                <span class="meter-sub" id="mem-free-sub">空き -- GB</span>
+                <div class="meter-bar"><div class="meter-fill" id="mem-bar" style="width: 0%"></div></div>
+              </div>
+
+              <div class="meter-box arc-box">
+                <div class="arc-gauge" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" class="arc-svg">
+                    <circle class="arc-track" cx="40" cy="40" r="32"></circle>
+                    <circle class="arc-fill gold" id="disk-ring" cx="40" cy="40" r="32"></circle>
+                  </svg>
+                  <span class="arc-center-val" id="disk-val">-- GB</span>
+                </div>
+                <span class="meter-label">保存容量の空き</span>
+                <span class="meter-sub" id="disk-pct-sub">使用 --%</span>
+                <div class="meter-bar"><div class="meter-fill gold" id="disk-bar" style="width: 0%"></div></div>
+              </div>
+            </div>
+
+            <div class="briefing-schedule-note">
+              <span id="briefing-detail-label">次回ブリーフィング：計算中</span>
+              <span id="briefing-rule-label">水木金 08:50 ／ 土日 07:00 ／ 月火 08:00</span>
+            </div>
+          </section>
+
+          <!-- ワンタップ保守アクション -->
+          <section class="panel hud-frame" aria-labelledby="maint-heading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="maint-heading">ワンタップ保守・静音リモコン</h2>
+              <span class="panel-note">1回押すだけで完了</span>
+            </div>
+            <div class="maint-actions">
+              <button type="button" class="cmd-btn" id="btn-maintain">
+                <span>🧹 データ整理・衛生掃除を実行</span>
+              </button>
+              <button type="button" class="cmd-btn gold" id="btn-quiet-mode">
+                <span>🌙 重いアプリを一括オフ（静音モード）</span>
+              </button>
+              <button type="button" class="cmd-btn" id="btn-test-notify">
+                <span>📲 スマホ＆Watchへテスト通知を送る</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 🎙️ ジャービスへの一言・音声オーダー窓口 -->
+      <section class="order-panel hud-frame" id="order-panel" aria-labelledby="order-heading">
+        <div class="panel-head">
+          <h2 class="panel-title" id="order-heading">🎙️ ジャービスへの一言・音声オーダー</h2>
+          <span class="panel-note">一言メモ送信、または「🔥 壁打ち」で3問深掘り</span>
+        </div>
+        <form class="order-form" id="order-form">
+          <input
+            type="text"
+            id="order-input"
+            class="order-input"
+            placeholder="例：次のMrボディハック動画のテーマは肩甲骨はがしにしたい"
+            maxlength="500"
+            aria-label="ジャービスへの一言オーダー入力欄"
+          />
+          <button type="button" class="cmd-btn voice-btn" id="voice-btn" aria-label="音声で入力する">
+            <span>🎙️ 音声</span>
+          </button>
+          <button type="button" class="cmd-btn grill-trigger-btn" id="grill-start-btn" aria-label="3問の壁打ちで方針を固める">
+            <span>🔥 壁打ち</span>
+          </button>
+          <button type="submit" class="cmd-btn gold send-order-btn" id="send-order-btn">
+            <span>送信</span>
+          </button>
+        </form>
+
+        <!-- 空欄で「🔥 壁打ち」を押した時に出るワンタップ例題チップ -->
+        <div class="grill-examples-bar" id="grill-examples-bar" hidden>
+          <span class="grill-examples-label">すぐ試せる例題（タップで壁打ち開始）：</span>
+          <div class="grill-examples-chips">
+            <button type="button" class="grill-example-chip" data-topic="Mrボディハックで肩甲骨はがしのショート動画を作りたい">
+              Mrボディハックの肩甲骨ショート動画
+            </button>
+            <button type="button" class="grill-example-chip" data-topic="公式HPに初めての方向けの安心ガイドを追加したい">
+              公式HPに初めての方の安心ガイド追加
+            </button>
+            <button type="button" class="grill-example-chip" data-topic="次の休みに1泊2日で温泉と美味しい夕食を楽しむ旅行計画">
+              1泊2日の温泉・グルメ旅行計画
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔥 壁打ち（Grill-Me）3問インタビュー＆確定カード -->
+        <div class="grill-session-box" id="grill-session-box" aria-live="polite" hidden></div>
+
+        <div class="orders-history" id="orders-history"></div>
+      </section>
+    </div>
   </main>
 
   <!-- ⌚ Galaxy Watch 8 円形ディスプレイ専用コンパクトリモコン (280x280 / ?mode=watch) -->
@@ -254,7 +383,7 @@
 
   <!-- 📱 スマホ＆Watch 初期ペアリング案内モーダル（認証済み時のみ表示可能） -->
   <div class="modal-backdrop" id="pairing-modal" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-pairing-title">
+    <div class="modal-card hud-frame" role="dialog" aria-modal="true" aria-labelledby="modal-pairing-title">
       <h3 class="panel-title" id="modal-pairing-title">📱 Galaxy スマホ ＆ Watch 8 永久アイコン登録</h3>
       <p class="pairing-desc">
         下の「スマホ用ペアリングURLをコピー」を押して Galaxy で1回だけ開き、ブラウザメニューから「ホーム画面に追加」を選ぶと、PC再起動後もずっと同じ1つのアイコンで自動接続されます。
@@ -274,6 +403,48 @@
       <div class="sys-actions">
         <button type="button" class="cmd-btn gold" id="copy-phone-url-btn">スマホ用URLをコピー</button>
         <button type="button" class="cmd-btn" id="close-pairing-modal-btn">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ＋ カスタムモニター追加・管理モーダル -->
+  <div class="modal-backdrop" id="custom-monitor-modal" hidden>
+    <div class="modal-card hud-frame" role="dialog" aria-modal="true" aria-labelledby="modal-cm-title">
+      <div class="panel-head" style="margin-bottom: 4px;">
+        <h3 class="panel-title" id="modal-cm-title">＋ カスタムモニター登録・管理</h3>
+        <button type="button" class="grill-close-btn" id="close-custom-modal-btn">閉じる</button>
+      </div>
+      <p class="pairing-desc">
+        よく使う管理ページや社内ツールを登録すると、上のモニタードックからワンタップで開けます。
+      </p>
+      <form class="cm-form" id="custom-monitor-form">
+        <div class="cm-row-2">
+          <div class="cm-field">
+            <label for="cm-icon" class="meter-label">アイコン</label>
+            <input type="text" id="cm-icon" class="cm-input" value="🖥️" maxlength="6" />
+          </div>
+          <div class="cm-field grow">
+            <label for="cm-name" class="meter-label">モニター名</label>
+            <input type="text" id="cm-name" class="cm-input" placeholder="例：YouTube管理画面" maxlength="48" required />
+          </div>
+        </div>
+        <div class="cm-field">
+          <label for="cm-url" class="meter-label">開くアドレス（http:// または https://）</label>
+          <input type="url" id="cm-url" class="cm-input" placeholder="https://example.com" maxlength="500" required />
+        </div>
+        <div class="cm-field">
+          <label for="cm-desc" class="meter-label">一言メモ（任意）</label>
+          <input type="text" id="cm-desc" class="cm-input" placeholder="例：チャンネル分析・公開予約の確認" maxlength="120" />
+        </div>
+        <label class="cm-check-row">
+          <input type="checkbox" id="cm-embeddable" checked />
+          <span>中央モニター枠内でそのまま開く（外部ログイン画面などはオフ推奨）</span>
+        </label>
+        <button type="submit" class="cmd-btn cyan" id="cm-submit-btn">モニターに追加する</button>
+      </form>
+      <div class="cm-saved-list-wrap">
+        <span class="meter-label">登録済みカスタムモニター</span>
+        <div class="cm-saved-list" id="custom-monitor-list"></div>
       </div>
     </div>
   </div>
