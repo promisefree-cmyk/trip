@@ -267,13 +267,13 @@
     const ctx = ensureAudioContext();
     if (!ctx) return;
     try {
-      // Deep arc reactor sub-bass power-up sweep + cyan chime sequence
-      playToneStep(ctx, 48, 128, 0.0, 0.95, 0.14, "sine");
-      playToneStep(ctx, 110, 220, 0.08, 0.75, 0.05, "triangle");
-      playToneStep(ctx, 440, 440, 0.25, 0.24, 0.045, "triangle");
-      playToneStep(ctx, 554.37, 554.37, 0.40, 0.24, 0.045, "triangle");
-      playToneStep(ctx, 659.25, 659.25, 0.55, 0.28, 0.05, "triangle");
-      playToneStep(ctx, 880, 880, 0.72, 0.42, 0.055, "sine");
+      // Fallback deep sub-bass rise + heavy lock impact + crisp 5th chord
+      playToneStep(ctx, 38, 82, 0.0, 0.92, 0.22, "sine");
+      playToneStep(ctx, 76, 164, 0.04, 0.88, 0.10, "triangle");
+      playToneStep(ctx, 110, 38, 0.82, 0.48, 0.24, "sine");
+      playToneStep(ctx, 659.25, 659.25, 0.48, 0.22, 0.045, "triangle");
+      playToneStep(ctx, 987.77, 987.77, 0.62, 0.24, 0.045, "triangle");
+      playToneStep(ctx, 1318.51, 1318.51, 0.80, 0.42, 0.055, "sine");
     } catch (_e) {
       // Non-fatal audio safeguard
     }
@@ -294,9 +294,10 @@
     const ctx = ensureAudioContext();
     if (!ctx) return;
     try {
-      playToneStep(ctx, 320, 680, 0, 0.18, 0.04, "triangle");
-      playToneStep(ctx, 880, 1180, 0.08, 0.14, 0.03, "sine");
-      state.waveEnergy = Math.max(state.waveEnergy, 2.1);
+      playToneStep(ctx, 75, 42, 0, 0.22, 0.12, "sine");
+      playToneStep(ctx, 320, 680, 0.02, 0.16, 0.038, "triangle");
+      playToneStep(ctx, 880, 1180, 0.09, 0.14, 0.032, "sine");
+      state.waveEnergy = Math.max(state.waveEnergy, 2.2);
     } catch (_e) {}
   }
 
@@ -305,7 +306,7 @@
     if (!("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance("おかえりなさい、船長。全システム、正常に稼働しています。");
+      const utter = new SpeechSynthesisUtterance("認証完了。おかえりなさいませ。全システム、正常に稼働しています。");
       utter.lang = "ja-JP";
       utter.rate = 0.94;
       utter.pitch = 0.96;
@@ -324,9 +325,14 @@
   function playBootVoiceGreeting() {
     if (state.soundMuted) return;
     stopBootVoiceGreeting();
+    const runSynthFallback = () => {
+      state.waveEnergy = 1.0;
+      playBootIgnitionSound();
+      speakJapaneseGreetingFallback();
+    };
     try {
-      const audio = new Audio("./boot_voice.mp3?v=jp-concierge-1");
-      audio.volume = 0.92;
+      const audio = new Audio("./boot_voice.mp3?v=jp-concierge-2");
+      audio.volume = 0.96;
       state.activeVoiceAudio = audio;
       audio.addEventListener("play", () => {
         state.waveEnergy = 2.8;
@@ -335,19 +341,13 @@
         state.waveEnergy = 1.0;
         if (state.activeVoiceAudio === audio) state.activeVoiceAudio = null;
       });
-      audio.addEventListener("error", () => {
-        state.waveEnergy = 1.0;
-        speakJapaneseGreetingFallback();
-      });
+      audio.addEventListener("error", runSynthFallback);
       const p = audio.play();
       if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          state.waveEnergy = 1.0;
-          speakJapaneseGreetingFallback();
-        });
+        p.catch(runSynthFallback);
       }
     } catch (_e) {
-      speakJapaneseGreetingFallback();
+      runSynthFallback();
     }
   }
 
@@ -638,7 +638,9 @@
     state.arcSpinBoost = 1.25;
 
     ensureAudioContext();
-    playBootIgnitionSound();
+    playHudClickSound();
+    // Play unified sub-bass ignition SFX + cyber concierge voice immediately on click
+    playBootVoiceGreeting();
 
     const standbyControls = document.getElementById("boot-standby-controls");
     const seqPanel = document.getElementById("boot-sequence-panel");
@@ -651,17 +653,17 @@
     if (seqPanel) seqPanel.hidden = false;
     if (logEl) logEl.innerHTML = "";
 
-    // Phase 1 (0.0s): Ignition burst
+    // Phase 1 (0.0s): Heavy sub-bass core ignition
     if (phaseLabel) phaseLabel.textContent = "01 // ARC CORE IGNITION";
     if (phasePct) phasePct.textContent = "24%";
     if (progFill) progFill.style.width = "24%";
     appendBootDiagLine("> INITIALIZING J.A.R.V.I.S. MARK VII CORE...", "gold");
     appendBootDiagLine("> CRYPTO BEACON & OWNER AUTH GATE ... VERIFIED", "ok");
 
-    // Phase 2 (0.85s): Japanese cyber concierge greeting + live telemetry stream
+    // Phase 2 (0.95s): Sub impact + voice cue + live telemetry stream
     state.bootTimers.push(
       window.setTimeout(() => {
-        playBootVoiceGreeting();
+        state.arcFlash = 0.65;
         state.arcSpinBoost = 0.7;
         if (phaseLabel) phaseLabel.textContent = "02 // TELEMETRY DIAGNOSTICS";
         if (phasePct) phasePct.textContent = "66%";
@@ -674,25 +676,25 @@
             }, i * 170)
           );
         });
-      }, 850)
+      }, 950)
     );
 
-    // Phase 3 (2.15s): Hologram deck landing
+    // Phase 3 (2.35s): Hologram deck landing
     state.bootTimers.push(
       window.setTimeout(() => {
         state.arcSpinBoost = 0.3;
         if (phaseLabel) phaseLabel.textContent = "03 // WORKSPACE MONITORS ONLINE";
         if (phasePct) phasePct.textContent = "100%";
         if (progFill) progFill.style.width = "100%";
-        appendBootDiagLine("> おかえりなさい、船長。全システム、正常に稼働しています。", "gold");
-      }, 2150)
+        appendBootDiagLine("> 認証完了。おかえりなさいませ。全システム、正常に稼働しています。", "gold");
+      }, 2350)
     );
 
-    // Complete (~2.95s)
+    // Complete (~3.40s)
     state.bootTimers.push(
       window.setTimeout(() => {
         completeBootIntoWorkspace(true);
-      }, 2950)
+      }, 3400)
     );
   }
 
