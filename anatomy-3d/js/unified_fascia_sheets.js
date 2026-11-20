@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261119a';
-import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261119a';
+import * as posture from './posture.js?v=20261120a';
+import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261120a';
 export { FASCIA_LINE_DEFS };
 const SEG_COUNT = 32;
 function clamp(x, min, max) {
@@ -318,6 +318,7 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB, float ankleW) {
   float floorSit    = uPoseH.w;
   float ankleFlexL  = uPoseI.x;
   float ankleFlexR  = uPoseI.y;
+  float toeRise     = uPoseI.z;
   float act = abs(trunkFlex) + abs(headForward) + abs(shoulderIn)
             + abs(pelvisTilt) + abs(trunkRotate) + abs(sideBend)
             + abs(hipShift) + abs(armsFold) + abs(sit) + abs(prone)
@@ -328,7 +329,7 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB, float ankleW) {
             + abs(legSwingL) + abs(legSwingR)
             + abs(pronateL) + abs(pronateR) + abs(wristExtL) + abs(wristExtR)
             + abs(legAdductL) + abs(legAdductR) + abs(lieSide) + abs(floorSit)
-            + abs(ankleFlexL) + abs(ankleFlexR);
+            + abs(ankleFlexL) + abs(ankleFlexR) + abs(toeRise);
   if (act < 1e-5) return wp;
   vec3 p0 = wp;
   vec3 p = wp;
@@ -543,6 +544,23 @@ vec3 poseDeformSheet(vec3 wp, vec4 rigA, vec4 rigB, float ankleW) {
     p.y -= 0.44 * kneeBend;
     p.z -= 0.18 * kneeBend;
   }
+  if (toeRise > 1e-4) {
+    float angRise = 0.78 * max(0.0, -0.5 * (ankleFlexL + ankleFlexR));
+    float cR = cos(angRise);
+    float sR = sin(angRise);
+    float dAnkY = 0.23 * (cR - 1.0) + 0.29 * sR;
+    float dAnkZ = -0.29 * (cR - 1.0) + 0.23 * sR;
+    float toeFlat = smoothstep(0.14, 0.24, p0.z) * (1.0 - smoothstep(-3.21, -3.08, p0.y)) * ankleWeight;
+    p.y += (dAnkY + 0.045 * (1.0 - toeFlat)) * toeRise;
+    p.z += dAnkZ * toeRise;
+    if (toeFlat > 1e-4 && angRise > 1e-4) {
+      p = sheetPitchFwd(p, vec3(s * 0.31, -3.26, 0.16), -angRise * 0.88 * toeFlat * toeRise);
+    }
+    float yBody = mix(p0.y, 2.02, armMask);
+    float swayPelvis = smoothstep(-3.03, -0.02, yBody) * (1.0 - 0.92 * smoothstep(0.24, 1.15, yBody));
+    float lumbarArch = smoothstep(0.12, 0.48, yBody) * (1.0 - smoothstep(0.62, 1.30, yBody));
+    p.z += (0.13 * swayPelvis + 0.075 * lumbarArch) * toeRise;
+  }
   if (hipWeight > 1e-5 && abs(hipShift) > 1e-4) {
     float hLegShift = 3.13 - 0.44 * clamp(kneeBend, 0.0, 1.2);
     float angLegShift = (0.24 * hipShift * standRatio * hipWeight) / hLegShift;
@@ -644,6 +662,7 @@ function evalDeformSheetJS(restPos, rigA, rigB, ankleW, poseObj, out) {
   const floorSit    = poseObj.floorSit    || 0;
   const ankleFlexL  = poseObj.ankleFlexL  || 0;
   const ankleFlexR  = poseObj.ankleFlexR  || 0;
+  const toeRise     = poseObj.toeRise     || 0;
   const act =
     Math.abs(trunkFlex) + Math.abs(headForward) + Math.abs(shoulderIn) +
     Math.abs(pelvisTilt) + Math.abs(trunkRotate) + Math.abs(sideBend) +
@@ -653,7 +672,7 @@ function evalDeformSheetJS(restPos, rigA, rigB, ankleW, poseObj, out) {
     Math.abs(elFlexL) + Math.abs(elFlexR) + Math.abs(foreYawL) + Math.abs(foreYawR) +
     Math.abs(legSwingL) + Math.abs(legSwingR) + Math.abs(pronateL) + Math.abs(pronateR) +
     Math.abs(wristExtL) + Math.abs(wristExtR) + Math.abs(legAdductL) + Math.abs(legAdductR) +
-    Math.abs(lieSide) + Math.abs(floorSit) + Math.abs(ankleFlexL) + Math.abs(ankleFlexR);
+    Math.abs(lieSide) + Math.abs(floorSit) + Math.abs(ankleFlexL) + Math.abs(ankleFlexR) + Math.abs(toeRise);
   if (act < 1e-5) return out;
   const x0 = restPos.x;
   const y0 = restPos.y;
@@ -867,6 +886,23 @@ function evalDeformSheetJS(restPos, rigA, rigB, ankleW, poseObj, out) {
   if (kneeBend > 1e-4) {
     out.y -= 0.44 * kneeBend;
     out.z -= 0.18 * kneeBend;
+  }
+  if (toeRise > 1e-4) {
+    const angRise = 0.78 * Math.max(0, -0.5 * (ankleFlexL + ankleFlexR));
+    const cR = Math.cos(angRise);
+    const sR = Math.sin(angRise);
+    const dAnkY = 0.23 * (cR - 1.0) + 0.29 * sR;
+    const dAnkZ = -0.29 * (cR - 1.0) + 0.23 * sR;
+    const toeFlat = smoothstep(0.14, 0.24, restPos.z) * (1 - smoothstep(-3.21, -3.08, y0)) * ankleWeight;
+    out.y += (dAnkY + 0.045 * (1 - toeFlat)) * toeRise;
+    out.z += dAnkZ * toeRise;
+    if (toeFlat > 1e-4 && angRise > 1e-4) {
+      pitchFwdJS(out, s * 0.31, -3.26, 0.16, -angRise * 0.88 * toeFlat * toeRise);
+    }
+    const yBody = mix(y0, 2.02, armMask);
+    const swayPelvis = smoothstep(-3.03, -0.02, yBody) * (1 - 0.92 * smoothstep(0.24, 1.15, yBody));
+    const lumbarArch = smoothstep(0.12, 0.48, yBody) * (1 - smoothstep(0.62, 1.30, yBody));
+    out.z += (0.13 * swayPelvis + 0.075 * lumbarArch) * toeRise;
   }
   if (hipWeight > 1e-5 && Math.abs(hipShift) > 1e-4) {
     const hLegShift = 3.13 - 0.44 * clamp(kneeBend, 0, 1.2);
@@ -2325,7 +2361,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       uF.x * 9.7 + uF.y * 10.1 + uF.z * 10.3 + uF.w * 10.7 +
       uG.x * 10.9 + uG.y * 11.3 + uG.z * 12.7 + uG.w * 13.1 +
       uH.x * 13.7 + uH.y * 13.9 + uH.z * 14.9 + uH.w * 15.1 +
-      uI.x * 15.7 + uI.y * 16.3 +
+      uI.x * 15.7 + uI.y * 16.3 + uI.z * 16.9 +
       rawCyc * 17.3;
     const poseChanged = !(Math.abs(poseHash - lastStrainHash) < 1e-6);
     const camHash = cameraQuat
@@ -2413,9 +2449,13 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       currentMode = 'habit';
       const tl = habit.triggerLine || habit.goldenLine;
       const sCore = habit.shortenCore?.length ? habit.shortenCore : tl?.shortenCore || habit.shorten || [];
-      const sLink = [...(habit.shortenLinked || []), ...(tl?.shortenLinked || []), ...(habit.shorten || [])];
+      const sLink = habit.shortenLinked?.length
+        ? [...habit.shortenLinked, ...(habit.shorten || [])]
+        : [...(tl?.shortenLinked || []), ...(habit.shorten || [])];
       const lAnt = habit.lengthenAntagonist?.length ? habit.lengthenAntagonist : tl?.lengthenAntagonist || habit.lengthen || [];
-      const lLink = [...(habit.lengthenLinked || []), ...(tl?.lengthenLinked || []), ...(habit.lengthen || [])];
+      const lLink = habit.lengthenLinked?.length
+        ? [...habit.lengthenLinked, ...(habit.lengthen || [])]
+        : [...(tl?.lengthenLinked || []), ...(habit.lengthen || [])];
       applyRoleColoring({
         lineIds: habit.lines || [],
         side: habit.side || 'both',

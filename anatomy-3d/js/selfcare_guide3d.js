@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-export const SELFCARE_GUIDE_VERSION = '20261118e';
+export const SELFCARE_GUIDE_VERSION = '20261120a';
 export const R_BALL = 0.105;
 export const R_ROLLER = 0.12;
 export const L_ROLLER = 0.52;
@@ -35,7 +35,7 @@ const DELICATE_HAND_ONLY_PATTERNS = [
   /^longus-(colli|capitis)$/,
   /^(infrahyoid|suprahyoid|sternohyoid|sternothyroid|omohyoid|thyrohyoid|mylohyoid|geniohyoid|digastric|stylohyoid)$/,
   /^(masseter|temporalis|medial-pterygoid|lateral-pterygoid|zygomaticus-major|zygomaticus-minor|frontalis|orbicularis-oculi|orbicularis-oris|buccinator)$/,
-  /^(pectoralis-minor|subclavius|diaphragm|transversus-thoracis)$/,
+  /^(pectoralis-minor|subclavius|subscapularis|diaphragm|transversus-thoracis)$/,
   /^(psoas-major|psoas-minor|iliacus)$/,
   /^(scm-neck-front|jaw-hyoid|pec-minor-r|sternum-clavicle|diaphragm-rib|groin-psoas)$/,
 ];

@@ -1,10 +1,10 @@
-import * as dataModule from './data.js?v=20261119a';
-import { createFascia } from './fascia.js?v=20261119a';
-import * as posture from './posture.js?v=20261119a';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261119a';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261119a';
-import { createUI } from './ui.js?v=20261119a';
-import { createViewer } from './viewer.js?v=20261119a';
+import * as dataModule from './data.js?v=20261120a';
+import { createFascia } from './fascia.js?v=20261120a';
+import * as posture from './posture.js?v=20261120a';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261120a';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261120a';
+import { createUI } from './ui.js?v=20261120a';
+import { createViewer } from './viewer.js?v=20261120a';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -30,7 +30,7 @@ const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPause
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
 let cachedAnatomyDetails = null;
 const preloadAnatomyDetails = () =>
-  import('./anatomy_details.js?v=20261119a')
+  import('./anatomy_details.js?v=20261120a')
     .then((m) => {
       cachedAnatomyDetails = m;
       return m;
@@ -114,7 +114,7 @@ const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261119a');
+    const res = await fetch('models/atlas_metadata.json?v=20261120a');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -169,14 +169,20 @@ const BEND_LOWBACK_HABIT_IDS = new Set([
 ]);
 function getSelfCareMuscles(habit) {
   if (!habit) return [];
-  const tl = habit.triggerLine || habit.goldenLine;
-  if (Array.isArray(tl?.triggerPoints) && tl.triggerPoints.length) {
-    const fromTp = tl.triggerPoints.map((tp) => (typeof tp === 'string' ? tp : tp?.muscleId || tp?.id)).filter(Boolean);
-    if (fromTp.length) return fromTp;
+  if (Array.isArray(habit.triggerPoints) && habit.triggerPoints.length) {
+    const fromHabitTp = habit.triggerPoints
+      .map((tp) => (typeof tp === 'string' ? tp : tp?.muscleId || tp?.id))
+      .filter(Boolean);
+    if (fromHabitTp.length) return fromHabitTp;
   }
   const sc = habit.selfCare;
   if (Array.isArray(sc?.targetMuscles) && sc.targetMuscles.length) {
     return sc.targetMuscles.filter(Boolean);
+  }
+  const tl = habit.triggerLine || habit.goldenLine;
+  if (Array.isArray(tl?.triggerPoints) && tl.triggerPoints.length) {
+    const fromTp = tl.triggerPoints.map((tp) => (typeof tp === 'string' ? tp : tp?.muscleId || tp?.id)).filter(Boolean);
+    if (fromTp.length) return fromTp;
   }
   if (Array.isArray(tl?.rootMuscles) && tl.rootMuscles.length) {
     return tl.rootMuscles.filter(Boolean);
@@ -194,7 +200,10 @@ function getSelfCareMuscles(habit) {
 function viewForHabit(habit, lines) {
   if (!habit) return 'front';
   if (habit.id === 'volleyball-smash' || habit.id === 'tennis-baseball-arm') return 'right';
-  if (habit.id === 'floor-sit-cross' || habit.id === 'leg-cross-r') return 'front';
+  if (habit.id === 'leg-cross-r') return 'hip-cross-right';
+  if (habit.id === 'floor-sit-cross') return 'front';
+  if (habit.id === 'cook-pan-hold') return 'front-left';
+  if (habit.id === 'desk-round') return 'front';
   if (habit.id === 'gym-bench-push') return 'side';
   if (habit.id === 'sleep-side-curl' || habit.id === 'phone-bed-side') return 'front';
   if (habit.id === 'laundry-reach' || habit.id === 'overhead-tool') return 'left';
@@ -443,8 +452,26 @@ async function start() {
           'external-oblique',
         );
       }
-      if (habit.id === 'leg-cross-r' || habit.id === 'floor-sit-cross') {
+      if (habit.id === 'leg-cross-r') {
+        base.push(
+          'gluteus-maximus',
+          'biceps-femoris',
+          'adductor-longus',
+          'gastrocnemius',
+          'right-calcaneus',
+          'left-calcaneus',
+        );
+      } else if (habit.id === 'floor-sit-cross') {
         base.push('frontal-bone', 'right-femur', 'left-femur', 'right-tibia', 'left-tibia');
+      }
+      if (habit.id === 'sway-back') {
+        base.push(
+          'frontal-bone',
+          'right-calcaneus',
+          'left-calcaneus',
+          'right-big-toe-distal-phalanx',
+          'left-big-toe-distal-phalanx',
+        );
       }
       if (
         (Number(habit.pose?.headForward || 0) >= 0.35 || Math.abs(Number(habit.pose?.headPitch || 0)) >= 0.30) &&
@@ -530,11 +557,20 @@ async function start() {
     const resolveReleaseConfig = (habit, muscleId, payload = null) => {
       const pObj = payload && typeof payload === 'object' ? payload : {};
       const tl = habit?.triggerLine || habit?.goldenLine;
-      const tpList = tl?.triggerPoints || habit?.triggerPoints || habit?.selfCare?.triggerPoints || [];
+      const tpList =
+        (Array.isArray(habit?.triggerPoints) && habit.triggerPoints.length ? habit.triggerPoints : null) ||
+        (Array.isArray(habit?.selfCare?.triggerPoints) && habit.selfCare.triggerPoints.length
+          ? habit.selfCare.triggerPoints
+          : null) ||
+        tl?.triggerPoints ||
+        [];
       const tpEntry = tpList.find((tp) => (typeof tp === 'object' ? (tp.id || tp.muscleId) === muscleId : false)) || {};
       let strokeTarget = pObj.strokeTarget || tpEntry.strokeTarget || null;
       if (!strokeTarget && habit) {
-        const pathSeq = tl?.fasciaChain || tl?.arrowPath || getSelfCareMuscles(habit) || habit.chain || [];
+        const scMuscles = getSelfCareMuscles(habit);
+        const pathSeq = scMuscles.length
+          ? scMuscles
+          : tl?.fasciaChain || tl?.arrowPath || habit.chain || [];
         const idx = pathSeq.indexOf(muscleId);
         if (idx >= 0 && idx < pathSeq.length - 1) {
           strokeTarget = pathSeq[idx + 1];

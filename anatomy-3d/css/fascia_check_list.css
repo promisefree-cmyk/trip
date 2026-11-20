@@ -229,6 +229,16 @@ font-weight: 800;
 cursor: pointer;
 transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
+.filter-tab-updated {
+border-color: var(--stretch-border);
+background-color: var(--stretch-bg);
+color: var(--stretch-col);
+}
+.filter-tab-updated.is-active {
+background-color: #0369a1;
+border-color: #0369a1;
+color: #ffffff;
+}
 .filter-tab-warn {
 border-color: var(--short-border);
 background-color: var(--short-bg);
@@ -362,6 +372,19 @@ box-shadow: 0 3px 14px rgba(5, 150, 105, 0.16);
 .check-card.has-edit {
 border-color: #ea580c;
 box-shadow: 0 4px 16px rgba(234, 88, 12, 0.16);
+}
+.updated-status-badge {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+padding: 4px 10px;
+border-radius: 8px;
+background-color: #0369a1;
+color: #ffffff;
+font-size: 13px;
+font-weight: 800;
+letter-spacing: 0.02em;
+flex-shrink: 0;
 }
 .edit-status-badge {
 display: inline-flex;

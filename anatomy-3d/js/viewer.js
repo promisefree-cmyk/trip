@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import * as posture from './posture.js?v=20261119a';
+import * as posture from './posture.js?v=20261120a';
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
 const getRigRole =
@@ -11,7 +11,7 @@ const getRigRole =
     ? posture.getRigRole
     : () => new THREE.Vector4(-1, -1, -1, -1);
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261119a';
+const ASSET_QUERY = '?v=20261120a';
 const IDLE_TIMEOUT_MS = 1800; // アニメーション停止中・静止閲覧時に1.8秒カメラ静止で省電力スリープへ移行（触れれば0msで60fps即復帰）
 const IDLE_FRAME_INTERVAL_MS = 1000; // 静止待機中は描画をほぼ停止しスマホの発熱・電池消費を最小化
 const FALLBACK_BYTES = {
@@ -115,6 +115,7 @@ const VIEW_DIRS = {
   'front-left': new THREE.Vector3(0.46, 0.08, 0.88).normalize(), // 左斜め前
   'back-right': new THREE.Vector3(-0.42, 0.07, -0.90).normalize(), // 肩甲骨間＋ボール＋壁パネルの3層が見える右斜め後ろ
   'back-left': new THREE.Vector3(0.42, 0.07, -0.90).normalize(), // 左斜め後ろ
+  'hip-cross-right': new THREE.Vector3(-0.76, 0.14, -0.63).normalize(), // 足組み時の大殿筋・ハムストリングスのねじれ・膝まわり〜ふくらはぎ・内ももを一望する右斜め後ろ
   'sole-right': new THREE.Vector3(-0.76, -0.13, 0.64).normalize(), // 足裏＋ボール＋床マットがはっきり見える低い右斜め前
   'sole-left': new THREE.Vector3(0.76, -0.13, 0.64).normalize(), // 低い左斜め前
   'prone-side': new THREE.Vector3(-0.88, 0.16, 0.45).normalize(), // うつ伏せ太もも前ローラー＋床マットが立体的に見える右斜め横
@@ -124,6 +125,7 @@ const VIEW_BADGE_MAP = {
   'front-left': 'front',
   'back-right': 'back',
   'back-left': 'back',
+  'hip-cross-right': 'back',
   'sole-right': 'right',
   'sole-left': 'left',
   'prone-side': 'right',

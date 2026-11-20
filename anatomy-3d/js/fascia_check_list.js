@@ -1,14 +1,42 @@
-import * as dataModule from './data.js?v=20261119a';
-import { createFascia } from './fascia.js?v=20261119a';
-import * as posture from './posture.js?v=20261119a';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261119a';
-import { createViewer } from './viewer.js?v=20261119a';
+import * as dataModule from './data.js?v=20261120a';
+import { createFascia } from './fascia.js?v=20261120a';
+import * as posture from './posture.js?v=20261120a';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261120a';
+import { createViewer } from './viewer.js?v=20261120a';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
 const lineById = new Map(LINES.map((l) => [l.id, l]));
 const STORAGE_KEY = 'anatomy_unified_check_selected_v2';
-const EDIT_STORAGE_KEY = 'anatomy_unified_check_edits_v1';
+const EDIT_STORAGE_KEY = 'anatomy_unified_check_edits_v2';
+const DEFAULT_CONFIRMED_HABIT_IDS = [
+  'hair-cut-arm',
+  'hair-shampoo-bend',
+  'stand-hip-r',
+  'desk-round',
+  'phone-neck',
+  'leg-cross-r',
+  'therapist-press',
+  'care-lift-bend',
+  'stand-hip-l',
+  'laundry-reach',
+  'vacuum-dish-bend',
+  'sofa-slouch',
+  'heavy-lift-dig',
+  'overhead-tool',
+  'drive-long',
+  'cook-pan-hold',
+  'sway-back',
+  'arms-fold',
+  'sleep-side-curl',
+];
+const RECENTLY_UPDATED_HABIT_IDS = new Set([
+  'desk-round',
+  'leg-cross-r',
+  'cook-pan-hold',
+  'sway-back',
+  'sleep-side-curl',
+]);
 const LINE_VIEW = {
   SBL: 'back',
   SFL: 'front',
@@ -23,10 +51,8 @@ const LINE_VIEW = {
   FFL: 'front',
 };
 const BEND_LOWBACK_HABIT_IDS = new Set([
-  'desk-round',
   'phone-neck',
   'laptop-low-screen',
-  'nail-eye-fine',
   'hair-shampoo-bend',
   'vacuum-dish-bend',
   'care-lift-bend',
@@ -34,7 +60,6 @@ const BEND_LOWBACK_HABIT_IDS = new Set([
   'therapist-press',
   'sofa-slouch',
   'drive-long',
-  'kitchen-knife-chop',
   'cycling-aero',
   'gym-squat-lift',
   'running-strike',
@@ -48,10 +73,12 @@ const BEND_LOWBACK_HABIT_IDS = new Set([
 function viewForHabit(habit) {
   if (!habit) return 'front';
   if (habit.id === 'volleyball-smash' || habit.id === 'tennis-baseball-arm') return 'right';
-  if (habit.id === 'leg-cross-r') return 'front-right';
-  if (habit.id === 'floor-sit-cross') return 'front-left';
-  if (habit.id === 'gym-bench-push') return 'right';
-  if (habit.id === 'desk-round' || habit.id === 'kitchen-knife-chop' || habit.id === 'drive-long') return 'right';
+  if (habit.id === 'leg-cross-r') return 'hip-cross-right';
+  if (habit.id === 'floor-sit-cross') return 'front';
+  if (habit.id === 'cook-pan-hold') return 'front-left';
+  if (habit.id === 'desk-round') return 'front';
+  if (habit.id === 'gym-bench-push') return 'side';
+  if (habit.id === 'drive-long') return 'right';
   if (habit.id === 'sleep-side-curl' || habit.id === 'phone-bed-side') return 'front';
   if (habit.id === 'laundry-reach' || habit.id === 'overhead-tool') return 'left';
   if (habit.id === 'leg-cross-l') return 'left';
@@ -68,24 +95,26 @@ function viewForHabit(habit) {
 function getHabitRoleIds(habit) {
   if (!habit) return [];
   const tl = habit.triggerLine || habit.goldenLine;
+  const sCore = habit.shortenCore?.length ? habit.shortenCore : tl?.shortenCore || [];
+  const sLink = habit.shortenLinked?.length ? habit.shortenLinked : [];
+  const lAnt = habit.lengthenAntagonist?.length ? habit.lengthenAntagonist : tl?.lengthenAntagonist || [];
+  const lLink = habit.lengthenLinked?.length ? habit.lengthenLinked : [];
   return [
     ...new Set(
       [
-        ...(habit.shortenCore || []),
-        ...(habit.shortenLinked || []),
+        ...sCore,
+        ...sLink,
         ...(habit.shorten || []),
-        ...(habit.lengthenAntagonist || []),
-        ...(habit.lengthenLinked || []),
+        ...lAnt,
+        ...lLink,
         ...(habit.lengthen || []),
-        ...(tl?.shortenCore || []),
-        ...(tl?.lengthenAntagonist || []),
       ].filter(Boolean),
     ),
   ];
 }
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261119a');
+    const res = await fetch('models/atlas_metadata.json?v=20261120a');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -104,11 +133,11 @@ function shortJaName(id, names) {
 function loadSelectedSet() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Set();
+    if (raw === null) return new Set(DEFAULT_CONFIRMED_HABIT_IDS);
     const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? new Set(arr) : new Set();
+    return Array.isArray(arr) ? new Set(arr) : new Set(DEFAULT_CONFIRMED_HABIT_IDS);
   } catch {
-    return new Set();
+    return new Set(DEFAULT_CONFIRMED_HABIT_IDS);
   }
 }
 function saveSelectedSet(set) {
@@ -233,6 +262,7 @@ async function initCheckListPage() {
   const updateFilterTabLabels = (okCount, editCount) => {
     const labels = {
       all: `すべて（${catCounts.all}件）`,
+      updated: `今回修正反映（${RECENTLY_UPDATED_HABIT_IDS.size}件）`,
       'needs-edit': `要修正メモ（${editCount}件）`,
       'ok-checked': `OK済み（${okCount}件）`,
       desk: `デスク・手作業（${catCounts.desk}件）`,
@@ -290,12 +320,27 @@ async function initCheckListPage() {
   HABITS.forEach((hb, idx) => {
     const numStr = `#${String(idx + 1).padStart(2, '0')}`;
     const tl = hb.triggerLine || hb.goldenLine || {};
-    const shortList = (hb.shortenCore?.length ? hb.shortenCore : hb.shorten || [])
-      .slice(0, 3)
+    const isRecentlyUpdated = RECENTLY_UPDATED_HABIT_IDS.has(hb.id);
+    const shortRaw = [
+      ...new Set([
+        ...(hb.shortenCore?.length ? hb.shortenCore : []),
+        ...(hb.shortenLinked?.length ? hb.shortenLinked : []),
+        ...(hb.shorten || []),
+      ]),
+    ];
+    const shortList = shortRaw
+      .slice(0, 4)
       .map((m) => shortJaName(m, names))
       .join('・');
-    const longList = (hb.lengthenAntagonist?.length ? hb.lengthenAntagonist : hb.lengthen || [])
-      .slice(0, 3)
+    const longRaw = [
+      ...new Set([
+        ...(hb.lengthenAntagonist?.length ? hb.lengthenAntagonist : []),
+        ...(hb.lengthenLinked?.length ? hb.lengthenLinked : []),
+        ...(hb.lengthen || []),
+      ]),
+    ];
+    const longList = longRaw
+      .slice(0, 4)
       .map((m) => shortJaName(m, names))
       .join('・');
     const lineBadges = (hb.lines || [])
@@ -319,6 +364,7 @@ async function initCheckListPage() {
         <div class="card-title-group">
           <div class="card-title-line">
             <span class="code-badge is-new">${numStr}</span>
+            ${isRecentlyUpdated ? '<span class="updated-status-badge">修正反映済み</span>' : ''}
             <span class="edit-status-badge" hidden>要修正メモあり</span>
             <span class="ok-status-badge" hidden>✓ OK確認済み</span>
             <h2 class="card-title"></h2>
@@ -367,7 +413,7 @@ async function initCheckListPage() {
           <div class="revision-box">
             <div class="revision-head">
               <label class="revision-label" for="memo-${hb.id}">直すところの指示メモ</label>
-              <span class="revision-autosave-hint">入力すると自動保存されます</span>
+              <span class="revision-autosave-hint">この端末に一時保存（反映時は上の「まとめてコピー」）</span>
             </div>
             <textarea
               id="memo-${hb.id}"
@@ -634,6 +680,8 @@ async function initCheckListPage() {
     const habitLines = (hb.lines || []).map((lid) => lineById.get(lid)).filter(Boolean);
     const roleIds = getHabitRoleIds(hb);
     viewer.setActiveRoleIds?.(roleIds);
+    const deepIds = roleIds.filter((id) => dataModule.getMuscleLayer?.(id) === 'deep');
+    viewer.setActiveDeepContext?.(deepIds);
     viewer.ghostOthers?.([...new Set([...roleIds, ...(hb.chain || [])])]);
     fascia.clear();
     fascia.showHabit(hb, habitLines);
@@ -667,7 +715,9 @@ async function initCheckListPage() {
   };
   const captureSinglePhase = (hb, phase01) => {
     posture.setHabitPhasePose(hb.id, hb.pose || null, phase01);
-    fascia.update(phase01 * 2.0, 0);
+    for (let i = 0; i < 8; i += 1) {
+      fascia.update(phase01 * 2.0, 0.1);
+    }
     unifiedSheets.update(phase01 * 2.0, 0, viewer.camera?.quaternion || null);
     viewer.renderer.render(viewer.scene, viewer.camera);
     return viewer.renderer.domElement.toDataURL('image/webp', 0.86);
@@ -883,6 +933,7 @@ async function initCheckListPage() {
   });
   const matchesFilter = (entry, filterKey) => {
     if (filterKey === 'all') return true;
+    if (filterKey === 'updated') return RECENTLY_UPDATED_HABIT_IDS.has(entry.habit.id);
     if (filterKey === 'needs-edit') return hasCardEdit(entry);
     if (filterKey === 'ok-checked') return selectedSet.has(entry.habit.id);
     return entry.cardEl.dataset.category === filterKey;

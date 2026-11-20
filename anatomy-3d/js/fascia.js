@@ -1,9 +1,9 @@
-import * as posture from './posture.js?v=20261119a';
+import * as posture from './posture.js?v=20261120a';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261119a';
+} from './selfcare_guide3d.js?v=20261120a';
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
     ? posture.POSE_GLSL

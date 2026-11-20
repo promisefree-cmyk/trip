@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261119a';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261119a';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261120a';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261120a';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
