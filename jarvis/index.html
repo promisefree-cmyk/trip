@@ -197,6 +197,22 @@
         <div class="approval-cards-list" id="approval-cards-list" hidden></div>
       </section>
 
+      <!-- 📡 執事ブリーフィング（朝＆夜21:00 AI 3行要約カード） -->
+      <section class="panel hud-frame briefing-card" id="butler-briefing-panel" aria-labelledby="butler-briefing-heading">
+        <div class="panel-head">
+          <div class="briefing-card-title-row">
+            <h2 class="panel-title" id="butler-briefing-heading">📡 執事ブリーフィング（朝＆夜21:00 AI要約）</h2>
+            <span class="grill-cat-badge gold" id="briefing-kind-badge">確認中</span>
+            <span class="panel-note" id="briefing-updated-at">--:--</span>
+          </div>
+          <div class="briefing-card-actions">
+            <button type="button" class="subtle-action-btn" id="briefing-refresh-btn">🔄 今すぐ要約</button>
+            <button type="button" class="subtle-action-btn" id="briefing-notify-btn">📲 スマホへ送る</button>
+          </div>
+        </div>
+        <p class="briefing-summary-body" id="briefing-summary-text">稼働状況を読み込んでおります。少々お待ちくださいませ。</p>
+      </section>
+
       <!-- 非対称2カラム：左＝基幹システム稼働＆リモコン ／ 右＝PC健康＆保守＆高速ワープ -->
       <div class="main-grid">
         <div class="panel-group">
@@ -274,19 +290,32 @@
 
             <div class="briefing-schedule-note">
               <span id="briefing-detail-label">次回ブリーフィング：計算中</span>
-              <span id="briefing-rule-label">水木金 08:50 ／ 土日 07:00 ／ 月火 08:00</span>
+              <span id="briefing-rule-label">水木金 08:50 ／ 土日 07:00 ／ 月火 08:00 ／ 夜 21:00</span>
+            </div>
+
+            <div class="bloat-strip" id="bloat-strip">
+              <span class="bloat-chip" id="bloat-summary-text">🧹 整理できる一時ゴミ：確認中...</span>
+              <span class="bloat-schedule-pill" id="daily-clean-badge">🕒 毎日 03:00 自動掃除</span>
             </div>
           </section>
 
-          <!-- ワンタップ保守アクション -->
+          <!-- ワンタップ保守・PCフルパワー解放アクション -->
           <section class="panel hud-frame" aria-labelledby="maint-heading">
             <div class="panel-head">
-              <h2 class="panel-title" id="maint-heading">ワンタップ保守・静音リモコン</h2>
-              <span class="panel-note">1回押すだけで完了</span>
+              <h2 class="panel-title" id="maint-heading">ワンタップ保守・PCフルパワー解放</h2>
+              <span class="panel-note">1回押すだけでメモリ＆ゴミ一掃</span>
             </div>
             <div class="maint-actions">
+              <button type="button" class="cmd-btn boost-primary" id="btn-pc-boost">
+                <span>⚡ PCフルパワー解放（メモリ＆一時ゴミ一掃）</span>
+              </button>
+              <label class="cm-check-row boost-opt-row">
+                <input type="checkbox" id="boost-stop-heavy" checked />
+                <span>重い一時アプリ（投資・動画スタジオ）も同時に止める</span>
+              </label>
+              <div class="boost-result-card" id="boost-result-card" hidden aria-live="polite"></div>
               <button type="button" class="cmd-btn" id="btn-maintain">
-                <span>🧹 データ整理・衛生掃除を実行</span>
+                <span>🧹 データ整理・記録同期のみ実行</span>
               </button>
               <button type="button" class="cmd-btn gold" id="btn-quiet-mode">
                 <span>🌙 重いアプリを一括オフ（静音モード）</span>
@@ -299,52 +328,134 @@
         </div>
       </div>
 
-      <!-- 🎙️ ジャービスへの一言・音声オーダー窓口 -->
+      <!-- 🧠 J.A.R.V.I.S. 参謀コンソール（3タブ統合：参謀チャット / AI壁打ち / ミッションボード） -->
       <section class="order-panel hud-frame" id="order-panel" aria-labelledby="order-heading">
-        <div class="panel-head">
-          <h2 class="panel-title" id="order-heading">🎙️ ジャービスへの一言・音声オーダー</h2>
-          <span class="panel-note">一言メモ送信、または「🔥 壁打ち」で3問深掘り</span>
-        </div>
-        <form class="order-form" id="order-form">
-          <input
-            type="text"
-            id="order-input"
-            class="order-input"
-            placeholder="例：次のMrボディハック動画のテーマは肩甲骨はがしにしたい"
-            maxlength="500"
-            aria-label="ジャービスへの一言オーダー入力欄"
-          />
-          <button type="button" class="cmd-btn voice-btn" id="voice-btn" aria-label="音声で入力する">
-            <span>🎙️ 音声</span>
-          </button>
-          <button type="button" class="cmd-btn grill-trigger-btn" id="grill-start-btn" aria-label="3問の壁打ちで方針を固める">
-            <span>🔥 壁打ち</span>
-          </button>
-          <button type="submit" class="cmd-btn gold send-order-btn" id="send-order-btn">
-            <span>送信</span>
-          </button>
-        </form>
-
-        <!-- 空欄で「🔥 壁打ち」を押した時に出るワンタップ例題チップ -->
-        <div class="grill-examples-bar" id="grill-examples-bar" hidden>
-          <span class="grill-examples-label">すぐ試せる例題（タップで壁打ち開始）：</span>
-          <div class="grill-examples-chips">
-            <button type="button" class="grill-example-chip" data-topic="Mrボディハックで肩甲骨はがしのショート動画を作りたい">
-              Mrボディハックの肩甲骨ショート動画
-            </button>
-            <button type="button" class="grill-example-chip" data-topic="公式HPに初めての方向けの安心ガイドを追加したい">
-              公式HPに初めての方の安心ガイド追加
-            </button>
-            <button type="button" class="grill-example-chip" data-topic="次の休みに1泊2日で温泉と美味しい夕食を楽しむ旅行計画">
-              1泊2日の温泉・グルメ旅行計画
-            </button>
+        <div class="panel-head advisor-panel-head">
+          <div class="advisor-title-wrap">
+            <h2 class="panel-title" id="order-heading">🧠 J.A.R.V.I.S. 参謀コンソール</h2>
+            <span class="panel-note" id="ai-brain-subtitle">最高峰ダンディー執事が状況を見て助言します</span>
+          </div>
+          <div class="advisor-head-controls">
+            <label for="ai-model-select" class="sr-only">AI頭脳モデル選択</label>
+            <select id="ai-model-select" class="ai-model-select" aria-label="AI頭脳モデル選択">
+              <option value="claude-opus">👑 Claude Opus（最高峰・契約済）</option>
+              <option value="gemini-4-carbon">💎 Gemini 4 Carbon（Google有料枠）</option>
+              <option value="gemini-3.5-flash-lite">⚡ Gemini 3.5 Flash-Lite（高速無料）</option>
+            </select>
           </div>
         </div>
 
-        <!-- 🔥 壁打ち（Grill-Me）3問インタビュー＆確定カード -->
-        <div class="grill-session-box" id="grill-session-box" aria-live="polite" hidden></div>
+        <div class="advisor-tabs" role="tablist" aria-label="参謀モード切替">
+          <button type="button" class="advisor-tab-btn active" role="tab" aria-selected="true" data-tab="chat" id="tab-btn-chat">
+            <span>💬 参謀チャット</span>
+          </button>
+          <button type="button" class="advisor-tab-btn" role="tab" aria-selected="false" data-tab="grill" id="tab-btn-grill">
+            <span>🔥 AI壁打ち＆一言オーダー</span>
+          </button>
+          <button type="button" class="advisor-tab-btn" role="tab" aria-selected="false" data-tab="missions" id="tab-btn-missions">
+            <span>📋 ミッションボード</span>
+            <span class="tab-count-badge" id="missions-badge">0</span>
+          </button>
+        </div>
 
-        <div class="orders-history" id="orders-history"></div>
+        <!-- タブ1：参謀チャット -->
+        <div class="advisor-tab-pane" id="tab-pane-chat">
+          <div class="ai-chat-toolbar">
+            <span class="panel-note">PC・HP・SNSの最新状況を自動で踏まえてご提案します</span>
+            <button type="button" class="subtle-action-btn" id="ai-chat-clear-btn">🗑️ 履歴クリア</button>
+          </div>
+          <div class="ai-chat-list" id="ai-chat-list" aria-live="polite"></div>
+          <form class="ai-chat-form" id="ai-chat-form">
+            <input
+              type="text"
+              id="ai-chat-input"
+              class="order-input"
+              placeholder="例：今の状況で今日いちばん先にやるべき一手は？"
+              maxlength="1000"
+              aria-label="参謀AIへのメッセージ"
+            />
+            <button type="button" class="cmd-btn voice-btn" id="ai-chat-voice-btn" aria-label="音声で相談する">
+              <span>🎙️ 音声</span>
+            </button>
+            <button type="submit" class="cmd-btn cyan send-order-btn" id="ai-chat-send-btn">
+              <span>相談する</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- タブ2：AI壁打ち＆一言オーダー（従来ID互換維持） -->
+        <div class="advisor-tab-pane" id="tab-pane-grill" hidden>
+          <p class="panel-note" style="margin: 0 0 10px;">選んだ頭脳AIがテーマに合わせた「（おすすめ）付き3問」を作ります。そのままミッション送信も可。</p>
+          <form class="order-form" id="order-form">
+            <input
+              type="text"
+              id="order-input"
+              class="order-input"
+              placeholder="例：次のMrボディハック動画のテーマは肩甲骨はがしにしたい"
+              maxlength="500"
+              aria-label="ジャービスへの一言オーダー入力欄"
+            />
+            <button type="button" class="cmd-btn voice-btn" id="voice-btn" aria-label="音声で入力する">
+              <span>🎙️ 音声</span>
+            </button>
+            <button type="button" class="cmd-btn grill-trigger-btn" id="grill-start-btn" aria-label="AIの3問壁打ちで方針を固める">
+              <span>🔥 AI壁打ち</span>
+            </button>
+            <button type="submit" class="cmd-btn gold send-order-btn" id="send-order-btn">
+              <span>送信</span>
+            </button>
+          </form>
+
+          <!-- 空欄で「🔥 AI壁打ち」を押した時に出るワンタップ例題チップ -->
+          <div class="grill-examples-bar" id="grill-examples-bar" hidden>
+            <span class="grill-examples-label">すぐ試せる例題（タップでAI壁打ち開始）：</span>
+            <div class="grill-examples-chips">
+              <button type="button" class="grill-example-chip" data-topic="Mrボディハックで肩甲骨はがしのショート動画を作りたい">
+                Mrボディハックの肩甲骨ショート動画
+              </button>
+              <button type="button" class="grill-example-chip" data-topic="公式HPに初めての方向けの安心ガイドを追加したい">
+                公式HPに初めての方の安心ガイド追加
+              </button>
+              <button type="button" class="grill-example-chip" data-topic="次の休みに1泊2日で温泉と美味しい夕食を楽しむ旅行計画">
+                1泊2日の温泉・グルメ旅行計画
+              </button>
+            </div>
+          </div>
+
+          <!-- 🔥 壁打ち（Grill-Me）3問インタビュー＆確定カード -->
+          <div class="grill-session-box" id="grill-session-box" aria-live="polite" hidden></div>
+
+          <div class="orders-history" id="orders-history"></div>
+        </div>
+
+        <!-- タブ3：ミッションボード -->
+        <div class="advisor-tab-pane" id="tab-pane-missions" hidden>
+          <div class="mission-toolbar">
+            <input
+              type="search"
+              id="mission-search-input"
+              class="order-input mission-search-input"
+              placeholder="ミッションを検索..."
+              maxlength="100"
+              aria-label="ミッション検索"
+            />
+            <select id="mission-status-select" class="ai-model-select mission-status-select" aria-label="状態で絞り込み">
+              <option value="active">進行中のみ</option>
+              <option value="all">すべて表示</option>
+              <option value="done">完了済み</option>
+            </select>
+          </div>
+          <div class="mission-cat-chips" id="mission-cat-chips">
+            <button type="button" class="mission-chip active" data-cat="all">すべて</button>
+            <button type="button" class="mission-chip" data-cat="hp">🏥 HP</button>
+            <button type="button" class="mission-chip" data-cat="sns">📱 SNS</button>
+            <button type="button" class="mission-chip" data-cat="video">🎬 動画</button>
+            <button type="button" class="mission-chip" data-cat="money">💰 お金</button>
+            <button type="button" class="mission-chip" data-cat="travel">✈️ 旅行</button>
+            <button type="button" class="mission-chip" data-cat="general">📌 一般</button>
+          </div>
+          <div class="missions-list" id="missions-list"></div>
+        </div>
       </section>
     </div>
   </main>
@@ -377,7 +488,7 @@
     <!-- Watch特大ボタン群 (>=46px) -->
     <button type="button" class="watch-btn gold" id="watch-quiet-btn">🌙 静音一括オフ</button>
     <button type="button" class="watch-btn" id="watch-inv-toggle-btn">⚡ 投資 起動する</button>
-    <button type="button" class="watch-btn" id="watch-maint-btn">🧹 データお掃除</button>
+    <button type="button" class="watch-btn" id="watch-maint-btn">⚡ フルパワー解放</button>
     <button type="button" class="watch-btn" id="watch-refresh-btn">🔄 状態を更新</button>
   </section>
 

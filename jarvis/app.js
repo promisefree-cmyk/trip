@@ -35,6 +35,16 @@
     audioCtx: null,
     activeVoiceAudio: null,
     busyAction: false,
+    advisorTab: "chat",
+    chatMessages: [],
+    chatLoaded: false,
+    chatBusy: false,
+    missions: [],
+    missionCategory: "all",
+    missionStatus: "active",
+    missionQuery: "",
+    aiConfig: null,
+    boostResult: null,
     workspace: {
       mode: "bridge", // bridge | monitor
       split: false,
@@ -51,6 +61,8 @@
       topic: "",
       category: "",
       categoryLabel: "",
+      aiPowered: false,
+      modelLabel: "",
       questions: [],
       stepIndex: 0,
       answers: [],
@@ -1326,7 +1338,193 @@
       document.getElementById("briefing-desktop-text").textContent = briefing.short_label;
       document.getElementById("briefing-mobile-text").textContent = briefing.short_label;
       document.getElementById("briefing-detail-label").textContent = briefing.next_label;
-      document.getElementById("briefing-rule-label").textContent = briefing.schedule_rule;
+      document.getElementById("briefing-rule-label").textContent =
+        briefing.schedule_summary || briefing.schedule_rule;
+    }
+  }
+
+  function renderButlerBriefing(latest) {
+    if (!latest) return;
+    const badgeEl = document.getElementById("briefing-kind-badge");
+    const updEl = document.getElementById("briefing-updated-at");
+    const bodyEl = document.getElementById("briefing-summary-text");
+    if (badgeEl) badgeEl.textContent = latest.kind_label || "執事まとめ";
+    if (updEl) updEl.textContent = formatShortTime(latest.updated_at) || "最新";
+    if (bodyEl) bodyEl.textContent = latest.summary || "";
+  }
+
+  function renderBloatSummary(bloat) {
+    if (!bloat) return;
+    const txtEl = document.getElementById("bloat-summary-text");
+    const badgeEl = document.getElementById("daily-clean-badge");
+    if (txtEl) {
+      txtEl.textContent = `🧹 整理できる一時ゴミ：約 ${bloat.total_cleanable_mb} MB（RAM空き ${bloat.ram_free_gb} GB）`;
+    }
+    if (badgeEl) {
+      badgeEl.textContent = bloat.daily_task_registered
+        ? "🕒 毎日 03:00 自動掃除（稼働中）"
+        : "🕒 毎日 03:00 自動掃除";
+    }
+  }
+
+  function renderBoostResult(res) {
+    const card = document.getElementById("boost-result-card");
+    if (!card) return;
+    if (!res) {
+      card.hidden = true;
+      card.innerHTML = "";
+      return;
+    }
+    card.hidden = false;
+    card.innerHTML = `
+      <strong>⚡ フルパワー解放 完了</strong><br />
+      作業メモリ：<strong>${escapeHtml(String(res.ram_before_pct))}% ➔ ${escapeHtml(String(res.ram_after_pct))}%</strong>
+      （解放 ${escapeHtml(String(res.ram_freed_mb))} MB・空き ${escapeHtml(String(res.ram_free_gb_after))} GB）<br />
+      不要ゴミ削減：<strong>${escapeHtml(String(res.freed_disk_mb))} MB</strong>（${escapeHtml(String(res.removed_files))}ファイル整理${res.stopped_processes > 0 ? `／停止アプリ ${escapeHtml(String(res.stopped_processes))}件` : ""}）
+    `;
+  }
+
+  function renderAiConfig(aiCfg) {
+    if (!aiCfg) return;
+    state.aiConfig = aiCfg;
+    const sel = document.getElementById("ai-model-select");
+    if (sel && aiCfg.model) {
+      sel.value = aiCfg.model;
+    }
+    const sub = document.getElementById("ai-brain-subtitle");
+    if (sub && aiCfg.short_label) {
+      sub.textContent = `使用中の頭脳：${aiCfg.short_label}（ダンディー執事参謀）`;
+    }
+  }
+
+  function renderAiChatList() {
+    const listEl = document.getElementById("ai-chat-list");
+    if (!listEl) return;
+
+    const msgs = state.chatMessages || [];
+    if (msgs.length === 0) {
+      listEl.innerHTML = `
+        <div class="ai-msg assistant">
+          <div class="ai-msg-meta"><span>🎩 J.A.R.V.I.S. 執事参謀</span><span>待機中</span></div>
+          <div>おかえりなさいませ。HP・SNS・科学動画・PC状態のすべてを見渡して、最短で勝てる次の一手をご提案いたします。どうぞ何なりとお尋ねください。</div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = msgs
+      .map((m) => {
+        const isUser = m.role === "user";
+        const metaWho = isUser
+          ? "あなた"
+          : `🎩 ${m.model_label || "J.A.R.V.I.S."}`;
+        const addBtn = !isUser
+          ? `<div class="ai-msg-actions">
+               <button type="button" class="subtle-action-btn js-chat-to-mission" data-msg-id="${escapeHtml(m.id)}">📋 ミッションに追加</button>
+             </div>`
+          : "";
+        return `
+          <div class="ai-msg ${isUser ? "user" : "assistant"}">
+            <div class="ai-msg-meta">
+              <span>${escapeHtml(metaWho)}</span>
+              <span>${escapeHtml(formatShortTime(m.created_at))}</span>
+            </div>
+            <div>${escapeHtml(m.content)}</div>
+            ${addBtn}
+          </div>
+        `;
+      })
+      .join("");
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+
+  function renderMissionBoard() {
+    const listEl = document.getElementById("missions-list");
+    if (!listEl) return;
+
+    const items = state.missions || [];
+    if (items.length === 0) {
+      listEl.innerHTML = `<div class="panel-note">条件に合うミッションはありません。「参謀チャット」や「🔥 AI壁打ち＆一言オーダー」から追加できます。</div>`;
+      return;
+    }
+
+    listEl.innerHTML = items
+      .map((m) => {
+        const done = Boolean(m.done);
+        const catLabel = m.mission_category_label || m.category_label || "📌 一般タスク";
+        const nextLine = m.ai_next_step
+          ? `<div class="mission-next-step">💡 次の一手：${escapeHtml(m.ai_next_step)}</div>`
+          : "";
+        return `
+          <article class="mission-card ${done ? "is-done" : ""}">
+            <div class="mission-left">
+              <button type="button" class="mission-check-btn js-mission-toggle ${done ? "done" : ""}" data-id="${escapeHtml(m.id)}" data-done="${done ? "1" : "0"}" aria-label="${done ? "未完了に戻す" : "完了にする"}">
+                ${done ? "✓" : ""}
+              </button>
+              <div class="mission-body">
+                <div class="mission-title-line">${escapeHtml(m.text)}</div>
+                <div class="mission-tags-row">
+                  <span class="mission-cat-tag">${escapeHtml(catLabel)}</span>
+                  <span class="mission-prio-tag">優先 ${escapeHtml(m.priority || "中")}</span>
+                  <span class="panel-note">${escapeHtml(formatShortTime(m.created_at))}</span>
+                </div>
+                ${nextLine}
+              </div>
+            </div>
+            <button type="button" class="mission-del-btn js-mission-del" data-id="${escapeHtml(m.id)}" aria-label="削除">削除</button>
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  async function fetchMissions() {
+    try {
+      const qs = new URLSearchParams({
+        category: state.missionCategory || "all",
+        status: state.missionStatus || "active",
+        q: state.missionQuery || "",
+        limit: "50",
+      });
+      const res = await apiRequest(`/api/orders?${qs.toString()}`);
+      state.missions = res.items || [];
+      const badge = document.getElementById("missions-badge");
+      if (badge && typeof res.active_count === "number") {
+        badge.textContent = String(res.active_count);
+      }
+      renderMissionBoard();
+    } catch (_err) {
+      // Keep current list on transient polling glitch
+    }
+  }
+
+  function switchAdvisorTab(tabName) {
+    const valid = ["chat", "grill", "missions"].includes(tabName) ? tabName : "chat";
+    state.advisorTab = valid;
+    ["chat", "grill", "missions"].forEach((t) => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const pane = document.getElementById(`tab-pane-${t}`);
+      const isOn = t === valid;
+      if (btn) {
+        btn.classList.toggle("active", isOn);
+        btn.setAttribute("aria-selected", isOn ? "true" : "false");
+      }
+      if (pane) pane.hidden = !isOn;
+    });
+    if (valid === "missions") {
+      fetchMissions();
+    }
+  }
+
+  async function loadAiChatHistoryOnce() {
+    if (state.chatLoaded) return;
+    state.chatLoaded = true;
+    try {
+      const res = await apiRequest("/api/ai/chat");
+      state.chatMessages = res.messages || [];
+      renderAiChatList();
+    } catch (_err) {
+      renderAiChatList();
     }
   }
 
@@ -1435,13 +1633,25 @@
     document.getElementById("updated-time-label").textContent = `${formatShortTime(data.updated_at)} 更新`;
 
     renderApprovals(data.approvals);
+    renderButlerBriefing(data.briefing_latest);
     renderSystems(data.systems);
     renderWarpDock(data.warp_dock, data.custom_monitors);
     renderWorkspaceBay();
     renderCustomMonitorListModal();
     renderHealthAndBriefing(data.pc_health, data.briefing);
+    renderBloatSummary(data.bloat_summary);
+    renderAiConfig(data.ai_config);
     renderOrders(data.orders);
     renderWatchView(data);
+
+    const missionsBadge = document.getElementById("missions-badge");
+    if (missionsBadge && data.missions_summary) {
+      missionsBadge.textContent = String(data.missions_summary.active || 0);
+    }
+    loadAiChatHistoryOnce();
+    if (state.advisorTab === "missions") {
+      fetchMissions();
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1471,7 +1681,7 @@
     }
   }
 
-  async function triggerPostAction(endpoint, buttonEl, loadingLabel = "実行中...") {
+  async function triggerPostAction(endpoint, buttonEl, loadingLabel = "実行中...", bodyObj = null) {
     if (state.busyAction) return;
     state.busyAction = true;
     playHudClickSound();
@@ -1481,11 +1691,21 @@
       buttonEl.textContent = loadingLabel;
     }
     try {
-      const res = await apiRequest(endpoint, { method: "POST" });
+      const fetchOpts = { method: "POST" };
+      if (bodyObj !== null) {
+        fetchOpts.body = JSON.stringify(bodyObj);
+      }
+      const res = await apiRequest(endpoint, fetchOpts);
+      if (endpoint === "/api/actions/boost") {
+        state.boostResult = res;
+        renderBoostResult(res);
+      }
       showToast(res.message || "完了しました。");
       await refreshOverview(true);
+      return res;
     } catch (err) {
       showToast(`エラー：${err.message}`);
+      return null;
     } finally {
       if (buttonEl) {
         buttonEl.disabled = false;
@@ -1598,15 +1818,16 @@
   // -------------------------------------------------------------------------
   // 11. Web Speech API Voice Input Support
   // -------------------------------------------------------------------------
-  function setupVoiceInput() {
-    const voiceBtn = document.getElementById("voice-btn");
-    const orderInput = document.getElementById("order-input");
+  function bindVoicePair(btnId, inputId) {
+    const voiceBtn = document.getElementById(btnId);
+    const targetInput = document.getElementById(inputId);
+    if (!voiceBtn || !targetInput) return;
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRec) {
       voiceBtn.addEventListener("click", () => {
-        orderInput.focus();
-        showToast("キーボードのマイクボタン、または文字入力からオーダーできます。");
+        targetInput.focus();
+        showToast("キーボードのマイクボタン、または文字入力から送信できます。");
       });
       return;
     }
@@ -1633,8 +1854,8 @@
       const transcript =
         ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : "";
       if (transcript) {
-        orderInput.value = orderInput.value ? `${orderInput.value} ${transcript}` : transcript;
-        orderInput.focus();
+        targetInput.value = targetInput.value ? `${targetInput.value} ${transcript}` : transcript;
+        targetInput.focus();
       }
     };
 
@@ -1649,10 +1870,15 @@
         try {
           rec.start();
         } catch (_e) {
-          orderInput.focus();
+          targetInput.focus();
         }
       }
     });
+  }
+
+  function setupVoiceInput() {
+    bindVoicePair("voice-btn", "order-input");
+    bindVoicePair("ai-chat-voice-btn", "ai-chat-input");
   }
 
   // -------------------------------------------------------------------------
@@ -1769,6 +1995,7 @@
         <div class="grill-head-left">
           <span class="grill-step-title">🔥 壁打ち深掘り中（質問 ${stepNum} / ${total}）</span>
           <span class="grill-cat-badge">${escapeHtml(state.grill.categoryLabel || "企画整理")}</span>
+          ${state.grill.aiPowered ? `<span class="grill-cat-badge gold">${escapeHtml(state.grill.modelLabel || "AI")} 生成</span>` : ""}
         </div>
         <button type="button" class="grill-close-btn js-grill-close" ${disabledAttr}>閉じる</button>
       </div>
@@ -1815,11 +2042,13 @@
     if (examplesBar) examplesBar.hidden = true;
     state.grill.busy = true;
     if (startBtn) startBtn.disabled = true;
+    const prevBtnTxt = startBtn ? startBtn.innerHTML : "";
+    if (startBtn) startBtn.textContent = "🧠 AI作成中...";
 
     try {
       const res = await apiRequest("/api/grill/start", {
         method: "POST",
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, use_ai: true }),
       });
 
       state.grill.active = true;
@@ -1827,6 +2056,8 @@
       state.grill.topic = res.topic || topic;
       state.grill.category = res.category || "general";
       state.grill.categoryLabel = res.category_label || "企画・アイデア整理";
+      state.grill.aiPowered = Boolean(res.ai_powered);
+      state.grill.modelLabel = res.model_label || "";
       state.grill.questions = Array.isArray(res.questions) ? res.questions : [];
       state.grill.stepIndex = 0;
       state.grill.answers = [];
@@ -1838,7 +2069,10 @@
       showToast(`壁打ちを開始できませんでした：${err.message}`);
     } finally {
       state.grill.busy = false;
-      if (startBtn) startBtn.disabled = false;
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.innerHTML = prevBtnTxt || "<span>🔥 AI壁打ち</span>";
+      }
     }
   }
 
@@ -2149,7 +2383,59 @@
       triggerPostAction("/api/approvals/sample", ev.currentTarget, "追加中...");
     });
 
-    // Maintenance Controls
+    // Butler Briefing Controls
+    document.getElementById("briefing-refresh-btn").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      if (btn.disabled) return;
+      playHudClickSound();
+      const prev = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "🧠 要約作成中...";
+      try {
+        const res = await apiRequest("/api/briefing/refresh", {
+          method: "POST",
+          body: JSON.stringify({ kind: "auto", notify: false }),
+        });
+        renderButlerBriefing(res.briefing);
+        showToast(res.message || "執事ブリーフィングを更新しました。");
+      } catch (err) {
+        showToast(`要約更新エラー：${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
+    });
+
+    document.getElementById("briefing-notify-btn").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      if (btn.disabled) return;
+      playHudClickSound();
+      const prev = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "送信中...";
+      try {
+        const res = await apiRequest("/api/briefing/refresh", {
+          method: "POST",
+          body: JSON.stringify({ kind: "auto", notify: true }),
+        });
+        renderButlerBriefing(res.briefing);
+        showToast(res.message || "スマホ＆Watchへ配信しました。");
+      } catch (err) {
+        showToast(`送信エラー：${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
+    });
+
+    // Maintenance & PC Full-Power Boost Controls
+    document.getElementById("btn-pc-boost").addEventListener("click", (ev) => {
+      const stopHeavyEl = document.getElementById("boost-stop-heavy");
+      const stopHeavy = stopHeavyEl ? Boolean(stopHeavyEl.checked) : true;
+      triggerPostAction("/api/actions/boost", ev.currentTarget, "⚡ メモリ＆ゴミ一掃中...", {
+        stop_heavy_apps: stopHeavy,
+      });
+    });
     document.getElementById("btn-maintain").addEventListener("click", (ev) => {
       triggerPostAction("/api/actions/maintain", ev.currentTarget, "整理・同期を実行中...");
     });
@@ -2165,7 +2451,186 @@
       triggerPostAction("/api/actions/quiet-mode", ev.currentTarget, "静音化中...");
     });
     document.getElementById("watch-maint-btn").addEventListener("click", (ev) => {
-      triggerPostAction("/api/actions/maintain", ev.currentTarget, "お掃除中...");
+      triggerPostAction("/api/actions/boost", ev.currentTarget, "解放中...", {
+        stop_heavy_apps: false,
+      });
+    });
+
+    // AI Brain Model Select & 3-Tab Advisor Console
+    document.getElementById("ai-model-select").addEventListener("change", async (ev) => {
+      const modelId = ev.target.value;
+      playHudClickSound();
+      try {
+        const res = await apiRequest("/api/ai/config", {
+          method: "POST",
+          body: JSON.stringify({ model: modelId }),
+        });
+        renderAiConfig(res);
+        showToast(res.message || "頭脳モデルを切り替えました。");
+      } catch (err) {
+        showToast(`モデル切替エラー：${err.message}`);
+      }
+    });
+
+    document.querySelector(".advisor-tabs").addEventListener("click", (ev) => {
+      const tabBtn = ev.target.closest(".advisor-tab-btn");
+      if (!tabBtn) return;
+      playHudClickSound();
+      switchAdvisorTab(tabBtn.dataset.tab || "chat");
+    });
+
+    document.getElementById("ai-chat-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (state.chatBusy) return;
+      const input = document.getElementById("ai-chat-input");
+      const sendBtn = document.getElementById("ai-chat-send-btn");
+      const msg = (input.value || "").trim();
+      if (!msg) return;
+
+      playHudClickSound();
+      state.chatBusy = true;
+      sendBtn.disabled = true;
+      const prevBtn = sendBtn.innerHTML;
+      sendBtn.textContent = "🧠 思考中...";
+
+      const optimisticUser = {
+        id: `tmp_${Date.now()}`,
+        role: "user",
+        content: msg,
+        created_at: new Date().toISOString(),
+      };
+      state.chatMessages = [...(state.chatMessages || []), optimisticUser];
+      renderAiChatList();
+      input.value = "";
+
+      try {
+        const res = await apiRequest("/api/ai/chat", {
+          method: "POST",
+          body: JSON.stringify({ message: msg }),
+        });
+        if (res.ok && Array.isArray(res.messages)) {
+          state.chatMessages = res.messages;
+        } else {
+          state.chatMessages = [
+            ...state.chatMessages,
+            {
+              id: `err_${Date.now()}`,
+              role: "assistant",
+              content: res.reply || "通信が不安定でした。少し置いて再度お試しください。",
+              model_label: res.model_label || "J.A.R.V.I.S.",
+              created_at: new Date().toISOString(),
+            },
+          ];
+        }
+        renderAiChatList();
+      } catch (err) {
+        showToast(`参謀チャットエラー：${err.message}`);
+      } finally {
+        state.chatBusy = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = prevBtn;
+      }
+    });
+
+    document.getElementById("ai-chat-clear-btn").addEventListener("click", async () => {
+      playHudClickSound();
+      try {
+        const res = await apiRequest("/api/ai/chat", { method: "DELETE" });
+        state.chatMessages = res.messages || [];
+        renderAiChatList();
+        showToast(res.message || "履歴を消去しました。");
+      } catch (err) {
+        showToast(`履歴消去エラー：${err.message}`);
+      }
+    });
+
+    document.getElementById("ai-chat-list").addEventListener("click", async (ev) => {
+      const addBtn = ev.target.closest(".js-chat-to-mission");
+      if (!addBtn) return;
+      const msgId = addBtn.dataset.msgId;
+      const msgObj = (state.chatMessages || []).find((m) => m.id === msgId);
+      if (!msgObj) return;
+      addBtn.disabled = true;
+      playHudClickSound();
+      try {
+        const firstLine = String(msgObj.content || "").split(/\r?\n/)[0].trim().slice(0, 120);
+        const res = await apiRequest("/api/orders", {
+          method: "POST",
+          body: JSON.stringify({ text: firstLine, source: "ai_chat" }),
+        });
+        showToast(res.message || "ミッションへ登録しました。");
+        await refreshOverview(true);
+      } catch (err) {
+        showToast(`登録エラー：${err.message}`);
+      } finally {
+        addBtn.disabled = false;
+      }
+    });
+
+    // Mission Board Filters & Actions
+    let missionSearchTimer = null;
+    document.getElementById("mission-search-input").addEventListener("input", (ev) => {
+      state.missionQuery = ev.target.value || "";
+      window.clearTimeout(missionSearchTimer);
+      missionSearchTimer = window.setTimeout(() => fetchMissions(), 200);
+    });
+
+    document.getElementById("mission-status-select").addEventListener("change", (ev) => {
+      state.missionStatus = ev.target.value || "active";
+      fetchMissions();
+    });
+
+    document.getElementById("mission-cat-chips").addEventListener("click", (ev) => {
+      const chip = ev.target.closest(".mission-chip");
+      if (!chip) return;
+      playHudClickSound();
+      state.missionCategory = chip.dataset.cat || "all";
+      document.querySelectorAll("#mission-cat-chips .mission-chip").forEach((c) => {
+        c.classList.toggle("active", c === chip);
+      });
+      fetchMissions();
+    });
+
+    document.getElementById("missions-list").addEventListener("click", async (ev) => {
+      const toggleBtn = ev.target.closest(".js-mission-toggle");
+      if (toggleBtn) {
+        const ordId = toggleBtn.dataset.id;
+        const nextDone = toggleBtn.dataset.done !== "1";
+        toggleBtn.disabled = true;
+        playHudClickSound();
+        try {
+          await apiRequest(`/api/orders/${encodeURIComponent(ordId)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ done: nextDone }),
+          });
+          showToast(nextDone ? "完了にしました！" : "進行中へ戻しました。");
+          await fetchMissions();
+          await refreshOverview(true);
+        } catch (err) {
+          showToast(`更新エラー：${err.message}`);
+        } finally {
+          toggleBtn.disabled = false;
+        }
+        return;
+      }
+      const delBtn = ev.target.closest(".js-mission-del");
+      if (delBtn) {
+        const ordId = delBtn.dataset.id;
+        delBtn.disabled = true;
+        playHudClickSound();
+        try {
+          await apiRequest(`/api/orders/${encodeURIComponent(ordId)}`, {
+            method: "DELETE",
+          });
+          showToast("ミッションを削除しました。");
+          await fetchMissions();
+          await refreshOverview(true);
+        } catch (err) {
+          showToast(`削除エラー：${err.message}`);
+        } finally {
+          delBtn.disabled = false;
+        }
+      }
     });
     document.getElementById("watch-inv-toggle-btn").addEventListener("click", (ev) => {
       const ep = ev.currentTarget.dataset.endpoint || "/api/actions/investment/start";
