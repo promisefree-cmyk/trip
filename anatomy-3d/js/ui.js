@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261121b';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261121b';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261121c';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261121c';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -710,15 +710,17 @@ export function createUI({
     pickedPart: null, // 3D直接タップ時のミニ部位バナー情報
     scSteps: [],
     scStepIndex: 0,
-    unifiedLayer: 'fascia', // 'fascia' | 'muscle'
+    unifiedLayer: 'fascia', // 'fascia' | 'muscle' | 'both'
     theme: 'light', // 'light' | 'dark'
     paused: false,
   };
   /* ---------- 外部シェルボタン（index.html）結線 ---------- */
   const btnThemeLight = document.getElementById('btn-theme-light');
   const btnThemeDark = document.getElementById('btn-theme-dark');
+  const layerSwitchEl = document.getElementById('layer-switch');
   const btnLayerFascia = document.getElementById('btn-layer-fascia');
   const btnLayerMuscle = document.getElementById('btn-layer-muscle');
+  const btnLayerBoth = document.getElementById('btn-layer-both');
   const btnPlayToggle = document.getElementById('btn-play-toggle');
   const btnPlayLabel = document.getElementById('btn-play-label');
   const stageLoader = document.getElementById('stage-loader');
@@ -744,8 +746,12 @@ export function createUI({
     }
   }
   function applyUnifiedLayerDOM(layerMode) {
-    const next = layerMode === 'muscle' ? 'muscle' : 'fascia';
+    const next = layerMode === 'muscle' || layerMode === 'both' ? layerMode : 'fascia';
     state.unifiedLayer = next;
+    const activeIndex = next === 'muscle' ? '1' : next === 'both' ? '2' : '0';
+    if (layerSwitchEl) {
+      layerSwitchEl.setAttribute('data-active-index', activeIndex);
+    }
     if (btnLayerFascia) {
       const on = next === 'fascia';
       btnLayerFascia.classList.toggle('is-active', on);
@@ -755,6 +761,11 @@ export function createUI({
       const on = next === 'muscle';
       btnLayerMuscle.classList.toggle('is-active', on);
       btnLayerMuscle.setAttribute('aria-pressed', String(on));
+    }
+    if (btnLayerBoth) {
+      const on = next === 'both';
+      btnLayerBoth.classList.toggle('is-active', on);
+      btnLayerBoth.setAttribute('aria-pressed', String(on));
     }
   }
   function applyPausedDOM(paused) {
@@ -786,6 +797,11 @@ export function createUI({
     if (state.unifiedLayer === 'muscle') return;
     applyUnifiedLayerDOM('muscle');
     emit('unified-layer', 'muscle');
+  });
+  btnLayerBoth?.addEventListener('click', () => {
+    if (state.unifiedLayer === 'both') return;
+    applyUnifiedLayerDOM('both');
+    emit('unified-layer', 'both');
   });
   btnPlayToggle?.addEventListener('click', () => {
     applyPausedDOM(!state.paused);

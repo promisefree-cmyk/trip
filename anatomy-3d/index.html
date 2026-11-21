@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-title" content="アナトミー筋膜・筋肉 3D" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json?v=20261121b" />
+  <link rel="manifest" href="manifest.json?v=20261121c" />
   <meta name="description" content="仕事や日常の姿勢・スポーツの動きで「縮むところ」と「伸びるところ」、ゆるめる順番を3Dでひと目で確認できる無料セルフケア図鑑。" />
   <meta property="og:title" content="アナトミー筋膜・筋肉 3D — 縮むところ・伸びるところ＆セルフケア図鑑" />
-  <meta property="og:description" content="いつもの姿勢や動作で「縮むところ」と「伸びるところ」、ゆるめる順番を筋膜と筋肉の3Dアニメーションで見比べられます。" />
+  <meta property="og:description" content="いつもの姿勢や動作で「縮むところ」と「伸びるところ」、ゆるめる順番を筋膜・筋肉・同時表示の3Dアニメーションで見比べられます。" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ja_JP" />
   <meta name="twitter:card" content="summary" />
   <title>アナトミー筋膜・筋肉 3D — 縮むところ・伸びるところ＆セルフケア図鑑</title>
-  <link rel="stylesheet" href="css/app.css?v=20261121b" />
+  <link rel="stylesheet" href="css/app.css?v=20261121c" />
   <script type="importmap">
     {
       "imports": {
@@ -74,12 +74,16 @@
         </div>
 
         <div id="stage-bar" class="unified-stage-bar" role="toolbar" aria-label="3D表示切り替え">
-          <div class="layer-switch" role="group" aria-label="筋膜と筋肉の切り替え">
+          <div id="layer-switch" class="layer-switch" data-active-index="0" role="group" aria-label="筋膜と筋肉の表示切り替え">
+            <span class="layer-switch-thumb" aria-hidden="true"></span>
             <button type="button" id="btn-layer-fascia" class="layer-switch-btn is-active" data-layer-mode="fascia" aria-pressed="true">
               <span class="layer-switch-label">筋膜</span>
             </button>
             <button type="button" id="btn-layer-muscle" class="layer-switch-btn" data-layer-mode="muscle" aria-pressed="false">
               <span class="layer-switch-label">筋肉</span>
+            </button>
+            <button type="button" id="btn-layer-both" class="layer-switch-btn" data-layer-mode="both" aria-pressed="false">
+              <span class="layer-switch-label">両方</span>
             </button>
           </div>
 
@@ -95,7 +99,7 @@
     </main>
   </div>
 
-  <script type="module" src="js/main.js?v=20261121b"></script>
+  <script type="module" src="js/main.js?v=20261121c"></script>
   <script>
     if (
       'serviceWorker' in navigator &&
@@ -104,7 +108,7 @@
         location.hostname === '127.0.0.1')
     ) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261121b').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=20261121c').catch(() => {});
       });
     }
   </script>

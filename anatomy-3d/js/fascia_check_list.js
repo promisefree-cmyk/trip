@@ -1,8 +1,8 @@
-import * as dataModule from './data.js?v=20261121b';
-import { createFascia } from './fascia.js?v=20261121b';
-import * as posture from './posture.js?v=20261121b';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121b';
-import { createViewer } from './viewer.js?v=20261121b';
+import * as dataModule from './data.js?v=20261121c';
+import { createFascia } from './fascia.js?v=20261121c';
+import * as posture from './posture.js?v=20261121c';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121c';
+import { createViewer } from './viewer.js?v=20261121c';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
@@ -115,7 +115,7 @@ function getHabitRoleIds(habit) {
 }
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261121b');
+    const res = await fetch('models/atlas_metadata.json?v=20261121c');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -682,12 +682,14 @@ async function initCheckListPage() {
   viewer.setLayer?.('bone', 'on');
   fascia.setLayerFilter?.('see-through', MUSCLE_LAYERS);
   const syncViewerLayerAndTheme = () => {
-    const isFascia = currentLayer === 'fascia';
+    const showSheets = currentLayer === 'fascia' || currentLayer === 'both';
+    const showMuscles = currentLayer === 'muscle' || currentLayer === 'both';
     viewer.setDarkTheme?.(isDark);
     unifiedSheets.setDarkTheme?.(isDark);
-    viewer.setUnifiedLayerMode?.(currentLayer);
-    unifiedSheets.setVisible(isFascia);
-    fascia.setMuscleOverlayVisible?.(!isFascia);
+    viewer.setUnifiedLayerMode?.(showMuscles ? 'muscle' : 'fascia');
+    unifiedSheets.setOverlayBlendScale?.(currentLayer === 'both' ? 0.62 : 1.0);
+    unifiedSheets.setVisible(showSheets);
+    fascia.setMuscleOverlayVisible?.(showMuscles);
   };
   syncViewerLayerAndTheme();
   bakeBanner.hidden = true;
@@ -971,13 +973,21 @@ async function initCheckListPage() {
       }
     }
   };
-  btnLayerMode.addEventListener('click', () => {
-    currentLayer = currentLayer === 'fascia' ? 'muscle' : 'fascia';
-    btnLayerMode.querySelectorAll('[data-layer-pill]').forEach((el) => {
-      el.classList.toggle('is-active', el.dataset.layerPill === currentLayer);
+  btnLayerMode?.querySelectorAll('[data-layer-pill]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = btn.dataset.layerPill || 'fascia';
+      if (currentLayer === next) return;
+      currentLayer = next;
+      const idx = next === 'muscle' ? '1' : next === 'both' ? '2' : '0';
+      btnLayerMode.setAttribute('data-active-index', idx);
+      btnLayerMode.querySelectorAll('[data-layer-pill]').forEach((el) => {
+        const active = el.dataset.layerPill === currentLayer;
+        el.classList.toggle('is-active', active);
+        el.setAttribute('aria-pressed', String(active));
+      });
+      syncViewerLayerAndTheme();
+      refreshVisibleSnapshots();
     });
-    syncViewerLayerAndTheme();
-    refreshVisibleSnapshots();
   });
   btnTheme.addEventListener('click', () => {
     isDark = !isDark;

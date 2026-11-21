@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fascia-3d-v20261121b';
+const CACHE_NAME = 'fascia-3d-v20261121c';
 const EXCLUDED_PATHS = ['/studio.html', '/VideoMasterStudio.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -1,10 +1,10 @@
-import * as dataModule from './data.js?v=20261121b';
-import { createFascia } from './fascia.js?v=20261121b';
-import * as posture from './posture.js?v=20261121b';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261121b';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121b';
-import { createUI } from './ui.js?v=20261121b';
-import { createViewer } from './viewer.js?v=20261121b';
+import * as dataModule from './data.js?v=20261121c';
+import { createFascia } from './fascia.js?v=20261121c';
+import * as posture from './posture.js?v=20261121c';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261121c';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121c';
+import { createUI } from './ui.js?v=20261121c';
+import { createViewer } from './viewer.js?v=20261121c';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -30,7 +30,7 @@ const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPause
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
 let cachedAnatomyDetails = null;
 const preloadAnatomyDetails = () =>
-  import('./anatomy_details.js?v=20261121b')
+  import('./anatomy_details.js?v=20261121c')
     .then((m) => {
       cachedAnatomyDetails = m;
       return m;
@@ -114,7 +114,7 @@ const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261121b');
+    const res = await fetch('models/atlas_metadata.json?v=20261121c');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -227,8 +227,9 @@ async function start() {
     const searchParams = new URLSearchParams(window.location.search);
     const initialTheme =
       String(searchParams.get('theme') || '').toLowerCase() === 'dark' ? 'dark' : 'light';
+    const rawLayer = String(searchParams.get('layer') || '').toLowerCase();
     const initialLayer =
-      String(searchParams.get('layer') || '').toLowerCase() === 'muscle' ? 'muscle' : 'fascia';
+      rawLayer === 'muscle' || rawLayer === 'both' ? rawLayer : 'fascia';
     document.documentElement.setAttribute('data-theme', initialTheme);
     const { meta, names } = await loadNames();
     for (const occ of OCCUPATIONS) {
@@ -271,14 +272,16 @@ async function start() {
     viewer.setLayer?.('bone', 'on');
     fascia.setLayerFilter?.('see-through', MUSCLE_LAYERS);
     let currentUnifiedLayer = initialLayer;
-    /** ［ 筋膜 ｜ 筋肉 ］を1ミリもポーズ・カメラ・手順を崩さず瞬時に切り替え */
+    /** ［ 筋膜 ｜ 筋肉 ｜ 両方 ］を1ミリもポーズ・カメラ・手順を崩さず瞬時に切り替え */
     const applyUnifiedLayer = (nextMode) => {
-      const resolved = nextMode === 'muscle' ? 'muscle' : 'fascia';
+      const resolved = nextMode === 'muscle' || nextMode === 'both' ? nextMode : 'fascia';
       currentUnifiedLayer = resolved;
-      const isFascia = resolved === 'fascia';
-      viewer.setUnifiedLayerMode?.(resolved);
-      unifiedSheets.setVisible(isFascia);
-      fascia.setMuscleOverlayVisible?.(!isFascia);
+      const showSheets = resolved === 'fascia' || resolved === 'both';
+      const showMuscles = resolved === 'muscle' || resolved === 'both';
+      viewer.setUnifiedLayerMode?.(showMuscles ? 'muscle' : 'fascia');
+      unifiedSheets.setOverlayBlendScale?.(resolved === 'both' ? 0.62 : 1.0);
+      unifiedSheets.setVisible(showSheets);
+      fascia.setMuscleOverlayVisible?.(showMuscles);
       ui.setUnifiedLayer?.(resolved);
       viewer.wake?.();
       return resolved;

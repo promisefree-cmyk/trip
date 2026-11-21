@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261121b';
-import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261121b';
+import * as posture from './posture.js?v=20261121c';
+import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261121c';
 export { FASCIA_LINE_DEFS };
 const SEG_COUNT = 32;
 function clamp(x, min, max) {
@@ -2246,7 +2246,14 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
   const activeLines = new Set(FASCIA_LINE_DEFS.map((d) => d.id));
   let systemVisible = true;
   let showStations = true;
+  let overlayBlendScale = 1.0;
   let currentMode = 'idle'; // 'idle' | 'habit' | 'line' | 'step' | 'chain'
+  const applySheetBaseOpacities = () => {
+    for (const sh of sheets) {
+      const boost = currentMode === 'line' && activeLines.has(sh.lineId) ? 0.08 : 0.0;
+      sh.material.uniforms.uBaseOpacity.value = Math.min(0.96, (sh.baseOpacity + boost) * overlayBlendScale);
+    }
+  };
   const syncVisibility = () => {
     group.visible = systemVisible;
     for (const sh of sheets) {
@@ -2267,11 +2274,11 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
   };
   const clearRoleTargets = () => {
     for (const sh of sheets) {
-      sh.material.uniforms.uBaseOpacity.value = sh.baseOpacity;
       for (const sp of sh.spanInfos) {
         sp.roleTargetStrain = null;
       }
     }
+    applySheetBaseOpacities();
   };
   /**
    * 縮む筋群・伸びる筋群・左右指定・対象ラインから各シートスパンのロール発色目標を計算する
@@ -2418,6 +2425,11 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       showStations = Boolean(v);
       syncVisibility();
     },
+    setOverlayBlendScale(scale) {
+      const n = Number(scale);
+      overlayBlendScale = Number.isFinite(n) ? clamp(n, 0.15, 1.0) : 1.0;
+      applySheetBaseOpacities();
+    },
     showAllLines() {
       currentMode = 'idle';
       clearRoleTargets();
@@ -2434,11 +2446,7 @@ export function createUnifiedFasciaSheets({ scene, muscleRoot, skeletonRoot }) {
       clearRoleTargets();
       activeLines.clear();
       activeLines.add(lineId);
-      for (const sh of sheets) {
-        if (sh.lineId === lineId) {
-          sh.material.uniforms.uBaseOpacity.value = Math.min(0.96, sh.baseOpacity + 0.08);
-        }
-      }
+      applySheetBaseOpacities();
       syncVisibility();
     },
     showHabit(habit) {
