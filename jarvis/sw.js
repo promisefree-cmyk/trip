@@ -1,4 +1,4 @@
-const CACHE_NAME = "jarvis-shell-v7";
+const CACHE_NAME = "jarvis-shell-v8";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

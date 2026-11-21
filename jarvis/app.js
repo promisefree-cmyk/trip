@@ -1151,7 +1151,7 @@
   // 8. Render Command Bridge & Watch 8 Interface
   // -------------------------------------------------------------------------
   function escapeHtml(str) {
-    return String(str || "")
+    return (str === null || str === undefined ? "" : String(str))
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
