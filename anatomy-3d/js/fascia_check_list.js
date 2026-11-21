@@ -8,6 +8,7 @@ const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
 const lineById = new Map(LINES.map((l) => [l.id, l]));
 const STORAGE_KEY = 'anatomy_unified_check_selected_v2';
+const SEED_19OK_KEY = 'anatomy_unified_check_seed_19ok_v1';
 const EDIT_STORAGE_KEY = 'anatomy_unified_check_edits_v2';
 const DEFAULT_CONFIRMED_HABIT_IDS = [
   'hair-cut-arm',
@@ -133,9 +134,20 @@ function shortJaName(id, names) {
 function loadSelectedSet() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return new Set(DEFAULT_CONFIRMED_HABIT_IDS);
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? new Set(arr) : new Set(DEFAULT_CONFIRMED_HABIT_IDS);
+    const alreadySeeded = localStorage.getItem(SEED_19OK_KEY) === '1';
+    let base = [];
+    if (raw !== null) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) base = arr;
+    }
+    const merged = alreadySeeded && raw !== null
+      ? new Set(base)
+      : new Set([...DEFAULT_CONFIRMED_HABIT_IDS, ...base]);
+    if (!alreadySeeded) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...merged]));
+      localStorage.setItem(SEED_19OK_KEY, '1');
+    }
+    return merged;
   } catch {
     return new Set(DEFAULT_CONFIRMED_HABIT_IDS);
   }
@@ -204,7 +216,19 @@ async function initCheckListPage() {
   const liveReadout = document.getElementById('live-scrub-readout');
   let currentLayer = 'fascia';
   let isDark = false;
-  let currentFilter = 'all';
+  const VALID_FILTERS = new Set([
+    'all',
+    'unchecked',
+    'updated',
+    'needs-edit',
+    'ok-checked',
+    'desk',
+    'work',
+    'daily',
+    'sport',
+  ]);
+  const urlFilter = new URLSearchParams(window.location.search).get('filter') || '';
+  let currentFilter = VALID_FILTERS.has(urlFilter) ? urlFilter : 'all';
   const selectedSet = loadSelectedSet();
   const editsStore = loadEditsMap();
   const { meta, names } = await loadNames();
@@ -260,9 +284,11 @@ async function initCheckListPage() {
   };
   let applyFilterFn = () => {};
   const updateFilterTabLabels = (okCount, editCount) => {
+    const uncheckedCount = Math.max(0, catCounts.all - okCount);
     const labels = {
       all: `すべて（${catCounts.all}件）`,
-      updated: `今回修正反映（${RECENTLY_UPDATED_HABIT_IDS.size}件）`,
+      unchecked: `未確認（${uncheckedCount}件）`,
+      updated: `修正OK済み（${RECENTLY_UPDATED_HABIT_IDS.size}件）`,
       'needs-edit': `要修正メモ（${editCount}件）`,
       'ok-checked': `OK済み（${okCount}件）`,
       desk: `デスク・手作業（${catCounts.desk}件）`,
@@ -764,6 +790,24 @@ async function initCheckListPage() {
       }
     });
   };
+  const matchesFilter = (entry, filterKey) => {
+    if (filterKey === 'all') return true;
+    if (filterKey === 'unchecked') return !selectedSet.has(entry.habit.id);
+    if (filterKey === 'updated') return RECENTLY_UPDATED_HABIT_IDS.has(entry.habit.id);
+    if (filterKey === 'needs-edit') return hasCardEdit(entry);
+    if (filterKey === 'ok-checked') return selectedSet.has(entry.habit.id);
+    return entry.cardEl.dataset.category === filterKey;
+  };
+  if (currentFilter !== 'all') {
+    document.querySelectorAll('.filter-tab').forEach((t) => {
+      const active = t.dataset.filter === currentFilter;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    for (const entry of cardMap.values()) {
+      entry.cardEl.hidden = !matchesFilter(entry, currentFilter);
+    }
+  }
   const visibleIds = new Set();
   const cardObserver = new IntersectionObserver(
     (entries) => {
@@ -931,13 +975,6 @@ async function initCheckListPage() {
     syncViewerLayerAndTheme();
     refreshVisibleSnapshots();
   });
-  const matchesFilter = (entry, filterKey) => {
-    if (filterKey === 'all') return true;
-    if (filterKey === 'updated') return RECENTLY_UPDATED_HABIT_IDS.has(entry.habit.id);
-    if (filterKey === 'needs-edit') return hasCardEdit(entry);
-    if (filterKey === 'ok-checked') return selectedSet.has(entry.habit.id);
-    return entry.cardEl.dataset.category === filterKey;
-  };
   applyFilterFn = () => {
     if (activeLiveId) {
       const liveEntry = cardMap.get(activeLiveId);
