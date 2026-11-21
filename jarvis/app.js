@@ -308,8 +308,8 @@
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance("認証完了。おかえりなさいませ。全システム、正常に稼働しています。");
       utter.lang = "ja-JP";
-      utter.rate = 0.94;
-      utter.pitch = 0.96;
+      utter.rate = 0.92;
+      utter.pitch = 0.78;
       const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
       const jpExact = voices.find((v) => v.lang && v.lang.toLowerCase() === "ja-jp");
       const jpAny = jpExact || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("ja"));
@@ -331,7 +331,7 @@
       speakJapaneseGreetingFallback();
     };
     try {
-      const audio = new Audio("./boot_voice.mp3?v=jp-concierge-2");
+      const audio = new Audio("./boot_voice.mp3?v=jp-dandy-3");
       audio.volume = 0.96;
       state.activeVoiceAudio = audio;
       audio.addEventListener("play", () => {

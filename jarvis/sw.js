@@ -1,4 +1,4 @@
-const CACHE_NAME = "jarvis-shell-v5";
+const CACHE_NAME = "jarvis-shell-v6";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const SHELL_ASSETS = [
   "./app.js",
   "./manifest.json",
   "./icon.svg",
-  "./boot_voice.mp3?v=jp-concierge-2"
+  "./boot_voice.mp3?v=jp-dandy-3"
 ];
 
 self.addEventListener("install", (event) => {
