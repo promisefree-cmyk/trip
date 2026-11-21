@@ -1,8 +1,8 @@
-import * as dataModule from './data.js?v=20261120a';
-import { createFascia } from './fascia.js?v=20261120a';
-import * as posture from './posture.js?v=20261120a';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261120a';
-import { createViewer } from './viewer.js?v=20261120a';
+import * as dataModule from './data.js?v=20261121b';
+import { createFascia } from './fascia.js?v=20261121b';
+import * as posture from './posture.js?v=20261121b';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121b';
+import { createViewer } from './viewer.js?v=20261121b';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
@@ -115,7 +115,7 @@ function getHabitRoleIds(habit) {
 }
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261120a');
+    const res = await fetch('models/atlas_metadata.json?v=20261121b');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -424,18 +424,29 @@ async function initCheckListPage() {
           <div class="live-slot"></div>
         </div>
         <div class="text-col">
-          <div class="info-block">
-            <span class="info-label">動きと負担のしくみ</span>
-            <p class="info-text js-oneline-text"></p>
+          <div class="simple-role-grid">
+            <div class="simple-role-box is-short">
+              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>縮むところ</span>
+              <p class="simple-role-body">${shortList || '—'}</p>
+            </div>
+            <div class="simple-role-box is-long">
+              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>伸びるところ</span>
+              <p class="simple-role-body">${longList || hb.symptom || '—'}</p>
+            </div>
           </div>
-          <div class="info-block">
-            <span class="info-label">縮む原因（赤） ／ 引っぱられて張る場所（青）</span>
-            <p class="info-text"><strong>縮む側：</strong>${shortList || '—'}<br/><strong>張る側：</strong>${longList || hb.symptom || '—'}</p>
-          </div>
-          <div class="info-block">
-            <span class="info-label">よくある違和感・お悩み</span>
+          <div class="info-block info-block-compact">
+            <span class="info-label">よくあるつらさ</span>
             <p class="info-text js-feel-text"></p>
           </div>
+          <details class="info-drawer js-info-drawer">
+            <summary class="info-drawer-summary">
+              <span>くわしい説明を見る</span>
+              <span class="info-drawer-arrow" aria-hidden="true">▾</span>
+            </summary>
+            <div class="info-drawer-body">
+              <p class="info-text js-oneline-text"></p>
+            </div>
+          </details>
           <div class="revision-box">
             <div class="revision-head">
               <label class="revision-label" for="memo-${hb.id}">直すところの指示メモ</label>
@@ -445,7 +456,7 @@ async function initCheckListPage() {
               id="memo-${hb.id}"
               class="memo-textarea"
               rows="2"
-              placeholder="直すところの指示を入力（例：前かがみを減らす、もっと腕を下げる、説明をこう変える 等）"
+              placeholder="直すところの指示を入力（例：もっと肘を曲げる、縮む筋肉を変える、説明をこう変える 等）"
             ></textarea>
             <div class="revision-btn-row">
               <button type="button" class="rev-btn js-toggle-inline-edit" aria-expanded="false">文章を直接編集</button>
@@ -457,11 +468,11 @@ async function initCheckListPage() {
                 <input id="edit-label-${hb.id}" type="text" class="inline-edit-input js-edit-label" />
               </div>
               <div class="inline-field">
-                <label class="inline-field-label" for="edit-oneline-${hb.id}">動きと負担のしくみ</label>
+                <label class="inline-field-label" for="edit-oneline-${hb.id}">くわしい説明</label>
                 <textarea id="edit-oneline-${hb.id}" rows="3" class="inline-edit-textarea js-edit-oneline"></textarea>
               </div>
               <div class="inline-field">
-                <label class="inline-field-label" for="edit-feel-${hb.id}">よくある違和感・お悩み</label>
+                <label class="inline-field-label" for="edit-feel-${hb.id}">よくあるつらさ</label>
                 <input id="edit-feel-${hb.id}" type="text" class="inline-edit-input js-edit-feel" />
               </div>
             </div>
@@ -544,9 +555,11 @@ async function initCheckListPage() {
       saveEditsMap(editsStore);
       updateGlobalSummaryUI();
     });
+    const infoDrawer = card.querySelector('.js-info-drawer');
     toggleInlineBtn.addEventListener('click', () => {
       const willOpen = inlinePanel.hidden;
       inlinePanel.hidden = !willOpen;
+      if (willOpen && infoDrawer) infoDrawer.open = true;
       toggleInlineBtn.classList.toggle('is-open', willOpen);
       toggleInlineBtn.setAttribute('aria-expanded', String(willOpen));
       toggleInlineBtn.textContent = willOpen ? '文章の編集欄を閉じる' : '文章を直接編集';

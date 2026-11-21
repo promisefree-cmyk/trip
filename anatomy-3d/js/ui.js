@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261120a';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261120a';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261121b';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261121b';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -601,9 +601,22 @@ export function createUI({
     const sList = resolveShortenMuscles(hb).slice(0, 2).map((m) => m.label).join('や');
     const lList = resolveLengthenMuscles(hb).slice(0, 2).map((m) => m.label).join('や');
     if (sList && lList) {
-      return `${sList}が縮んで固まることで、筋膜のつながりを伝って「${lList}」が引っぱられて張っています。`;
+      return `${sList}が縮んで固まることで、つながっている「${lList}」が引っぱられて伸びています。`;
     }
-    return sanitizeText(hb?.feel || '離れた場所の縮みが筋膜を伝わり、気になる場所を引っぱっています。');
+    return sanitizeText(hb?.feel || '片側の筋肉が縮むと、つながっている反対側が引っぱられて伸びます。');
+  }
+  function resolveSimpleAnalogyText(hb) {
+    const tlId = String(hb?.triggerLineId || hb?.goldenLineId || '');
+    if (tlId === 'TL-03' || tlId === 'TL-11') {
+      return '例えると：着ている服の袖（そで）やわきの下を手で押さえたまま腕を動かそうとすると、反対側の生地がつっぱって動かしにくくなるのと同じしくみです。';
+    }
+    if (tlId === 'TL-07' || tlId === 'TL-12') {
+      return '例えると：着ているTシャツの片方のすそをギュッと引っぱると、反対側の生地まで斜めに引っぱられて伸びるのと同じしくみです。';
+    }
+    if (tlId === 'TL-09') {
+      return '例えると：つながったゴムひもの下側がギュッと縮んで硬くなると、つながっている上側まで引っぱられて伸びるのと同じしくみです。';
+    }
+    return '例えると：着ているTシャツの前側（または後ろ側）をギュッとつまんで引っぱると、反対側の生地がピンと伸びてつっぱるのと同じしくみです。';
   }
   function resolveSafetyNoteText(hb, muscleIds = []) {
     const tl = hb?.triggerLine || hb?.goldenLine || resolveTriggerLine(hb?.triggerLineId || hb?.goldenLineId);
@@ -792,7 +805,7 @@ export function createUI({
     id: 'step-prog-2',
     disabled: true,
     onclick: () => goToStep(2),
-    text: '② 原因と動き',
+    text: '② 縮む・伸びる',
   });
   const progBtn3 = h('button', {
     type: 'button',
@@ -1433,6 +1446,7 @@ export function createUI({
           .map((mId) => shortMuscleNameOf(mId))
           .filter(Boolean);
         const uniqTrack = [...new Set(trackLabels)];
+        const lineDesc = sanitizeText(activeLine.desc || activeLine.oneLine || '');
         frag.append(
           h(
             'div',
@@ -1446,21 +1460,17 @@ export function createUI({
                 text: `${activeLine.tag || activeLine.name}${activeLine.name && activeLine.tag ? `（${activeLine.name}）` : ''}`,
               }),
             ),
-            h('p', {
-              class: 'line-detail-desc',
-              text: sanitizeText(activeLine.desc || activeLine.oneLine || ''),
-            }),
             uniqTrack.length
               ? h('p', {
                   class: 'row-sub',
-                  text: `主な通り道：${uniqTrack.join(' → ')}`,
+                  text: `通り道：${uniqTrack.join(' → ')}`,
                 })
               : null,
             relatedHabits.length
               ? h(
                   'div',
                   null,
-                  h('p', { class: 'line-detail-subhead', text: 'このラインが関わる代表的な動き（タップで原因と動きへ）：' }),
+                  h('p', { class: 'line-detail-subhead', text: '関係する動き（タップで縮む・伸びるを表示）：' }),
                   h(
                     'div',
                     { class: 'pill-wrap-row' },
@@ -1472,6 +1482,23 @@ export function createUI({
                         onclick: () => openHabitStep2(hb),
                       }),
                     ),
+                  ),
+                )
+              : null,
+            lineDesc
+              ? h(
+                  'details',
+                  { class: 'detail-drawer', style: { 'margin-top': '8px' } },
+                  h(
+                    'summary',
+                    { class: 'detail-drawer-summary' },
+                    h('span', { text: 'くわしい説明を見る' }),
+                    h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+                  ),
+                  h(
+                    'div',
+                    { class: 'detail-drawer-body' },
+                    h('p', { class: 'causal-lead', text: lineDesc }),
                   ),
                 )
               : null,
@@ -1643,29 +1670,6 @@ export function createUI({
         ),
       );
     }
-    const causalSummary = resolveCausalSummaryText(hb);
-    const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
-    const quickCheck = sanitizeText(hb.quickCheck || tl?.quickCheck || '');
-    const feelDetail = sanitizeText(hb.feel || '');
-    const extraLine = quickCheck || (feelDetail && feelDetail !== causalSummary ? feelDetail : '');
-    wrap.append(
-      h(
-        'div',
-        { class: 'causal-box' },
-        h('p', { class: 'causal-lead', text: causalSummary }),
-        extraLine ? h('p', { class: 'causal-sub', text: extraLine }) : null,
-      ),
-      h(
-        'button',
-        {
-          type: 'button',
-          id: 'btn-open-step3',
-          class: 'primary-step3-cta',
-          onclick: () => openStep3SelfCare(hb),
-        },
-        h('span', { text: '▶ ③ ゆるめる順番（3Dマッサージ）を見る' }),
-      ),
-    );
     const shortMuscles = resolveShortenMuscles(hb);
     const shortIdSet = new Set(shortMuscles.map((m) => m.id));
     const longMuscles = resolveLengthenMuscles(hb, shortIdSet);
@@ -1704,14 +1708,14 @@ export function createUI({
             'h3',
             { class: 'role-card-head' },
             h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-            h('span', { text: '縮んでいる原因' }),
+            h('span', { text: '縮むところ' }),
           ),
           h(
             'div',
             { class: 'role-pill-list' },
             ...(shortMuscles.length
               ? shortMuscles.map(makeRoleMuscleButton)
-              : [h('span', { class: 'row-sub', text: '主要な縮み部位' })]),
+              : [h('span', { class: 'row-sub', text: '縮む部位' })]),
           ),
         ),
         h(
@@ -1721,14 +1725,14 @@ export function createUI({
             'h3',
             { class: 'role-card-head' },
             h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-            h('span', { text: '引っぱられて張る場所' }),
+            h('span', { text: '伸びるところ' }),
           ),
           h(
             'div',
             { class: 'role-pill-list' },
             ...(longMuscles.length
               ? longMuscles.map(makeRoleMuscleButton)
-              : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '張る部位') })]),
+              : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '伸びる部位') })]),
           ),
         ),
       ),
@@ -1747,6 +1751,47 @@ export function createUI({
         }),
       );
     }
+    wrap.append(
+      h(
+        'button',
+        {
+          type: 'button',
+          id: 'btn-open-step3',
+          class: 'primary-step3-cta',
+          onclick: () => openStep3SelfCare(hb),
+        },
+        h('span', { text: '▶ ③ ゆるめる順番（3Dマッサージ）を見る' }),
+      ),
+    );
+    const causalSummary = resolveCausalSummaryText(hb);
+    const analogyText = resolveSimpleAnalogyText(hb);
+    const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
+    const quickCheck = sanitizeText(hb.quickCheck || tl?.quickCheck || '');
+    const detailEl = h(
+      'details',
+      {
+        class: 'detail-drawer',
+        ontoggle: (e) => {
+          if (e.currentTarget.open) {
+            e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        },
+      },
+      h(
+        'summary',
+        { class: 'detail-drawer-summary' },
+        h('span', { text: 'くわしい説明を見る' }),
+        h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+      ),
+      h(
+        'div',
+        { class: 'detail-drawer-body' },
+        h('p', { class: 'causal-lead', text: causalSummary }),
+        analogyText ? h('p', { class: 'causal-sub', text: analogyText }) : null,
+        quickCheck ? h('p', { class: 'causal-sub', text: `10秒チェック：${quickCheck}` }) : null,
+      ),
+    );
+    wrap.append(detailEl);
     return wrap;
   }
   function renderStep2Story(story) {
@@ -1784,16 +1829,6 @@ export function createUI({
         ),
       ),
     );
-    wrap.append(
-      h(
-        'div',
-        { class: 'causal-box' },
-        h('p', {
-          class: 'causal-lead',
-          text: sanitizeText(curStep.body || curStep.text || curStep.desc || story.lead || ''),
-        }),
-      ),
-    );
     const sIds = [...new Set([...(curStep.shortenCore || []), ...(curStep.shorten || [])])].slice(0, 3);
     const lIds = [...new Set([...(curStep.lengthenAntagonist || []), ...(curStep.lengthen || [])])].slice(0, 3);
     if (sIds.length || lIds.length) {
@@ -1808,7 +1843,7 @@ export function createUI({
               'h3',
               { class: 'role-card-head' },
               h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-              h('span', { text: '縮んでいる原因' }),
+              h('span', { text: '縮むところ' }),
             ),
             h(
               'div',
@@ -1830,7 +1865,7 @@ export function createUI({
               'h3',
               { class: 'role-card-head' },
               h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-              h('span', { text: '引っぱられて張る場所' }),
+              h('span', { text: '伸びるところ' }),
             ),
             h(
               'div',
@@ -1861,6 +1896,26 @@ export function createUI({
         ),
       );
     }
+    const storyDetailText = sanitizeText(curStep.body || curStep.text || curStep.desc || story.lead || '');
+    if (storyDetailText) {
+      wrap.append(
+        h(
+          'details',
+          { class: 'detail-drawer' },
+          h(
+            'summary',
+            { class: 'detail-drawer-summary' },
+            h('span', { text: 'くわしい説明を見る' }),
+            h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+          ),
+          h(
+            'div',
+            { class: 'detail-drawer-body' },
+            h('p', { class: 'causal-lead', text: storyDetailText }),
+          ),
+        ),
+      );
+    }
     return wrap;
   }
   /* ---------- 描画：ステップ ③「ゆるめる順番」 ---------- */
@@ -1885,7 +1940,7 @@ export function createUI({
             class: 'back-pill-btn',
             onclick: () => goToStep(2),
           },
-          '← ② 原因へ',
+          '← ② 戻る',
         ),
         h('h2', {
           class: 'subnav-title',
@@ -1993,6 +2048,27 @@ export function createUI({
             role: 'note',
             text: `安全ポイント：${safetyNote}`,
           }),
+        );
+      }
+      const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
+      const orderReason = sanitizeText(hb.point || hb.selfCare?.point || tl?.point || '');
+      if (orderReason) {
+        wrap.append(
+          h(
+            'details',
+            { class: 'detail-drawer' },
+            h(
+              'summary',
+              { class: 'detail-drawer-summary' },
+              h('span', { text: 'なぜこの順番？（くわしい説明を見る）' }),
+              h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+            ),
+            h(
+              'div',
+              { class: 'detail-drawer-body' },
+              h('p', { class: 'causal-lead', text: orderReason }),
+            ),
+          ),
         );
       }
     }

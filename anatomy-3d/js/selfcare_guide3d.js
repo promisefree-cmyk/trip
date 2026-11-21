@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-export const SELFCARE_GUIDE_VERSION = '20261120a';
+export const SELFCARE_GUIDE_VERSION = '20261121b';
 export const R_BALL = 0.105;
 export const R_ROLLER = 0.12;
 export const L_ROLLER = 0.52;
