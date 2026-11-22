@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import * as posture from './posture.js?v=20261122a';
+import * as posture from './posture.js?v=20261122b';
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
 const getRigRole =
@@ -11,7 +11,7 @@ const getRigRole =
     ? posture.getRigRole
     : () => new THREE.Vector4(-1, -1, -1, -1);
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261122a';
+const ASSET_QUERY = '?v=20261122b';
 const IDLE_TIMEOUT_MS = 1800; // アニメーション停止中・静止閲覧時に1.8秒カメラ静止で省電力スリープへ移行（触れれば0msで60fps即復帰）
 const IDLE_FRAME_INTERVAL_MS = 1000; // 静止待機中は描画をほぼ停止しスマホの発熱・電池消費を最小化
 const FALLBACK_BYTES = {
@@ -367,17 +367,27 @@ const ILLUST_FRAG = /* glsl */ `
     vec3 baseMusOut = mix( colM, sepiaEdgeM, contourM ) + totalEmissiveRadiance * 0.25;
     if ( uSelected > 0.5 ) {
       float isLeftV = step( 0.0, vAtlasPos.x );
-      float tappedMatch = abs( uSelectSide ) < 0.2
+      float nearMid = 1.0 - smoothstep( 0.012, 0.042, abs( vAtlasPos.x ) );
+      float sideMatch = abs( uSelectSide ) < 0.2
         ? 1.0
-        : ( uSelectSide > 0.0 ? mix( 0.82, 1.0, isLeftV ) : mix( 1.0, 0.82, isLeftV ) );
-      float selRim = pow( 1.0 - facingGeo, 2.05 );
-      vec3 defBase = vec3( 0.62, 0.38, 0.10 ); // Honey-Amber linear
-      vec3 baseHue = uSelectCustom > 0.5 ? uSelectColor : defBase;
-      vec3 selShadow = mix( baseHue * 0.52, vec3( 0.36, 0.21, 0.07 ), 0.35 );
-      vec3 selLit    = mix( baseHue * 1.12, vec3( 0.94, 0.84, 0.62 ), 0.32 );
-      vec3 selCol    = mix( selShadow, selLit, diffAmt ) * sulcusAO;
-      selCol = mix( selCol, vec3( 0.24, 0.14, 0.06 ), selRim * 0.42 );
-      baseMusOut = mix( baseMusOut, selCol, 0.88 * tappedMatch );
+        : max( nearMid, uSelectSide > 0.0 ? isLeftV : ( 1.0 - isLeftV ) );
+      if ( sideMatch > 0.5 ) {
+        float pulse = 0.5 + 0.5 * sin( uPulseTime * 4.6 );
+        float selRim = pow( 1.0 - facingGeo, 1.65 );
+        vec3 defBase = vec3( 0.85, 0.045, 0.025 );
+        vec3 baseHue = uSelectCustom > 0.5 ? uSelectColor : defBase;
+        vec3 litCore  = baseHue * ( 0.92 + 0.42 * diffAmt ) * ( 0.86 + 0.34 * pulse ) + baseHue * 0.18 * pulse;
+        vec3 lightRim = baseHue * 0.26;
+        vec3 darkRim  = mix( baseHue * 1.35, vec3( 1.0, 0.94, 0.72 ), 0.45 );
+        vec3 rimTarget = mix( lightRim, darkRim, uDarkMode );
+        vec3 selCol = mix( litCore, rimTarget, clamp( selRim * mix( 0.62, 0.55, uDarkMode ), 0.0, 0.78 ) );
+        baseMusOut = mix( baseMusOut, clamp( selCol, 0.0, 1.35 ), 0.97 );
+      } else {
+        vec3 linenLow = vec3( 0.72, 0.65, 0.56 );
+        vec3 linenHi  = vec3( 0.90, 0.86, 0.79 );
+        vec3 warmLinen = mix( linenLow, linenHi, diffAmt ) * sulcusAO;
+        baseMusOut = mix( baseMusOut, warmLinen, 0.92 );
+      }
     } else if ( uUninvolved > 0.5 || uHasSelection > 0.5 ) {
       vec3 linenLow = vec3( 0.72, 0.65, 0.56 );
       vec3 linenHi  = vec3( 0.90, 0.86, 0.79 );
@@ -385,7 +395,7 @@ const ILLUST_FRAG = /* glsl */ `
       warmLinen = mix( warmLinen, sepiaEdgeM, pow( 1.0 - facingGeo, 2.35 ) * 0.44 );
       baseMusOut = mix( baseMusOut, warmLinen, 0.90 );
     }
-    if ( uXRay > 0.01 ) {
+    if ( uXRay > 0.01 && uSelected < 0.5 ) {
       float rimMX = pow( 1.0 - facingGeo, 2.1 );
       vec3 xrMusCol = mix( vec3( 0.88, 0.83, 0.75 ), vec3( 0.30, 0.21, 0.13 ), rimMX * 0.72 );
       baseMusOut = mix( baseMusOut, xrMusCol, uXRay * 0.82 );
@@ -2377,7 +2387,8 @@ varying vec3 vExtWorldPos;`,
       const baseColor = illust ? mesh.userData.illustColor : mesh.userData.atlasColor;
       const mode = layer[kind];
       const mLayer = kind === 'muscle' ? (mesh.userData.fasciaLayer || resolveMuscleLayer(id)) : 'bone';
-      if (isUnifiedFascia) {
+      const isHighlighted = highlights.has(id);
+      if (isUnifiedFascia && !(kind === 'muscle' && isHighlighted)) {
         if (kind === 'bone') {
           mesh.visible = true;
           mesh.userData.ghost = false;
@@ -2434,10 +2445,10 @@ varying vec3 vExtWorldPos;`,
         }
         continue;
       }
-      const hideByFasciaMode = kind === 'muscle' && fasciaLayerMode === 'surface' && mLayer === 'deep';
+      const hideByFasciaMode = kind === 'muscle' && !isHighlighted && fasciaLayerMode === 'surface' && mLayer === 'deep';
       const hideSkullBehindSculpt = headSculptLoaded && !shouldSeeSkullThrough && CRANIAL_FACIAL_BONE_IDS.has(id);
       const isHighlightedOrActiveRole =
-        highlights.has(id) ||
+        isHighlighted ||
         activeRoleIds.has(id) ||
         (keep !== null && keep.has(id));
       const hideIdleFacialStrip =
@@ -2454,7 +2465,6 @@ varying vec3 vExtWorldPos;`,
             !hidden.has(id) &&
             !hideByFasciaMode &&
             !hideIdleFacialStrip;
-      const isHighlighted = highlights.has(id);
       const customCol = isHighlighted ? highlights.get(id) : null;
       const isRoleInvolved = kind === 'muscle' && (hasActiveRoles ? activeRoleIds.has(id) : (keep !== null ? keep.has(id) : false));
       const isUninvolvedMuscle =
@@ -2462,31 +2472,35 @@ varying vec3 vExtWorldPos;`,
         !isHighlighted &&
         (hasActiveRoles ? !activeRoleIds.has(id) : (keep !== null ? !keep.has(id) : false));
       const xrayMuscleGhost = xrayMode && kind === 'muscle' && !isHighlighted;
+      const dimOthersForSpotlight = hasSel > 0 && kind === 'muscle' && !isHighlighted;
       let ghost = false;
       let veilMode = 0; // 0: 通常ゴースト, 1: 重ね透視コラーゲンベール, 2: 深層モード極薄ガラス輪郭シルエット
       const uninvolvedOrNonSelected =
-        isUninvolvedMuscle || (hasSel > 0 && !isHighlighted && !isRoleInvolved);
+        isUninvolvedMuscle || dimOthersForSpotlight;
       if (kind === 'muscle') {
-        if (fasciaLayerMode === 'deep') {
+        if (isHighlighted) {
+          ghost = false;
+          veilMode = 0;
+        } else if (fasciaLayerMode === 'deep') {
           if (mLayer === 'surface') {
             ghost = true;
             veilMode = 2;
           } else {
-            ghost = !isHighlighted && (mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost);
+            ghost = mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost;
             veilMode = 0;
           }
         } else if (fasciaLayerMode === 'surface') {
-          ghost = !isHighlighted && (mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost);
+          ghost = mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost;
           veilMode = 0;
         } else {
           if (hasActiveDeep && mLayer === 'surface') {
             ghost = true;
             veilMode = 1;
           } else if (hasActiveDeep && mLayer === 'deep' && activeDeepSet.has(id)) {
-            ghost = !isHighlighted && (mode === 'ghost' || xrayMuscleGhost);
+            ghost = mode === 'ghost' || dimOthersForSpotlight || xrayMuscleGhost;
             veilMode = 0;
           } else {
-            ghost = !isHighlighted && (mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost);
+            ghost = mode === 'ghost' || uninvolvedOrNonSelected || xrayMuscleGhost;
             veilMode = 0;
           }
         }
@@ -2519,6 +2533,8 @@ varying vec3 vExtWorldPos;`,
       if (ghost) {
         if (xrayMode && kind === 'muscle') {
           mat.opacity = xraySkinOpacity;
+        } else if (dimOthersForSpotlight) {
+          mat.opacity = 0.14;
         } else if (veilMode === 2) {
           mat.opacity = 0.06;
         } else if (veilMode === 1) {
@@ -2530,7 +2546,7 @@ varying vec3 vExtWorldPos;`,
         mat.opacity = 1;
       }
       mat.depthWrite = !ghost;
-      mesh.renderOrder = ghost ? (veilMode === 1 ? 2 : 1) : 0;
+      mesh.renderOrder = isHighlighted && kind === 'muscle' ? (isUnifiedFascia ? 24 : 4) : ghost ? (veilMode === 1 ? 2 : 1) : 0;
       if (ghost) {
         if (xrayMode) {
           mat.color.copy(baseColor).lerp(XRAY_GHOST_TONE, 0.68);
@@ -3163,9 +3179,9 @@ varying vec3 vExtWorldPos;`,
   renderer.setAnimationLoop(renderTick);
   report(100, '準備ができました');
   const idsToSet = (ids) => new Set((ids || []).filter((id) => meshesById.has(id)));
-  /** 指定 ID 群のワールド AABB（左右 side 指定と目標姿勢変形後の頂点座標を厳密に考慮） */
+  /** 指定 ID 群のワールド AABB（左右 side 指定と姿勢変形後の全範囲を厳密に考慮） */
   const cornerTmp = new THREE.Vector3();
-  const boundsOf = (ids, side = 'both') => {
+  const boundsOf = (ids, side = 'both', includeMotionSweep = false) => {
     const wantSide = side === 'L' || side === 'R' ? side : 'both';
     const box = new THREE.Box3();
     const fallbackBox = new THREE.Box3();
@@ -3175,18 +3191,25 @@ varying vec3 vExtWorldPos;`,
         mesh.updateWorldMatrix(true, false);
         const pos = mesh.geometry?.attributes?.position;
         if (pos && pos.count > 0) {
-          const step = Math.max(1, Math.floor(pos.count / 360));
+          const step = Math.max(1, Math.floor(pos.count / (includeMotionSweep ? 900 : 400)));
           for (let i = 0; i < pos.count; i += step) {
             cornerTmp.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
             const restX = cornerTmp.x;
-            const targetPt = deformPoint(cornerTmp, rigRole, true);
-            fallbackBox.expandByPoint(targetPt);
             const sideMatch =
               wantSide === 'both' ||
               (wantSide === 'L' && restX >= -0.02) ||
               (wantSide === 'R' && restX <= 0.02);
+            const targetPt = deformPoint(cornerTmp, rigRole, true);
+            fallbackBox.expandByPoint(targetPt);
             if (sideMatch) {
               box.expandByPoint(targetPt);
+            }
+            if (includeMotionSweep) {
+              const curPt = deformPoint(cornerTmp, rigRole, false);
+              fallbackBox.expandByPoint(curPt);
+              if (sideMatch) {
+                box.expandByPoint(curPt);
+              }
             }
           }
         }
@@ -3362,6 +3385,7 @@ varying vec3 vExtWorldPos;`,
       for (const id of idsToSet(ids)) highlights.set(id, c);
       applyState();
     },
+    hasHighlight: () => highlights.size > 0,
     /** 指定 ID 以外を半透明（ゴースト）にする。空配列・null で解除。 */
     ghostOthers(ids) {
       wakeRenderLoop();
@@ -3496,7 +3520,8 @@ varying vec3 vExtWorldPos;`,
       isHomeFullBodyFraming = false;
       homeZoomSettling = false;
       const side = opts.side === 'L' || opts.side === 'R' ? opts.side : 'both';
-      const box = boundsOf(valid, side);
+      const isWholeMuscle = Boolean(opts.wholeMuscle || opts.inspectorOpen);
+      const box = boundsOf(valid, side, isWholeMuscle);
       if (box.isEmpty()) return;
       const center = box.getCenter(new THREE.Vector3());
       const sz = box.getSize(new THREE.Vector3());
@@ -3516,19 +3541,21 @@ varying vec3 vExtWorldPos;`,
       const hDirLen = Math.hypot(dir.x, dir.z) || 1;
       const horiz = (sz.x * Math.abs(dir.z) + sz.z * Math.abs(dir.x)) / hDirLen;
       const depthSpan = (sz.x * Math.abs(dir.x) + sz.z * Math.abs(dir.z)) / hDirLen;
-      const minFloorH = opts.closeSelfCare ? 0.36 : opts.inspectorOpen ? 0.50 : 0.56;
-      const minFloorW = opts.closeSelfCare ? 0.32 : opts.inspectorOpen ? 0.42 : 0.48;
+      const minFloorH = opts.closeSelfCare ? 0.36 : isWholeMuscle ? 0.86 : 0.56;
+      const minFloorW = opts.closeSelfCare ? 0.32 : isWholeMuscle ? 0.72 : 0.48;
       const halfH = Math.max(sz.y * 0.5, minFloorH);
       const halfW = Math.max(horiz * 0.5, minFloorW);
-      const padMul = opts.selfCareModal ? 1.24 : opts.inspectorOpen ? 1.28 : 1.28;
+      const padMul = opts.selfCareModal ? 1.26 : isWholeMuscle ? 1.62 : 1.28;
       const rawDist =
-        fitClearDistance(halfH * padMul, halfW * (padMul + 0.06), 0, true) +
-        depthSpan * 0.45;
+        fitClearDistance(halfH * padMul, halfW * (padMul + 0.08), 0, true) +
+        depthSpan * 0.48;
       const minDist = opts.closeSelfCare
         ? 2.65
         : opts.selfCareModal
           ? Math.max(3.8, homeDistance() * 0.44)
-          : 2.65;
+          : isWholeMuscle
+            ? Math.max(3.65, homeDistance() * 0.42)
+            : 2.65;
       const dist = THREE.MathUtils.clamp(rawDist, minDist, homeDistance() * 1.12);
       flyTo(center, dir, dist);
     },

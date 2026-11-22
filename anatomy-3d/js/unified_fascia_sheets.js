@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import * as posture from './posture.js?v=20261122a';
-import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261122a';
+import * as posture from './posture.js?v=20261122b';
+import { BONE, BONY_STATIONS, buildBodyEnvelope, FASCIA_LINE_DEFS } from './fascia_envelope_defs.js?v=20261122b';
 export { FASCIA_LINE_DEFS };
 const SEG_COUNT = 32;
 function clamp(x, min, max) {

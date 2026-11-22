@@ -1,10 +1,10 @@
-import * as dataModule from './data.js?v=20261122a';
-import { createFascia } from './fascia.js?v=20261122a';
-import * as posture from './posture.js?v=20261122a';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261122a';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122a';
-import { createUI } from './ui.js?v=20261122a';
-import { createViewer } from './viewer.js?v=20261122a';
+import * as dataModule from './data.js?v=20261122b';
+import { createFascia } from './fascia.js?v=20261122b';
+import * as posture from './posture.js?v=20261122b';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261122b';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122b';
+import { createUI } from './ui.js?v=20261122b';
+import { createViewer } from './viewer.js?v=20261122b';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -30,7 +30,7 @@ const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPause
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
 let cachedAnatomyDetails = null;
 const preloadAnatomyDetails = () =>
-  import('./anatomy_details.js?v=20261122a')
+  import('./anatomy_details.js?v=20261122b')
     .then((m) => {
       cachedAnatomyDetails = m;
       return m;
@@ -114,7 +114,7 @@ const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261122a');
+    const res = await fetch('models/atlas_metadata.json?v=20261122b');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -272,6 +272,14 @@ async function start() {
     viewer.setLayer?.('bone', 'on');
     fascia.setLayerFilter?.('see-through', MUSCLE_LAYERS);
     let currentUnifiedLayer = initialLayer;
+    let isSpotlightingMuscle = false;
+    const syncSheetBlendForCurrentState = () => {
+      if (isSpotlightingMuscle) {
+        unifiedSheets.setOverlayBlendScale?.(0.24);
+      } else {
+        unifiedSheets.setOverlayBlendScale?.(currentUnifiedLayer === 'both' ? 0.62 : 1.0);
+      }
+    };
     /** ［ 筋膜 ｜ 筋肉 ｜ 両方 ］を1ミリもポーズ・カメラ・手順を崩さず瞬時に切り替え */
     const applyUnifiedLayer = (nextMode) => {
       const resolved = nextMode === 'muscle' || nextMode === 'both' ? nextMode : 'fascia';
@@ -279,7 +287,7 @@ async function start() {
       const showSheets = resolved === 'fascia' || resolved === 'both';
       const showMuscles = resolved === 'muscle' || resolved === 'both';
       viewer.setUnifiedLayerMode?.(showMuscles ? 'muscle' : 'fascia');
-      unifiedSheets.setOverlayBlendScale?.(resolved === 'both' ? 0.62 : 1.0);
+      syncSheetBlendForCurrentState();
       unifiedSheets.setVisible(showSheets);
       fascia.setMuscleOverlayVisible?.(showMuscles);
       ui.setUnifiedLayer?.(resolved);
@@ -297,6 +305,7 @@ async function start() {
     applyUnifiedLayer(initialLayer);
     setTimeout(preloadAnatomyDetails, 1200);
     viewer.setKeepAwakePredicate?.(() => {
+      if (viewer.hasHighlight?.()) return true;
       if (isPosePaused()) return false;
       return Boolean(fascia.isBusy?.() || isPoseAnimating());
     });
@@ -320,11 +329,13 @@ async function start() {
     let currentStepIdx = -1;
     let lastPart = null;
     const clearAll = ({ camera = true } = {}) => {
+      isSpotlightingMuscle = false;
       setPose(null, 0);
       clearSelfCarePose();
       fascia.clearReleaseTool?.();
       fascia.clearTriggerPoint?.();
       fascia.clear();
+      syncSheetBlendForCurrentState();
       unifiedSheets.showAllLines();
       viewer.setXRayMode?.(false);
       viewer.setActiveRoleIds?.([]);
@@ -339,6 +350,8 @@ async function start() {
     const selectLine = (id) => {
       const line = lineById.get(typeof id === 'object' ? id?.id : id);
       if (!line) return;
+      isSpotlightingMuscle = false;
+      syncSheetBlendForCurrentState();
       setPose(null, 0);
       clearSelfCarePose();
       fascia.clearReleaseTool?.();
@@ -506,6 +519,8 @@ async function start() {
     const selectHabit = (id) => {
       const habit = typeof id === 'object' && id ? id : habitById.get(id);
       if (!habit) return;
+      isSpotlightingMuscle = false;
+      syncSheetBlendForCurrentState();
       const lines = (habit.lines || []).map((lid) => lineById.get(lid)).filter(Boolean);
       const ids = buildHabitKeepIds(habit);
       currentHabit = habit;
@@ -533,6 +548,8 @@ async function start() {
       lastPart = null;
     };
     const returnToTriggerLine = (habit = currentHabit) => {
+      isSpotlightingMuscle = false;
+      syncSheetBlendForCurrentState();
       clearSelfCarePose();
       fascia.clearReleaseTool?.();
       fascia.clearTriggerPoint?.();
@@ -616,18 +633,18 @@ async function start() {
       if (/plantar|flexor-digitorum-brevis|abductor-hallucis|quadratus-plantae/.test(id)) {
         return s === 'L' ? 'sole-left' : 'sole-right';
       }
-      if (/rhomboid/.test(id)) {
+      if (/rhomboid|infraspinatus|supraspinatus|teres|levator-scapulae/.test(id)) {
         return s === 'L' ? 'back-left' : 'back-right';
       }
       if (
-        /abductor-pollicis|opponens-pollicis|flexor-pollicis|brachioradialis|flexor-carpi|extensor-carpi|pronator|supinator|pectoralis-minor|subclavius/.test(
+        /abductor-pollicis|opponens-pollicis|flexor-pollicis|brachioradialis|flexor-carpi|extensor-carpi|pronator|supinator|pectoralis-minor|subclavius|sternocleidomastoid|scalenus|scalene|biceps-brachii/.test(
           id,
         )
       ) {
         return s === 'L' ? 'front-left' : 'front-right';
       }
       if (
-        /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus-dorsi|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
+        /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|obturator|gemellus|quadratus-femoris|latissimus-dorsi|erector-spinae|longissimus|iliocostalis|multifidus|spinalis|interspinal|rotatores|quadratus-lumborum|trapezius|subscapularis|splenius|semispinalis|occipitalis|rectus-capitis-posterior|obliquus-capitis|calcaneal|popliteus|tibialis-posterior|triceps|anconeus/.test(
           id,
         )
       ) {
@@ -641,10 +658,16 @@ async function start() {
         return s === 'L' ? 'left' : 'right';
       }
       if (
-        /biceps-brachii|pectoralis|sternocleidomastoid|scalene|scalenus|platysma|masseter|temporalis|diaphragm|rectus-abdominis|psoas|iliacus|tibialis-anterior|rectus-femoris|vastus-medialis|vastus-intermedius|adductor|gracilis|sartorius/.test(
+        /pectoralis|platysma|masseter|temporalis|zygomatic|frontalis|orbicularis|buccinator|pterygoid|longus-colli|longus-capitis|rectus-capitis-anterior|hyoid|digastric|mylohyoid|diaphragm|rectus-abdominis|transversus|psoas|iliacus|tibialis-anterior|extensor-digitorum-longus|extensor-hallucis|rectus-femoris|vastus-medialis|vastus-intermedius|adductor|pectineus|gracilis|sartorius|pubococcygeus|iliococcygeus|coccygeus|pelvic/.test(
           id,
         )
       ) {
+        return 'front';
+      }
+      const c = viewer.getCenter?.(id, 'both');
+      if (c) {
+        if (c.z < -0.05) return 'back';
+        if (Math.abs(c.x) > 0.28 && Math.abs(c.z) < 0.08) return s === 'L' ? 'left' : 'right';
         return 'front';
       }
       const lines = (habit?.lines || []).map((lid) => lineById.get(lid)).filter(Boolean);
@@ -663,12 +686,34 @@ async function start() {
       fascia.setProgress(DEFAULT_HABIT_PROGRESS);
       unifiedSheets.showHabit(habit);
     };
-    const focusTriggerPoint = (muscleId, habit = currentHabit, releaseCfg = null) => {
+    const isLengthenRoleMuscle = (habit, muscleId) => {
+      if (!habit || !muscleId) return false;
+      const tl = habit.triggerLine || habit.goldenLine;
+      const longList = [
+        ...(habit.lengthenAntagonist || []),
+        ...(tl?.lengthenAntagonist || []),
+        ...(habit.lengthen || []),
+        ...(habit.lengthenLinked || []),
+        ...(tl?.lengthenLinked || []),
+      ];
+      const shortList = [
+        ...(habit.shortenCore || []),
+        ...(tl?.shortenCore || []),
+        ...(habit.shorten || []),
+        ...(habit.shortenLinked || []),
+        ...(tl?.shortenLinked || []),
+      ];
+      if (shortList.includes(muscleId)) return false;
+      return longList.includes(muscleId);
+    };
+    const focusTriggerPoint = (muscleId, habit = currentHabit, releaseCfg = null, explicitRole = null) => {
       if (!muscleId) {
         returnToTriggerLine(habit);
         return;
       }
       syncSelfCareHabitBase(habit);
+      isSpotlightingMuscle = true;
+      syncSheetBlendForCurrentState();
       const relCfg = releaseCfg || resolveReleaseConfig(currentHabit, muscleId);
       const strokeTarget = relCfg?.strokeTarget || null;
       if (currentHabit) {
@@ -680,12 +725,15 @@ async function start() {
       } else {
         syncDeepContext([muscleId, strokeTarget].filter(Boolean));
       }
-      const targetSide = relCfg?.side || currentHabit?.side || 'both';
-      const focusSide = targetSide === 'both' ? 'R' : targetSide;
-      fascia.showTriggerPoint?.(muscleId, focusSide);
-      viewer.highlight([muscleId], '#BF6450', { side: focusSide });
-      const view = viewForReleaseTarget(muscleId, currentHabit, { ...relCfg, side: focusSide });
-      viewer.focus([muscleId], { view, side: focusSide, inspectorOpen: true });
+      const habitSide = currentHabit?.side === 'L' || currentHabit?.side === 'R' ? currentHabit.side : 'both';
+      const spotSide = relCfg?.side === 'L' || relCfg?.side === 'R' ? relCfg.side : habitSide;
+      const viewSide = spotSide === 'both' ? 'R' : spotSide;
+      const isLong = explicitRole === 'long' || (explicitRole !== 'short' && isLengthenRoleMuscle(currentHabit, muscleId));
+      const glowHex = isLong ? '#0E62F6' : '#EC2418';
+      fascia.showTriggerPoint?.(muscleId, spotSide);
+      viewer.highlight([muscleId], glowHex, { side: spotSide });
+      const view = viewForReleaseTarget(muscleId, currentHabit, { ...relCfg, side: viewSide });
+      viewer.focus([muscleId], { view, side: spotSide, inspectorOpen: true, wholeMuscle: true });
       lastPart = muscleId;
     };
     const focusSelfCareView = (muscleId, habit = currentHabit, releaseCfg = null) => {
@@ -694,6 +742,8 @@ async function start() {
         return;
       }
       syncSelfCareHabitBase(habit);
+      isSpotlightingMuscle = true;
+      syncSheetBlendForCurrentState();
       if (currentHabit) {
         unifiedSheets.showHabit(currentHabit);
       }
@@ -711,7 +761,7 @@ async function start() {
       const targetSide = relCfg?.side || currentHabit?.side || 'both';
       const focusSide = targetSide === 'both' ? 'R' : targetSide;
       fascia.showTriggerPoint?.(muscleId, focusSide);
-      viewer.highlight([muscleId], '#BF6450', { side: focusSide });
+      viewer.highlight([muscleId], '#EC2418', { side: focusSide });
       const baseFocusIds = [muscleId, strokeTarget].filter(Boolean);
       let landmarkIds;
       let closeSelfCare = false;
@@ -849,6 +899,8 @@ async function start() {
         ...(step.yore || []),
       ];
       const ids = new Set([...(line?.track || []), ...activeStepIds]);
+      isSpotlightingMuscle = false;
+      syncSheetBlendForCurrentState();
       clearSelfCarePose();
       setPose(step.pose || null, 1, { cyclic: false });
       fascia.clearReleaseTool?.();
@@ -955,24 +1007,30 @@ async function start() {
           lines: involvedLines.length ? involvedLines : lines,
           side: resolvedSide,
         };
+        isSpotlightingMuscle = true;
+        syncSheetBlendForCurrentState();
         fascia.showMuscleChain?.(chainSpec);
         fascia.setProgress?.(DEFAULT_HABIT_PROGRESS);
         unifiedSheets.showMuscleChain?.(chainSpec);
-        viewer.highlight([id], '#BF6450', { side: resolvedSide });
+        viewer.highlight([id], '#EC2418', { side: resolvedSide });
         if (focusCamera) {
-          viewer.focus([...new Set(allChainIds)], {
-            view: viewForReleaseTarget(id, currentHabit, { side: resolvedSide }),
+          viewer.focus([id], {
+            view: viewForReleaseTarget(id, currentHabit, { side: resolvedSide === 'both' ? 'R' : resolvedSide }),
             side: resolvedSide,
             inspectorOpen: true,
+            wholeMuscle: true,
           });
         }
       } else {
-        viewer.highlight([id], kind === 'muscle' ? '#BF6450' : '#9E6B4B', { side: resolvedSide });
+        isSpotlightingMuscle = Boolean(kind === 'muscle');
+        syncSheetBlendForCurrentState();
+        viewer.highlight([id], kind === 'muscle' ? '#EC2418' : '#CFA058', { side: resolvedSide });
         if (focusCamera) {
           viewer.focus([id], {
-            view: kind === 'muscle' ? viewForReleaseTarget(id, currentHabit, { side: resolvedSide }) : undefined,
+            view: kind === 'muscle' ? viewForReleaseTarget(id, currentHabit, { side: resolvedSide === 'both' ? 'R' : resolvedSide }) : undefined,
             side: resolvedSide,
             inspectorOpen: true,
+            wholeMuscle: true,
           });
         }
       }
@@ -1025,14 +1083,15 @@ async function start() {
         const targetHabit = habit || currentHabit;
         fascia.clearReleaseTool?.();
         const rawRelCfg = muscleId ? resolveReleaseConfig(targetHabit, muscleId, payload) : null;
-        const effSide =
-          rawRelCfg?.side === 'L' || rawRelCfg?.side === 'R'
-            ? rawRelCfg.side
+        const explicitSide =
+          payload && typeof payload === 'object' && (payload.side === 'L' || payload.side === 'R')
+            ? payload.side
             : targetHabit?.side === 'L' || targetHabit?.side === 'R'
               ? targetHabit.side
-              : 'R';
-        const relCfg = rawRelCfg ? { ...rawRelCfg, side: effSide } : null;
-        focusTriggerPoint(muscleId, targetHabit, relCfg);
+              : 'both';
+        const relCfg = rawRelCfg ? { ...rawRelCfg, side: explicitSide } : null;
+        const explicitRole = payload && typeof payload === 'object' ? payload.role || null : null;
+        focusTriggerPoint(muscleId, targetHabit, relCfg, explicitRole);
       }, '部位スポットライト'),
     );
     ui.on(

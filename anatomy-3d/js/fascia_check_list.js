@@ -1,8 +1,8 @@
-import * as dataModule from './data.js?v=20261122a';
-import { createFascia } from './fascia.js?v=20261122a';
-import * as posture from './posture.js?v=20261122a';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122a';
-import { createViewer } from './viewer.js?v=20261122a';
+import * as dataModule from './data.js?v=20261122b';
+import { createFascia } from './fascia.js?v=20261122b';
+import * as posture from './posture.js?v=20261122b';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122b';
+import { createViewer } from './viewer.js?v=20261122b';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
@@ -115,7 +115,7 @@ function getHabitRoleIds(habit) {
 }
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261122a');
+    const res = await fetch('models/atlas_metadata.json?v=20261122b');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -426,11 +426,11 @@ async function initCheckListPage() {
         <div class="text-col">
           <div class="simple-role-grid">
             <div class="simple-role-box is-short">
-              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>縮むところ</span>
+              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>縮んだ所</span>
               <p class="simple-role-body">${shortList || '—'}</p>
             </div>
             <div class="simple-role-box is-long">
-              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>伸びるところ</span>
+              <span class="simple-role-head"><i class="simple-role-dot" aria-hidden="true"></i>伸びた所</span>
               <p class="simple-role-body">${longList || hb.symptom || '—'}</p>
             </div>
           </div>
@@ -440,7 +440,7 @@ async function initCheckListPage() {
           </div>
           <details class="info-drawer js-info-drawer">
             <summary class="info-drawer-summary">
-              <span>くわしい説明を見る</span>
+              <span class="js-info-drawer-label">説明を開く</span>
               <span class="info-drawer-arrow" aria-hidden="true">▾</span>
             </summary>
             <div class="info-drawer-body">
@@ -494,6 +494,13 @@ async function initCheckListPage() {
     const ph0 = card.querySelector('[data-stage="0"] .snap-placeholder');
     const img100 = card.querySelector('[data-stage="100"] .snap-img');
     const ph100 = card.querySelector('[data-stage="100"] .snap-placeholder');
+    const infoDrawer = card.querySelector('.js-info-drawer');
+    const infoDrawerLabel = card.querySelector('.js-info-drawer-label');
+    if (infoDrawer && infoDrawerLabel) {
+      infoDrawer.addEventListener('toggle', () => {
+        infoDrawerLabel.textContent = infoDrawer.open ? '説明を閉じる' : '説明を開く';
+      });
+    }
     const memoTextarea = card.querySelector('.memo-textarea');
     const toggleInlineBtn = card.querySelector('.js-toggle-inline-edit');
     const resetTextBtn = card.querySelector('.js-reset-inline-edit');
@@ -555,7 +562,6 @@ async function initCheckListPage() {
       saveEditsMap(editsStore);
       updateGlobalSummaryUI();
     });
-    const infoDrawer = card.querySelector('.js-info-drawer');
     toggleInlineBtn.addEventListener('click', () => {
       const willOpen = inlinePanel.hidden;
       inlinePanel.hidden = !willOpen;

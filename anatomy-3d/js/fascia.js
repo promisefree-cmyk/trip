@@ -1,9 +1,9 @@
-import * as posture from './posture.js?v=20261122a';
+import * as posture from './posture.js?v=20261122b';
 import {
   createSelfCareGuide3D,
   sampleSurfaceStrokeByRaycaster,
   resolveCareProfile,
-} from './selfcare_guide3d.js?v=20261122a';
+} from './selfcare_guide3d.js?v=20261122b';
 const POSE_GLSL =
   typeof posture.POSE_GLSL === 'string' && posture.POSE_GLSL.includes('poseDeform')
     ? posture.POSE_GLSL
@@ -337,19 +337,21 @@ const OVERLAY_FS = /* glsl */ `
       rawAlpha = clamp(cStr * (0.56 + 0.10 * bellyFocus + 0.12 * rim) * endBellyMask, 0.0, 0.72);
     }
     if (uSelected > 0.5) {
-      float selRim = pow(1.0 - facing, 1.85);
-      vec3 targetRim = (uRole < 0.5)
-        ? mix(uColor, vec3(0.95, 0.90, 0.78), 0.42)
-        : (uRole >= 2.5)
-          ? uAntagBlueRidge
-          : uCoreRose;
-      targetRim = mix(targetRim, reliefSage, relAmt * 0.78);
-      col = mix(col, targetRim, clamp(0.20 + 0.38 * selRim, 0.0, 0.68));
-      rawAlpha = max(rawAlpha, clamp(0.64 + 0.24 * selRim, 0.0, 0.88));
+      float pulse = 0.5 + 0.5 * sin(uTime * 4.6);
+      float selRim = pow(1.0 - facing, 1.65);
+      vec3 spotCore = (uRole >= 2.5)
+        ? vec3(0.02, 0.26, 0.96)
+        : vec3(0.90, 0.06, 0.04);
+      spotCore = mix(spotCore, reliefSage, relAmt * 0.72);
+      vec3 litCore = spotCore * (0.88 + 0.34 * dif0) * (0.88 + 0.28 * pulse);
+      vec3 darkEdge = spotCore * 0.30;
+      vec3 glowCol = mix(litCore, darkEdge, clamp(selRim * 0.56, 0.0, 0.72));
+      col = mix(col, clamp(glowCol, 0.0, 1.0), 0.92);
+      rawAlpha = clamp(0.84 + 0.12 * selRim + 0.04 * pulse, 0.0, 0.97);
     }
-    float nonSelDim = (uHasSpot > 0.5 && uSelected < 0.5) ? 0.84 : 1.0;
+    float nonSelDim = (uHasSpot > 0.5 && uSelected < 0.5) ? 0.14 : 1.0;
     vec3 clampedCol = clamp(col, 0.0, 1.0);
-    float alpha = clamp(rawAlpha * 1.16 * sideW * uFade * nonSelDim * uLayerAlpha, 0.0, 0.94);
+    float alpha = clamp(rawAlpha * 1.16 * sideW * uFade * nonSelDim * uLayerAlpha, 0.0, 0.95);
     gl_FragColor = vec4(clampedCol, alpha);
     #include <colorspace_fragment>
     gl_FragColor.rgb *= gl_FragColor.a;
@@ -1535,6 +1537,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       }
       return;
     }
+    const spotDim = state.spotMuscleId ? 0.18 : 1.0;
     for (const sh of state.sheets) {
       const eA = state.muscles.get(sh.fromId);
       const eB = state.muscles.get(sh.toId);
@@ -1546,7 +1549,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
       sh.u.uRidgeB.value.copy(stB.ridge);
       sh.u.uModeA.value = stA.mode;
       sh.u.uModeB.value = stB.mode;
-      sh.u.uAlpha.value = (stA.alpha + stB.alpha) * 0.5;
+      sh.u.uAlpha.value = ((stA.alpha + stB.alpha) * 0.5) * spotDim;
     }
   }
   /**
@@ -1995,6 +1998,12 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
     }
     applyLayerFilter();
     apply();
+    const effectiveSide =
+      side === 'L' || side === 'R'
+        ? side
+        : state.habit && (state.habit.side === 'L' || state.habit.side === 'R')
+          ? state.habit.side
+          : 'both';
     if (e) {
       if (e.role >= 3) {
         e.u.uStretch.value = Math.max(e.u.uStretch.value, 0.94);
@@ -2009,32 +2018,7 @@ export function createFascia({ THREE, scene, getMeshes, getCenter, getBasis }) {
         e.u.uLockMax.value = Math.max(e.lockMax || 0, 0.94);
       }
       e.u.uSelected.value = 1.0;
-      e.u.uSide.value.set(1, 1);
-    }
-    const rigRole = getRigRole ? getRigRole(muscleId, 'muscle') : null;
-    const effectiveSide =
-      side === 'L' || side === 'R'
-        ? side
-        : state.habit && (state.habit.side === 'L' || state.habit.side === 'R')
-          ? state.habit.side
-          : 'both';
-    if (effectiveSide === 'L' || effectiveSide === 'R') {
-      const pos = centerOf(muscleId, effectiveSide) || e?.an?.[effectiveSide]?.center || centerOf(muscleId, 'both');
-      if (pos) pushNode(pos, '#CC6F5B', 0, rigRole);
-    } else {
-      const posL = centerOf(muscleId, 'L') || e?.an?.L?.center;
-      const posR = centerOf(muscleId, 'R') || e?.an?.R?.center;
-      if (posL && posR) {
-        if (posL.distanceTo(posR) < 0.08) {
-          pushNode(posL, '#CC6F5B', 0, rigRole);
-        } else {
-          pushNode(posL, '#CC6F5B', 0, rigRole);
-          pushNode(posR, '#B95C48', 0.35, rigRole);
-        }
-      } else {
-        const pos = posL || posR || centerOf(muscleId, 'both');
-        if (pos) pushNode(pos, '#CC6F5B', 0, rigRole);
-      }
+      e.u.uSide.value.set(effectiveSide === 'R' ? 0 : 1, effectiveSide === 'L' ? 0 : 1);
     }
     commitNodes();
   }

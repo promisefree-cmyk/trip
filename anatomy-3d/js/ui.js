@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261122a';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261122a';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261122b';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261122b';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -1501,7 +1501,7 @@ export function createUI({
               ? h(
                   'div',
                   null,
-                  h('p', { class: 'line-detail-subhead', text: '関係する動き（タップで縮む・伸びるを表示）：' }),
+                  h('p', { class: 'line-detail-subhead', text: '関係する動き（タップで縮んだ所・伸びた所を表示）：' }),
                   h(
                     'div',
                     { class: 'pill-wrap-row' },
@@ -1517,21 +1517,30 @@ export function createUI({
                 )
               : null,
             lineDesc
-              ? h(
-                  'details',
-                  { class: 'detail-drawer', style: { 'margin-top': '8px' } },
-                  h(
-                    'summary',
-                    { class: 'detail-drawer-summary' },
-                    h('span', { text: 'くわしい説明を見る' }),
-                    h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
-                  ),
-                  h(
-                    'div',
-                    { class: 'detail-drawer-body' },
-                    h('p', { class: 'causal-lead', text: lineDesc }),
-                  ),
-                )
+              ? (() => {
+                  const lblSpan = h('span', { text: '説明を開く' });
+                  return h(
+                    'details',
+                    {
+                      class: 'detail-drawer',
+                      style: { 'margin-top': '8px' },
+                      ontoggle: (e) => {
+                        lblSpan.textContent = e.currentTarget.open ? '説明を閉じる' : '説明を開く';
+                      },
+                    },
+                    h(
+                      'summary',
+                      { class: 'detail-drawer-summary' },
+                      lblSpan,
+                      h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+                    ),
+                    h(
+                      'div',
+                      { class: 'detail-drawer-body' },
+                      h('p', { class: 'causal-lead', text: lineDesc }),
+                    ),
+                  );
+                })()
               : null,
           ),
         );
@@ -1690,6 +1699,10 @@ export function createUI({
       ),
     );
     if (state.feelingContext && state.feelingContext.habits.length > 1) {
+      const relCount = state.feelingContext.habits.length;
+      const causesSummaryLabel = h('span', {
+        text: state.causesOpen ? `関連情報を閉じる（${relCount}件）` : `関連情報をみる（${relCount}件）`,
+      });
       wrap.append(
         h(
           'details',
@@ -1698,8 +1711,12 @@ export function createUI({
             id: 'drawer-related-causes',
             open: state.causesOpen,
             ontoggle: (e) => {
-              state.causesOpen = e.currentTarget.open;
-              if (e.currentTarget.open) {
+              const isOpen = e.currentTarget.open;
+              state.causesOpen = isOpen;
+              causesSummaryLabel.textContent = isOpen
+                ? `関連情報を閉じる（${relCount}件）`
+                : `関連情報をみる（${relCount}件）`;
+              if (isOpen) {
                 e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
               }
             },
@@ -1707,7 +1724,7 @@ export function createUI({
           h(
             'summary',
             { class: 'detail-drawer-summary' },
-            h('span', { text: `関連の原因をみる（${state.feelingContext.habits.length}件）` }),
+            causesSummaryLabel,
             h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
           ),
           h(
@@ -1715,7 +1732,7 @@ export function createUI({
             { class: 'detail-drawer-body is-compact' },
             h('p', {
               class: 'context-switcher-label',
-              text: `「${state.feelingContext.label}」に関わる他の原因動作：`,
+              text: `「${state.feelingContext.label}」に関わる動き：`,
             }),
             h(
               'div',
@@ -1742,7 +1759,7 @@ export function createUI({
     const shortMuscles = resolveShortenMuscles(hb);
     const shortIdSet = new Set(shortMuscles.map((m) => m.id));
     const longMuscles = resolveLengthenMuscles(hb, shortIdSet);
-    const makeRoleMuscleButton = (mObj) => {
+    const makeRoleMuscleButton = (mObj, roleType) => {
       const isFocused = state.focusedRoleMuscleId === mObj.id;
       return h(
         'button',
@@ -1758,15 +1775,18 @@ export function createUI({
               emit('trigger-line', hb.id);
             } else {
               state.focusedRoleMuscleId = mObj.id;
-              emit('trigger-point', { habitId: hb.id, muscleId: mObj.id });
+              emit('trigger-point', { habitId: hb.id, muscleId: mObj.id, role: roleType });
             }
             render();
           },
         },
         h('span', { text: mObj.label }),
-        h('span', { 'aria-hidden': 'true', text: isFocused ? '戻す' : 'みる' }),
+        h('span', { 'aria-hidden': 'true', text: isFocused ? '戻す' : '光らせる' }),
       );
     };
+    const rolesSummaryLabel = h('span', {
+      text: state.rolesOpen ? '縮んだ所・伸びた所を閉じる' : '縮んだ所・伸びた所を開く',
+    });
     wrap.append(
       h(
         'details',
@@ -1775,8 +1795,10 @@ export function createUI({
           id: 'drawer-shrink-stretch',
           open: state.rolesOpen,
           ontoggle: (e) => {
-            state.rolesOpen = e.currentTarget.open;
-            if (e.currentTarget.open) {
+            const isOpen = e.currentTarget.open;
+            state.rolesOpen = isOpen;
+            rolesSummaryLabel.textContent = isOpen ? '縮んだ所・伸びた所を閉じる' : '縮んだ所・伸びた所を開く';
+            if (isOpen) {
               e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
           },
@@ -1784,7 +1806,7 @@ export function createUI({
         h(
           'summary',
           { class: 'detail-drawer-summary' },
-          h('span', { text: '縮むところ・伸びるところをみる' }),
+          rolesSummaryLabel,
           h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
         ),
         h(
@@ -1800,14 +1822,14 @@ export function createUI({
                 'h3',
                 { class: 'role-card-head' },
                 h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-                h('span', { text: '縮むところ' }),
+                h('span', { text: '縮んだ所' }),
               ),
               h(
                 'div',
                 { class: 'role-pill-list' },
                 ...(shortMuscles.length
-                  ? shortMuscles.map(makeRoleMuscleButton)
-                  : [h('span', { class: 'row-sub', text: '縮む部位' })]),
+                  ? shortMuscles.map((m) => makeRoleMuscleButton(m, 'short'))
+                  : [h('span', { class: 'row-sub', text: '縮んだ所' })]),
               ),
             ),
             h(
@@ -1817,14 +1839,14 @@ export function createUI({
                 'h3',
                 { class: 'role-card-head' },
                 h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-                h('span', { text: '伸びるところ' }),
+                h('span', { text: '伸びた所' }),
               ),
               h(
                 'div',
                 { class: 'role-pill-list' },
                 ...(longMuscles.length
-                  ? longMuscles.map(makeRoleMuscleButton)
-                  : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '伸びる部位') })]),
+                  ? longMuscles.map((m) => makeRoleMuscleButton(m, 'long'))
+                  : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '伸びた所') })]),
               ),
             ),
           ),
@@ -1848,6 +1870,9 @@ export function createUI({
     const analogyText = resolveSimpleAnalogyText(hb);
     const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
     const quickCheck = sanitizeText(hb.quickCheck || tl?.quickCheck || '');
+    const explainSummaryLabel = h('span', {
+      text: state.explainOpen ? '説明を閉じる' : '説明を開く',
+    });
     const detailEl = h(
       'details',
       {
@@ -1855,8 +1880,10 @@ export function createUI({
         id: 'drawer-detail-explain',
         open: state.explainOpen,
         ontoggle: (e) => {
-          state.explainOpen = e.currentTarget.open;
-          if (e.currentTarget.open) {
+          const isOpen = e.currentTarget.open;
+          state.explainOpen = isOpen;
+          explainSummaryLabel.textContent = isOpen ? '説明を閉じる' : '説明を開く';
+          if (isOpen) {
             e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         },
@@ -1864,7 +1891,7 @@ export function createUI({
       h(
         'summary',
         { class: 'detail-drawer-summary' },
-        h('span', { text: 'くわしい説明をみる' }),
+        explainSummaryLabel,
         h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
       ),
       h(
@@ -1929,6 +1956,9 @@ export function createUI({
     const sIds = [...new Set([...(curStep.shortenCore || []), ...(curStep.shorten || [])])].slice(0, 3);
     const lIds = [...new Set([...(curStep.lengthenAntagonist || []), ...(curStep.lengthen || [])])].slice(0, 3);
     if (sIds.length || lIds.length) {
+      const storyRolesLabel = h('span', {
+        text: state.rolesOpen ? '縮んだ所・伸びた所を閉じる' : '縮んだ所・伸びた所を開く',
+      });
       wrap.append(
         h(
           'details',
@@ -1937,13 +1967,15 @@ export function createUI({
             id: 'drawer-shrink-stretch',
             open: state.rolesOpen,
             ontoggle: (e) => {
-              state.rolesOpen = e.currentTarget.open;
+              const isOpen = e.currentTarget.open;
+              state.rolesOpen = isOpen;
+              storyRolesLabel.textContent = isOpen ? '縮んだ所・伸びた所を閉じる' : '縮んだ所・伸びた所を開く';
             },
           },
           h(
             'summary',
             { class: 'detail-drawer-summary' },
-            h('span', { text: '縮むところ・伸びるところをみる' }),
+            storyRolesLabel,
             h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
           ),
           h(
@@ -1959,7 +1991,7 @@ export function createUI({
                   'h3',
                   { class: 'role-card-head' },
                   h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-                  h('span', { text: '縮むところ' }),
+                  h('span', { text: '縮んだ所' }),
                 ),
                 h(
                   'div',
@@ -1984,7 +2016,7 @@ export function createUI({
                   'h3',
                   { class: 'role-card-head' },
                   h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-                  h('span', { text: '伸びるところ' }),
+                  h('span', { text: '伸びた所' }),
                 ),
                 h(
                   'div',
@@ -2009,6 +2041,9 @@ export function createUI({
     }
     const storyDetailText = sanitizeText(curStep.body || curStep.text || curStep.desc || story.lead || '');
     if (storyDetailText) {
+      const storyExplainLabel = h('span', {
+        text: state.explainOpen ? '説明を閉じる' : '説明を開く',
+      });
       wrap.append(
         h(
           'details',
@@ -2017,13 +2052,15 @@ export function createUI({
             id: 'drawer-detail-explain',
             open: state.explainOpen,
             ontoggle: (e) => {
-              state.explainOpen = e.currentTarget.open;
+              const isOpen = e.currentTarget.open;
+              state.explainOpen = isOpen;
+              storyExplainLabel.textContent = isOpen ? '説明を閉じる' : '説明を開く';
             },
           },
           h(
             'summary',
             { class: 'detail-drawer-summary' },
-            h('span', { text: 'くわしい説明をみる' }),
+            storyExplainLabel,
             h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
           ),
           h(
@@ -2171,14 +2208,21 @@ export function createUI({
       const tl = hb.triggerLine || hb.goldenLine || resolveTriggerLine(hb.triggerLineId || hb.goldenLineId);
       const orderReason = sanitizeText(hb.point || hb.selfCare?.point || tl?.point || '');
       if (orderReason) {
+        const scExplainLabel = h('span', { text: '説明を開く' });
         wrap.append(
           h(
             'details',
-            { class: 'detail-drawer' },
+            {
+              class: 'detail-drawer',
+              id: 'drawer-step3-explain',
+              ontoggle: (e) => {
+                scExplainLabel.textContent = e.currentTarget.open ? '説明を閉じる' : '説明を開く';
+              },
+            },
             h(
               'summary',
               { class: 'detail-drawer-summary' },
-              h('span', { text: 'なぜこの順番？（くわしい説明を見る）' }),
+              scExplainLabel,
               h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
             ),
             h(
