@@ -89,7 +89,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'pectoralis-minor',
         durationSec: 30,
-        step: '② テーブルに置いたローラーに力こぶを乗せてゆっくり転がす',
+        step: '② 力こぶ（腕の前）にローラーを当てて、ゆっくり前後に転がす',
       },
       {
         id: 'pectoralis-minor',
@@ -413,7 +413,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'biceps-femoris',
         durationSec: 30,
-        step: '① 床またはイスの前で、ふくらはぎをローラーに乗せてコロコロ転がす',
+        step: '① ふくらはぎにローラーを当てて、足首からひざ下までコロコロ転がす',
       },
       {
         id: 'biceps-femoris',
@@ -480,7 +480,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'gluteus-medius',
         durationSec: 30,
-        step: '① 床マットの上でズボンのポケット横〜外ももにローラーを挟み、ゆっくり転がす',
+        step: '① ズボンのポケット横〜外ももにローラーを当てて、ゆっくり転がす',
       },
       {
         id: 'gluteus-medius',
@@ -547,7 +547,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'rectus-femoris',
         durationSec: 30,
-        step: '① 床マットの上ですねの外側をローラーに乗せ、ゆっくり往復転がす',
+        step: '① すねの外側にローラーを当てて、ゆっくり往復転がす',
       },
       {
         id: 'rectus-femoris',
@@ -558,7 +558,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'psoas-major',
         durationSec: 30,
-        step: '② 床マットの上でうつ伏せになり、太ももの前側にローラーを挟んでゆっくり転がす',
+        step: '② 太ももの前側にローラーを当てて、ひざ上から付け根手前までゆっくり転がす',
       },
       {
         id: 'psoas-major',
@@ -614,7 +614,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'soleus',
         durationSec: 30,
-        step: '① 土踏まず（足の裏）でボールを踏んで前後にコロコロ転がす（30秒）',
+        step: '① 土踏まず（足の裏）にボールを当てて前後にコロコロ転がす（30秒）',
       },
       {
         id: 'soleus',
@@ -625,7 +625,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'gastrocnemius',
         durationSec: 30,
-        step: '② ふくらはぎの下側（アキレス腱の上）をローラーに乗せて往復転がす（30秒）',
+        step: '② ふくらはぎの下側（アキレス腱の上）にローラーを当てて往復転がす（30秒）',
       },
       {
         id: 'gastrocnemius',
@@ -703,7 +703,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'trapezius',
         durationSec: 30,
-        step: '③ 壁と背中のあいだにボールを挟み、ひざを軽く動かして肩甲骨の内側を転がす（30秒）',
+        step: '③ 肩甲骨の内側（背中のあいだ）にボールを当てて、小さく転がしてほぐす（30秒）',
       },
     ],
   },
@@ -815,7 +815,7 @@ export const TRIGGER_LINES = [
         motion: 'roll',
         strokeTarget: 'pectineus',
         durationSec: 30,
-        step: '① うつ伏せで片膝を曲げ、内ももの真ん中をローラーでゆっくり転がす（30秒）',
+        step: '① ひざを軽く開いて内ももの真ん中にローラーを当て、ゆっくり転がす（30秒）',
       },
       {
         id: 'pectineus',
@@ -2690,7 +2690,7 @@ export const HABITS = [
         motion: 'roll',
         strokeTarget: 'deltoid',
         durationSec: 30,
-        step: '② テーブルに置いたローラーに力こぶ〜肩の前を乗せてゆっくり往復転がす',
+        step: '② 力こぶ〜肩の前にローラーを当てて、ゆっくり往復転がす',
       },
       {
         id: 'pectoralis-minor',

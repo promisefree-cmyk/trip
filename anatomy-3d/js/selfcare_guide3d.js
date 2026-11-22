@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-export const SELFCARE_GUIDE_VERSION = '20261121c';
-export const R_BALL = 0.105;
-export const R_ROLLER = 0.12;
-export const L_ROLLER = 0.52;
+export const SELFCARE_GUIDE_VERSION = '20261122a';
+export const R_BALL = 0.102;
+export const R_ROLLER = 0.096;
+export const L_ROLLER = 0.38;
 const noRaycast = () => {};
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth01 = (a, b, x) => {
@@ -111,18 +111,17 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
     handPose = 'thumb';
     scale = /pollicis|thumb-wrist/.test(id) ? 0.90 : 0.95;
     strokeSpan = /pollicis|thumb-wrist/.test(id) ? 0.65 : 0.82;
+    supportSurface = 'none';
     if (tool === 'hand') {
       motion = 'glide';
-      supportSurface = 'none';
       guideText = /pollicis|thumb-wrist/.test(id)
         ? '親指の腹でふくらみを押さえたまま、反対の手首をゆっくり反らしたり曲げたりします（30秒）'
         : '親指の腹で気持ちいい場所を押さえたまま、手首をゆっくり反らしたり曲げたりします（30秒）';
     } else {
       motion = 'roll';
-      supportSurface = 'chair';
       guideText = /pollicis|thumb-wrist/.test(id)
-        ? 'テーブルの上のボールを親指の付け根で挟み、小さくコロコロ転がします（30秒）'
-        : 'テーブルの上に置いたボールに腕を乗せ、手首の力を抜いてコロコロ転がします（30秒）';
+        ? '親指の付け根のふくらみにボールを当て、やさしくコロコロ転がします（30秒）'
+        : '前腕の気持ちいい場所にボールを当て、手首の力を抜いてコロコロ転がします（30秒）';
     }
   }
   else if (/^(pectoralis-minor|subclavius|pec-minor-r|sternum-clavicle)$/.test(id)) {
@@ -169,39 +168,35 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
   }
   else if (/^(rhomboid-major|rhomboid-minor|between-scapula|infraspinatus|teres-minor|teres-major|trapezius|levator-scapulae)$/.test(id)) {
     handPose = 'fingers';
-    scale = 0.96;
-    strokeSpan = 0.92;
+    scale = 0.94;
+    strokeSpan = 0.90;
+    supportSurface = 'none';
     if (tool === 'ball') {
       motion = /rhomboid|between-scapula/.test(id) ? 'roll' : 'circle';
-      supportSurface = 'wall';
       guideText = /rhomboid|between-scapula/.test(id)
-        ? '壁と背中のあいだにボールを挟み、ひざを軽く曲げ伸ばしして肩甲骨の内側を転がします（30秒）'
-        : '壁と背中のあいだにボールを挟み、痛気持ちいい強さで小さくゆらしてほぐします（30秒）';
+        ? '肩甲骨の内側（背中のあいだ）にボールを当て、上下に小さく転がしてほぐします（30秒）'
+        : '肩甲骨まわりにボールを当て、痛気持ちいい強さでくるくるほぐします（30秒）';
     } else if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = 'floor';
-      guideText = '床マットの上で背中の下にローラーを当て、肩甲骨のあいだをゆっくり上下に転がします（30秒）';
+      guideText = '背中の上側にローラーを当て、肩甲骨のあいだをゆっくり上下に転がします（30秒）';
     } else {
       motion = 'circle';
-      supportSurface = 'none';
       guideText = '反対の手を前から肩越しに回し、指先で肩甲骨まわりを押さえながら肩をゆっくり回します（30秒）';
     }
   }
   else if (/^(splenius-|semispinalis|rectus-capitis-posterior|obliquus-capitis)/.test(id)) {
     handPose = 'thumb';
-    scale = 0.88;
+    scale = 0.86;
     strokeSpan = 0.68;
+    supportSurface = 'none';
     if (tool === 'ball') {
       motion = 'circle';
-      supportSurface = 'floor';
-      guideText = '仰向けで床マットの上に置いたボールに頭の付け根を乗せ、小さくうなずくようにゆらします（30秒）';
+      guideText = '頭のうしろのくぼみにボールを当て、深呼吸しながら小さくくるくるゆるめます（30秒）';
     } else if (tool === 'roller') {
-      motion = 'cross';
-      supportSurface = 'floor';
-      guideText = '仰向けで頭のうしろのくぼみをローラーに乗せ、左右へゆっくり首をゆらします（30秒）';
+      motion = 'roll';
+      guideText = '首のうしろから頭の付け根にローラーを当て、やさしく上下に転がします（30秒）';
     } else {
       motion = 'circle';
-      supportSurface = 'none';
       guideText = '両手の親指を頭のうしろのくぼみに添え、深呼吸しながら小さく円を描いてゆるめます（30秒）';
     }
   }
@@ -209,20 +204,20 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
     handPose = 'thumb';
     scale = 0.86;
     strokeSpan = 0.88;
+    supportSurface = 'none';
     if (tool === 'ball') {
       motion = 'roll';
-      supportSurface = 'floor';
-      guideText = '床マットに置いたボールを足の裏で踏み、土踏まずからかかと前までコロコロ転がします（30秒）';
+      guideText = '土踏まずからかかと前にボールを当て、前後にコロコロ転がしてほぐします（30秒）';
     } else {
       motion = 'glide';
-      supportSurface = 'none';
       guideText = 'イスに座って土踏まずを親指の腹で押さえたまま、足の指と足首をゆっくり動かします（30秒）';
     }
   }
   else if (/^(rectus-femoris|vastus-|sartorius|tensor-fasciae-latae|adductor-|pectineus|gracilis|front-thigh-shin|outer-hip-r|inner-thigh-r)/.test(id)) {
     handPose = 'fingers';
-    scale = 1.0;
-    strokeSpan = 1.05;
+    scale = 0.96;
+    strokeSpan = 1.02;
+    supportSurface = 'none';
     const areaJa = /tensor-fasciae|vastus-lateralis|outer-hip/.test(id)
       ? '骨盤の横から外もも'
       : /adductor|pectineus|gracilis|inner-thigh/.test(id)
@@ -230,57 +225,50 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
         : '太ももの前側';
     if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = 'floor';
-      guideText = `床マットと${areaJa}のあいだにローラーを挟み、体重を預けてゆっくり大きく転がします（30秒）`;
+      guideText = `${areaJa}にローラーを当て、ひざへ向けてゆっくり往復転がします（30秒）`;
     } else if (tool === 'ball') {
       motion = 'circle';
-      supportSurface = 'floor';
-      guideText = `床マットと${areaJa}のあいだにボールを挟み、硬い場所を小さくゆらしてほぐします（30秒）`;
+      guideText = `${areaJa}の硬い場所にボールを当て、小さく円を描いてほぐします（30秒）`;
     } else {
       motion = 'stroke';
-      supportSurface = 'none';
       guideText = `座った姿勢で${areaJa}に4本の指の腹を添え、ひざへ向けてやさしくさすり流します（30秒）`;
     }
   }
   else if (/^(external-oblique|internal-oblique|quadratus-lumborum|latissimus-dorsi|serratus-anterior|flank-r|armpit-lat-r|chest-oblique-sling)$/.test(id)) {
     handPose = 'fingers';
-    scale = 0.96;
-    strokeSpan = 0.92;
+    scale = 0.94;
+    strokeSpan = 0.90;
+    supportSurface = 'none';
     const areaJa = /latissimus|armpit/.test(id) ? 'わきの下の後ろ側' : /chest-oblique/.test(id) ? '胸の外側からろっ骨横' : '脇腹';
     if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = 'floor';
-      guideText = `片腕を頭の上へ上げて${areaJa}を開き、床マットの上でローラーに乗せてやさしく転がします（30秒）`;
+      guideText = `片腕を上げて${areaJa}を伸ばし、ローラーを当ててやさしく上下に転がします（30秒）`;
     } else if (tool === 'ball') {
       motion = 'circle';
-      supportSurface = 'wall';
-      guideText = `片腕を上げて${areaJa}を開き、壁とのあいだにボールを挟んで小さくゆらします（30秒）`;
+      guideText = `片腕を上げて${areaJa}を伸ばし、ボールを当てて小さくくるくるほぐします（30秒）`;
     } else {
       motion = 'stroke';
-      supportSurface = 'none';
       guideText = `片腕を頭の上へ上げて${areaJa}を伸ばし、4本の指の腹でろっ骨から骨盤へさすり流します（30秒）`;
     }
   }
   else if (/^(gluteus-|piriformis|biceps-femoris|semitendinosus|semimembranosus|ischium-ham)/.test(id)) {
     handPose = 'thumb';
-    scale = 1.0;
-    strokeSpan = 0.95;
+    scale = 0.96;
+    strokeSpan = 0.94;
+    supportSurface = 'none';
     const isHam = /femoris|semitendinosus|semimembranosus|ischium-ham/.test(id);
     if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = 'floor';
       guideText = isHam
-        ? '床マットの上でもも裏の下にローラーを置き、お尻からひざ裏の手前までゆっくり転がします（30秒）'
-        : '床マットの上でローラーにお尻を乗せ、体重を少し傾けてゆっくり前後に転がします（30秒）';
+        ? 'もも裏にローラーを当て、お尻の下からひざ裏の手前までゆっくり転がします（30秒）'
+        : 'お尻の筋肉にローラーを当て、ゆっくり前後に転がしてゆるめます（30秒）';
     } else if (tool === 'ball') {
       motion = 'circle';
-      supportSurface = isHam ? 'chair' : 'floor';
       guideText = isHam
-        ? 'イスの座面ともも裏の付け根のあいだにボールを挟み、ひざを軽く伸ばしたり曲げたりします（30秒）'
-        : '床マットとお尻のあいだにボールを挟み、呼吸を止めずに小さく円を描いてゆるめます（30秒）';
+        ? 'もも裏の付け根にボールを当て、小さく円を描くようにほぐします（30秒）'
+        : 'お尻のえくぼ周りにボールを当て、呼吸を止めずに小さく円を描いてゆるめます（30秒）';
     } else {
       motion = 'circle';
-      supportSurface = 'none';
       guideText = isHam
         ? 'イスに座ってもも裏に両手の指を添え、ひざを軽く動かしながらやさしくほぐします（30秒）'
         : 'お尻のえくぼの周りに親指を添え、体重を左右にゆらしながらやさしくゆるめます（30秒）';
@@ -288,24 +276,22 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
   }
   else if (/^(gastrocnemius|soleus|calcaneal-tendon|tibialis-anterior|fibularis-|fibula-outer-r)/.test(id)) {
     handPose = /tibialis|fibularis|fibula/.test(id) ? 'thumb' : 'fingers';
-    scale = 0.95;
-    strokeSpan = 0.96;
+    scale = 0.92;
+    strokeSpan = 0.94;
+    supportSurface = 'none';
     const isShin = /tibialis|fibularis|fibula/.test(id);
     if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = 'floor';
       guideText = isShin
-        ? '床マットの上ですねの外側をローラーに乗せ、足首の力を抜いてゆっくり往復転がします（30秒）'
-        : '床マットの上でふくらはぎをローラーに乗せ、足首からひざ下までゆっくり転がします（30秒）';
+        ? 'すねの外側にローラーを当て、足首の力を抜いてゆっくり往復転がします（30秒）'
+        : 'ふくらはぎにローラーを当て、足首からひざ下までゆっくり転がします（30秒）';
     } else if (tool === 'ball') {
       motion = 'roll';
-      supportSurface = 'floor';
       guideText = isShin
-        ? '床マットまたは座面の上ですねの外側にボールを当て、足首をゆっくり動かしながらほぐします（30秒）'
-        : '床マットに置いたボールの上にふくらはぎを乗せ、足首をゆっくり回しながらほぐします（30秒）';
+        ? 'すねの外側にボールを当て、足首をゆっくり動かしながらコロコロほぐします（30秒）'
+        : 'ふくらはぎにボールを当て、足首からひざ下へコロコロ転がしてほぐします（30秒）';
     } else {
       motion = isShin ? 'glide' : 'stroke';
-      supportSurface = 'none';
       guideText = isShin
         ? 'イスに座ってすねの外側を親指で押さえたまま、足首をゆっくり反らしたり曲げたりします（30秒）'
         : 'イスに座ってふくらはぎを両手の指で包み、足首からひざ裏へ向けてやさしくさすり上げます（30秒）';
@@ -314,23 +300,17 @@ export function resolveCareProfile(targetKeyOrMuscleId, requestedTool = null, fa
   else {
     const isArm = /biceps-brachii|triceps-brachii|brachialis|deltoid/.test(id);
     handPose = 'fingers';
-    scale = isArm ? 0.88 : 0.95;
+    scale = isArm ? 0.86 : 0.92;
     strokeSpan = 0.88;
+    supportSurface = 'none';
     if (tool === 'roller') {
       motion = 'roll';
-      supportSurface = isArm ? 'chair' : 'floor';
-      guideText = isArm
-        ? `テーブルの上に置いたローラーに${partLabel}を乗せ、ゆっくり前後に転がします（30秒）`
-        : `床マットの上で${partLabel}にローラーを当て、呼吸を続けながらゆっくり転がします（30秒）`;
+      guideText = `${partLabel}にローラーを当て、呼吸を続けながらゆっくり前後に転がします（30秒）`;
     } else if (tool === 'ball') {
       motion = 'circle';
-      supportSurface = isArm ? 'chair' : 'wall';
-      guideText = isArm
-        ? `テーブルや壁とのあいだで${partLabel}にボールを当て、小さく転がしてゆるめます（30秒）`
-        : `壁と${partLabel}のあいだにボールを挟み、痛気持ちいい強さでくるくるゆるめます（30秒）`;
+      guideText = `${partLabel}にボールを当て、痛気持ちいい強さでくるくるゆるめます（30秒）`;
     } else {
       motion = 'stroke';
-      supportSurface = 'none';
       guideText = `${partLabel}に4本の指の腹をそっと添え、筋膜の流れに沿ってやさしくさすり流します（30秒）`;
     }
   }
@@ -1483,7 +1463,7 @@ export function createSelfCareGuide3D({ parent }) {
     st.tool = profile.tool;
     st.handPose = handPose || profile.handPose;
     st.motion = motion || profile.motion;
-    st.supportSurface = supportSurface !== null ? supportSurface : profile.supportSurface;
+    st.supportSurface = 'none';
     st.effSide = effSide === 'L' ? 'L' : 'R';
     st.speed = Math.max(0.2, Math.min(3.0, Number(speed) || 1.0));
     st.scale = Math.max(0.45, Math.min(2.0, Number(scale) || profile.scale || 1.0));
@@ -1517,19 +1497,7 @@ export function createSelfCareGuide3D({ parent }) {
     rippleMeshes.forEach((m, idx) => {
       m.material.color.setHex(idx % 2 === 0 ? rippleMain : rippleSub);
     });
-    const showPanel = st.tool !== 'hand' && st.supportSurface && st.supportSurface !== 'none';
-    supportPanel.group.visible = Boolean(showPanel);
-    if (showPanel) {
-      if (st.tool === 'roller') {
-        supportPanel.group.scale.set(1.26 * st.scale, 1.12 * st.scale, 1);
-      } else if (st.supportSurface === 'chair') {
-        supportPanel.group.scale.set(0.78 * st.scale, 0.82 * st.scale, 1);
-      } else if (st.supportSurface === 'wall') {
-        supportPanel.group.scale.set(0.88 * st.scale, 0.96 * st.scale, 1);
-      } else {
-        supportPanel.group.scale.set(0.92 * st.scale, 0.98 * st.scale, 1);
-      }
-    }
+    supportPanel.group.visible = false;
     rootGroup.visible = true;
     update(0, 0);
     return profile;
@@ -1577,36 +1545,7 @@ export function createSelfCareGuide3D({ parent }) {
       }
     }
     if (guideTubeMesh) guideTubeMesh.visible = showGuideTube;
-    const wantPanel = st.tool !== 'hand' && st.supportSurface && st.supportSurface !== 'none';
-    if (wantPanel) {
-      curveTmp.getPointAt(0.5, midPosDef);
-      curveTmp.getTangentAt(0.5, midTanDef);
-      sampleNormalAt(0.5, count, midNormDef);
-      if (st.supportSurface === 'floor') {
-        if (midNormDef.y > -0.35) {
-          supportPanel.group.visible = false;
-        } else {
-          supportPanel.group.visible = true;
-          midNormDef.set(midNormDef.x * 0.14, -1.0, midNormDef.z * 0.14).normalize();
-        }
-      } else {
-        supportPanel.group.visible = true;
-      }
-      if (supportPanel.group.visible) {
-        midTanDef.addScaledVector(midNormDef, -midTanDef.dot(midNormDef));
-        if (midTanDef.lengthSq() < 1e-6) midTanDef.set(0, 0, 1);
-        else midTanDef.normalize();
-        midBitanDef.crossVectors(midTanDef, midNormDef).normalize();
-        midTanDef.crossVectors(midNormDef, midBitanDef).normalize();
-        const rTool = st.tool === 'roller' ? R_ROLLER : R_BALL;
-        const outerOffset = 2.0 * rTool * st.scale + 0.008;
-        supportPanel.group.position.copy(midPosDef).addScaledVector(midNormDef, outerOffset);
-        panelRotMatTmp.makeBasis(midBitanDef, midTanDef, midNormDef);
-        supportPanel.group.quaternion.setFromRotationMatrix(panelRotMatTmp);
-      }
-    } else {
-      supportPanel.group.visible = false;
-    }
+    supportPanel.group.visible = false;
     const spd = st.speed;
     let uParam = 0.5;
     let lateralOff = 0;

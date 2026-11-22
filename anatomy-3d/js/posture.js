@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-export const POSTURE_VERSION = '20261121c';
+export const POSTURE_VERSION = '20261122a';
 const POSE_KEYS = [
   'trunkFlex',   // -0.5..1   背中が丸まる（胸椎・腰椎屈曲）
   'headForward', // 0..1      頭が前に出る（スマホ首・ストレートネック）
@@ -2963,44 +2963,29 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
   if (/rectus-femoris|vastus-medialis|vastus-intermedius|sartorius|psoas|iliacus|tibialis-anterior|fibularis/.test(mId)) {
-    if (scTool === 'hand') {
-      out.sit = 0.92 * k;
-      out.trunkFlex = 0.10 * k;
-      const isShin = /tibialis|fibularis/.test(mId);
-      const shinAnkle = isShin ? 0.32 * glideWave : 0;
-      if (isL) {
-        out.legSwingL = 0.28 * k;
-        out.ankleFlexL = shinAnkle * k;
-      } else {
-        out.legSwingR = 0.28 * k;
-        out.ankleFlexR = shinAnkle * k;
-      }
-      out.armRaiseL = 0.28 * k;
-      out.armRaiseR = 0.28 * k;
-      out.elFlexL = 0.68 * k;
-      out.elFlexR = 0.68 * k;
-      out.pronateL = 0.80 * k;
-      out.pronateR = 0.80 * k;
-      return;
+    out.sit = 0.92 * k;
+    out.trunkFlex = 0.10 * k;
+    const isShin = /tibialis|fibularis/.test(mId);
+    const shinAnkle = isShin ? 0.24 * glideWave : 0;
+    if (isL) {
+      out.legSwingL = 0.28 * k;
+      out.ankleFlexL = shinAnkle * k;
+    } else {
+      out.legSwingR = 0.28 * k;
+      out.ankleFlexR = shinAnkle * k;
     }
-    out.prone = 1.0 * k;
-    out.trunkFlex = -0.16 * k;
-    out.headPitch = -0.18 * k;
-    out.armRaiseL = 0.72 * k;
-    out.armRaiseR = 0.72 * k;
-    out.elFlexL = 1.32 * k;
-    out.elFlexR = 1.32 * k;
-    out.pronateL = 0.95 * k;
-    out.pronateR = 0.95 * k;
-    const slide = 0.08 * Math.sin(t * 1.6);
-    out.legSwingL = slide * k;
-    out.legSwingR = slide * k;
+    out.armRaiseL = 0.28 * k;
+    out.armRaiseR = 0.28 * k;
+    out.elFlexL = 0.68 * k;
+    out.elFlexR = 0.68 * k;
+    out.pronateL = 0.80 * k;
+    out.pronateR = 0.80 * k;
     return;
   }
   if (/biceps-femoris|semitendinosus|semimembranosus/.test(mId)) {
     out.sit = 0.98 * k;
     out.trunkFlex = 0.04 * k;
-    const hamRoll = 0.06 * Math.sin(t * 1.6);
+    const hamRoll = 0.05 * Math.sin(t * 1.6);
     if (isL) {
       out.legSwingL = (0.24 + hamRoll) * k;
       out.kneeBend = (0.16 - hamRoll) * k;
@@ -3019,35 +3004,15 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
   if (/flexor-digitorum-brevis|abductor-hallucis|abductor-digiti-minimi-foot|quadratus-plantae|plantar|flexor-hallucis/.test(mId)) {
-    if (scTool === 'hand') {
-      out.sit = 0.94 * k;
-      out.trunkFlex = 0.14 * k;
-      if (isL) out.legSwingL = (0.34 + 0.08 * glideWave) * k;
-      else out.legSwingR = (0.34 + 0.08 * glideWave) * k;
-      out.armRaiseL = 0.36 * k;
-      out.armRaiseR = 0.36 * k;
-      out.elFlexL = 0.68 * k;
-      out.elFlexR = 0.68 * k;
-      return;
-    }
-    out.sit = 0;
-    out.trunkFlex = 0.04 * k;
-    out.kneeBend = (0.08 + 0.04 * (0.5 + 0.5 * rollWave)) * k;
-    if (isL) {
-      out.legSwingL = (0.14 + 0.04 * rollWave) * k;
-      out.legSwingR = -0.18 * k;
-    } else {
-      out.legSwingR = (0.14 + 0.04 * rollWave) * k;
-      out.legSwingL = -0.18 * k;
-    }
-    out.armRaiseL = 0.18 * k;
-    out.armRaiseR = 0.18 * k;
-    out.armSpreadL = 0.12 * k;
-    out.armSpreadR = 0.12 * k;
-    out.elFlexL = 0.48 * k;
-    out.elFlexR = 0.48 * k;
-    out.pronateL = 0.75 * k;
-    out.pronateR = 0.75 * k;
+    out.sit = 0.94 * k;
+    out.trunkFlex = 0.14 * k;
+    const footSwing = scTool === 'hand' ? 0.08 * glideWave : 0.04 * rollWave;
+    if (isL) out.legSwingL = (0.34 + footSwing) * k;
+    else out.legSwingR = (0.34 + footSwing) * k;
+    out.armRaiseL = 0.36 * k;
+    out.armRaiseR = 0.36 * k;
+    out.elFlexL = 0.68 * k;
+    out.elFlexR = 0.68 * k;
     return;
   }
   if (/gastrocnemius|soleus|calcaneal|tibialis-posterior/.test(mId)) {
@@ -3128,10 +3093,9 @@ export function computeSelfCarePose(phase, raw, out, config, k = 1.0) {
     return;
   }
   if (/rhomboid/.test(mId)) {
-    out.sit = 0;
+    out.sit = 0.90 * k;
     out.trunkFlex = 0.08 * k;
-    out.shoulderIn = 0.28 * k;
-    out.kneeBend = (0.10 + 0.08 * (0.5 + 0.5 * rollWave)) * k;
+    out.shoulderIn = 0.26 * k;
     out.armRaiseL = 0.54 * k;
     out.armRaiseR = 0.54 * k;
     out.elFlexL = 0.96 * k;

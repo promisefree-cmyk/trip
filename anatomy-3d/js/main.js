@@ -1,10 +1,10 @@
-import * as dataModule from './data.js?v=20261121c';
-import { createFascia } from './fascia.js?v=20261121c';
-import * as posture from './posture.js?v=20261121c';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261121c';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121c';
-import { createUI } from './ui.js?v=20261121c';
-import { createViewer } from './viewer.js?v=20261121c';
+import * as dataModule from './data.js?v=20261122a';
+import { createFascia } from './fascia.js?v=20261122a';
+import * as posture from './posture.js?v=20261122a';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261122a';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122a';
+import { createUI } from './ui.js?v=20261122a';
+import { createViewer } from './viewer.js?v=20261122a';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -30,7 +30,7 @@ const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPause
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
 let cachedAnatomyDetails = null;
 const preloadAnatomyDetails = () =>
-  import('./anatomy_details.js?v=20261121c')
+  import('./anatomy_details.js?v=20261122a')
     .then((m) => {
       cachedAnatomyDetails = m;
       return m;
@@ -114,7 +114,7 @@ const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261121c');
+    const res = await fetch('models/atlas_metadata.json?v=20261122a');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};
@@ -627,12 +627,6 @@ async function start() {
         return s === 'L' ? 'front-left' : 'front-right';
       }
       if (
-        /rectus-femoris|vastus-intermedius|vastus-medialis|sartorius|tibialis-anterior/.test(id) &&
-        (relCfg?.tool === 'roller' || relCfg?.tool === 'ball')
-      ) {
-        return 'prone-side';
-      }
-      if (
         /gastrocnemius|soleus|biceps-femoris|semitendinosus|semimembranosus|gluteus-maximus|piriformis|latissimus-dorsi|longissimus|iliocostalis|multifidus|spinalis|quadratus-lumborum|trapezius|levator-scapulae|infraspinatus|supraspinatus|teres|subscapularis|splenius|semispinalis|occipitalis|calcaneal|popliteus|tibialis-posterior|triceps/.test(
           id,
         )
@@ -647,13 +641,7 @@ async function start() {
         return s === 'L' ? 'left' : 'right';
       }
       if (
-        (relCfg?.tool === 'roller' || relCfg?.tool === 'ball') &&
-        /rectus-femoris|vastus-medialis|vastus-intermedius|sartorius|tibialis-anterior/.test(id)
-      ) {
-        return s === 'L' ? 'left' : 'right';
-      }
-      if (
-        /biceps-brachii|pectoralis|sternocleidomastoid|scalene|scalenus|platysma|masseter|temporalis|diaphragm|rectus-abdominis|psoas|iliacus|tibialis-anterior|rectus-femoris|vastus-medialis|adductor|gracilis|sartorius/.test(
+        /biceps-brachii|pectoralis|sternocleidomastoid|scalene|scalenus|platysma|masseter|temporalis|diaphragm|rectus-abdominis|psoas|iliacus|tibialis-anterior|rectus-femoris|vastus-medialis|vastus-intermedius|adductor|gracilis|sartorius/.test(
           id,
         )
       ) {
@@ -754,7 +742,7 @@ async function start() {
       } else if (/rhomboid/.test(muscleId)) {
         landmarkIds = ['trapezius', 'rhomboid-major', 'infraspinatus', 'latissimus-dorsi'];
         closeSelfCare = true;
-      } else if (/tibia|fibula|gastrocnemius|soleus|popliteus|calcane/.test(muscleId) && relCfg?.tool === 'hand') {
+      } else if (/tibia|fibula|gastrocnemius|soleus|popliteus|calcane/.test(muscleId)) {
         landmarkIds = [
           'tibialis-anterior',
           'gastrocnemius',

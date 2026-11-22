@@ -1,8 +1,8 @@
-import * as dataModule from './data.js?v=20261121c';
-import { createFascia } from './fascia.js?v=20261121c';
-import * as posture from './posture.js?v=20261121c';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261121c';
-import { createViewer } from './viewer.js?v=20261121c';
+import * as dataModule from './data.js?v=20261122a';
+import { createFascia } from './fascia.js?v=20261122a';
+import * as posture from './posture.js?v=20261122a';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261122a';
+import { createViewer } from './viewer.js?v=20261122a';
 const HABITS = dataModule.HABITS || [];
 const LINES = dataModule.LINES || [];
 const MUSCLE_LAYERS = dataModule.MUSCLE_LAYERS || {};
@@ -115,7 +115,7 @@ function getHabitRoleIds(habit) {
 }
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261121c');
+    const res = await fetch('models/atlas_metadata.json?v=20261122a');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};

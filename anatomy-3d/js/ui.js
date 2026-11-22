@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261121c';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261121c';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261122a';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261122a';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -708,6 +708,9 @@ export function createUI({
     activeLineId: null, // Step1 'lines' 図鑑で選択中のラインID
     focusedRoleMuscleId: null, // Step2 2カラムカードで単体フォーカス中の筋肉ID
     pickedPart: null, // 3D直接タップ時のミニ部位バナー情報
+    causesOpen: false, // Step2「関連の原因をみる」プルダウン開閉状態（初期＝格納）
+    rolesOpen: false, // Step2「縮むところ・伸びるところをみる」プルダウン開閉状態（初期＝格納）
+    explainOpen: false, // Step2「くわしい説明をみる」プルダウン開閉状態（初期＝格納）
     scSteps: [],
     scStepIndex: 0,
     unifiedLayer: 'fascia', // 'fascia' | 'muscle' | 'both'
@@ -821,7 +824,7 @@ export function createUI({
     id: 'step-prog-2',
     disabled: true,
     onclick: () => goToStep(2),
-    text: '② 縮む・伸びる',
+    text: '② 原因の動き',
   });
   const progBtn3 = h('button', {
     type: 'button',
@@ -865,6 +868,9 @@ export function createUI({
       }
       state.step = 1;
       state.focusedRoleMuscleId = null;
+      state.causesOpen = false;
+      state.rolesOpen = false;
+      state.explainOpen = false;
       render();
       scrollTopNow();
       return;
@@ -882,6 +888,9 @@ export function createUI({
       }
       state.step = 2;
       state.focusedRoleMuscleId = null;
+      state.causesOpen = false;
+      state.rolesOpen = false;
+      state.explainOpen = false;
       render();
       scrollTopNow();
       return;
@@ -902,6 +911,9 @@ export function createUI({
     state.currentHabit = resolved;
     state.currentStory = null;
     state.focusedRoleMuscleId = null;
+    state.causesOpen = false;
+    state.rolesOpen = false;
+    state.explainOpen = false;
     state.step = 2;
     render();
     scrollTopNow();
@@ -924,6 +936,9 @@ export function createUI({
       null;
     state.currentHabit = fallbackHabit;
     state.focusedRoleMuscleId = null;
+    state.causesOpen = false;
+    state.rolesOpen = false;
+    state.explainOpen = false;
     state.step = 2;
     render();
     scrollTopNow();
@@ -1662,24 +1677,62 @@ export function createUI({
         h('h2', { class: 'subnav-title', text: cleanTitle(hb.label) }),
       ),
     );
+    wrap.append(
+      h(
+        'button',
+        {
+          type: 'button',
+          id: 'btn-open-step3',
+          class: 'primary-step3-cta',
+          onclick: () => openStep3SelfCare(hb),
+        },
+        h('span', { text: '▶ ③ ゆるめる順番（3Dマッサージ）を見る' }),
+      ),
+    );
     if (state.feelingContext && state.feelingContext.habits.length > 1) {
       wrap.append(
         h(
-          'div',
-          { class: 'context-switcher-box' },
-          h('p', {
-            class: 'context-switcher-label',
-            text: `「${state.feelingContext.label}」に関わる動きを切り替え：`,
-          }),
+          'details',
+          {
+            class: 'detail-drawer',
+            id: 'drawer-related-causes',
+            open: state.causesOpen,
+            ontoggle: (e) => {
+              state.causesOpen = e.currentTarget.open;
+              if (e.currentTarget.open) {
+                e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            },
+          },
+          h(
+            'summary',
+            { class: 'detail-drawer-summary' },
+            h('span', { text: `関連の原因をみる（${state.feelingContext.habits.length}件）` }),
+            h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+          ),
           h(
             'div',
-            { class: 'pill-wrap-row' },
-            ...state.feelingContext.habits.map((cand) =>
-              h('button', {
-                type: 'button',
-                class: `action-pill-btn${cand.id === hb.id ? ' is-active' : ''}`,
-                text: cleanTitle(cand.label),
-                onclick: () => openHabitStep2(cand, { keepFeelingContext: true }),
+            { class: 'detail-drawer-body is-compact' },
+            h('p', {
+              class: 'context-switcher-label',
+              text: `「${state.feelingContext.label}」に関わる他の原因動作：`,
+            }),
+            h(
+              'div',
+              { class: 'related-cause-list' },
+              ...state.feelingContext.habits.map((cand) => {
+                const isCur = cand.id === hb.id;
+                return h(
+                  'button',
+                  {
+                    type: 'button',
+                    class: `related-cause-btn${isCur ? ' is-active' : ''}`,
+                    'aria-pressed': String(isCur),
+                    onclick: () => openHabitStep2(cand, { keepFeelingContext: true }),
+                  },
+                  h('span', { class: 'related-cause-name', text: cleanTitle(cand.label) }),
+                  h('span', { class: 'related-cause-badge', 'aria-hidden': 'true', text: isCur ? '表示中' : 'みる ›' }),
+                );
               }),
             ),
           ),
@@ -1699,6 +1752,7 @@ export function createUI({
           'data-role-muscle': mObj.id,
           'aria-pressed': String(isFocused),
           onclick: () => {
+            state.rolesOpen = true;
             if (state.focusedRoleMuscleId === mObj.id) {
               state.focusedRoleMuscleId = null;
               emit('trigger-line', hb.id);
@@ -1710,73 +1764,84 @@ export function createUI({
           },
         },
         h('span', { text: mObj.label }),
-        h('span', { 'aria-hidden': 'true', text: isFocused ? '戻す' : '見る' }),
+        h('span', { 'aria-hidden': 'true', text: isFocused ? '戻す' : 'みる' }),
       );
     };
     wrap.append(
       h(
-        'div',
-        { class: 'cause-symptom-grid' },
-        h(
-          'div',
-          { class: 'role-card is-short' },
-          h(
-            'h3',
-            { class: 'role-card-head' },
-            h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-            h('span', { text: '縮むところ' }),
-          ),
-          h(
-            'div',
-            { class: 'role-pill-list' },
-            ...(shortMuscles.length
-              ? shortMuscles.map(makeRoleMuscleButton)
-              : [h('span', { class: 'row-sub', text: '縮む部位' })]),
-          ),
-        ),
-        h(
-          'div',
-          { class: 'role-card is-long' },
-          h(
-            'h3',
-            { class: 'role-card-head' },
-            h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-            h('span', { text: '伸びるところ' }),
-          ),
-          h(
-            'div',
-            { class: 'role-pill-list' },
-            ...(longMuscles.length
-              ? longMuscles.map(makeRoleMuscleButton)
-              : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '伸びる部位') })]),
-          ),
-        ),
-      ),
-    );
-    if (state.focusedRoleMuscleId) {
-      wrap.append(
-        h('button', {
-          type: 'button',
-          class: 'focus-reset-btn',
-          text: '全体の動きアニメーションに戻す',
-          onclick: () => {
-            state.focusedRoleMuscleId = null;
-            emit('trigger-line', hb.id);
-            render();
-          },
-        }),
-      );
-    }
-    wrap.append(
-      h(
-        'button',
+        'details',
         {
-          type: 'button',
-          id: 'btn-open-step3',
-          class: 'primary-step3-cta',
-          onclick: () => openStep3SelfCare(hb),
+          class: 'detail-drawer',
+          id: 'drawer-shrink-stretch',
+          open: state.rolesOpen,
+          ontoggle: (e) => {
+            state.rolesOpen = e.currentTarget.open;
+            if (e.currentTarget.open) {
+              e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          },
         },
-        h('span', { text: '▶ ③ ゆるめる順番（3Dマッサージ）を見る' }),
+        h(
+          'summary',
+          { class: 'detail-drawer-summary' },
+          h('span', { text: '縮むところ・伸びるところをみる' }),
+          h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+        ),
+        h(
+          'div',
+          { class: 'detail-drawer-body is-roles' },
+          h(
+            'div',
+            { class: 'cause-symptom-grid' },
+            h(
+              'div',
+              { class: 'role-card is-short' },
+              h(
+                'h3',
+                { class: 'role-card-head' },
+                h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
+                h('span', { text: '縮むところ' }),
+              ),
+              h(
+                'div',
+                { class: 'role-pill-list' },
+                ...(shortMuscles.length
+                  ? shortMuscles.map(makeRoleMuscleButton)
+                  : [h('span', { class: 'row-sub', text: '縮む部位' })]),
+              ),
+            ),
+            h(
+              'div',
+              { class: 'role-card is-long' },
+              h(
+                'h3',
+                { class: 'role-card-head' },
+                h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
+                h('span', { text: '伸びるところ' }),
+              ),
+              h(
+                'div',
+                { class: 'role-pill-list' },
+                ...(longMuscles.length
+                  ? longMuscles.map(makeRoleMuscleButton)
+                  : [h('span', { class: 'row-sub', text: sanitizeText(hb.pulledLabel || hb.symptom || '伸びる部位') })]),
+              ),
+            ),
+          ),
+          state.focusedRoleMuscleId
+            ? h('button', {
+                type: 'button',
+                class: 'focus-reset-btn',
+                style: { 'margin-top': '8px' },
+                text: '全体の動きアニメーションに戻す',
+                onclick: () => {
+                  state.focusedRoleMuscleId = null;
+                  emit('trigger-line', hb.id);
+                  render();
+                },
+              })
+            : null,
+        ),
       ),
     );
     const causalSummary = resolveCausalSummaryText(hb);
@@ -1787,7 +1852,10 @@ export function createUI({
       'details',
       {
         class: 'detail-drawer',
+        id: 'drawer-detail-explain',
+        open: state.explainOpen,
         ontoggle: (e) => {
+          state.explainOpen = e.currentTarget.open;
           if (e.currentTarget.open) {
             e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
@@ -1796,7 +1864,7 @@ export function createUI({
       h(
         'summary',
         { class: 'detail-drawer-summary' },
-        h('span', { text: 'くわしい説明を見る' }),
+        h('span', { text: 'くわしい説明をみる' }),
         h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
       ),
       h(
@@ -1845,60 +1913,6 @@ export function createUI({
         ),
       ),
     );
-    const sIds = [...new Set([...(curStep.shortenCore || []), ...(curStep.shorten || [])])].slice(0, 3);
-    const lIds = [...new Set([...(curStep.lengthenAntagonist || []), ...(curStep.lengthen || [])])].slice(0, 3);
-    if (sIds.length || lIds.length) {
-      wrap.append(
-        h(
-          'div',
-          { class: 'cause-symptom-grid' },
-          h(
-            'div',
-            { class: 'role-card is-short' },
-            h(
-              'h3',
-              { class: 'role-card-head' },
-              h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-              h('span', { text: '縮むところ' }),
-            ),
-            h(
-              'div',
-              { class: 'role-pill-list' },
-              ...sIds.map((id) =>
-                h('button', {
-                  type: 'button',
-                  class: 'role-muscle-btn',
-                  text: shortMuscleNameOf(id),
-                  onclick: () => emit('inspect', id),
-                }),
-              ),
-            ),
-          ),
-          h(
-            'div',
-            { class: 'role-card is-long' },
-            h(
-              'h3',
-              { class: 'role-card-head' },
-              h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
-              h('span', { text: '伸びるところ' }),
-            ),
-            h(
-              'div',
-              { class: 'role-pill-list' },
-              ...lIds.map((id) =>
-                h('button', {
-                  type: 'button',
-                  class: 'role-muscle-btn',
-                  text: shortMuscleNameOf(id),
-                  onclick: () => emit('inspect', id),
-                }),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
     if (state.currentHabit) {
       wrap.append(
         h(
@@ -1912,16 +1926,104 @@ export function createUI({
         ),
       );
     }
+    const sIds = [...new Set([...(curStep.shortenCore || []), ...(curStep.shorten || [])])].slice(0, 3);
+    const lIds = [...new Set([...(curStep.lengthenAntagonist || []), ...(curStep.lengthen || [])])].slice(0, 3);
+    if (sIds.length || lIds.length) {
+      wrap.append(
+        h(
+          'details',
+          {
+            class: 'detail-drawer',
+            id: 'drawer-shrink-stretch',
+            open: state.rolesOpen,
+            ontoggle: (e) => {
+              state.rolesOpen = e.currentTarget.open;
+            },
+          },
+          h(
+            'summary',
+            { class: 'detail-drawer-summary' },
+            h('span', { text: '縮むところ・伸びるところをみる' }),
+            h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
+          ),
+          h(
+            'div',
+            { class: 'detail-drawer-body is-roles' },
+            h(
+              'div',
+              { class: 'cause-symptom-grid' },
+              h(
+                'div',
+                { class: 'role-card is-short' },
+                h(
+                  'h3',
+                  { class: 'role-card-head' },
+                  h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
+                  h('span', { text: '縮むところ' }),
+                ),
+                h(
+                  'div',
+                  { class: 'role-pill-list' },
+                  ...sIds.map((id) =>
+                    h('button', {
+                      type: 'button',
+                      class: 'role-muscle-btn',
+                      text: shortMuscleNameOf(id),
+                      onclick: () => {
+                        state.rolesOpen = true;
+                        emit('inspect', id);
+                      },
+                    }),
+                  ),
+                ),
+              ),
+              h(
+                'div',
+                { class: 'role-card is-long' },
+                h(
+                  'h3',
+                  { class: 'role-card-head' },
+                  h('span', { class: 'role-dot', 'aria-hidden': 'true' }),
+                  h('span', { text: '伸びるところ' }),
+                ),
+                h(
+                  'div',
+                  { class: 'role-pill-list' },
+                  ...lIds.map((id) =>
+                    h('button', {
+                      type: 'button',
+                      class: 'role-muscle-btn',
+                      text: shortMuscleNameOf(id),
+                      onclick: () => {
+                        state.rolesOpen = true;
+                        emit('inspect', id);
+                      },
+                    }),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     const storyDetailText = sanitizeText(curStep.body || curStep.text || curStep.desc || story.lead || '');
     if (storyDetailText) {
       wrap.append(
         h(
           'details',
-          { class: 'detail-drawer' },
+          {
+            class: 'detail-drawer',
+            id: 'drawer-detail-explain',
+            open: state.explainOpen,
+            ontoggle: (e) => {
+              state.explainOpen = e.currentTarget.open;
+            },
+          },
           h(
             'summary',
             { class: 'detail-drawer-summary' },
-            h('span', { text: 'くわしい説明を見る' }),
+            h('span', { text: 'くわしい説明をみる' }),
             h('span', { class: 'detail-drawer-arrow', 'aria-hidden': 'true', text: '▾' }),
           ),
           h(
@@ -2177,6 +2279,9 @@ export function createUI({
       state.activeLineId = null;
       state.focusedRoleMuscleId = null;
       state.pickedPart = null;
+      state.causesOpen = false;
+      state.rolesOpen = false;
+      state.explainOpen = false;
       state.scSteps = [];
       state.scStepIndex = 0;
       render();
