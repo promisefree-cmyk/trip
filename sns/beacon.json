@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "alg": "PBKDF2-SHA256/AES-256-GCM",
+  "iter": 150000,
+  "salt": "7Hp8LnSbVN/LnztKvjfp2g==",
+  "iv": "2NqwY86rjlqyCXcj",
+  "ct": "TCTATrpQIpiiJZvw9XaCbD8DYaCaOA6SWndd4Fd2bjae4ZL+BG9MCLCh+TNScMEH0ds+IOuxO4a5WTFs6BGgbTFDG9UTDDJr4H/2BuYKq/ZQamJ6cRQyg3r6ax6BgzTovwM4dJfDIVKuiRS74+pr0LACGEqHOHIYZU9hA/jpsjBEDeG4",
+  "updatedAt": "2026-11-22T13:08:05.056Z"
+}
