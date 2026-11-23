@@ -1,10 +1,10 @@
-import * as dataModule from './data.js?v=20261123b';
-import { createFascia } from './fascia.js?v=20261123b';
-import * as posture from './posture.js?v=20261123b';
-import { resolveCareProfile } from './selfcare_guide3d.js?v=20261123b';
-import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261123b';
-import { createUI } from './ui.js?v=20261123b';
-import { createViewer } from './viewer.js?v=20261123b';
+import * as dataModule from './data.js?v=20261123c';
+import { createFascia } from './fascia.js?v=20261123c';
+import * as posture from './posture.js?v=20261123c';
+import { resolveCareProfile } from './selfcare_guide3d.js?v=20261123c';
+import { createUnifiedFasciaSheets } from './unified_fascia_sheets.js?v=20261123c';
+import { createUI } from './ui.js?v=20261123c';
+import { createViewer } from './viewer.js?v=20261123c';
 const TRIGGER_LINES = dataModule.TRIGGER_LINES || dataModule.GOLDEN_LINES || [];
 const LINES = dataModule.LINES || [];
 const HABITS = dataModule.HABITS || [];
@@ -30,7 +30,7 @@ const setPosePaused = typeof posture.setPaused === 'function' ? posture.setPause
 const isPosePaused = typeof posture.isPaused === 'function' ? posture.isPaused : () => false;
 let cachedAnatomyDetails = null;
 const preloadAnatomyDetails = () =>
-  import('./anatomy_details.js?v=20261123b')
+  import('./anatomy_details.js?v=20261123c')
     .then((m) => {
       cachedAnatomyDetails = m;
       return m;
@@ -114,7 +114,7 @@ const jaMessage = (err) =>
   err && err.ja && err.message ? err.message : '読み込みに失敗しました。ページを再読み込みしてください。';
 async function loadNames() {
   try {
-    const res = await fetch('models/atlas_metadata.json?v=20261123b');
+    const res = await fetch('models/atlas_metadata.json?v=20261123c');
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const names = {};

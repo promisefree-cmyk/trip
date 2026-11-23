@@ -1,5 +1,5 @@
-import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261123b';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261123b';
+import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261123c';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261123c';
 const isSafeHttpsUrl = (raw) => {
   if (typeof raw !== 'string') return false;
   const trimmed = raw.trim();
@@ -11,18 +11,67 @@ const isSafeHttpsUrl = (raw) => {
     return false;
   }
 };
+const CLINIC_FALLBACK_KEYS = [
+  'clinicCtaUrl',
+  'clinicMenuUrl',
+  'clinicCheckUrl',
+  'clinicMonitorUrl',
+  'clinicCtaLabel',
+  'clinicCtaSub',
+  'clinicMenuLabel',
+  'clinicCheckLabel',
+  'clinicMonitorLabel',
+];
+const LEGACY_GENERIC_CTA_LABEL = 'セルフケアで取れない深いねじれをプロに相談する';
+const LEGACY_GENERIC_CTA_SUB = '長年のクセで固まった筋膜や姿勢のバランスを専門家がチェックします';
 function loadMonetizeConfig() {
-  const base = { ...(MONETIZE_DEFAULTS || {}) };
+  const defaults = MONETIZE_DEFAULTS || {};
+  const base = { ...defaults };
+  let hadEmptyLegacyClinicUrl = false;
   try {
     const raw = window.localStorage?.getItem(MONETIZE_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        hadEmptyLegacyClinicUrl = typeof parsed.clinicCtaUrl === 'string' && parsed.clinicCtaUrl.trim() === '';
         Object.assign(base, parsed);
+        if (parsed.deployMode === 'public') {
+          base.deployMode = 'public';
+        } else if (parsed.deployMode !== 'clinic') {
+          base.deployMode = defaults.deployMode || 'clinic';
+        }
       }
     }
   } catch {}
+  if (hadEmptyLegacyClinicUrl) {
+    if (base.clinicCtaLabel === LEGACY_GENERIC_CTA_LABEL) {
+      base.clinicCtaLabel = defaults.clinicCtaLabel || '';
+    }
+    if (base.clinicCtaSub === LEGACY_GENERIC_CTA_SUB) {
+      base.clinicCtaSub = defaults.clinicCtaSub || '';
+    }
+  }
+  for (const key of CLINIC_FALLBACK_KEYS) {
+    if (typeof base[key] !== 'string' || base[key].trim() === '') {
+      base[key] = defaults[key] || '';
+    }
+  }
   return base;
+}
+function syncHeaderHpElement(el) {
+  if (!el) return;
+  const mCfg = loadMonetizeConfig();
+  if (mCfg.deployMode === 'clinic' && isSafeHttpsUrl(mCfg.clinicCtaUrl)) {
+    el.href = mCfg.clinicCtaUrl.trim();
+    el.target = '_blank';
+    el.rel = 'noopener noreferrer';
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+if (typeof document !== 'undefined') {
+  syncHeaderHpElement(document.getElementById('btn-header-hp'));
 }
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
@@ -743,6 +792,7 @@ export function createUI({
     paused: false,
   };
   /* ---------- 外部シェルボタン（index.html）結線 ---------- */
+  const btnHeaderHp = document.getElementById('btn-header-hp');
   const btnThemeLight = document.getElementById('btn-theme-light');
   const btnThemeDark = document.getElementById('btn-theme-dark');
   const layerSwitchEl = document.getElementById('layer-switch');
@@ -756,6 +806,9 @@ export function createUI({
   const stageLoaderText = document.getElementById('stage-loader-text');
   const stageLoaderFill = document.getElementById('stage-loader-fill');
   const metaThemeColor = document.getElementById('meta-theme-color');
+  function syncHeaderHpLink() {
+    syncHeaderHpElement(btnHeaderHp);
+  }
   function applyThemeDOM(themeMode) {
     const next = themeMode === 'dark' ? 'dark' : 'light';
     state.theme = next;
@@ -1207,6 +1260,37 @@ export function createUI({
       if (state.searchQuery.trim()) return frag;
     }
     if (state.step1Route === 'home') {
+      const mCfgHome = loadMonetizeConfig();
+      const homeClinicHref = isSafeHttpsUrl(mCfgHome.clinicCheckUrl)
+        ? mCfgHome.clinicCheckUrl.trim()
+        : isSafeHttpsUrl(mCfgHome.clinicCtaUrl)
+          ? mCfgHome.clinicCtaUrl.trim()
+          : '';
+      const homeClinicCard =
+        mCfgHome.deployMode === 'clinic' && homeClinicHref
+          ? h(
+              'a',
+              {
+                id: 'home-clinic-card',
+                class: 'home-clinic-card',
+                href: homeClinicHref,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              },
+              h(
+                'span',
+                { class: 'home-clinic-body' },
+                h('span', {
+                  class: 'home-clinic-kicker',
+                  text: '監修：Rooton カイロプラクティック（東京・中目黒）',
+                }),
+                h('span', {
+                  class: 'home-clinic-title',
+                  text: 'どこから引っぱられているか「30秒セルフチェック」で調べる ↗',
+                }),
+              ),
+            )
+          : null;
       const stack = h(
         'div',
         { class: 'full-row-stack' },
@@ -1265,12 +1349,15 @@ export function createUI({
             },
           },
           h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('line')),
-            h('span', { class: 'row-body' },
-              h('span', { class: 'row-title', text: '全身11本の筋膜ライン図鑑' }),
-              h('span', { class: 'row-sub', text: '頭から足裏までつながる11本の筋膜シート一覧' }),
-            ),
-            h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+          h(
+            'span',
+            { class: 'row-body' },
+            h('span', { class: 'row-title', text: '全身11本の筋膜ライン図鑑' }),
+            h('span', { class: 'row-sub', text: '頭から足裏までつながる11本の筋膜シート一覧' }),
           ),
+          h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+        ),
+        homeClinicCard,
         isAdminView
           ? h(
               'a',
@@ -2333,25 +2420,70 @@ export function createUI({
       wrap.append(shareBtn);
       const mCfg = loadMonetizeConfig();
       if (mCfg.deployMode === 'clinic' && isSafeHttpsUrl(mCfg.clinicCtaUrl)) {
+        const formatSubBtnText = (label, fallback) => {
+          const baseText = String(label || fallback)
+            .replace(/\s*↗\s*$/u, '')
+            .trim();
+          return `${baseText} ↗`;
+        };
+        const subButtons = [];
+        if (isSafeHttpsUrl(mCfg.clinicMenuUrl)) {
+          subButtons.push(
+            h(
+              'a',
+              {
+                id: 'sc-clinic-menu',
+                class: 'sc-clinic-sub-btn',
+                href: mCfg.clinicMenuUrl.trim(),
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              },
+              h('span', { text: formatSubBtnText(mCfg.clinicMenuLabel, '料金・施術の流れ') }),
+            ),
+          );
+        }
+        if (isSafeHttpsUrl(mCfg.clinicMonitorUrl)) {
+          subButtons.push(
+            h(
+              'a',
+              {
+                id: 'sc-clinic-monitor',
+                class: 'sc-clinic-sub-btn',
+                href: mCfg.clinicMonitorUrl.trim(),
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              },
+              h('span', { text: formatSubBtnText(mCfg.clinicMonitorLabel, '週1名・モニター枠') }),
+            ),
+          );
+        }
         wrap.append(
           h(
-            'a',
-            {
-              href: mCfg.clinicCtaUrl.trim(),
-              target: '_blank',
-              rel: 'noopener noreferrer',
-              class: 'sc-clinic-cta-card',
-              id: 'sc-clinic-cta',
-            },
+            'div',
+            { class: 'sc-clinic-cta-wrap' },
             h(
-              'span',
-              { class: 'sc-clinic-cta-body' },
-              h('span', { class: 'sc-clinic-cta-title', text: mCfg.clinicCtaLabel || 'プロに相談する' }),
-              mCfg.clinicCtaSub
-                ? h('span', { class: 'sc-clinic-cta-sub', text: mCfg.clinicCtaSub })
-                : null,
+              'a',
+              {
+                id: 'sc-clinic-cta',
+                class: 'sc-clinic-cta-card',
+                href: mCfg.clinicCtaUrl.trim(),
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              },
+              h(
+                'span',
+                { class: 'sc-clinic-cta-body' },
+                h('span', {
+                  class: 'sc-clinic-cta-title',
+                  text: mCfg.clinicCtaLabel || 'セルフケアで戻るときは、全身のつながりを相談する',
+                }),
+                mCfg.clinicCtaSub
+                  ? h('span', { class: 'sc-clinic-cta-sub', text: mCfg.clinicCtaSub })
+                  : null,
+              ),
+              h('span', { class: 'sc-clinic-cta-ext', 'aria-hidden': 'true', text: '↗' }),
             ),
-            h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+            subButtons.length ? h('div', { class: 'sc-clinic-sub-row' }, ...subButtons) : null,
           ),
         );
       } else if (
@@ -2389,6 +2521,7 @@ export function createUI({
   }
   /* ---------- メイン再描画 ---------- */
   function render() {
+    syncHeaderHpLink();
     syncProgressBar();
     scrollBody.textContent = '';
     if (state.step === 3) {

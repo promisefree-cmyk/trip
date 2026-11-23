@@ -1,9 +1,15 @@
 export const MONETIZE_STORAGE_KEY = 'fascia_monetize_config_v1';
 export const MONETIZE_DEFAULTS = Object.freeze({
   deployMode: 'clinic',
-  clinicCtaLabel: 'セルフケアで取れない深いねじれをプロに相談する',
-  clinicCtaSub: '長年のクセで固まった筋膜や姿勢のバランスを専門家がチェックします',
-  clinicCtaUrl: '',
+  clinicCtaLabel: 'セルフケアで戻るときは、全身のつながりを相談する',
+  clinicCtaSub: 'Rooton カイロプラクティック（東京・中目黒／WHO基準カイロプラクター 杉山 慶彦）',
+  clinicCtaUrl: 'https://rootonchiro.com/',
+  clinicMenuLabel: '料金・施術の流れ',
+  clinicMenuUrl: 'https://rootonchiro.com/menu/',
+  clinicCheckLabel: '30秒セルフチェック',
+  clinicCheckUrl: 'https://rootonchiro.com/check/',
+  clinicMonitorLabel: '週1名・モニター枠',
+  clinicMonitorUrl: 'https://rootonchiro.com/monitor/',
   ballUrl:
     'https://www.amazon.co.jp/s?k=%E3%83%9E%E3%83%83%E3%82%B5%E3%83%BC%E3%82%B8%E3%83%9C%E3%83%BC%E3%83%AB+%E7%AD%8B%E8%86%9C%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9',
   rollerUrl:
