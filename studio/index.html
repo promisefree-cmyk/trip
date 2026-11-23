@@ -4,17 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>制作・同時投稿スタジオ — J.A.R.V.I.S. 接続案内</title>
+<title>Rooton Master Studio — 全画面ダイレクト接続</title>
 <style>
   :root {
     --bg: #0B111E;
     --surface: #131C2E;
-    --border: rgba(197, 160, 89, 0.28);
+    --border: rgba(197, 160, 89, 0.32);
     --gold: #C5A059;
+    --emerald: #2FB07D;
     --ink: #F8FAFC;
     --muted: #94A3B8;
+    --danger: #FCA5A5;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
@@ -24,97 +27,188 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 24px;
-    line-height: 1.75;
+    padding: 20px;
+    line-height: 1.7;
   }
   .card {
-    max-width: 480px;
+    max-width: 460px;
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 36px 28px;
+    padding: 32px 24px;
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
     text-align: center;
   }
   .eyebrow {
     display: inline-block;
-    font-size: 11.5px;
+    font-size: 11px;
     letter-spacing: 0.14em;
     color: var(--gold);
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   h1 {
     font-size: 20px;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     color: var(--ink);
-    letter-spacing: 0.03em;
     font-weight: 700;
   }
   p {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--muted);
-    margin: 0 0 22px;
+    margin: 0 0 18px;
   }
   .status {
-    font-size: 13.5px;
+    font-size: 13px;
     color: #E2E8F0;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 13px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 14px;
     border-radius: 12px;
-    margin-bottom: 22px;
+    margin-bottom: 18px;
+  }
+  .status.err {
+    border-color: rgba(248, 113, 113, 0.45);
+    color: var(--danger);
+  }
+  .key-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  .key-form[hidden] { display: none; }
+  .key-input {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(197, 160, 89, 0.45);
+    background: #0A101B;
+    color: var(--ink);
+    font-size: 16px;
   }
   .links {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
-  a.btn {
+  .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 50px;
+    min-height: 48px;
+    width: 100%;
     text-decoration: none;
-    padding: 14px 20px;
+    padding: 12px 18px;
     border-radius: 12px;
+    border: 0;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14.5px;
+    cursor: pointer;
     background: var(--gold);
     color: #0B111E;
     transition: opacity 0.2s ease;
   }
-  a.btn:hover { opacity: 0.92; }
-  a.btn.sub {
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.55; cursor: wait; }
+  .btn.emerald {
+    background: var(--emerald);
+    color: #06130E;
+  }
+  .btn.sub {
     background: transparent;
     color: #E2E8F0;
     border: 1px solid rgba(255, 255, 255, 0.18);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13.5px;
   }
 </style>
 </head>
 <body>
 <main class="card">
-  <span class="eyebrow">PRIVATE CREATIVE GATEWAY</span>
-  <h1>記事・SNS同時投稿スタジオ</h1>
-  <p>セキュリティ保護のため、スタジオは本人認証済みの J.A.R.V.I.S. 総司令室から自動で起動・接続されます。</p>
-  <div id="status" class="status">接続先を確認しています…</div>
+  <span class="eyebrow">DIRECT FULL-SCREEN GATEWAY</span>
+  <h1>Rooton Master Studio</h1>
+  <p>枠内ではなく全画面でそのまま開きます。初回1回だけ認証すれば次回から0タップで直通します。</p>
+  <div id="status" class="status">接続先を自動確認しています…</div>
+
+  <form id="key-form" class="key-form" hidden>
+    <label for="key-input" style="font-size:12px; color:#CBD5E1; font-weight:600;">J.A.R.V.I.S. 専用ペアリングキー（初回1回のみ・端末に保存）</label>
+    <input id="key-input" class="key-input" type="password" autocomplete="off" placeholder="64文字のペアリングキーを貼り付け" required />
+    <button type="submit" class="btn emerald" id="btn-unlock">保存して全画面スタジオを開く</button>
+  </form>
+
   <div class="links">
-    <a id="btn-jarvis" class="btn" href="https://promisefree-cmyk.github.io/trip/jarvis/">J.A.R.V.I.S. 総司令室からスタジオを開く</a>
-    <a class="btn sub" href="http://localhost:8788/apps/studio/">自宅PCで直接スタジオを開く</a>
+    <a id="btn-direct" class="btn emerald" href="#" hidden>↗ 全画面スタジオを今すぐ開く</a>
+    <a class="btn sub" href="../jarvis/">J.A.R.V.I.S. 総司令室を開く</a>
+    <a class="btn sub" href="http://localhost:8788/apps/studio/">自宅PCから直接スタジオを開く</a>
   </div>
 </main>
 <script>
-(async function() {
-  const JARVIS_PORTAL_URL = "https://promisefree-cmyk.github.io/trip/jarvis/";
+(() => {
+  "use strict";
+  const STORAGE_KEY_NAME = "jarvis_master_key";
+  const TUNNEL_RE = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i;
   const statusEl = document.getElementById("status");
-  const btnJarvis = document.getElementById("btn-jarvis");
+  const keyForm = document.getElementById("key-form");
+  const keyInput = document.getElementById("key-input");
+  const btnUnlock = document.getElementById("btn-unlock");
+  const btnDirect = document.getElementById("btn-direct");
+  let isConnecting = false;
 
-  async function fetchWithTimeout(url, timeoutMs) {
+  function setStatus(msg, isErr = false) {
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("err", Boolean(isErr));
+  }
+
+  function hexToBytes(hex) {
+    const clean = (hex || "").trim().toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(clean)) {
+      throw new Error("ペアリングキーは64文字の英数字（0〜9, a〜f）で入力してください。");
+    }
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i += 1) {
+      bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+
+  function b64ToBytes(b64) {
+    const bin = window.atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  async function decryptBeacon(beaconObj, masterKeyHex) {
+    if (!beaconObj || beaconObj.v !== 1 || !beaconObj.iv || !beaconObj.ct) {
+      throw new Error("接続ビーコンの形式が正しくありません。");
+    }
+    const keyBytes = hexToBytes(masterKeyHex);
+    try {
+      const cryptoKey = await window.crypto.subtle.importKey(
+        "raw",
+        keyBytes,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+      const plain = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: b64ToBytes(beaconObj.iv), tagLength: 128 },
+        cryptoKey,
+        b64ToBytes(beaconObj.ct)
+      );
+      return JSON.parse(new TextDecoder("utf-8").decode(plain));
+    } catch (_err) {
+      throw new Error("ペアリングキーが一致しないか、接続情報の復号に失敗しました。");
+    }
+  }
+
+  async function fetchWithTimeout(url, ms) {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    const timer = setTimeout(() => ctrl.abort(), ms);
     try {
       return await fetch(url, { cache: "no-store", signal: ctrl.signal });
     } finally {
@@ -122,30 +216,95 @@
     }
   }
 
-  let verifiedStudioUrl = "";
-  try {
-    const epRes = await fetchWithTimeout("../endpoint.json?t=" + Date.now(), 1500);
-    if (epRes.ok) {
-      const ep = await epRes.json();
-      if (ep && typeof ep.studioTunnelUrl === "string" && ep.studioTunnelUrl.startsWith("https://")) {
-        const candidate = ep.studioTunnelUrl.replace(/\/+$/, "") + "/";
-        const ping = await fetchWithTimeout(candidate, 2500);
-        if (ping.ok) {
-          verifiedStudioUrl = candidate;
-        }
-      }
+  function captureHashKey() {
+    const raw = window.location.hash || "";
+    if (!raw) return "";
+    const params = new URLSearchParams(raw.replace(/^#/, ""));
+    const k = (params.get("key") || "").trim().toLowerCase();
+    if (/^[0-9a-f]{64}$/.test(k)) {
+      try { window.localStorage.setItem(STORAGE_KEY_NAME, k); } catch (_e) {}
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      return k;
     }
-  } catch (_err) {
-    verifiedStudioUrl = "";
+    return "";
   }
 
-  if (verifiedStudioUrl) {
-    statusEl.textContent = "稼働中のスタジオを確認しました。移動します…";
-    window.location.replace(verifiedStudioUrl);
-  } else {
-    btnJarvis.href = JARVIS_PORTAL_URL;
-    statusEl.textContent = "J.A.R.V.I.S. 総司令室（下のボタン）からスタジオを開いてください。";
+  function loadKey() {
+    const fromHash = captureHashKey();
+    if (fromHash) return fromHash;
+    try {
+      const s = (window.localStorage.getItem(STORAGE_KEY_NAME) || "").trim().toLowerCase();
+      if (/^[0-9a-f]{64}$/.test(s)) return s;
+    } catch (_e) {}
+    return "";
   }
+
+  async function tryConnectWithKey(masterKey) {
+    const normalizedKey = String(masterKey || "").trim().toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(normalizedKey)) {
+      throw new Error("ペアリングキーは64文字の英数字（0〜9, a〜f）で入力してください。");
+    }
+    btnDirect.hidden = true;
+    btnDirect.removeAttribute("href");
+    setStatus("最新の自宅PCトンネルを復号・確認中…");
+    const bRes = await fetchWithTimeout("../jarvis/beacon.json?t=" + Date.now(), 4000);
+    if (!bRes.ok) throw new Error("接続ビーコンの読み込みに失敗しました。");
+    const beacon = await bRes.json();
+    const payload = await decryptBeacon(beacon, normalizedKey);
+    const baseUrl = String(payload.jarvis_url || payload.url || "").trim().replace(/\/+$/, "");
+    if (!TUNNEL_RE.test(baseUrl)) {
+      throw new Error("接続先URLの検証に失敗しました。");
+    }
+    try {
+      const hp = await fetchWithTimeout(baseUrl + "/api/health-public", 5500);
+      if (!hp.ok) throw new Error("not ok");
+    } catch (_e) {
+      throw new Error("自宅PCの J.A.R.V.I.S. トンネルに接続できませんでした（PCスリープ中または再起動中の可能性）。");
+    }
+
+    try { window.localStorage.setItem(STORAGE_KEY_NAME, normalizedKey); } catch (_e) {}
+    const studioUrl = `${baseUrl}/apps/studio/?k=${normalizedKey}`;
+    btnDirect.href = studioUrl;
+    btnDirect.hidden = false;
+    keyForm.hidden = true;
+    setStatus("接続確認完了！全画面スタジオへ自動移動します…");
+    window.location.replace(studioUrl);
+  }
+
+  keyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (isConnecting) return;
+    const k = (keyInput.value || "").trim().toLowerCase();
+    keyInput.value = "";
+    isConnecting = true;
+    btnUnlock.disabled = true;
+    btnUnlock.textContent = "接続確認中…";
+    try {
+      await tryConnectWithKey(k);
+    } catch (err) {
+      setStatus(err.message || "キーの確認に失敗しました。", true);
+      keyForm.hidden = false;
+    } finally {
+      isConnecting = false;
+      btnUnlock.disabled = false;
+      btnUnlock.textContent = "保存して全画面スタジオを開く";
+    }
+  });
+
+  (async () => {
+    const key = loadKey();
+    if (!key) {
+      setStatus("初回のみ J.A.R.V.I.S. ペアリングキーを入力してください（次回から自動接続します）。");
+      keyForm.hidden = false;
+      return;
+    }
+    try {
+      await tryConnectWithKey(key);
+    } catch (err) {
+      setStatus(err.message || "接続確認に失敗しました。キーを再確認するか J.A.R.V.I.S. から開いてください。", true);
+      keyForm.hidden = false;
+    }
+  })();
 })();
 </script>
 </body>

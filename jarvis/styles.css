@@ -672,6 +672,7 @@ body.watch-mode .boot-overlay {
   align-items: center;
   gap: 7px;
   max-width: 100%;
+  text-decoration: none;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
 

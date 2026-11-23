@@ -51,8 +51,6 @@
       split: false,
       slotA: "",
       slotB: "",
-      forceEmbedA: false,
-      forceEmbedB: false,
       activeSlot: "a",
     },
     grill: {
@@ -890,6 +888,20 @@
     }
   }
 
+  function canEmbedSafelyInCurrentOrigin(monitor) {
+    if (!monitor || monitor.embeddable === false) return false;
+    const safeUrl = isSafeNavigationUrl(monitor.url) ? monitor.url : "";
+    if (!safeUrl) return false;
+    try {
+      const parsed = new URL(safeUrl, window.location.href);
+      // Same-origin (e.g., PC localhost:8788 -> /apps/studio/, or github.io -> github.io/trip/...) works cleanly in iframe.
+      // Cross-origin authenticated apps (github.io -> trycloudflare.com/apps/*) break under 3rd-party cookie rules; always open full-screen tab.
+      return parsed.origin === window.location.origin;
+    } catch (_e) {
+      return false;
+    }
+  }
+
   function renderMonitorDock() {
     const listEl = document.getElementById("monitor-dock-list");
     if (!listEl) return;
@@ -914,6 +926,17 @@
       .map((m) => {
         const isActive = activeIds.has(m.id);
         const dotCls = m.state === "ok" ? "" : m.state === "warn" ? "warn" : "idle";
+        const safeHref = isSafeNavigationUrl(m.url) ? m.url : "";
+        const preferDirect = Boolean(safeHref) && !canEmbedSafelyInCurrentOrigin(m);
+        if (preferDirect) {
+          return `
+            <a class="dock-pill dock-pill-direct" href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" title="全画面（新しいタブ）で直接開く">
+              <span class="dock-pill-dot ${dotCls}"></span>
+              <span aria-hidden="true">${escapeHtml(m.icon)}</span>
+              <span class="dock-pill-label">${escapeHtml(m.name)} ↗</span>
+            </a>
+          `;
+        }
         return `
           <button type="button" class="dock-pill ${isActive ? "active" : ""}" data-monitor-id="${escapeHtml(m.id)}">
             <span class="dock-pill-dot ${dotCls}"></span>
@@ -988,8 +1011,7 @@
       }
     }
 
-    const forceEmbed = isB ? state.workspace.forceEmbedB : state.workspace.forceEmbedA;
-    const renderKey = `${monitor.id}|${safeUrl}|${forceEmbed ? "1" : "0"}|${monitor.running ? "up" : "down"}`;
+    const renderKey = `${monitor.id}|${safeUrl}|${canEmbedSafelyInCurrentOrigin(monitor) ? "embed" : "ext"}|${monitor.running ? "up" : "down"}`;
     if (!forceReload && bodyEl.dataset.loadedKey === renderKey) {
       return;
     }
@@ -1022,8 +1044,8 @@
       return;
     }
 
-    // Case 2: External domain known to restrict embedding unless user requests override
-    if (!monitor.embeddable && !forceEmbed) {
+    // Case 2: External or cross-origin authenticated app -> always open directly in a clean full-screen tab
+    if (!canEmbedSafelyInCurrentOrigin(monitor)) {
       const hasSec = isSafeNavigationUrl(monitor.secondary_url);
       bodyEl.innerHTML = `
         <div class="monitor-fallback-card">
@@ -1031,16 +1053,16 @@
           <h3 class="monitor-fallback-title">${escapeHtml(monitor.name)}</h3>
           <p class="monitor-fallback-desc">
             ${escapeHtml(monitor.desc)}<br />
-            ※ 外部サイトのセキュリティ制限により、別ウィンドウでの表示を標準にしています。
+            ※ 認証保護と操作性のため、狭い枠内ではなく全画面（新しいタブ）で直接開きます（パスワード再入力不要）。
           </p>
           <div class="monitor-fallback-actions">
-            <a class="cmd-btn cyan" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">↗ 新しいタブで開く</a>
+            <a class="cmd-btn cyan" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">↗ 全画面（新しいタブ）で開く</a>
             ${
               hasSec
                 ? `<a class="cmd-btn gold" href="${escapeHtml(monitor.secondary_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(monitor.secondary_label || "関連画面を開く")}</a>`
                 : ""
             }
-            <button type="button" class="cmd-btn js-pane-force-embed" data-slot="${slot}">試しに枠内で読み込む</button>
+            <button type="button" class="cmd-btn js-pane-to-bridge">🏠 司令ブリッジへ戻る</button>
           </div>
         </div>
       `;
@@ -1094,6 +1116,17 @@
     const target = findMonitorById(monitorId);
     if (!target) return;
 
+    const safeUrl = isSafeNavigationUrl(target.url) ? target.url : "";
+    if (safeUrl && !canEmbedSafelyInCurrentOrigin(target)) {
+      playMonitorOpenSound();
+      const win = window.open(safeUrl, "_blank", "noopener,noreferrer");
+      if (win) {
+        showToast(`${target.name} を全画面タブで開きました。`);
+        return;
+      }
+      // If browser blocked popup, fall through to Case 2 big direct link card
+    }
+
     const slot =
       preferredSlot ||
       (state.workspace.split && window.innerWidth >= 960 ? state.workspace.activeSlot : "a");
@@ -1101,13 +1134,14 @@
     state.workspace.mode = "monitor";
     if (slot === "b") {
       state.workspace.slotB = monitorId;
-      state.workspace.forceEmbedB = false;
       state.workspace.activeSlot = "a";
     } else {
       state.workspace.slotA = monitorId;
-      state.workspace.forceEmbedA = false;
       if (state.workspace.split && !state.workspace.slotB) {
-        const second = state.monitors.find((m) => m.id !== monitorId) || target;
+        const second =
+          state.monitors.find((m) => m.id !== monitorId && canEmbedSafelyInCurrentOrigin(m)) ||
+          state.monitors.find((m) => m.id !== monitorId) ||
+          target;
         state.workspace.slotB = second.id;
       }
       state.workspace.activeSlot = state.workspace.split ? "b" : "a";
@@ -1131,15 +1165,21 @@
     state.workspace.split = !state.workspace.split;
     if (state.workspace.split) {
       state.workspace.mode = "monitor";
-      if (!state.workspace.slotA && state.monitors.length > 0) {
-        state.workspace.slotA =
-          findMonitorById("deep_science")?.id ||
-          findMonitorById("studio")?.id ||
-          state.monitors[0].id;
+      const embeddableMonitors = state.monitors.filter((m) => canEmbedSafelyInCurrentOrigin(m));
+      const pool = embeddableMonitors.length > 0 ? embeddableMonitors : state.monitors;
+      if (!state.workspace.slotA && pool.length > 0) {
+        const preferredA =
+          pool.find((m) => m.id === "deep_science") ||
+          pool.find((m) => m.id === "studio") ||
+          pool[0];
+        state.workspace.slotA = preferredA.id;
       }
       if (!state.workspace.slotB || state.workspace.slotB === state.workspace.slotA) {
-        const alt = state.monitors.find((m) => m.id !== state.workspace.slotA && m.embeddable !== false);
-        state.workspace.slotB = (alt || state.monitors[0] || { id: "" }).id;
+        const alt =
+          pool.find((m) => m.id !== state.workspace.slotA) ||
+          state.monitors.find((m) => m.id !== state.workspace.slotA && canEmbedSafelyInCurrentOrigin(m)) ||
+          state.monitors.find((m) => m.id !== state.workspace.slotA);
+        state.workspace.slotB = (alt || pool[0] || { id: "" }).id;
       }
       playMonitorOpenSound();
     } else {
@@ -1208,19 +1248,27 @@
     stack.innerHTML = (systems || [])
       .map((sys) => {
         const actions = [];
+        const hasPrimary = isSafeNavigationUrl(sys.primary_url);
+        const canEmbed = canEmbedSafelyInCurrentOrigin({
+          url: sys.primary_url,
+          embeddable: sys.embeddable !== false,
+        });
 
-        actions.push(
-          `<button type="button" class="cmd-btn cyan js-open-monitor" data-monitor-id="${escapeHtml(sys.id)}">🖥️ モニターで開く</button>`
-        );
-
-        if (sys.primary_url && sys.primary_label) {
-          const btnStyle = sys.id === "investment" ? "cmd-btn gold" : "cmd-btn";
+        if (hasPrimary) {
+          const btnStyle = sys.id === "investment" ? "cmd-btn gold" : "cmd-btn cyan";
+          const lbl = sys.primary_label ? `↗ ${sys.primary_label}` : "↗ 全画面で開く";
           actions.push(
-            `<a class="${btnStyle}" href="${escapeHtml(sys.primary_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(sys.primary_label)}</a>`
+            `<a class="${btnStyle}" href="${escapeHtml(sys.primary_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(lbl)}</a>`
           );
         }
 
-        if (sys.secondary_url && sys.secondary_label) {
+        if (canEmbed) {
+          actions.push(
+            `<button type="button" class="cmd-btn js-open-monitor" data-monitor-id="${escapeHtml(sys.id)}">◫ 枠内で開く</button>`
+          );
+        }
+
+        if (sys.secondary_url && sys.secondary_label && isSafeNavigationUrl(sys.secondary_url)) {
           actions.push(
             `<a class="cmd-btn" href="${escapeHtml(sys.secondary_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(sys.secondary_label)}</a>`
           );
@@ -1278,22 +1326,41 @@
         name: c.name,
         desc: c.desc || c.url,
         url: c.url,
+        embeddable: c.embeddable !== false,
       })),
     ];
 
     grid.innerHTML = combined
       .map((item) => {
-        const safeHref = isSafeNavigationUrl(item.url) ? item.url : "#";
+        const safeHref = isSafeNavigationUrl(item.url) ? item.url : "";
+        const canEmbed = canEmbedSafelyInCurrentOrigin({
+          url: safeHref,
+          embeddable: item.embeddable !== false,
+        });
+        const tileBody = `
+          <span class="warp-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+          <span class="warp-meta">
+            <span class="warp-name">${escapeHtml(item.name)}</span>
+            <span class="warp-desc">${escapeHtml(item.desc)}</span>
+          </span>`;
+        if (safeHref) {
+          return `
+          <div class="warp-tile-wrap">
+            <a class="warp-tile" href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(item.name)}を全画面で開く">
+              ${tileBody}
+            </a>
+            ${
+              canEmbed
+                ? `<button type="button" class="warp-pop-btn js-open-monitor" data-monitor-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)}を枠内で開く" title="PC枠内で開く">◫</button>`
+                : `<a class="warp-pop-btn" href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.name)}を全画面で開く" title="全画面で開く">↗</a>`
+            }
+          </div>`;
+        }
         return `
         <div class="warp-tile-wrap">
           <button type="button" class="warp-tile js-open-monitor" data-monitor-id="${escapeHtml(item.id)}">
-            <span class="warp-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
-            <span class="warp-meta">
-              <span class="warp-name">${escapeHtml(item.name)}</span>
-              <span class="warp-desc">${escapeHtml(item.desc)}</span>
-            </span>
+            ${tileBody}
           </button>
-          <a class="warp-pop-btn" href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.name)}を新しいタブで開く" title="新しいタブで開く">↗</a>
         </div>`;
       })
       .join("");
@@ -2356,7 +2423,7 @@
     // Monitor Dock & Workspace Bay Controls
     document.getElementById("monitor-dock-list").addEventListener("click", (ev) => {
       const pill = ev.target.closest(".dock-pill");
-      if (!pill) return;
+      if (!pill || pill.tagName === "A") return;
       openMonitorInWorkspace(pill.dataset.monitorId || "");
     });
 
@@ -2372,7 +2439,6 @@
 
     document.getElementById("monitor-select-a").addEventListener("change", (ev) => {
       state.workspace.slotA = ev.target.value;
-      state.workspace.forceEmbedA = false;
       playMonitorOpenSound();
       renderMonitorDock();
       renderMonitorPane("a", true);
@@ -2380,7 +2446,6 @@
 
     document.getElementById("monitor-select-b").addEventListener("change", (ev) => {
       state.workspace.slotB = ev.target.value;
-      state.workspace.forceEmbedB = false;
       playMonitorOpenSound();
       renderMonitorDock();
       renderMonitorPane("b", true);
@@ -2403,20 +2468,11 @@
       renderWorkspaceBay();
     });
 
-    // Monitor Pane Body Delegation (Force Embed / Back to Bridge / Start Stopped Service)
+    // Monitor Pane Body Delegation (Back to Bridge / Start Stopped Service)
     document.getElementById("monitor-bay-grid").addEventListener("click", (ev) => {
       const bridgeBtn = ev.target.closest(".js-pane-to-bridge");
       if (bridgeBtn) {
         closeMonitorWorkspace();
-        return;
-      }
-      const forceBtn = ev.target.closest(".js-pane-force-embed");
-      if (forceBtn) {
-        const slot = forceBtn.dataset.slot === "b" ? "b" : "a";
-        if (slot === "b") state.workspace.forceEmbedB = true;
-        else state.workspace.forceEmbedA = true;
-        playMonitorOpenSound();
-        renderMonitorPane(slot, true);
         return;
       }
       const startBtn = ev.target.closest(".js-pane-sys-start");
