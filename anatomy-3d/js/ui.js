@@ -1,5 +1,5 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261122b';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261122b';
+import { SAFETY_NOTICE } from './monetize_config.js?v=20261123a';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261123a';
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -725,6 +725,7 @@ export function createUI({
   const btnLayerMuscle = document.getElementById('btn-layer-muscle');
   const btnLayerBoth = document.getElementById('btn-layer-both');
   const btnPlayToggle = document.getElementById('btn-play-toggle');
+  const btnPlayIcon = document.getElementById('btn-play-icon');
   const btnPlayLabel = document.getElementById('btn-play-label');
   const stageLoader = document.getElementById('stage-loader');
   const stageLoaderText = document.getElementById('stage-loader-text');
@@ -777,8 +778,13 @@ export function createUI({
       btnPlayToggle.classList.toggle('is-paused', state.paused);
       btnPlayToggle.setAttribute('aria-pressed', String(state.paused));
     }
+    if (btnPlayIcon) {
+      btnPlayIcon.innerHTML = state.paused
+        ? '<path d="M7 4.8v14.4a.9.9 0 0 0 1.4.75l11-7.2a.9.9 0 0 0 0-1.5l-11-7.2A.9.9 0 0 0 7 4.8Z" fill="currentColor"></path>'
+        : '<rect x="5.5" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"></rect><rect x="14.3" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"></rect>';
+    }
     if (btnPlayLabel) {
-      btnPlayLabel.textContent = state.paused ? '▶ 再生' : '一時停止';
+      btnPlayLabel.textContent = state.paused ? '再生' : '一時停止';
     }
   }
   btnThemeLight?.addEventListener('click', () => {

@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="アナトミー筋膜・筋肉 3D" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json?v=20261122b" />
+  <link rel="manifest" href="manifest.json?v=20261123a" />
   <meta name="description" content="仕事や日常の姿勢・スポーツの動きで「縮んだ所」と「伸びた所」、ゆるめる順番を3Dでひと目で確認できる無料セルフケア図鑑。" />
   <meta property="og:title" content="アナトミー筋膜・筋肉 3D — 縮んだ所・伸びた所＆セルフケア図鑑" />
   <meta property="og:description" content="いつもの姿勢や動作で「縮んだ所」と「伸びた所」、ゆるめる順番を筋膜・筋肉・同時表示の3Dアニメーションで見比べられます。" />
@@ -19,7 +19,7 @@
   <meta property="og:locale" content="ja_JP" />
   <meta name="twitter:card" content="summary" />
   <title>アナトミー筋膜・筋肉 3D — 縮んだ所・伸びた所＆セルフケア図鑑</title>
-  <link rel="stylesheet" href="css/app.css?v=20261122b" />
+  <link rel="stylesheet" href="css/app.css?v=20261123a" />
   <script type="importmap">
     {
       "imports": {
@@ -63,19 +63,10 @@
             </span>
           </div>
 
-          <div id="stage-loader" class="stage-loader" role="status" aria-live="polite">
-            <div class="stage-loader-card">
-              <p id="stage-loader-text" class="stage-loader-text">3Dモデルを準備しています…</p>
-              <div class="stage-loader-track" aria-hidden="true">
-                <span id="stage-loader-fill" class="stage-loader-fill"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="stage-bar" class="unified-stage-bar" role="toolbar" aria-label="3D表示切り替え">
           <div id="layer-switch" class="layer-switch" data-active-index="0" role="group" aria-label="筋膜と筋肉の表示切り替え">
-            <span class="layer-switch-thumb" aria-hidden="true"></span>
+            <div class="layer-switch-track" aria-hidden="true">
+              <span class="layer-switch-thumb"></span>
+            </div>
             <button type="button" id="btn-layer-fascia" class="layer-switch-btn is-active" data-layer-mode="fascia" aria-pressed="true">
               <span class="layer-switch-label">筋膜</span>
             </button>
@@ -88,8 +79,23 @@
           </div>
 
           <button type="button" id="btn-play-toggle" class="stage-play-btn" aria-pressed="false">
-            <span id="btn-play-label">一時停止</span>
+            <span class="stage-play-chip">
+              <svg id="btn-play-icon" class="stage-play-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="5.5" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"></rect>
+                <rect x="14.3" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"></rect>
+              </svg>
+              <span id="btn-play-label">一時停止</span>
+            </span>
           </button>
+
+          <div id="stage-loader" class="stage-loader" role="status" aria-live="polite">
+            <div class="stage-loader-card">
+              <p id="stage-loader-text" class="stage-loader-text">3Dモデルを準備しています…</p>
+              <div class="stage-loader-track" aria-hidden="true">
+                <span id="stage-loader-fill" class="stage-loader-fill"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -99,7 +105,7 @@
     </main>
   </div>
 
-  <script type="module" src="js/main.js?v=20261122b"></script>
+  <script type="module" src="js/main.js?v=20261123a"></script>
   <script>
     if (
       'serviceWorker' in navigator &&
@@ -108,7 +114,7 @@
         location.hostname === '127.0.0.1')
     ) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261122b').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=20261123a').catch(() => {});
       });
     }
   </script>

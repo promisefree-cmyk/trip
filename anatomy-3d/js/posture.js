@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-export const POSTURE_VERSION = '20261122b';
+export const POSTURE_VERSION = '20261123a';
 const POSE_KEYS = [
   'trunkFlex',   // -0.5..1   背中が丸まる（胸椎・腰椎屈曲）
   'headForward', // 0..1      頭が前に出る（スマホ首・ストレートネック）
