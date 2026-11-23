@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import * as posture from './posture.js?v=20261123a';
+import * as posture from './posture.js?v=20261123b';
 const injectPose = typeof posture.injectPose === 'function' ? posture.injectPose : () => {};
 const deformPoint = typeof posture.deformPoint === 'function' ? posture.deformPoint : (p) => p.clone();
 const getRigRole =
@@ -11,7 +11,7 @@ const getRigRole =
     ? posture.getRigRole
     : () => new THREE.Vector4(-1, -1, -1, -1);
 const MODEL_BASE = 'models/';
-const ASSET_QUERY = '?v=20261123a';
+const ASSET_QUERY = '?v=20261123b';
 const IDLE_TIMEOUT_MS = 1800; // アニメーション停止中・静止閲覧時に1.8秒カメラ静止で省電力スリープへ移行（触れれば0msで60fps即復帰）
 const IDLE_FRAME_INTERVAL_MS = 1000; // 静止待機中は描画をほぼ停止しスマホの発熱・電池消費を最小化
 const FALLBACK_BYTES = {

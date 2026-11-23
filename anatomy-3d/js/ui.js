@@ -1,5 +1,29 @@
-import { SAFETY_NOTICE } from './monetize_config.js?v=20261123a';
-import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261123a';
+import { MONETIZE_DEFAULTS, MONETIZE_STORAGE_KEY, SAFETY_NOTICE } from './monetize_config.js?v=20261123b';
+import { getAllowedToolsAndDefault, resolveCareProfile } from './selfcare_guide3d.js?v=20261123b';
+const isSafeHttpsUrl = (raw) => {
+  if (typeof raw !== 'string') return false;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith('https://')) return false;
+  try {
+    const u = new URL(trimmed);
+    return u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+function loadMonetizeConfig() {
+  const base = { ...(MONETIZE_DEFAULTS || {}) };
+  try {
+    const raw = window.localStorage?.getItem(MONETIZE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        Object.assign(base, parsed);
+      }
+    }
+  } catch {}
+  return base;
+}
 const DISCLAIMER_TEXT =
   SAFETY_NOTICE?.shortDisclaimer ||
   '※本アプリは姿勢と筋膜・筋肉のつながりを学ぶセルフケア図鑑であり、医師の診断・治療に代わるものではありません。強い痛みやしびれがある場合は中止してください。';
@@ -692,6 +716,7 @@ export function createUI({
     }
     return steps;
   }
+  const isAdminView = new URLSearchParams(window.location.search).get('admin') === '1';
   /* ---------- UI ステート ---------- */
   const state = {
     step: 1, // 1: 選ぶ | 2: 原因と動き | 3: ゆるめる順番
@@ -952,7 +977,7 @@ export function createUI({
       emit('story', resolved.id);
     }
   }
-  function openStep3SelfCare(hb) {
+  function openStep3SelfCare(hb, initialStepIdx = 0) {
     const resolved = resolveHabit(hb) || state.currentHabit;
     if (!resolved) return;
     state.currentHabit = resolved;
@@ -960,13 +985,14 @@ export function createUI({
     state.focusedRoleMuscleId = null;
     state.pickedPart = null;
     state.scSteps = buildSelfCareSteps(resolved);
-    state.scStepIndex = 0;
+    const clampedIdx = Math.max(0, Math.min(Math.max(0, state.scSteps.length - 1), Number(initialStepIdx) || 0));
+    state.scStepIndex = clampedIdx;
     state.step = 3;
     render();
     scrollTopNow();
-    const first = state.scSteps[0];
-    if (first) {
-      emitSelfCareStepPayload(resolved, first, 0, false);
+    const targetStepObj = state.scSteps[clampedIdx] || state.scSteps[0];
+    if (targetStepObj) {
+      emitSelfCareStepPayload(resolved, targetStepObj, clampedIdx, false);
     } else {
       emit('selfcare', resolved.id);
     }
@@ -1245,23 +1271,25 @@ export function createUI({
             ),
             h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
           ),
-        h(
-          'a',
-          {
-            href: 'fascia-check-list.html',
-            id: 'entry-checklist',
-            class: 'list-row-btn',
-            style: { 'text-decoration': 'none', color: 'inherit' },
-          },
-          h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('play')),
-          h(
-            'span',
-            { class: 'row-body' },
-            h('span', { class: 'row-title', text: '全45アニメーション 最初・最後チェック表' }),
-            h('span', { class: 'row-sub', text: '全動作の開始（0%）と終了（100%）を横並びで確認・修正番号コピー' }),
-          ),
-          h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
-        ),
+        isAdminView
+          ? h(
+              'a',
+              {
+                href: 'fascia-check-list.html?filter=unchecked',
+                id: 'entry-checklist',
+                class: 'list-row-btn',
+                style: { 'text-decoration': 'none', color: 'inherit' },
+              },
+              h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('play')),
+              h(
+                'span',
+                { class: 'row-body' },
+                h('span', { class: 'row-title', text: '【管理用】全45アニメーション チェック表' }),
+                h('span', { class: 'row-sub', text: '未確認アニメーションの確認・修正番号コピー' }),
+              ),
+              h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+            )
+          : null,
       );
       frag.append(stack);
       return frag;
@@ -1402,22 +1430,24 @@ export function createUI({
           ),
           h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
         ),
-        h(
-          'a',
-          {
-            href: 'fascia-check-list.html',
-            class: 'list-row-btn',
-            style: { 'text-decoration': 'none', color: 'inherit' },
-          },
-          h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('habit')),
-          h(
-            'span',
-            { class: 'row-body' },
-            h('span', { class: 'row-title', text: `全${habits.length}アニメーション 最初・最後チェック表` }),
-            h('span', { class: 'row-sub', text: '最初と最後の姿勢を左右に並べて見比べ・番号チェック' }),
-          ),
-          h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
-        ),
+        isAdminView
+          ? h(
+              'a',
+              {
+                href: 'fascia-check-list.html?filter=unchecked',
+                class: 'list-row-btn',
+                style: { 'text-decoration': 'none', color: 'inherit' },
+              },
+              h('span', { class: 'row-leading', 'aria-hidden': 'true' }, icon('habit')),
+              h(
+                'span',
+                { class: 'row-body' },
+                h('span', { class: 'row-title', text: `【管理用】全${habits.length}アニメーション チェック表` }),
+                h('span', { class: 'row-sub', text: '最初と最後の姿勢を左右に並べて見比べ・番号チェック' }),
+              ),
+              h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+            )
+          : null,
       );
       frag.append(stack);
       return frag;
@@ -2239,6 +2269,120 @@ export function createUI({
           ),
         );
       }
+      const shareLabelSpan = h('span', { text: 'このセルフケア画面のURLをコピー' });
+      let shareResetTimer = null;
+      const shareBtn = h(
+        'button',
+        {
+          type: 'button',
+          id: 'btn-copy-selfcare-url',
+          class: 'sc-share-btn',
+          onclick: async () => {
+            const shareUrl = new URL(window.location.href);
+            shareUrl.search = '';
+            shareUrl.searchParams.set('habit', hb.id);
+            shareUrl.searchParams.set('step', '3');
+            if (idx > 0) shareUrl.searchParams.set('sc', String(idx));
+            if (state.unifiedLayer !== 'fascia') shareUrl.searchParams.set('layer', state.unifiedLayer);
+            const urlStr = shareUrl.toString();
+            let copied = false;
+            if (navigator.clipboard?.writeText) {
+              try {
+                await navigator.clipboard.writeText(urlStr);
+                copied = true;
+              } catch {
+                copied = false;
+              }
+            }
+            if (!copied) {
+              const ta = document.createElement('textarea');
+              ta.value = urlStr;
+              ta.setAttribute('readonly', '');
+              ta.style.position = 'fixed';
+              ta.style.top = '-9999px';
+              ta.style.left = '-9999px';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              try {
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, urlStr.length);
+                copied = document.execCommand('copy') === true;
+              } catch {
+                copied = false;
+              } finally {
+                ta.remove();
+              }
+            }
+            if (copied) {
+              if (shareResetTimer) clearTimeout(shareResetTimer);
+              shareLabelSpan.textContent = 'URLをコピーしました ✓';
+              shareBtn.classList.add('is-copied');
+              shareResetTimer = setTimeout(() => {
+                shareLabelSpan.textContent = 'このセルフケア画面のURLをコピー';
+                shareBtn.classList.remove('is-copied');
+                shareResetTimer = null;
+              }, 2200);
+            } else {
+              window.prompt('このセルフケア画面のURLです（コピーしてお使いください）：', urlStr);
+            }
+          },
+        },
+        shareLabelSpan,
+      );
+      wrap.append(shareBtn);
+      const mCfg = loadMonetizeConfig();
+      if (mCfg.deployMode === 'clinic' && isSafeHttpsUrl(mCfg.clinicCtaUrl)) {
+        wrap.append(
+          h(
+            'a',
+            {
+              href: mCfg.clinicCtaUrl.trim(),
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              class: 'sc-clinic-cta-card',
+              id: 'sc-clinic-cta',
+            },
+            h(
+              'span',
+              { class: 'sc-clinic-cta-body' },
+              h('span', { class: 'sc-clinic-cta-title', text: mCfg.clinicCtaLabel || 'プロに相談する' }),
+              mCfg.clinicCtaSub
+                ? h('span', { class: 'sc-clinic-cta-sub', text: mCfg.clinicCtaSub })
+                : null,
+            ),
+            h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+          ),
+        );
+      } else if (
+        mCfg.deployMode === 'public' &&
+        Number(mCfg.adFrequency) > 0 &&
+        (cur.tool === 'ball' || cur.tool === 'roller')
+      ) {
+        const prUrl = cur.tool === 'roller' ? mCfg.rollerUrl : mCfg.ballUrl;
+        const prLabel = cur.tool === 'roller' ? mCfg.rollerLabel : mCfg.ballLabel;
+        if (isSafeHttpsUrl(prUrl)) {
+          wrap.append(
+            h(
+              'div',
+              { class: 'sc-pr-card' },
+              h(
+                'a',
+                {
+                  href: prUrl.trim(),
+                  target: '_blank',
+                  rel: 'noopener noreferrer sponsored',
+                  class: 'sc-pr-link',
+                },
+                h('span', { class: 'sc-pr-badge', text: 'PR' }),
+                h('span', { class: 'sc-pr-title', text: prLabel || 'おすすめのケア器具を見る' }),
+                h('span', { class: 'row-chevron', 'aria-hidden': 'true', text: '›' }),
+              ),
+              mCfg.disclosure ? h('p', { class: 'sc-pr-disclosure', text: mCfg.disclosure }) : null,
+            ),
+          );
+        }
+      }
     }
     wrap.append(h('p', { class: 'sc-disclaimer', text: DISCLAIMER_TEXT }));
     return wrap;
@@ -2316,8 +2460,8 @@ export function createUI({
       state.pickedPart = part;
       render();
     },
-    openSelfCare(habit) {
-      openStep3SelfCare(habit || state.currentHabit);
+    openSelfCare(habit, stepIdx = 0) {
+      openStep3SelfCare(habit || state.currentHabit, stepIdx);
     },
     resetHome() {
       state.step = 1;
