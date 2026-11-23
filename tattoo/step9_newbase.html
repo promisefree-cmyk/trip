@@ -27,7 +27,7 @@
   .chips { display:flex; flex-wrap:wrap; gap:8px; }
   .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; min-height:44px; }
   .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
-  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; min-height:44px; }
   .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
   .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; min-height:48px; }
   .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
@@ -64,7 +64,7 @@
   </div>
 </div>
 
-<div class="sec-label">② 7椎＆5番目骨折明確型 ＆ 元タトゥー極細点描同化型の2案</div>
+<div class="sec-label">② 連なる背骨の分離ヒビ×骨盤アンカー型 ＆ 極細点描同化型の2案</div>
 <div class="grid">
   <div class="card" id="card-N-3">
     <img src="step9_n3.jpg?v=1" onclick="zoomImg(this.src)" alt="N-3案">
@@ -123,12 +123,30 @@
   function upd() {
     document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
   }
+  function showCopied() {
+    const b = document.getElementById('copyBtn');
+    b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+    setTimeout(upd, 3000);
+  }
+  function fallbackCopy(txt) {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    showCopied();
+  }
   function copyAns() {
-    navigator.clipboard.writeText(getSummary()).then(() => {
-      const b = document.getElementById('copyBtn');
-      b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
-      setTimeout(upd, 3000);
-    });
+    const txt = getSummary();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(showCopied).catch(() => fallbackCopy(txt));
+    } else {
+      fallbackCopy(txt);
+    }
   }
   function zoomImg(src) {
     document.getElementById('mImg').src = src;
