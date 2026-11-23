@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step 10：【N-3】確定ベース × 太い斜め羅針盤（N/S/E/W付・太陽と非重複）4案比較</title>
+<style>
+  body { background:#0B1326; color:#F5EBD6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; padding:12px 12px 120px; line-height:1.5; max-width:920px; margin-inline:auto; }
+  h1 { font-size:18px; color:#E5CFA9; margin:4px 0 6px; text-align:center; }
+  .sub { font-size:13px; color:#B8C4D9; text-align:center; margin-bottom:14px; }
+  .badge-wrap { text-align:center; margin-bottom:8px; }
+  .badge { display:inline-block; background:rgba(200,169,126,0.2); border:1px solid #C8A97E; color:#E5CFA9; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; margin:2px; }
+  .full-box { background:#131F3A; border:2px solid #C8A97E; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .full-box img { width:100%; height:auto; display:block; }
+  .sec-label { font-size:14px; font-weight:900; color:#FFD27D; margin:14px 0 8px; padding-left:6px; border-left:4px solid #C8A97E; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  @media (max-width:560px) { .grid { grid-template-columns:1fr; } }
+  .card { background:#131F3A; border:2px solid rgba(200,169,126,0.55); border-radius:12px; padding:10px; }
+  .card.sel { border-color:#FFD27D; box-shadow:0 0 0 2px #FFD27D; }
+  .card img { width:100%; height:auto; border-radius:8px; display:block; margin-bottom:8px; background:#F5EBD6; }
+  .c-title { font-size:15px; font-weight:900; color:#E5CFA9; margin-bottom:4px; }
+  .c-desc { font-size:13px; color:#D0D9E8; margin-bottom:10px; }
+  .pick-btn { width:100%; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#1C2C50; color:#F5EBD6; font-weight:800; font-size:14px; cursor:pointer; min-height:46px; }
+  .card.sel .pick-btn { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .q-box { background:#131F3A; border:1px solid rgba(200,169,126,0.5); border-radius:12px; padding:12px; margin-bottom:12px; }
+  .q-title { font-size:14px; font-weight:900; color:#E5CFA9; margin-bottom:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#1C2C50; color:#F5EBD6; border:1px solid rgba(200,169,126,0.65); border-radius:8px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; min-height:44px; }
+  .chip.active { background:#C8A97E; color:#0B1326; font-weight:900; }
+  .note { width:100%; box-sizing:border-box; padding:11px; border-radius:8px; border:1px solid #C8A97E; background:#0B1326; color:#FFF; font-size:14px; margin-top:10px; min-height:44px; }
+  .dock { position:fixed; bottom:0; left:0; right:0; background:rgba(11,19,38,0.97); border-top:2px solid #C8A97E; padding:10px 12px; z-index:99; }
+  .copy-btn { width:100%; max-width:920px; margin:0 auto; display:block; padding:13px; border:none; border-radius:9px; background:#C8A97E; color:#0B1326; font-size:14.5px; font-weight:900; cursor:pointer; min-height:48px; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999; align-items:center; justify-content:center; padding:10px; }
+  .modal.open { display:flex; }
+  .modal img { max-width:96vw; max-height:88vh; border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="badge-wrap">
+  <span class="badge">✅ 背骨アンカー：【N-3】で確定</span>
+  <span class="badge">🧭 羅針盤：太く力強いツートン針 ＋ N/E/S/W明記</span>
+  <span class="badge">✨ 太陽の炎と1ミリも重ならない「斜め配置」</span>
+</div>
+<h1>🧭☀️🦴 Step 10：【N-3】× 太い斜め羅針盤（N/S/E/W付）4案</h1>
+<div class="sub">画像はタップで大きく拡大できます！<br>選んでいただいた【N-3（連なる背骨の分離ヒビ×骨盤アンカー）】をベースに固定し、羅針盤をグッと太く力強くしてN・E・S・Wの方位文字を入れ、太陽の炎と一切重ならない斜め配置で4パターン仕上げました。</div>
+
+<div class="full-box" onclick="zoomImg('step10_diag.jpg?v=1')">
+  <img src="step10_diag.jpg?v=1" alt="Step 10 N-3ベース×太い斜め羅針盤4案一覧">
+</div>
+
+<div class="sec-label">① 太めコンパスリング付き × 右上N・左下Sの斜め配置（2案）</div>
+<div class="grid">
+  <div class="card" id="card-P-1">
+    <img src="step10_p1.jpg?v=1" onclick="zoomImg(this.src)" alt="P-1案">
+    <div class="c-title">【P-1】極太ツートン輪 × 右上N斜め4本太針</div>
+    <div class="c-desc">太陽の外側を囲む白黒ツートンの太いコンパスリングから、右上N・右下E・左下S・左上Wへ極太の4本針が斜めに伸びる力強い王道案。</div>
+    <button class="pick-btn" onclick="pickBase('P-1')">この【P-1】にする</button>
+  </div>
+  <div class="card" id="card-P-2">
+    <img src="step10_p2.jpg?v=1" onclick="zoomImg(this.src)" alt="P-2案">
+    <div class="c-title">【P-2】目盛り付き太リング × 右上N斜め多方位太針</div>
+    <div class="c-desc">繊細な角度目盛り入りの太めリングに、斜めの太い4本主針（N・E・S・W）と左右の副針を組み合わせた本格航海コンパス案。</div>
+    <button class="pick-btn" onclick="pickBase('P-2')">この【P-2】にする</button>
+  </div>
+</div>
+
+<div class="sec-label">② リングなし超極太クロス型 ＆ 左上N・右下S南北長針型の2案</div>
+<div class="grid">
+  <div class="card" id="card-P-3">
+    <img src="step10_p3.jpg?v=1" onclick="zoomImg(this.src)" alt="P-3案">
+    <div class="c-title">【P-3】輪なし・超極太45°クロス（×字斜め）4本針のみ</div>
+    <div class="c-desc">外周リングを無くし、太陽の後ろから「巨大な×字の極太コンパス針（N・E・S・W）」だけが斜め45°に突き出すスッキリ豪快案。</div>
+    <button class="pick-btn" onclick="pickBase('P-3')">この【P-3】にする</button>
+  </div>
+  <div class="card" id="card-P-4">
+    <img src="step10_p4.jpg?v=1" onclick="zoomImg(this.src)" alt="P-4案">
+    <div class="c-title">【P-4】左上N・右下S（逆斜め）× 南北（N・S）特大長針</div>
+    <div class="c-desc">逆方向の斜め（左上N・右下S）の主針をひときわ太く長く強調し、右上E・左下Wと目盛りリングで引き締めたメリハリ案。</div>
+    <button class="pick-btn" onclick="pickBase('P-4')">この【P-4】にする</button>
+  </div>
+</div>
+
+<div class="q-box">
+  <div class="q-title">💡 確定または微調整（複数タップOK）</div>
+  <div class="chips">
+    <button class="chip" onclick="toggleTag(this,'これで確定！「完成1枚の高解像度デザイン＆彫り師用ステンシル線画」を作成する')">🎉 これで確定！完成1枚絵＆ステンシルを作る！</button>
+    <button class="chip" onclick="toggleTag(this,'方位文字はNとSの2つだけに絞ってスッキリさせたい')">文字は「N・S」の2つだけに絞りたい</button>
+    <button class="chip" onclick="toggleTag(this,'N・E・S・Wの文字をもっと大きくしたい')">N・E・S・Wの文字をもっと大きく</button>
+    <button class="chip" onclick="toggleTag(this,'P-1の白黒リングで左上N・右下Sの向きにしたい')">P-1の白黒リングで左上N向きにしたい</button>
+    <button class="chip" onclick="toggleTag(this,'羅針盤の針をもっとさらに太く長くしたい')">羅針盤の針をもっと太く長く</button>
+  </div>
+  <input class="note" id="freeNote" placeholder="例：P-1の輪っかをなくしてP-4のようにNとSだけ長くしたい 等、自由に入力OK！" oninput="upd()">
+</div>
+
+<div class="dock">
+  <button class="copy-btn" id="copyBtn" onclick="copyAns()">📋 選んだ回答をコピーしてチャットに貼る</button>
+</div>
+
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><img id="mImg" src=""></div>
+
+<script>
+  let basePick = '';
+  const tags = new Set();
+  function pickBase(k) {
+    basePick = k;
+    ['P-1','P-2','P-3','P-4'].forEach(x => document.getElementById('card-'+x).classList.toggle('sel', x===k));
+    upd();
+  }
+  function toggleTag(btn, val) {
+    if (tags.has(val)) { tags.delete(val); btn.classList.remove('active'); }
+    else { tags.add(val); btn.classList.add('active'); }
+    upd();
+  }
+  function getSummary() {
+    const p = [];
+    if (basePick) p.push('決定ベース＝【' + basePick + '（N-3骨格）】');
+    if (tags.size) p.push('調整＝' + Array.from(tags).join('・'));
+    const n = document.getElementById('freeNote').value.trim();
+    if (n) p.push('要望＝' + n);
+    return p.length ? '【Step10 N-3×太い斜め羅針盤】 ' + p.join(' ／ ') : '【Step10 N-3×太い斜め羅針盤】（上から選択または入力してください）';
+  }
+  function upd() {
+    document.getElementById('copyBtn').textContent = '📋 コピー：' + getSummary();
+  }
+  function showCopied() {
+    const b = document.getElementById('copyBtn');
+    b.textContent = '✅ コピーしました！そのままチャットに貼り付けて送信してください';
+    setTimeout(upd, 3000);
+  }
+  function fallbackCopy(txt) {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    showCopied();
+  }
+  function copyAns() {
+    const txt = getSummary();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(showCopied).catch(() => fallbackCopy(txt));
+    } else {
+      fallbackCopy(txt);
+    }
+  }
+  function zoomImg(src) {
+    document.getElementById('mImg').src = src;
+    document.getElementById('modal').classList.add('open');
+  }
+</script>
+</body>
+</html>
