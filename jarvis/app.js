@@ -45,6 +45,7 @@
     missionQuery: "",
     aiConfig: null,
     boostResult: null,
+    editingLaneId: null,
     workspace: {
       mode: "bridge", // bridge | monitor
       split: false,
@@ -1353,6 +1354,166 @@
     if (bodyEl) bodyEl.textContent = latest.summary || "";
   }
 
+  function renderWatchdog(wd) {
+    const badgeEl = document.getElementById("watchdog-badge");
+    const checkedEl = document.getElementById("watchdog-last-checked");
+    const listEl = document.getElementById("watchdog-alerts-list");
+    const histWrap = document.getElementById("watchdog-history-wrap");
+    const histList = document.getElementById("watchdog-history-list");
+    if (!badgeEl || !listEl) return;
+
+    const data = wd || { overall: "ok", badge_label: "全系統 異常なし", alerts: [], history: [] };
+    badgeEl.textContent = data.badge_label || "全系統 異常なし";
+    badgeEl.className = `watchdog-badge ${data.overall === "danger" ? "danger" : data.overall === "warn" ? "warn" : "ok"}`;
+    if (checkedEl) {
+      checkedEl.textContent = data.last_checked_at ? `点検 ${formatShortTime(data.last_checked_at)}` : "常時見張り待機中";
+    }
+
+    const alerts = data.alerts || [];
+    if (alerts.length === 0) {
+      listEl.innerHTML = `<div class="watchdog-ok-line">主要サービス・Obsidian同期・空き容量はすべて安定しています（投資システムは静音停止中）。</div>`;
+    } else {
+      listEl.innerHTML = alerts
+        .map((a) => {
+          const cls = a.severity === "danger" ? "danger" : "";
+          return `
+            <div class="watchdog-alert-item ${cls}">
+              <div class="watchdog-alert-meta">
+                <div class="watchdog-alert-title">${escapeHtml(a.title)}</div>
+                <div class="watchdog-alert-detail">${escapeHtml(a.detail)}</div>
+              </div>
+              <button type="button" class="subtle-action-btn js-watchdog-action" data-action-id="${escapeHtml(a.action_id || "")}">
+                ${escapeHtml(a.action_label || "対応する")}
+              </button>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    const hist = data.history || [];
+    if (histWrap && histList) {
+      if (hist.length === 0) {
+        histWrap.hidden = true;
+      } else {
+        histWrap.hidden = false;
+        histList.innerHTML = hist
+          .map((h) => {
+            const mark = h.ok ? "✓" : "!";
+            return `<div class="watchdog-history-row">${mark} ${escapeHtml(formatShortTime(h.at))} — ${escapeHtml(h.summary || "")}</div>`;
+          })
+          .join("");
+      }
+    }
+  }
+
+  function renderBrainLanes(brainLanes, obsSync) {
+    const metaEl = document.getElementById("brain-handoff-meta");
+    const syncBadge = document.getElementById("obsidian-sync-badge");
+    const gridEl = document.getElementById("brain-lanes-grid");
+    if (!gridEl) return;
+
+    if (metaEl && brainLanes) {
+      metaEl.textContent = `直前の引き継ぎ：${brainLanes.line_count || 0}/${brainLanes.max_lines || 75}行・${brainLanes.size_kb || 0}/${brainLanes.max_kb || 12}KB`;
+    }
+    if (syncBadge && obsSync) {
+      syncBadge.textContent = obsSync.summary_label || "確認中";
+      syncBadge.className = `watchdog-badge ${obsSync.state === "ok" ? "ok" : "warn"}`;
+    }
+
+    if (state.editingLaneId) {
+      return;
+    }
+
+    const lanes = (brainLanes && brainLanes.lanes) || [];
+    if (lanes.length === 0) {
+      gridEl.innerHTML = `<div class="panel-note">横断ボードの行が見つかりませんでした。</div>`;
+      return;
+    }
+
+    gridEl.innerHTML = lanes
+      .map((lane) => `
+        <article class="brain-lane-card" data-lane-id="${escapeHtml(lane.id)}">
+          <div class="brain-lane-head">
+            <span class="brain-lane-name">${escapeHtml(lane.icon || "📌")} ${escapeHtml(lane.name)}</span>
+            <button type="button" class="subtle-action-btn js-lane-edit-btn" data-lane-id="${escapeHtml(lane.id)}">✏️ 更新</button>
+          </div>
+          <div class="brain-lane-status">${escapeHtml(lane.status)}</div>
+          <div class="brain-lane-next">👉 ${escapeHtml(lane.next_action)}</div>
+          <div class="brain-lane-foot">
+            <span class="brain-lane-source">${escapeHtml(lane.source)}</span>
+          </div>
+        </article>
+      `)
+      .join("");
+  }
+
+  function openLaneInlineEditor(laneId) {
+    const gridEl = document.getElementById("brain-lanes-grid");
+    if (!gridEl || !state.overview || !state.overview.brain_lanes) return;
+    const lane = (state.overview.brain_lanes.lanes || []).find((l) => l.id === laneId);
+    if (!lane) return;
+    state.editingLaneId = laneId;
+
+    const card = gridEl.querySelector(`.brain-lane-card[data-lane-id="${CSS.escape(laneId)}"]`);
+    if (!card) return;
+    card.innerHTML = `
+      <div class="brain-lane-head">
+        <span class="brain-lane-name">${escapeHtml(lane.icon || "📌")} ${escapeHtml(lane.name)}</span>
+      </div>
+      <form class="brain-lane-edit-form js-lane-edit-form" data-lane-id="${escapeHtml(lane.id)}">
+        <label class="meter-label">最新状態</label>
+        <input type="text" class="brain-lane-input js-lane-status-input" maxlength="160" value="${escapeHtml(lane.status)}" required />
+        <label class="meter-label">次の一手</label>
+        <input type="text" class="brain-lane-input js-lane-next-input" maxlength="160" value="${escapeHtml(lane.next_action)}" required />
+        <div class="brain-lane-edit-actions">
+          <button type="submit" class="cmd-btn cyan">保存して全拠点同期</button>
+          <button type="button" class="cmd-btn js-lane-cancel-btn">やめる</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function renderLauncherResult(title, bodyHtml) {
+    const box = document.getElementById("launcher-result-card");
+    if (!box) return;
+    box.hidden = false;
+    box.innerHTML = `<strong>${escapeHtml(title)}</strong><div style="margin-top:6px;">${bodyHtml}</div>`;
+  }
+
+  function renderHpSpeedAuditResult(res) {
+    if (!res || !Array.isArray(res.pages)) return;
+    const rows = res.pages
+      .map((p) => {
+        const hitLabel = p.litespeed_cache === "hit" ? "保存応答 (hit)" : (p.litespeed_cache || "都度生成");
+        return `
+          <tr>
+            <td>${escapeHtml(p.label)}</td>
+            <td>${escapeHtml(String(p.status_code))}</td>
+            <td>${escapeHtml(String(p.ttfb_ms))} ms</td>
+            <td><strong>${escapeHtml(String(p.total_ms))} ms</strong></td>
+            <td>${escapeHtml(String(p.wire_kb))} KB</td>
+            <td>${escapeHtml(hitLabel)}</td>
+            <td>${escapeHtml(p.grade || "")}</td>
+          </tr>
+        `;
+      })
+      .join("");
+    const notes = (res.diagnosis_notes || [])
+      .map((n) => `<li>${escapeHtml(n)}</li>`)
+      .join("");
+    const html = `
+      <table class="hp-speed-table">
+        <thead>
+          <tr><th>ページ</th><th>状態</th><th>初期応答</th><th>合計</th><th>容量</th><th>仕組み</th><th>評価</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${notes ? `<ul class="hp-diag-list">${notes}</ul>` : ""}
+    `;
+    renderLauncherResult(`⚡ 公式HP 速度計測結果（総合評価：${res.overall_grade || "確認済"}）`, html);
+  }
+
   function renderBloatSummary(bloat) {
     if (!bloat) return;
     const txtEl = document.getElementById("bloat-summary-text");
@@ -1634,6 +1795,8 @@
 
     renderApprovals(data.approvals);
     renderButlerBriefing(data.briefing_latest);
+    renderWatchdog(data.watchdog);
+    renderBrainLanes(data.brain_lanes, data.obsidian_sync);
     renderSystems(data.systems);
     renderWarpDock(data.warp_dock, data.custom_monitors);
     renderWorkspaceBay();
@@ -2427,6 +2590,210 @@
         btn.textContent = prev;
       }
     });
+
+    // Command Bridge v4: Watchdog, Obsidian 8-Lane Board & Revenue Launcher
+    async function runObsidianSyncAction(triggerBtn) {
+      if (triggerBtn && triggerBtn.disabled) return;
+      playHudClickSound();
+      const prevHtml = triggerBtn ? triggerBtn.innerHTML : "";
+      if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.textContent = "🔄 同期中...";
+      }
+      try {
+        const res = await apiRequest("/api/actions/obsidian/sync", { method: "POST" });
+        showToast(res.message || "共通の脳を同期しました。");
+        renderLauncherResult("🧠 共通の脳・全拠点同期", `<p style="margin:0;">${escapeHtml(res.message || "完了しました。")}</p>`);
+        await refreshOverview(true);
+      } catch (err) {
+        showToast(`同期エラー：${err.message}`);
+      } finally {
+        if (triggerBtn) {
+          triggerBtn.disabled = false;
+          triggerBtn.innerHTML = prevHtml;
+        }
+      }
+    }
+
+    async function runHpSpeedAuditAction(triggerBtn) {
+      if (triggerBtn && triggerBtn.disabled) return;
+      playHudClickSound();
+      const prevHtml = triggerBtn ? triggerBtn.innerHTML : "";
+      if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.textContent = "⚡ 計測中...";
+      }
+      try {
+        const res = await apiRequest("/api/actions/hp/speed-check", { method: "POST" });
+        renderHpSpeedAuditResult(res);
+        showToast(`公式HP 速度計測完了（総合：${res.overall_grade || "確認済"}）`);
+      } catch (err) {
+        showToast(`速度計測エラー：${err.message}`);
+      } finally {
+        if (triggerBtn) {
+          triggerBtn.disabled = false;
+          triggerBtn.innerHTML = prevHtml;
+        }
+      }
+    }
+
+    const watchdogCheckBtn = document.getElementById("watchdog-check-btn");
+    if (watchdogCheckBtn) {
+      watchdogCheckBtn.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        if (btn.disabled) return;
+        playHudClickSound();
+        const prev = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "🔍 点検中...";
+        try {
+          const res = await apiRequest("/api/watchdog/check", {
+            method: "POST",
+            body: JSON.stringify({ auto_heal: true, notify: false }),
+          });
+          renderWatchdog(res);
+          const healedCnt = (res.healed_actions || []).length;
+          showToast(healedCnt > 0 ? `点検完了（自動復旧 ${healedCnt}件）` : `点検完了：${res.badge_label || "正常"}`);
+          await refreshOverview(true);
+        } catch (err) {
+          showToast(`点検エラー：${err.message}`);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prev;
+        }
+      });
+    }
+
+    const watchdogListEl = document.getElementById("watchdog-alerts-list");
+    if (watchdogListEl) {
+      watchdogListEl.addEventListener("click", async (ev) => {
+        const actBtn = ev.target.closest(".js-watchdog-action");
+        if (!actBtn) return;
+        const actionId = actBtn.dataset.actionId || "";
+        if (actionId === "hp_speed_check") {
+          await runHpSpeedAuditAction(actBtn);
+          const resBox = document.getElementById("launcher-result-card");
+          if (resBox) resBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } else if (actionId === "sns_start") {
+          await triggerPostAction("/api/actions/sns/start", actBtn, "📱 SNS起動中...");
+        } else if (actionId === "obsidian_sync") {
+          await runObsidianSyncAction(actBtn);
+        } else if (actionId === "disk_bloat_trim" || actionId === "pc_boost") {
+          await triggerPostAction("/api/actions/boost", actBtn, "🧹 整理実行中...", {
+            stop_heavy_apps: false,
+          });
+        }
+      });
+    }
+
+    const obsSyncBtn = document.getElementById("btn-obsidian-sync");
+    if (obsSyncBtn) {
+      obsSyncBtn.addEventListener("click", (ev) => runObsidianSyncAction(ev.currentTarget));
+    }
+
+    const obsSyncLauncherBtn = document.getElementById("btn-obsidian-sync-launcher");
+    if (obsSyncLauncherBtn) {
+      obsSyncLauncherBtn.addEventListener("click", (ev) => runObsidianSyncAction(ev.currentTarget));
+    }
+
+    const hpSpeedBtn = document.getElementById("btn-hp-speed-check");
+    if (hpSpeedBtn) {
+      hpSpeedBtn.addEventListener("click", (ev) => runHpSpeedAuditAction(ev.currentTarget));
+    }
+
+    const hpLocalCheckBtn = document.getElementById("btn-hp-local-check");
+    if (hpLocalCheckBtn) {
+      hpLocalCheckBtn.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        if (btn.disabled) return;
+        playHudClickSound();
+        const prev = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = "🛡️ 19項目点検中...";
+        try {
+          const res = await apiRequest("/api/actions/hp/local-check", { method: "POST" });
+          const tailHtml = res.summary_tail
+            ? `<pre style="white-space:pre-wrap;margin:6px 0 0;font-size:12px;color:#94A3B8;">${escapeHtml(res.summary_tail)}</pre>`
+            : "";
+          renderLauncherResult("🛡️ 公式HP 19項目ローカル点検結果", `<p style="margin:0;">${escapeHtml(res.message || "")}</p>${tailHtml}`);
+          showToast(res.message || "ローカル点検が完了しました。");
+        } catch (err) {
+          showToast(`ローカル点検エラー：${err.message}`);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = prev;
+        }
+      });
+    }
+
+    const studioRestartBtn = document.getElementById("btn-studio-restart");
+    if (studioRestartBtn) {
+      studioRestartBtn.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        if (btn.disabled) return;
+        playHudClickSound();
+        const prev = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = "🎬 動画スタジオ起動中...";
+        try {
+          const res = await apiRequest("/api/actions/studio/restart", { method: "POST" });
+          renderLauncherResult("🎬 動画スタジオ状態", `<p style="margin:0;">${escapeHtml(res.message || "")}</p>`);
+          showToast(res.message || "動画スタジオを起動しました。");
+          await refreshOverview(true);
+        } catch (err) {
+          showToast(`動画スタジオ起動エラー：${err.message}`);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = prev;
+        }
+      });
+    }
+
+    const brainGridEl = document.getElementById("brain-lanes-grid");
+    if (brainGridEl) {
+      brainGridEl.addEventListener("click", (ev) => {
+        const editBtn = ev.target.closest(".js-lane-edit-btn");
+        if (editBtn) {
+          playHudClickSound();
+          openLaneInlineEditor(editBtn.dataset.laneId || "");
+          return;
+        }
+        const cancelBtn = ev.target.closest(".js-lane-cancel-btn");
+        if (cancelBtn) {
+          state.editingLaneId = null;
+          if (state.overview) {
+            renderBrainLanes(state.overview.brain_lanes, state.overview.obsidian_sync);
+          }
+        }
+      });
+
+      brainGridEl.addEventListener("submit", async (ev) => {
+        const form = ev.target.closest(".js-lane-edit-form");
+        if (!form) return;
+        ev.preventDefault();
+        const laneId = form.dataset.laneId || "";
+        const statusVal = (form.querySelector(".js-lane-status-input")?.value || "").trim();
+        const nextVal = (form.querySelector(".js-lane-next-input")?.value || "").trim();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+          const res = await apiRequest(`/api/brain/lanes/${encodeURIComponent(laneId)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: statusVal, next_action: nextVal, sync_after: true }),
+          });
+          state.editingLaneId = null;
+          if (state.overview) {
+            state.overview.brain_lanes = res.brain_lanes;
+            if (res.obsidian_sync) state.overview.obsidian_sync = res.obsidian_sync;
+          }
+          renderBrainLanes(res.brain_lanes, res.obsidian_sync || (state.overview && state.overview.obsidian_sync));
+          showToast(res.message || "レーンを更新して同期しました。");
+        } catch (err) {
+          showToast(`更新エラー：${err.message}`);
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+    }
 
     // Maintenance & PC Full-Power Boost Controls
     document.getElementById("btn-pc-boost").addEventListener("click", (ev) => {

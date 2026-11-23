@@ -213,6 +213,27 @@
         <p class="briefing-summary-body" id="briefing-summary-text">稼働状況を読み込んでおります。少々お待ちくださいませ。</p>
       </section>
 
+      <!-- 🚨 自動見張り ＆ 安全復旧パネル -->
+      <section class="panel hud-frame watchdog-card" id="watchdog-panel" aria-labelledby="watchdog-heading">
+        <div class="panel-head">
+          <div class="briefing-card-title-row">
+            <h2 class="panel-title" id="watchdog-heading">🚨 自動見張り ＆ 安全復旧</h2>
+            <span class="watchdog-badge ok" id="watchdog-badge">全系統 異常なし</span>
+          </div>
+          <div class="watchdog-head-right">
+            <span class="panel-note" id="watchdog-last-checked">待機中</span>
+            <button type="button" class="subtle-action-btn" id="watchdog-check-btn">🔍 今すぐ点検</button>
+          </div>
+        </div>
+        <div class="watchdog-alerts-list" id="watchdog-alerts-list">
+          <div class="watchdog-ok-line">主要サービス・Obsidian同期・空き容量はすべて安定しています。</div>
+        </div>
+        <details class="watchdog-history-wrap" id="watchdog-history-wrap" hidden>
+          <summary>直近の自動復旧・見張り記録を見る</summary>
+          <div class="watchdog-history-list" id="watchdog-history-list"></div>
+        </details>
+      </section>
+
       <!-- 非対称2カラム：左＝基幹システム稼働＆リモコン ／ 右＝PC健康＆保守＆高速ワープ -->
       <div class="main-grid">
         <div class="panel-group">
@@ -457,6 +478,46 @@
             <button type="button" class="mission-chip" data-cat="general">📌 一般</button>
           </div>
           <div class="missions-list" id="missions-list"></div>
+        </div>
+      </section>
+
+      <!-- 🎯 収益直結「今日の次の一手」ランチャー -->
+      <section class="panel hud-frame launcher-section" id="revenue-launcher-panel" aria-labelledby="launcher-heading">
+        <div class="panel-head">
+          <h2 class="panel-title" id="launcher-heading">🎯 収益直結「今日の次の一手」ランチャー</h2>
+          <span class="panel-note">確認・起動を1タップ実行（本番変更や課金操作は自動実行しません）</span>
+        </div>
+        <div class="launcher-grid">
+          <button type="button" class="cmd-btn cyan launcher-btn" id="btn-hp-speed-check">
+            <span>⚡ 公式HP 速度詳細チェック</span>
+          </button>
+          <button type="button" class="cmd-btn launcher-btn" id="btn-hp-local-check">
+            <span>🛡️ 公式HP 19項目ローカル点検（本番変更なし）</span>
+          </button>
+          <button type="button" class="cmd-btn launcher-btn" id="btn-studio-restart">
+            <span>🎬 動画スタジオ 起動／再起動</span>
+          </button>
+          <button type="button" class="cmd-btn gold launcher-btn" id="btn-obsidian-sync-launcher">
+            <span>🧠 共通の脳・全拠点同期</span>
+          </button>
+        </div>
+        <div class="launcher-result-card" id="launcher-result-card" hidden aria-live="polite"></div>
+      </section>
+
+      <!-- 🧭 全8領域 並列チャット横断ボード ＆ Obsidian 同期管理 -->
+      <section class="panel hud-frame brain-lanes-section" id="brain-lanes-panel" aria-labelledby="brain-lanes-heading">
+        <div class="panel-head">
+          <div class="briefing-card-title-row">
+            <h2 class="panel-title" id="brain-lanes-heading">🧭 全8領域 並列チャット横断ボード ＆ Obsidian 同期</h2>
+            <span class="panel-note" id="brain-handoff-meta">読み込み中...</span>
+          </div>
+          <div class="watchdog-head-right">
+            <span class="watchdog-badge ok" id="obsidian-sync-badge">同期確認中</span>
+            <button type="button" class="subtle-action-btn" id="btn-obsidian-sync">🔄 全拠点同期</button>
+          </div>
+        </div>
+        <div class="brain-lanes-grid" id="brain-lanes-grid">
+          <div class="panel-note">横断ボードを読み込んでいます...</div>
         </div>
       </section>
     </div>
