@@ -2,8 +2,8 @@
   "v": 1,
   "alg": "PBKDF2-SHA256/AES-256-GCM",
   "iter": 150000,
-  "salt": "+muBU2Ghj1LpGMNJ2uBvUw==",
-  "iv": "/I7aiGJjbPuz9QMJ",
-  "ct": "gLJaUGiRtEr4P6ykAPbNc7u0PK/OOhyrzJCb/8jAI3RRKMedk55n7p76mPHbgyYgI4dKYOokUcP7KlVlx9miZwsrr4ma1IrgsjtPyPUp8vGMj/Kf3Q37cTiSp8m6IR74XtLRhVv6IwfUApJ8t5nKP3mNdJi+kq68B+5/rGYHN6fsYWhc",
-  "updatedAt": "2026-11-23T13:49:25.053Z"
+  "salt": "2AJMPEZLouPax0MwXuM/8g==",
+  "iv": "5mGOH600beZ6G0S/",
+  "ct": "4y9dDzBw49cMgK/oD/afWeXHdIvLUyVxHm8rPAK7cKQGHJmZycuLSs6RZdjkHhiV+ctW6WWUMjmYcGMGdShzLtA2xycZHZaxAaTp26STiMNxOd5zCjwC379mvlmQ9Lmi2rJb3o5DxumC8FbxMf0Ei2v4BrvsZzl2mXyHCD1wDpS+NgOD",
+  "updatedAt": "2026-11-23T14:16:12.600Z"
 }
