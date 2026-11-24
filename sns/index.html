@@ -31,6 +31,11 @@
       --accent-soft: #FEF3C7;
       --accent-border: #FDE68A;
     }
+    body[data-role="world-anatomy"] {
+      --accent: #1E3A5F;
+      --accent-soft: #EFF6FF;
+      --accent-border: #BFDBFE;
+    }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -108,8 +113,8 @@
     }
     .role-switch {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
       padding: 5px;
       background: #F1F5F9;
       border-radius: 13px;
@@ -121,10 +126,11 @@
       background: transparent;
       color: var(--muted);
       border-radius: 9px;
-      padding: 11px 10px;
-      font-size: 13.5px;
+      padding: 10px 6px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
       transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
     }
     .role-btn.active {
@@ -315,8 +321,9 @@
     </p>
 
     <div class="role-switch" role="tablist" aria-label="接続先モード">
-      <button type="button" class="role-btn active" id="roleWorkBtn" data-role="work" role="tab" aria-selected="true">仕事用マスター</button>
-      <button type="button" class="role-btn" id="rolePersonalBtn" data-role="personal" role="tab" aria-selected="false">個人用マスター</button>
+      <button type="button" class="role-btn active" id="roleWorkBtn" data-role="work" role="tab" aria-selected="true">Mrボディハック</button>
+      <button type="button" class="role-btn" id="roleWorldAnatomyBtn" data-role="world-anatomy" role="tab" aria-selected="false">WORLD ANATOMY</button>
+      <button type="button" class="role-btn" id="rolePersonalBtn" data-role="personal" role="tab" aria-selected="false">個人用</button>
     </div>
 
     <section id="autoPanel" class="auto-panel" aria-live="polite">
@@ -356,20 +363,26 @@
 
       const params = new URLSearchParams(window.location.search);
       const queryRole = (params.get('role') || '').toLowerCase();
+      const rawChannel = String(params.get('channel') || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const manualMode = params.get('manual') === '1';
 
       let selectedRole =
         queryRole === 'personal'
           ? 'personal'
-          : queryRole === 'work' || queryRole === 'business'
-            ? 'work'
-            : localStorage.getItem(STORAGE_ROLE_KEY) === 'personal'
-              ? 'personal'
-              : 'work';
+          : queryRole === 'world-anatomy' || queryRole === 'wa' || queryRole === 'world_anatomy'
+            ? 'world-anatomy'
+            : queryRole === 'work' || queryRole === 'business'
+              ? 'work'
+              : localStorage.getItem(STORAGE_ROLE_KEY) === 'personal'
+                ? 'personal'
+                : localStorage.getItem(STORAGE_ROLE_KEY) === 'world-anatomy'
+                  ? 'world-anatomy'
+                  : 'work';
 
       let autoCancelled = false;
 
       const roleWorkBtn = document.getElementById('roleWorkBtn');
+      const roleWorldAnatomyBtn = document.getElementById('roleWorldAnatomyBtn');
       const rolePersonalBtn = document.getElementById('rolePersonalBtn');
       const portalForm = document.getElementById('portalForm');
       const passcodeInput = document.getElementById('passcodeInput');
@@ -385,10 +398,19 @@
       const forgetDeviceBtn = document.getElementById('forgetDeviceBtn');
 
       function applyRole(role) {
-        selectedRole = role === 'personal' ? 'personal' : 'work';
+        selectedRole =
+          role === 'personal'
+            ? 'personal'
+            : role === 'world-anatomy'
+              ? 'world-anatomy'
+              : 'work';
         document.body.setAttribute('data-role', selectedRole);
         roleWorkBtn.classList.toggle('active', selectedRole === 'work');
         roleWorkBtn.setAttribute('aria-selected', String(selectedRole === 'work'));
+        if (roleWorldAnatomyBtn) {
+          roleWorldAnatomyBtn.classList.toggle('active', selectedRole === 'world-anatomy');
+          roleWorldAnatomyBtn.setAttribute('aria-selected', String(selectedRole === 'world-anatomy'));
+        }
         rolePersonalBtn.classList.toggle('active', selectedRole === 'personal');
         rolePersonalBtn.setAttribute('aria-selected', String(selectedRole === 'personal'));
         try {
@@ -486,7 +508,13 @@
         const nInput = document.createElement('input');
         nInput.type = 'hidden';
         nInput.name = 'next';
-        nInput.value = role === 'personal' ? '/personal' : '/work';
+        nInput.value = rawChannel
+          ? '/channel/' + rawChannel
+          : role === 'personal'
+            ? '/personal'
+            : role === 'world-anatomy'
+              ? '/world-anatomy'
+              : '/work';
 
         form.appendChild(pInput);
         form.appendChild(nInput);
@@ -507,7 +535,11 @@
           portalForm.classList.add('hidden');
           autoPanel.classList.add('show');
           autoTitle.textContent =
-            selectedRole === 'personal' ? '個人用マスターへ自動接続中…' : '仕事用マスターへ自動接続中…';
+            selectedRole === 'personal'
+              ? '個人用マスターへ自動接続中…'
+              : selectedRole === 'world-anatomy'
+                ? 'WORLD ANATOMY スタジオへ自動接続中…'
+                : 'Mrボディハック マスターへ自動接続中…';
           autoSub.textContent = '暗号化ビーコンを読み込み、自宅PCの応答を確認しています';
         } else {
           showStatus('info', '最新の接続先を復号して確認しています…');
@@ -609,6 +641,7 @@
       }
 
       roleWorkBtn.addEventListener('click', () => applyRole('work'));
+      if (roleWorldAnatomyBtn) roleWorldAnatomyBtn.addEventListener('click', () => applyRole('world-anatomy'));
       rolePersonalBtn.addEventListener('click', () => applyRole('personal'));
 
       toggleEyeBtn.addEventListener('click', () => {
