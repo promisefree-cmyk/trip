@@ -1,4 +1,5 @@
-const CACHE_NAME = 'fascia-3d-v20261123c';
+const CACHE_NAME = 'fascia-3d-v20261126a';
+const APP_SCOPE_PATH = new URL('./', self.location.href).pathname;
 const EXCLUDED_PATHS = ['/studio.html', '/VideoMasterStudio.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -100,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   const isSameOrigin = url.origin === self.location.origin;
-  if (isSameOrigin && (isExcluded(url) || url.pathname.endsWith('/sw.js'))) {
+  if (isSameOrigin && (!url.pathname.startsWith(APP_SCOPE_PATH) || isExcluded(url) || url.pathname.endsWith('/sw.js'))) {
     return;
   }
   if (
