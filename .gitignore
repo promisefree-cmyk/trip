@@ -1,0 +1,16 @@
+.trip_pages_repo/
+.agents/
+.claude/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+pc-setup/
+run_travel_tunnel.py
+travel_server.py
+sync_trip_pages.py
+tunnel_url.txt
+sync_gist_id.txt
+*.log
+*.bak
+.env
+.env.*
