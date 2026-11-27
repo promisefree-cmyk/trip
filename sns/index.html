@@ -621,10 +621,11 @@
             throw new Error('INVALID_PASSCODE');
           }
 
-          const origin = String(payload && payload.url ? payload.url : '').replace(/\/+$/, '');
-          if (!isSafeHttpsOrigin(origin)) {
+          const rawOrigin = String(payload && payload.url ? payload.url : '').trim();
+          if (!isSafeHttpsOrigin(rawOrigin)) {
             throw new Error('INVALID_TARGET');
           }
+          const origin = new URL(rawOrigin).origin;
 
           if (autoCancelled && isAuto) return;
 
